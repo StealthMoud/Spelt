@@ -38,6 +38,20 @@ export async function reloadVault() {
   renderVaultList();
 }
 
+function formatTimeUntil(nextDate) {
+  const now = Date.now();
+  if (nextDate <= now) return { text: 'Due now', color: 'var(--primary-light)' };
+  const diff = nextDate - now;
+  const mins = Math.floor(diff / 60000);
+  const hrs = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 60) return { text: `in ${mins}m`, color: 'var(--warning, hsl(40,90%,55%))' };
+  if (hrs < 24) return { text: `in ${hrs}h`, color: 'var(--text-muted)' };
+  if (days < 30) return { text: `in ${days}d`, color: 'var(--text-muted)' };
+  const months = Math.floor(days / 30);
+  return { text: `in ${months}mo`, color: 'var(--text-muted)' };
+}
+
 // Populate table rows based on filters and sort
 function renderVaultList() {
   const query = document.getElementById('vault-search').value.trim().toLowerCase();
@@ -88,7 +102,7 @@ function renderVaultList() {
     emptyState.style.display = 'none';
     filtered.forEach(w => {
       const tr = document.createElement('tr');
-      const nextStr = w.nextDate <= now ? 'Due Now' : new Date(w.nextDate).toLocaleDateString();
+      const review = formatTimeUntil(w.nextDate);
       
       tr.innerHTML = `
         <td style="font-weight: 600; color: var(--primary-light);">${w.word}</td>
@@ -96,7 +110,7 @@ function renderVaultList() {
         <td>${w.translation || '--'}</td>
         <td style="font-variant-numeric: tabular-nums;">${w.ef.toFixed(1)}</td>
         <td style="font-variant-numeric: tabular-nums;">${w.rep}</td>
-        <td style="color: ${w.nextDate <= now ? 'var(--primary-light)' : 'var(--text-muted)'}">${nextStr}</td>
+        <td style="color: ${review.color}; font-variant-numeric: tabular-nums;">${review.text}</td>
         <td style="text-align: right;">
           <div class="word-action-cell">
             <button class="table-icon-btn edit-btn" data-id="${w.id}" title="Edit word">

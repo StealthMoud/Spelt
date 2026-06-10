@@ -31,6 +31,20 @@ export async function reloadVaultList() {
   renderList();
 }
 
+function formatTimeUntil(nextDate) {
+  const now = Date.now();
+  if (nextDate <= now) return { text: 'Due now', color: 'var(--primary-light)' };
+  const diff = nextDate - now;
+  const mins = Math.floor(diff / 60000);
+  const hrs = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 60) return { text: `in ${mins}m`, color: 'var(--warning, hsl(40,90%,55%))' };
+  if (hrs < 24) return { text: `in ${hrs}h`, color: 'var(--text-muted)' };
+  if (days < 30) return { text: `in ${days}d`, color: 'var(--text-muted)' };
+  const months = Math.floor(days / 30);
+  return { text: `in ${months}mo`, color: 'var(--text-muted)' };
+}
+
 function renderList() {
   const query = document.getElementById('vault-search').value.trim().toLowerCase();
   const listEl = document.getElementById('popup-vault-list');
@@ -65,9 +79,13 @@ function renderList() {
     filtered.forEach(w => {
       const li = document.createElement('li');
       li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 0.75rem; background: hsla(0,0%,100%,0.01); border-radius: 8px;";
+      const review = formatTimeUntil(w.nextDate);
       li.innerHTML = `
         <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1;">
-          <strong style="color: var(--primary-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${w.word}</strong>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <strong style="color: var(--primary-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${w.word}</strong>
+            <span style="font-size: 0.58rem; color: ${review.color}; background: hsla(0,0%,100%,0.04); padding: 1px 5px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">${review.text}</span>
+          </div>
           <span style="color: var(--text-muted); font-size: 0.65rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${w.definition || 'No definition'}</span>
         </div>
         <div style="display: flex; gap: 4px; margin-left: 8px;">
