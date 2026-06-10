@@ -348,7 +348,7 @@
           <span class="settings-group-title">Active Cloud Session</span>
           <div class="sync-status-row">
             <div>
-              <h4 id="sync-user-email" style="margin: 0; font-size: 1.1rem; color: var(--primary-light);">email@example.com</h4>
+              <h4 id="sync-user-email" style="margin: 0; font-size: 1.1rem; color: var(--primary-light);">Not Connected</h4>
               <p id="sync-last-date" class="settings-desc" style="margin: 4px 0 0;">Last synchronized: Never</p>
             </div>
             <button id="sync-now-btn" class="action-btn">
@@ -390,7 +390,7 @@
             <form id="unified-auth-form" style="display: flex; flex-direction: column; gap: 14px;">
               <div class="input-group" style="margin-bottom: 0;">
                 <label>Email Address</label>
-                <input type="email" id="auth-email" class="premium-input" placeholder="example@gmail.com" required autocomplete="email">
+                <input type="email" id="auth-email" class="premium-input" placeholder="name@gmail.com" required autocomplete="email">
               </div>
               
               <div class="input-group" style="margin-bottom: 0;">
@@ -433,6 +433,27 @@
               <option value="1.0" selected>Balanced (1.0x spacing)</option>
               <option value="1.5">Relaxed (1.5x spacing)</option>
             </select>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <span class="settings-group-title">Google Integration</span>
+          <div class="settings-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+            <div class="settings-label-wrapper" style="margin-bottom: 4px;">
+              <span class="settings-label">Google OAuth Client ID</span>
+              <span class="settings-desc">Specify a custom Client ID from Google Cloud Console to run native Google OAuth login locally.</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+              <input type="text" id="setting-oauth-client-id" class="premium-input" placeholder="Enter Google Client ID" autocomplete="off" style="font-size: 0.8rem; flex: 1;">
+              <button id="save-oauth-client-id-btn" class="action-btn" style="padding: 10px 16px; font-size: 0.8rem; white-space: nowrap; height: 38px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 4px;">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                <span>Save</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -556,6 +577,9 @@
         </button>
       </div>
       
+      <!-- Notice banner for unconfigured or error status -->
+      <div id="google-modal-notice" class="settings-desc" style="display: none; padding: 10px; background: hsla(0, 80%, 50%, 0.15); border: 1px solid hsla(0, 80%, 50%, 0.3); border-radius: 6px; font-size: 0.76rem; color: #ff8080; margin: 4px 0 12px; line-height: 1.4; text-align: left; box-sizing: border-box;"></div>
+      
       <!-- Real profile container (populated dynamically) -->
       <div id="chrome-profile-container" style="display: none; flex-direction: column; gap: 8px; margin: 8px 0;">
         <p class="confirm-message" style="margin-bottom: 2px;">Use active Chrome profile:</p>
@@ -573,7 +597,7 @@
       <div id="custom-gmail-input-container" style="width: 100%;">
         <div class="input-group">
           <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Enter Gmail Address</label>
-          <input type="email" id="custom-gmail-field" class="premium-input" placeholder="user@gmail.com" style="margin-bottom: 8px;">
+          <input type="email" id="custom-gmail-field" class="premium-input" placeholder="name@gmail.com" style="margin-bottom: 8px;">
         </div>
         <button type="button" id="custom-gmail-submit-btn" class="action-btn" style="width: 100%;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
