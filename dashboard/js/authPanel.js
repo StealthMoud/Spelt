@@ -35,6 +35,16 @@ export function initAuthPanel(onAuthChanged) {
   syncBtn.addEventListener('click', handleCloudSync);
 
   initGoogleAuthElements();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('action') === 'google-login') {
+    const navItem = document.querySelector('.nav-item[data-target="auth-section"]');
+    if (navItem) navItem.click();
+    setTimeout(() => {
+      const googleBtn = document.getElementById('google-login-btn');
+      if (googleBtn) googleBtn.click();
+    }, 150);
+  }
 }
 
 async function checkEmailState() {

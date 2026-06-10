@@ -70,23 +70,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         await logoutUser();
         await checkSession();
       } else {
-        authBtnText.textContent = 'Syncing...';
-        let email = '';
-        if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getProfileUserInfo) {
-          const info = await new Promise(resolve => chrome.identity.getProfileUserInfo(resolve));
-          email = info?.email;
-        }
-        if (email) {
-          await loginWithGoogle(email);
-          const words = await getWords();
-          await syncUserData(words);
-          await checkSession();
+        const url = typeof chrome !== 'undefined' && chrome.runtime
+          ? chrome.runtime.getURL('dashboard/dashboard.html?action=google-login')
+          : '../dashboard/dashboard.html?action=google-login';
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+          chrome.tabs.create({ url });
         } else {
-          if (typeof chrome !== 'undefined' && chrome.tabs) {
-            chrome.tabs.create({ url: chrome.runtime.getURL('dashboard/dashboard.html') });
-          } else {
-            window.open('../dashboard/dashboard.html', '_blank');
-          }
+          window.open(url, '_blank');
         }
       }
     } catch (err) {
