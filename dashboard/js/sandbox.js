@@ -1,4 +1,4 @@
-import { addWord, addXp, registerMisspelling } from '../../shared/storage.js';
+import { addWord, addXp, registerMisspelling, getWords, saveWords } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -9,26 +9,17 @@ const spellingMap = {
 };
 
 const commonWords = [
-  "accommodate", "definitely", "separate", "receive", "embarrass", "until", "government",
-  "environment", "occurred", "threshold", "pronunciation", "calendar", "necessary", "writing",
-  "colleague", "independent", "successful", "tomorrow", "achievement", "experience", "beautiful",
-  "business", "knowledge", "possession"
+  "accommodate", "definitely", "separate", "receive", "embarrass", "until", "government", "environment",
+  "occurred", "threshold", "pronunciation", "calendar", "necessary", "writing", "colleague", "independent",
+  "successful", "tomorrow", "achievement", "experience", "beautiful", "business", "knowledge", "possession"
 ];
 
-let onXpUpdatedCallback = null;
-let triggerConfettiFn = null;
+let onXpUpdatedCallback = null, triggerConfettiFn = null;
 
 export function initSandbox(onXpUpdated, triggerConfetti) {
-  onXpUpdatedCallback = onXpUpdated;
-  triggerConfettiFn = triggerConfetti;
-
+  onXpUpdatedCallback = onXpUpdated; triggerConfettiFn = triggerConfetti;
   const inputField = document.getElementById('sandbox-spell-input');
-  if (inputField) {
-    inputField.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); handleVerify(); }
-    });
-  }
-
+  if (inputField) inputField.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleVerify(); } });
   const feedback = document.getElementById('sandbox-feedback');
   if (feedback) {
     feedback.addEventListener('click', async (e) => {
@@ -53,11 +44,28 @@ async function handleVerify() {
   const feedback = document.getElementById('sandbox-feedback');
   const word = inputField?.value.trim();
   if (!word) return;
-
   try {
     feedback.style.display = 'block';
     feedback.innerHTML = '<p style="color: var(--primary-light);">Verifying dictionary records...</p>';
     const lowerWord = word.toLowerCase();
+    const words = await getWords();
+    const existing = words.find(w => w.word.toLowerCase() === lowerWord);
+    if (existing) {
+      if (existing.misspellings && existing.misspellings.length > 0) {
+        existing.nextDate = Date.now() + 24 * 60 * 60 * 1000;
+        await saveWords(words);
+        feedback.innerHTML = `
+          <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
+          <p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${existing.word}</p>
+          <p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;">You previously misspelled this word (${existing.misspellings.join(', ')}).</p>
+          <p style="font-size: 0.75rem; color: var(--primary-light); font-weight: 600; margin: 8px 0 0;">Scheduled for a follow-up review tomorrow to ensure it's fully learned.</p>
+        `;
+      } else {
+        feedback.innerHTML = `<h4 style="color: var(--primary-light); margin: 0 0 4px;">Already Saved</h4><p style="font-size: 0.8rem; line-height: 1.4; margin: 0;">"${existing.word}" is already in your Word Vault.</p>`;
+      }
+      if (inputField) inputField.value = '';
+      return;
+    }
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`);
     if (response.ok) {
       const data = await response.json();
@@ -66,38 +74,28 @@ async function handleVerify() {
       const suggestion = findSpellingSuggestion(lowerWord);
       await handleMisspelling(word, suggestion);
     }
-  } catch (err) {
-    feedback.innerHTML = `<p style="color: var(--danger);">Verification error: ${err.message}</p>`;
-  }
+  } catch (err) { feedback.innerHTML = `<p style="color: var(--danger);">Verification error: ${err.message}</p>`; }
 }
 
 async function handleCorrectSpelling(apiData, word) {
-  const feedback = document.getElementById('sandbox-feedback');
   const def = apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
   const ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
   const { us, uk } = extractAudios(apiData.phonetics);
-  const audioHtml = renderAudioButtons(us, uk);
-
   try {
-    const farDate = Date.now() + 365 * 24 * 60 * 60 * 1000; // 1 year delay
-    await addWord({ word, definition: def, transcription: ipa, nextDate: farDate });
+    await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 365 * 24 * 60 * 60 * 1000 });
     await addXp(10);
     if (onXpUpdatedCallback) onXpUpdatedCallback();
     if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
-
-    feedback.innerHTML = `
+    document.getElementById('sandbox-feedback').innerHTML = `
       <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
       <p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${word} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span></p>
-      ${audioHtml}
+      ${renderAudioButtons(us, uk)}
       <p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p>
       <p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Earned +10 XP! Saved to database (hidden from reviews).</p>
     `;
     document.getElementById('sandbox-spell-input').value = '';
   } catch (err) {
-    feedback.innerHTML = `
-      <h4 style="color: var(--primary-light); margin: 0 0 4px;">Already Saved</h4>
-      <p style="font-size: 0.8rem; line-height: 1.4; margin: 0;">"${word}" is already in your Word Vault.</p>
-    `;
+    document.getElementById('sandbox-feedback').innerHTML = `<h4 style="color: var(--primary-light); margin: 0 0 4px;">Already Saved</h4><p style="font-size: 0.8rem; line-height: 1.4; margin: 0;">"${word}" is already in your Word Vault.</p>`;
   }
 }
 
@@ -114,10 +112,8 @@ async function handleMisspelling(word, suggestion) {
       ({ us, uk } = extractAudios(data[0].phonetics));
     }
     const card = await registerMisspelling(suggestion, word, { definition: def, transcription: ipa });
-    await addXp(2);
-    if (onXpUpdatedCallback) onXpUpdatedCallback();
+    await addXp(2); if (onXpUpdatedCallback) onXpUpdatedCallback();
     const pastMsg = card.misspellings && card.misspellings.length > 1 ? `<p style="font-size: 0.75rem; color: var(--text-muted); margin: 4px 0;"><strong>Past errors:</strong> ${card.misspellings.join(', ')}</p>` : '';
-
     feedback.innerHTML = `
       <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
       <p style="font-size: 0.8rem; margin: 4px 0;">"${word}" is incorrect. Did you mean <strong style="color: var(--primary-light);">${suggestion}</strong>?</p>
@@ -140,7 +136,6 @@ async function handleMisspelling(word, suggestion) {
 
 async function handleManualCorrection(correctWord, originalWord) {
   const feedback = document.getElementById('sandbox-feedback');
-  const inputField = document.getElementById('sandbox-spell-input');
   try {
     feedback.innerHTML = '<p style="color: var(--primary-light);">Verifying dictionary records...</p>';
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(correctWord.toLowerCase())}`);
@@ -149,12 +144,9 @@ async function handleManualCorrection(correctWord, originalWord) {
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
       const { us, uk } = extractAudios(data[0].phonetics);
-
       await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa });
-      await addXp(10);
-      if (onXpUpdatedCallback) onXpUpdatedCallback();
-      if (triggerConfettiFn) triggerConfettiFn(inputField);
-
+      await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
+      if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
       feedback.innerHTML = `
         <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correction Saved!</h4>
         <p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${correctWord} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span></p>
@@ -162,7 +154,7 @@ async function handleManualCorrection(correctWord, originalWord) {
         <p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p>
         <p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Earned +10 XP! Added to vault for SRS practice.</p>
       `;
-      if (inputField) inputField.value = '';
+      document.getElementById('sandbox-spell-input').value = '';
     } else {
       feedback.innerHTML = `
         <h4 style="color: var(--danger); margin: 0 0 4px;">❌ Word Not Found</h4>
@@ -176,20 +168,10 @@ async function handleManualCorrection(correctWord, originalWord) {
   } catch (err) { feedback.innerHTML = `<p style="color: var(--danger);">Error: ${err.message}</p>`; }
 }
 
-function extractAudios(phonetics) {
-  let us = '', uk = '';
-  if (!phonetics) return { us, uk };
-  for (const p of phonetics) {
-    if (p.audio) {
-      if (p.audio.includes('-us.mp3') || p.audio.includes('/us/')) us = p.audio;
-      else if (p.audio.includes('-uk.mp3') || p.audio.includes('/uk/')) uk = p.audio;
-    }
-  }
-  const all = phonetics.filter(p => p.audio).map(p => p.audio);
-  if (all.length > 0) {
-    if (!us) us = all[0];
-    if (!uk) uk = all[1] || all[0];
-  }
+function extractAudios(ph) {
+  const audios = ph ? ph.map(p => p.audio).filter(Boolean) : [];
+  const us = audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '';
+  const uk = audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || us;
   return { us, uk };
 }
 
@@ -200,21 +182,16 @@ function renderAudioButtons(us, uk) {
 
 function findSpellingSuggestion(word) {
   if (spellingMap[word]) return spellingMap[word];
-  let bestMatch = null, minDistance = 3;
-  commonWords.forEach(correct => {
-    const dist = getLevenshteinDistance(word, correct);
-    if (dist < minDistance) { minDistance = dist; bestMatch = correct; }
-  });
-  return bestMatch;
+  let best = null, min = 3;
+  commonWords.forEach(w => { const d = getLevenshteinDistance(word, w); if (d < min) { min = d; best = w; } });
+  return best;
 }
 
 function getLevenshteinDistance(a, b) {
-  const m = Array(b.length + 1).fill(0).map((_, i) => [i]);
+  const m = Array(b.length + 1).fill().map((_, i) => [i]);
   for (let j = 0; j <= a.length; j++) m[0][j] = j;
   for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      m[i][j] = b.charAt(i - 1) === a.charAt(j - 1) ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
-    }
+    for (let j = 1; j <= a.length; j++) m[i][j] = b.charAt(i - 1) === a.charAt(j - 1) ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
   }
   return m[b.length][a.length];
 }
