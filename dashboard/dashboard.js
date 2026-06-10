@@ -86,7 +86,7 @@ export async function refreshXpUI() {
 export function triggerConfetti(targetElement) {
   if (!targetElement) return;
   const rect = targetElement.getBoundingClientRect();
-  const colors = ['#6655e6', '#a399ff', '#ffffff', '#e0ddff'];
+  const colors = ['#3acb81', '#85e6b5', '#ffffff', '#d0f5e4'];
 
   for (let i = 0; i < 24; i++) {
     const particle = document.createElement('div');

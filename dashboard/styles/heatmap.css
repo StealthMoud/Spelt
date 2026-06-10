@@ -68,7 +68,7 @@
 }
 
 .vault-table tbody tr:hover {
-  background: hsla(245, 80%, 62%, 0.03);
+  background: hsla(155, 65%, 48%, 0.03);
 }
 
 .word-action-cell {
@@ -98,7 +98,7 @@
 
 .table-icon-btn:hover {
   color: var(--primary-light);
-  background: hsla(245, 80%, 62%, 0.12);
+  background: hsla(155, 65%, 48%, 0.12);
   border-color: var(--primary);
 }
 
@@ -142,9 +142,9 @@
 }
 
 .heatmap-day.val-0 { background: hsla(0, 0%, 100%, 0.03); }
-.heatmap-day.val-1 { background: hsla(245, 80%, 62%, 0.2); }
-.heatmap-day.val-2 { background: hsla(245, 80%, 62%, 0.45); }
-.heatmap-day.val-3 { background: hsla(245, 80%, 62%, 0.75); }
+.heatmap-day.val-1 { background: hsla(155, 65%, 48%, 0.2); }
+.heatmap-day.val-2 { background: hsla(155, 65%, 48%, 0.45); }
+.heatmap-day.val-3 { background: hsla(155, 65%, 48%, 0.75); }
 .heatmap-day.val-4 { background: var(--primary-light); box-shadow: 0 0 8px var(--primary); }
 
 .heatmap-legend {
@@ -163,6 +163,6 @@
 }
 
 .legend-box.val-0 { background: hsla(0, 0%, 100%, 0.03); }
-.legend-box.val-1 { background: hsla(245, 80%, 62%, 0.2); }
-.legend-box.val-2 { background: hsla(245, 80%, 62%, 0.45); }
-.legend-box.val-3 { background: hsla(245, 80%, 62%, 0.75); }
+.legend-box.val-1 { background: hsla(155, 65%, 48%, 0.2); }
+.legend-box.val-2 { background: hsla(155, 65%, 48%, 0.45); }
+.legend-box.val-3 { background: hsla(155, 65%, 48%, 0.75); }

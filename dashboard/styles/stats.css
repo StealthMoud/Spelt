@@ -150,7 +150,7 @@
 .srs-recommend {
   border-color: var(--primary) !important;
   box-shadow: 0 0 15px var(--primary-glow) !important;
-  background: hsla(245, 80%, 62%, 0.2) !important;
+  background: hsla(155, 65%, 48%, 0.2) !important;
   animation: pulse-border 1.5s infinite;
 }
 

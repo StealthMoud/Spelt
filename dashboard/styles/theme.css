@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-dark: hsl(245, 15%, 7%);
-  --bg-card: hsla(245, 10%, 12%, 0.7);
-  --bg-card-hover: hsla(245, 10%, 15%, 0.75);
-  --bg-sidebar: hsl(245, 14%, 9%);
-  --border: hsla(245, 10%, 25%, 0.25);
-  --border-hover: hsla(245, 80%, 62%, 0.4);
-  --primary: hsl(245, 80%, 62%);
-  --primary-glow: hsla(245, 80%, 62%, 0.35);
-  --primary-light: hsl(245, 100%, 75%);
+  --bg-dark: hsl(155, 15%, 7%);
+  --bg-card: hsla(155, 10%, 12%, 0.7);
+  --bg-card-hover: hsla(155, 10%, 15%, 0.75);
+  --bg-sidebar: hsl(155, 14%, 9%);
+  --border: hsla(155, 10%, 25%, 0.25);
+  --border-hover: hsla(155, 65%, 48%, 0.4);
+  --primary: hsl(155, 65%, 48%);
+  --primary-glow: hsla(155, 65%, 48%, 0.35);
+  --primary-light: hsl(155, 80%, 72%);
   --text-main: hsl(0, 0%, 95%);
-  --text-muted: hsl(245, 10%, 65%);
+  --text-muted: hsl(155, 10%, 65%);
   
   --success: hsl(145, 80%, 45%);
   --success-glow: hsla(145, 80%, 45%, 0.35);
@@ -55,7 +55,7 @@ h1, h2, h3, h4, h5 {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsla(245, 10%, 25%, 0.4);
+  background: hsla(155, 10%, 25%, 0.4);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {

@@ -39,7 +39,7 @@
 .brand-beta {
   font-size: 0.65rem;
   font-weight: 700;
-  background: hsla(245, 80%, 62%, 0.2);
+  background: hsla(155, 65%, 48%, 0.2);
   border: 1px solid var(--primary);
   color: var(--primary-light);
   padding: 1px 6px;
@@ -87,7 +87,7 @@
 /* Main Workspace Viewport */
 .workspace {
   flex: 1;
-  background: radial-gradient(circle at 70% 20%, hsla(245, 80%, 62%, 0.05) 0%, transparent 60%);
+  background: radial-gradient(circle at 70% 20%, hsla(155, 65%, 48%, 0.05) 0%, transparent 60%);
   position: relative;
   overflow: hidden;
 }
