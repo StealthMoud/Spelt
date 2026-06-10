@@ -26,6 +26,14 @@ export async function initPractice(onDeckUpdated, onXpUpdated, triggerConfetti) 
     else if (e.key === '4') { e.preventDefault(); await submitRating(5); }
   });
 
+  document.getElementById('deck-card')?.addEventListener('click', (e) => {
+    const playBtn = e.target.closest('[data-audio-url]');
+    if (playBtn) {
+      const url = playBtn.getAttribute('data-audio-url');
+      if (url) new Audio(url).play().catch(err => console.error(err));
+    }
+  });
+
   await loadDeck();
 }
 
@@ -94,6 +102,21 @@ function checkSpelling() {
   userTyped.textContent = inputVal || '(Blank)';
   document.getElementById('back-word-display').textContent = card.word;
   document.getElementById('back-definition-display').textContent = card.definition;
+  document.getElementById('back-transcription-display').textContent = card.transcription || '/--/';
+
+  const audioContainer = document.getElementById('back-audio-container');
+  if (audioContainer) {
+    audioContainer.innerHTML = '';
+    fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(card.word.toLowerCase())}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data[0] && data[0].phonetics) {
+          const { us, uk } = extractAudios(data[0].phonetics);
+          audioContainer.innerHTML = renderAudioButtons(us, uk);
+        }
+      })
+      .catch(err => console.error(err));
+  }
 
   document.querySelectorAll('.srs-btn').forEach(btn => btn.classList.remove('srs-recommend'));
   document.querySelector(isCorrect ? '.srs-good' : '.srs-again').classList.add('srs-recommend');
@@ -118,4 +141,16 @@ async function submitRating(score) {
       showCurrentCard();
     }, 300);
   } catch (err) { console.error('Failed to log spelling rating:', err); }
+}
+
+function extractAudios(ph) {
+  const audios = ph ? ph.map(p => p.audio).filter(Boolean) : [];
+  const us = audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '';
+  const uk = audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || us;
+  return { us, uk };
+}
+
+function renderAudioButtons(us, uk) {
+  const b = (u, l) => u ? `<button type="button" class="audio-play-btn" data-audio-url="${u}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>${l}</span></button>` : '';
+  return (us || uk) ? `<div style="display: flex; gap: 6px; margin: 4px 0 4px;">${b(us, 'US')}${b(uk, 'UK')}</div>` : '';
 }

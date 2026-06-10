@@ -105,9 +105,13 @@
           
           <!-- Back Face -->
           <div class="card-face card-back">
-            <div class="back-header-row">
-              <h3 id="back-word-display"></h3>
-              <div id="spelling-result-badge" class="result-badge success">Correct</div>
+            <div class="back-header-row" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+              <div style="display: flex; align-items: center; width: 100%; justify-content: space-between;">
+                <h3 id="back-word-display" style="margin: 0;"></h3>
+                <div id="spelling-result-badge" class="result-badge success">Correct</div>
+              </div>
+              <span id="back-transcription-display" style="font-size: 0.72rem; color: var(--text-muted);"></span>
+              <div id="back-audio-container"></div>
             </div>
             <div class="back-details-list">
               <p><strong>You typed:</strong> <span id="user-typed-display"></span></p>

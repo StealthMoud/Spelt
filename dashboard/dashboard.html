@@ -132,9 +132,13 @@
               <div class="card-face card-back">
                 <span class="card-hint-badge">Spelling Verification</span>
                 
-                <div class="spelling-feedback-header">
+                <div class="spelling-feedback-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
                   <div id="spelling-result-badge" class="result-badge success">Correct</div>
-                  <h1 id="back-word-display" class="practice-word">Vocabulary</h1>
+                  <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+                    <h1 id="back-word-display" class="practice-word" style="margin: 0;">Vocabulary</h1>
+                    <span id="back-transcription-display" style="font-size: 1.1rem; color: var(--text-muted); font-weight: 400;"></span>
+                  </div>
+                  <div id="back-audio-container"></div>
                 </div>
 
                 <div class="back-details">
