@@ -125,7 +125,7 @@ async function handleCorrectSpelling(apiData, word) {
         subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 4px 0 0;">This word is already in your Word Vault.</p>`;
       }
     } else {
-      await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 365 * 24 * 60 * 60 * 1000 });
+      await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 30 * 24 * 60 * 60 * 1000 });
       await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
       subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 4px 0 0;">Added to database.</p>`;
     }

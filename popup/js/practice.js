@@ -122,11 +122,11 @@ async function submitRating(score) {
   try {
     const typed = document.getElementById('spelling-input').value.trim();
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
-    await reviewWord(card.id, score, isOk ? null : typed);
+    const updatedCard = await reviewWord(card.id, score, isOk ? null : typed);
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
-      if (score < 3 || !isOk) dueCards.push(card);
+      if (score < 3 || !isOk) dueCards.push(updatedCard);
       currentIndex += 1;
       onDeckUpdatedCallback?.(dueCards.length - currentIndex);
       showPracticeCard();

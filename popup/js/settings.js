@@ -8,13 +8,13 @@ export function initSettings(onDbRestored) {
   onDbRestoredCallback = onDbRestored;
 
   // Spacing multiplier sync
-  chrome.storage?.local.get('srs_multiplier', (res) => {
-    const mult = res.srs_multiplier || '1.0';
+  chrome.storage?.local.get('spelt_srs_multiplier', (res) => {
+    const mult = res.spelt_srs_multiplier || '1.0';
     document.getElementById('setting-srs-multiplier').value = mult;
   });
 
   document.getElementById('setting-srs-multiplier').addEventListener('change', (e) => {
-    chrome.storage?.local.set({ srs_multiplier: e.target.value });
+    chrome.storage?.local.set({ spelt_srs_multiplier: parseFloat(e.target.value) });
   });
 
   document.getElementById('export-db-btn').addEventListener('click', exportDb);
@@ -33,8 +33,14 @@ async function exportDb() {
     async () => {
       try {
         const words = await getWords();
-        const dataStr = JSON.stringify(words, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
+        let activity = {}, streak = { current: 0, lastDate: '' };
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          const res = await chrome.storage.local.get(['spelt_activity', 'spelt_streak']);
+          activity = res.spelt_activity || {};
+          streak = res.spelt_streak || { current: 0, lastDate: '' };
+        }
+        const dataPackage = { words, activity, streak, exportDate: Date.now() };
+        const blob = new Blob([JSON.stringify(dataPackage, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -54,8 +60,21 @@ async function importDb(e) {
   const reader = new FileReader();
   reader.onload = async (evt) => {
     try {
-      const words = JSON.parse(evt.target.result);
-      if (!Array.isArray(words)) throw new Error('Invalid backup file');
+      const parsed = JSON.parse(evt.target.result);
+      // Support both old bare-array format and new structured format
+      let words;
+      if (Array.isArray(parsed)) {
+        words = parsed;
+      } else if (parsed && Array.isArray(parsed.words)) {
+        words = parsed.words;
+        // Restore activity and streak if present
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          if (parsed.activity) await chrome.storage.local.set({ 'spelt_activity': parsed.activity });
+          if (parsed.streak) await chrome.storage.local.set({ 'spelt_streak': parsed.streak });
+        }
+      } else {
+        throw new Error('Invalid backup file');
+      }
       await saveWords(words);
       showConfirm('Success', 'Library restored successfully!', null, false);
       if (onDbRestoredCallback) {
@@ -66,6 +85,7 @@ async function importDb(e) {
     }
   };
   reader.readAsText(file);
+  e.target.value = '';
 }
 
 async function wipeDb() {

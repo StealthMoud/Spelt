@@ -150,7 +150,15 @@ function confirmDeleteWord(wordObj) {
   msg.textContent = `Are you sure you want to delete the word "${wordObj.word}" from your vault?`;
   modal.classList.add('active');
 
-  const close = () => modal.classList.remove('active');
+  const cleanup = () => {
+    okBtn.removeEventListener('click', handleOk);
+    cancelBtn.removeEventListener('click', handleCancel);
+  };
+
+  const close = () => {
+    modal.classList.remove('active');
+    cleanup();
+  };
   
   const handleOk = async () => {
     wordsList = wordsList.filter(w => w.id !== wordObj.id);
@@ -158,14 +166,10 @@ function confirmDeleteWord(wordObj) {
     close();
     await reloadVault();
     if (onVaultUpdatedCallback) onVaultUpdatedCallback();
-    cleanup();
   };
 
-  const cleanup = () => {
-    okBtn.removeEventListener('click', handleOk);
-    cancelBtn.removeEventListener('click', close);
-  };
+  const handleCancel = () => close();
 
   okBtn.addEventListener('click', handleOk);
-  cancelBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', handleCancel);
 }

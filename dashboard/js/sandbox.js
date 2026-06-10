@@ -109,7 +109,7 @@ async function handleCorrectSpelling(apiData, word) {
         subtext = `<p style="font-size: 0.75rem; color: var(--primary-light); font-weight: 600; margin: 8px 0 0;">You previously misspelled this word (${existing.misspellings.join(', ')}). Scheduled review tomorrow.</p>`;
       } else { subtext = `<p style="font-size: 0.75rem; color: var(--text-muted); margin: 8px 0 0;">This word is already in your Word Vault.</p>`; }
     } else {
-      await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 365 * 24 * 60 * 60 * 1000 });
+      await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 30 * 24 * 60 * 60 * 1000 });
       await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
       if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
       subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Earned +10 XP! Saved to database.</p>`;

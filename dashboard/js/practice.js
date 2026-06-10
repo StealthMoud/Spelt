@@ -131,11 +131,11 @@ async function submitRating(score) {
   try {
     const inputVal = document.getElementById('spelling-input').value.trim();
     const isCorrect = inputVal.toLowerCase() === card.word.toLowerCase();
-    await reviewWord(card.id, score, isCorrect ? null : inputVal);
+    const updatedCard = await reviewWord(card.id, score, isCorrect ? null : inputVal);
     
     document.getElementById('deck-card').classList.remove('flipped');
     setTimeout(() => {
-      if (score < 3 || !isCorrect) dueCards.push(card);
+      if (score < 3 || !isCorrect) dueCards.push(updatedCard);
       currentCardIndex += 1;
       onDeckUpdatedCallback?.(dueCards.length - currentCardIndex);
       showCurrentCard();

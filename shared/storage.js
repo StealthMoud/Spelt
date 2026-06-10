@@ -23,14 +23,15 @@ async function setStored(key, value) {
 
 // Compute SM-2 spaced repetition values
 // quality: 1 (Again), 3 (Hard), 4 (Good), 5 (Easy)
-export function calcSM2(q, prevRep, prevInt, prevEF) {
+// multiplier scales the computed interval (0.5 = faster, 1.5 = slower)
+export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0) {
   let rep = prevRep;
   let interval = prevInt;
   let ef = prevEF;
 
   if (q < 3) {
     rep = 0;
-    interval = 1; // repeat tomorrow
+    interval = 1; // reset
   } else {
     if (rep === 0) {
       interval = 1;
@@ -42,11 +43,14 @@ export function calcSM2(q, prevRep, prevInt, prevEF) {
     rep += 1;
   }
 
+  // Apply spacing multiplier from user settings
+  interval = Math.max(1, Math.round(interval * multiplier));
+
   // Adjust Ease Factor (EF)
   ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
   if (ef < 1.3) ef = 1.3;
 
-  // Next review date — "Again" cards stay due immediately,
+  // "Again" cards stay due immediately,
   // successful reviews get pushed forward by the computed interval
   const nextDate = q < 3
     ? Date.now()
@@ -130,8 +134,15 @@ export async function reviewWord(wordId, q, typedWrongWord = null) {
   const index = list.findIndex(w => w.id === wordId);
   if (index === -1) throw new Error('Word not found');
 
+  // Read user's spacing multiplier setting (defaults to 1.0)
+  let multiplier = 1.0;
+  try {
+    const stored = await getStored('spelt_srs_multiplier');
+    if (stored && !isNaN(stored)) multiplier = parseFloat(stored);
+  } catch (_) { /* fallback to 1.0 */ }
+
   const card = list[index];
-  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef);
+  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef, multiplier);
 
   card.rep = rep;
   card.interval = interval;
