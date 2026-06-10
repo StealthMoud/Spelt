@@ -27,19 +27,25 @@ export function initSettings(onDbRestored) {
 }
 
 async function exportDb() {
-  try {
-    const words = await getWords();
-    const dataStr = JSON.stringify(words, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `spelt_library_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    showConfirm('Export Error', 'Export failed: ' + e.message, null, false);
-  }
+  showConfirm(
+    'Export Database',
+    'Do you want to download a backup of your Spelt library?',
+    async () => {
+      try {
+        const words = await getWords();
+        const dataStr = JSON.stringify(words, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `spelt_library_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        showConfirm('Export Error', 'Export failed: ' + e.message, null, false);
+      }
+    }
+  );
 }
 
 async function importDb(e) {
