@@ -69,6 +69,31 @@ export async function loginUser(email, password) {
   return session;
 }
 
+// Log in/Register using Google account simulation
+export async function loginWithGoogle(email) {
+  await delay(900); // mock OAuth validation lag
+  if (!email) throw new Error('Google email is required');
+
+  const accounts = await getAuthStored('spelt_accounts') || {};
+  let user = accounts[email.toLowerCase()];
+
+  if (!user) {
+    // Auto-create cloud sync storage for new Gmail logs
+    user = {
+      email: email.toLowerCase(),
+      isGoogle: true,
+      createdAt: Date.now(),
+      syncDate: 0
+    };
+    accounts[email.toLowerCase()] = user;
+    await setAuthStored('spelt_accounts', accounts);
+  }
+
+  const session = { email: email.toLowerCase(), loggedInAt: Date.now(), isGoogle: true };
+  await setAuthStored('spelt_session', session);
+  return session;
+}
+
 // Logout
 export async function logoutUser() {
   await setAuthStored('spelt_session', null);

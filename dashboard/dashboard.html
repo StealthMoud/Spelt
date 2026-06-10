@@ -340,6 +340,13 @@
               <button type="submit" class="submit-btn" id="login-submit-btn">
                 <span>Sign In</span>
               </button>
+              <div class="auth-separator"><span>or</span></div>
+              <button type="button" class="google-auth-btn" id="google-login-btn">
+                <svg viewBox="0 0 24 24" class="google-icon" fill="currentColor" style="width: 14px; height: 14px; margin-right: 4px;">
+                  <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.767 5.767 0 0 1 8.2 12.75a5.767 5.767 0 0 1 5.79-5.765c1.498 0 2.861.549 3.927 1.453l3.023-3.023C19.09 3.73 16.7 2.75 13.99 2.75c-5.09 0-9.22 4.13-9.22 9.22s4.13 9.22 9.22 9.22c5.3 0 9.22-3.74 9.22-9.22 0-.622-.055-1.077-.17-1.465H12.24Z"/>
+                </svg>
+                <span>Continue with Gmail</span>
+              </button>
             </form>
           </div>
 
@@ -356,6 +363,13 @@
               </div>
               <button type="submit" class="submit-btn" id="register-submit-btn">
                 <span>Register & Sync</span>
+              </button>
+              <div class="auth-separator"><span>or</span></div>
+              <button type="button" class="google-auth-btn" id="google-register-btn">
+                <svg viewBox="0 0 24 24" class="google-icon" fill="currentColor" style="width: 14px; height: 14px; margin-right: 4px;">
+                  <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.767 5.767 0 0 1 8.2 12.75a5.767 5.767 0 0 1 5.79-5.765c1.498 0 2.861.549 3.927 1.453l3.023-3.023C19.09 3.73 16.7 2.75 13.99 2.75c-5.09 0-9.22 4.13-9.22 9.22s4.13 9.22 9.22 9.22c5.3 0 9.22-3.74 9.22-9.22 0-.622-.055-1.077-.17-1.465H12.24Z"/>
+                </svg>
+                <span>Continue with Gmail</span>
               </button>
             </form>
           </div>
@@ -492,6 +506,52 @@
       <div class="modal-actions">
         <button id="confirm-cancel" class="action-btn secondary-btn">Cancel</button>
         <button id="confirm-ok" class="action-btn primary-confirm-btn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOOGLE OAUTH MODAL -->
+  <div id="google-auth-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="google-modal-title">Sign in with Google</h3>
+        <button id="google-modal-close" class="close-icon-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p class="confirm-message" style="margin-bottom: 4px;">Select a Gmail account to authenticate with <strong>Spelt</strong>:</p>
+      
+      <div class="google-accounts-list" style="display: flex; flex-direction: column; gap: 8px; margin: 12px 0;">
+        <button class="google-account-row" data-email="stealthmoud@gmail.com">
+          <div class="google-avatar" style="background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">S</div>
+          <div class="google-acc-info" style="display: flex; flex-direction: column; text-align: left; margin-left: 10px;">
+            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">StealthMoud</span>
+            <span class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">stealthmoud@gmail.com</span>
+          </div>
+        </button>
+        <button class="google-account-row" data-email="guest.spelt@gmail.com">
+          <div class="google-avatar" style="background: var(--success); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">G</div>
+          <div class="google-acc-info" style="display: flex; flex-direction: column; text-align: left; margin-left: 10px;">
+            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">Guest Practitioner</span>
+            <span class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">guest.spelt@gmail.com</span>
+          </div>
+        </button>
+        <button class="google-account-row" id="google-use-different-acc">
+          <div class="google-avatar" style="background: hsla(0, 0%, 100%, 0.05); color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">+</div>
+          <div class="google-acc-info" style="display: flex; flex-direction: column; text-align: left; margin-left: 10px;">
+            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">Use another account</span>
+            <span class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">Log in with a custom Gmail address</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Hidden input for custom gmail -->
+      <div id="custom-gmail-input-container" style="display: none; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px;">
+        <div class="input-group">
+          <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Enter Gmail Address</label>
+          <input type="email" id="custom-gmail-field" class="premium-input" placeholder="user@gmail.com" style="margin-bottom: 8px;">
+        </div>
+        <button type="button" id="custom-gmail-submit-btn" class="action-btn" style="width: 100%;">Authorize</button>
       </div>
     </div>
   </div>

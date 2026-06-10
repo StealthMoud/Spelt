@@ -126,3 +126,77 @@
   box-shadow: 0 6px 15px var(--danger-glow) !important;
   background: hsl(5, 80%, 48%) !important;
 }
+
+/* Google Auth Separator & Button */
+.auth-separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin: 12px 0;
+}
+.auth-separator::before,
+.auth-separator::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+.auth-separator:not(:empty)::before {
+  margin-right: .5em;
+}
+.auth-separator:not(:empty)::after {
+  margin-left: .5em;
+}
+
+.google-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius-xl);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: hsla(0, 0%, 100%, 0.03);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  transition: all var(--transition-slow) var(--spring-curve);
+}
+
+.google-auth-btn:hover {
+  background: hsla(0, 0%, 100%, 0.08);
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.google-auth-btn:active {
+  transform: scale(0.98);
+}
+
+/* Google account row styles inside chooser */
+.google-account-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px;
+  background: hsla(0, 0%, 100%, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  color: var(--text-main);
+  transition: all var(--transition-slow) var(--spring-curve);
+}
+
+.google-account-row:hover {
+  background: hsla(245, 80%, 62%, 0.06);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.google-account-row:active {
+  transform: scale(0.99);
+}
