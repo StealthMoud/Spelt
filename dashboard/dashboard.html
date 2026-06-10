@@ -369,43 +369,28 @@
           </div>
         </div>
 
-        <!-- Unified Login/Register Panel (Fast, Clean, OAuth-first) -->
+        <!-- Unified Login/Register Panel (Fast, Clean, Email-only) -->
         <div id="auth-panel-forms" style="display: flex; justify-content: center; width: 100%;">
           <div class="auth-card" style="max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 20px;">
             <div style="text-align: center; border-bottom: 1px dashed var(--border); padding-bottom: 12px; margin-bottom: 4px;">
-              <h3 id="auth-card-title" style="margin: 0; font-size: 1.2rem;">Sync & Secure Progress</h3>
+              <h3 style="margin: 0; font-size: 1.2rem;">Sync & Secure Progress</h3>
               <p style="font-size: 0.76rem; color: var(--text-muted); margin: 6px 0 0;">Synchronize your learning statistics, level progress, and SRS decks</p>
             </div>
 
-            <!-- OAuth First (Instant Gmail Auth) -->
-            <button type="button" class="google-auth-btn" id="google-login-btn" style="padding: 12px; font-size: 0.9rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
-              <svg viewBox="0 0 24 24" class="google-icon" fill="currentColor" style="width: 16px; height: 16px;">
-                <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.767 5.767 0 0 1 8.2 12.75a5.767 5.767 0 0 1 5.79-5.765c1.498 0 2.861.549 3.927 1.453l3.023-3.023C19.09 3.73 16.7 2.75 13.99 2.75c-5.09 0-9.22 4.13-9.22 9.22s4.13 9.22 9.22 9.22c5.3 0 9.22-3.74 9.22-9.22 0-.622-.055-1.077-.17-1.465H12.24Z"/>
-              </svg>
-              <span>Continue with Google OAuth</span>
-            </button>
-
-            <div class="auth-separator"><span>or use credentials</span></div>
-
             <form id="unified-auth-form" style="display: flex; flex-direction: column; gap: 14px;">
               <div class="input-group" style="margin-bottom: 0;">
-                <label>Email Address</label>
+                <label>Enter Gmail or Email Address</label>
                 <input type="email" id="auth-email" class="premium-input" placeholder="name@gmail.com" required autocomplete="email">
               </div>
-              
-              <div class="input-group" style="margin-bottom: 0;">
-                <label>Password</label>
-                <input type="password" id="auth-password" class="premium-input" placeholder="••••••••" required autocomplete="current-password">
-              </div>
 
-              <p id="auth-form-subtext" style="font-size: 0.76rem; color: var(--text-muted); margin: -4px 0 2px; line-height: 1.35; text-align: center;">Enter email and password to sync your progress.</p>
+              <p id="auth-form-subtext" style="font-size: 0.76rem; color: var(--text-muted); margin: -4px 0 2px; line-height: 1.35; text-align: center;">Enter your email to instantly sync your data with the cloud.</p>
 
-              <button type="submit" class="submit-btn" id="auth-submit-btn">
+              <button type="submit" class="submit-btn" id="auth-submit-btn" style="padding: 12px; font-size: 0.9rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
-                <span id="auth-btn-text">Continue with Email</span>
+                <span>Connect & Sync</span>
               </button>
             </form>
           </div>
@@ -436,26 +421,6 @@
           </div>
         </div>
 
-        <div class="settings-group">
-          <span class="settings-group-title">Google Integration</span>
-          <div class="settings-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-            <div class="settings-label-wrapper" style="margin-bottom: 4px;">
-              <span class="settings-label">Google OAuth Client ID</span>
-              <span class="settings-desc">Specify a custom Client ID from Google Cloud Console to run native Google OAuth login locally.</span>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
-              <input type="text" id="setting-oauth-client-id" class="premium-input" placeholder="Enter Google Client ID" autocomplete="off" style="font-size: 0.8rem; flex: 1;">
-              <button id="save-oauth-client-id-btn" class="action-btn" style="padding: 10px 16px; font-size: 0.8rem; white-space: nowrap; height: 38px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 4px;">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                  <polyline points="17 21 17 13 7 13 7 21"/>
-                  <polyline points="7 3 7 8 15 8"/>
-                </svg>
-                <span>Save</span>
-              </button>
-            </div>
-          </div>
-        </div>
 
         <div class="settings-group">
           <span class="settings-group-title">Database Export / Import</span>
@@ -567,47 +532,6 @@
     </div>
   </div>
 
-  <!-- GOOGLE OAUTH MODAL -->
-  <div id="google-auth-modal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 id="google-modal-title">Sign in with Google</h3>
-        <button id="google-modal-close" class="close-icon-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      
-      <!-- Notice banner for unconfigured or error status -->
-      <div id="google-modal-notice" class="settings-desc" style="display: none; padding: 10px; background: hsla(0, 80%, 50%, 0.15); border: 1px solid hsla(0, 80%, 50%, 0.3); border-radius: 6px; font-size: 0.76rem; color: #ff8080; margin: 4px 0 12px; line-height: 1.4; text-align: left; box-sizing: border-box;"></div>
-      
-      <!-- Real profile container (populated dynamically) -->
-      <div id="chrome-profile-container" style="display: none; flex-direction: column; gap: 8px; margin: 8px 0;">
-        <p class="confirm-message" style="margin-bottom: 2px;">Use active Chrome profile:</p>
-        <button class="google-account-row" id="chrome-profile-btn" data-email="">
-          <div class="google-avatar" style="background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">👤</div>
-          <div class="google-acc-info" style="display: flex; flex-direction: column; text-align: left; margin-left: 10px;">
-            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">Chrome Profile User</span>
-            <span id="chrome-profile-email" class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">...</span>
-          </div>
-        </button>
-        <div class="auth-separator" style="margin: 8px 0;"><span>or connect custom Gmail</span></div>
-      </div>
-
-      <!-- Input for custom gmail -->
-      <div id="custom-gmail-input-container" style="width: 100%;">
-        <div class="input-group">
-          <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Enter Gmail Address</label>
-          <input type="email" id="custom-gmail-field" class="premium-input" placeholder="name@gmail.com" style="margin-bottom: 8px;">
-        </div>
-        <button type="button" id="custom-gmail-submit-btn" class="action-btn" style="width: 100%;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span>Authorize</span>
-        </button>
-      </div>
-    </div>
-  </div>
 
   <script type="module" src="dashboard.js"></script>
 </body>

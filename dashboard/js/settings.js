@@ -20,14 +20,6 @@ export function initSettings(onDbRestored) {
   const multiplierSelect = document.getElementById('setting-srs-multiplier');
   multiplierSelect.addEventListener('change', saveMultiplierSetting);
   loadMultiplierSetting();
-
-  // OAuth client ID settings save
-  const oauthInput = document.getElementById('setting-oauth-client-id');
-  const oauthSaveBtn = document.getElementById('save-oauth-client-id-btn');
-  if (oauthSaveBtn && oauthInput) {
-    oauthSaveBtn.addEventListener('click', saveOAuthClientId);
-    loadOAuthClientId();
-  }
 }
 
 async function saveMultiplierSetting() {
@@ -131,19 +123,3 @@ function confirmWipe(onDbRestored) {
   cancelBtn.addEventListener('click', close);
 }
 
-async function saveOAuthClientId() {
-  const val = document.getElementById('setting-oauth-client-id').value.trim();
-  if (isExt) {
-    await chrome.storage.local.set({ 'spelt_oauth_client_id': val });
-    alert('OAuth Client ID saved successfully!');
-  }
-}
-
-async function loadOAuthClientId() {
-  if (isExt) {
-    const res = await chrome.storage.local.get('spelt_oauth_client_id');
-    const val = res['spelt_oauth_client_id'] || '';
-    const input = document.getElementById('setting-oauth-client-id');
-    if (input) input.value = val;
-  }
-}

@@ -1,5 +1,5 @@
 import { getWords, addWord } from '../shared/storage.js';
-import { getSession, loginWithGoogle, logoutUser, syncUserData } from '../shared/auth.js';
+import { getSession, logoutUser, syncUserData } from '../shared/auth.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely',
@@ -71,8 +71,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         await checkSession();
       } else {
         const url = typeof chrome !== 'undefined' && chrome.runtime
-          ? chrome.runtime.getURL('dashboard/dashboard.html?action=google-login')
-          : '../dashboard/dashboard.html?action=google-login';
+          ? chrome.runtime.getURL('dashboard/dashboard.html?action=sync')
+          : '../dashboard/dashboard.html?action=sync';
         if (typeof chrome !== 'undefined' && chrome.tabs) {
           chrome.tabs.create({ url });
         } else {

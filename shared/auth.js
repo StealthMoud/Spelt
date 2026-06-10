@@ -62,19 +62,17 @@ export async function loginUser(email, password) {
   return session;
 }
 
-// Log in/Register using Google account simulation
-export async function loginWithGoogle(email) {
-  await delay(900); // mock OAuth validation lag
-  if (!email) throw new Error('Google email is required');
+// Log in/Register using email address instantly
+export async function loginWithEmail(email) {
+  await delay(800); // mock validation lag
+  if (!email) throw new Error('Email is required');
 
   const accounts = await getAuthStored('spelt_accounts') || {};
   let user = accounts[email.toLowerCase()];
 
   if (!user) {
-    // Auto-create cloud sync storage for new Gmail logs
     user = {
       email: email.toLowerCase(),
-      isGoogle: true,
       createdAt: Date.now(),
       syncDate: 0
     };
@@ -82,10 +80,12 @@ export async function loginWithGoogle(email) {
     await setAuthStored('spelt_accounts', accounts);
   }
 
-  const session = { email: email.toLowerCase(), loggedInAt: Date.now(), isGoogle: true };
+  const session = { email: email.toLowerCase(), loggedInAt: Date.now() };
   await setAuthStored('spelt_session', session);
   return session;
 }
+
+export const loginWithGoogle = loginWithEmail; // compatibility alias
 
 // Logout
 export async function logoutUser() {
@@ -104,7 +104,6 @@ export async function syncUserData(wordsData) {
   
   if (!user) throw new Error('User account not found');
 
-  // Sync details saved to user profile
   user.syncDate = Date.now();
   user.backupData = wordsData;
 
@@ -137,58 +136,4 @@ export async function checkEmailExists(email) {
   if (!email) return false;
   const accounts = await getAuthStored('spelt_accounts') || {};
   return !!accounts[email.toLowerCase()];
-}
-
-// Official Google OAuth 2.0 flow using launchWebAuthFlow to force account seleciton chooser
-export async function authenticateWithGoogle() {
-  return new Promise(async (resolve, reject) => {
-    if (typeof chrome === 'undefined' || !chrome.identity || !chrome.identity.launchWebAuthFlow) {
-      reject(new Error('Chrome Identity Web Auth Flow is not available'));
-      return;
-    }
-    try {
-      let clientId = await getAuthStored('spelt_oauth_client_id');
-      if (!clientId) {
-        const manifest = chrome.runtime.getManifest();
-        clientId = manifest.oauth2?.client_id;
-      }
-      if (!clientId || clientId.includes('YOUR_GOOGLE_CLIENT_ID')) {
-        reject(new Error('OAuth Client ID is not configured. Set a custom Client ID in Settings.'));
-        return;
-      }
-      const redirectUri = chrome.identity.getRedirectURL();
-      const scope = encodeURIComponent('https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
-      const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(clientId)}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&prompt=select_account`;
-
-      chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, async (responseUrl) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message || 'OAuth interaction failed'));
-          return;
-        }
-        if (!responseUrl) {
-          reject(new Error('OAuth flow canceled or returned no response.'));
-          return;
-        }
-        try {
-          const urlObj = new URL(responseUrl);
-          const hashParams = new URLSearchParams(urlObj.hash.substring(1));
-          const token = hashParams.get('access_token');
-          if (!token) {
-            reject(new Error('OAuth token not found in response.'));
-            return;
-          }
-          const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`);
-          if (!response.ok) throw new Error('Failed to retrieve Google profile info');
-          const info = await response.json();
-          if (!info.email) throw new Error('Google email address not found in profile');
-          const session = await loginWithGoogle(info.email);
-          resolve(session);
-        } catch (err) {
-          reject(err);
-        }
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
 }
