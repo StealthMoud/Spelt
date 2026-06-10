@@ -155,18 +155,22 @@
                 <!-- SRS Scoring Buttons -->
                 <div class="srs-rating-wrapper">
                   <button class="srs-btn srs-again" data-score="1">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-bottom: 4px; opacity: 0.85;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                     <span>Again</span>
                     <small class="srs-hint">Incorrect</small>
                   </button>
                   <button class="srs-btn srs-hard" data-score="3">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-bottom: 4px; opacity: 0.85;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     <span>Hard</span>
                     <small class="srs-hint">1d</small>
                   </button>
                   <button class="srs-btn srs-good" data-score="4">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-bottom: 4px; opacity: 0.85;"><polyline points="20 6 9 17 4 12"/></svg>
                     <span>Good</span>
                     <small class="srs-hint">6d</small>
                   </button>
                   <button class="srs-btn srs-easy" data-score="5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-bottom: 4px; opacity: 0.85;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     <span>Easy</span>
                     <small class="srs-hint">12d</small>
                   </button>
@@ -196,7 +200,7 @@
                 <input type="text" id="sandbox-spell-input" class="premium-input" placeholder="Type word & press Enter to verify..." autocomplete="off" style="text-align: center; font-size: 1rem; font-weight: 600;">
               </div>
 
-              <div id="sandbox-feedback" class="settings-group" style="display: none; padding: 14px; margin-top: 16px; background: hsla(155, 10%, 15%, 0.5); border-color: var(--border); box-sizing: border-box;">
+              <div id="sandbox-feedback" class="settings-group" style="display: none; position: relative; padding: 14px; margin-top: 16px; background: hsla(155, 10%, 15%, 0.5); border-color: var(--border); box-sizing: border-box;">
                 <!-- Filled dynamically -->
               </div>
             </div>
@@ -440,8 +444,14 @@
           <input type="text" id="form-notes" class="premium-input" placeholder="Mnemonics or details..." autocomplete="off">
         </div>
         <div class="modal-actions">
-          <button type="button" id="form-cancel-btn" class="action-btn secondary-btn">Cancel</button>
-          <button type="submit" class="action-btn">Save Word</button>
+          <button type="button" id="form-cancel-btn" class="action-btn secondary-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Cancel</span>
+          </button>
+          <button type="submit" class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle;"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Save Word</span>
+          </button>
         </div>
       </form>
     </div>
@@ -455,8 +465,14 @@
       </div>
       <p id="confirm-modal-msg" class="confirm-message">Are you sure?</p>
       <div class="modal-actions">
-        <button id="confirm-cancel" class="action-btn secondary-btn">Cancel</button>
-        <button id="confirm-ok" class="action-btn primary-confirm-btn">Confirm</button>
+        <button id="confirm-cancel" class="action-btn secondary-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cancel</span>
+        </button>
+        <button id="confirm-ok" class="action-btn primary-confirm-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle;"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Confirm</span>
+        </button>
       </div>
     </div>
   </div>

@@ -1,0 +1,111 @@
+// Compact word vault list and modal controller for Spelt extension popup
+import { getWords, addWord, saveWords } from '../../shared/storage.js';
+
+let wordsList = [];
+let onVaultUpdatedCallback = null;
+
+export async function initVault(onVaultUpdated) {
+  onVaultUpdatedCallback = onVaultUpdated;
+
+  document.getElementById('add-word-btn').addEventListener('click', () => openModal());
+  document.getElementById('form-cancel-btn').addEventListener('click', closeModal);
+  document.getElementById('word-entry-form').addEventListener('submit', saveWord);
+  document.getElementById('vault-search').addEventListener('input', renderList);
+
+  await reloadVaultList();
+}
+
+export async function reloadVaultList() {
+  wordsList = await getWords();
+  renderList();
+}
+
+function renderList() {
+  const query = document.getElementById('vault-search').value.trim().toLowerCase();
+  const listEl = document.getElementById('popup-vault-list');
+  const emptyEl = document.getElementById('vault-list-empty');
+
+  listEl.innerHTML = '';
+  
+  const filtered = wordsList.filter(w => 
+    w.word.toLowerCase().includes(query) || 
+    w.definition.toLowerCase().includes(query)
+  );
+
+  if (filtered.length === 0) {
+    emptyEl.style.display = 'block';
+  } else {
+    emptyEl.style.display = 'none';
+    filtered.forEach(w => {
+      const li = document.createElement('li');
+      li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 0.75rem; background: hsla(0,0%,100%,0.01); border-radius: 8px;";
+      li.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1;">
+          <strong style="color: var(--primary-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${w.word}</strong>
+          <span style="color: var(--text-muted); font-size: 0.65rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${w.definition || 'No definition'}</span>
+        </div>
+        <div style="display: flex; gap: 4px; margin-left: 8px;">
+          <button class="table-icon-btn edit-btn" data-id="${w.id}" style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg></button>
+          <button class="table-icon-btn delete-btn" data-id="${w.id}" style="background: none; border: none; cursor: pointer; color: var(--danger); padding: 4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div>
+      `;
+      
+      li.querySelector('.edit-btn').addEventListener('click', () => openModal(w));
+      li.querySelector('.delete-btn').addEventListener('click', () => deleteWord(w.id));
+      listEl.appendChild(li);
+    });
+  }
+}
+
+function openModal(wordObj = null) {
+  const modal = document.getElementById('word-form-modal');
+  document.getElementById('edit-word-id').value = wordObj ? wordObj.id : '';
+  document.getElementById('form-word').value = wordObj ? wordObj.word : '';
+  document.getElementById('form-definition').value = wordObj ? wordObj.definition : '';
+  document.getElementById('form-transcription').value = wordObj ? wordObj.transcription : '';
+  document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
+  document.getElementById('form-example').value = wordObj ? wordObj.example : '';
+  document.getElementById('form-modal-title').textContent = wordObj ? 'Edit Word Details' : 'Add New Word';
+  modal.style.display = 'flex';
+  document.getElementById('form-word').focus();
+}
+
+function closeModal() {
+  document.getElementById('word-form-modal').style.display = 'none';
+}
+
+async function saveWord(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit-word-id').value;
+  const word = document.getElementById('form-word').value.trim();
+  const definition = document.getElementById('form-definition').value.trim();
+  const transcription = document.getElementById('form-transcription').value.trim();
+  const translation = document.getElementById('form-translation').value.trim();
+  const example = document.getElementById('form-example').value.trim();
+
+  try {
+    if (id) {
+      const idx = wordsList.findIndex(w => w.id === id);
+      if (idx !== -1) {
+        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, example };
+        await saveWords(wordsList);
+      }
+    } else {
+      await addWord({ word, definition, transcription, translation, example });
+    }
+    closeModal();
+    await reloadVaultList();
+    if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+  } catch (err) {
+    alert(err.message || 'Save failed');
+  }
+}
+
+async function deleteWord(id) {
+  if (confirm('Delete this word from your vault?')) {
+    wordsList = wordsList.filter(w => w.id !== id);
+    await saveWords(wordsList);
+    await reloadVaultList();
+    if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+  }
+}
