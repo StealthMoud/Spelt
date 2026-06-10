@@ -31,7 +31,16 @@ export async function initPractice(onDeckUpdated) {
     const playBtn = e.target.closest('[data-audio-url]');
     if (playBtn) {
       const url = playBtn.getAttribute('data-audio-url');
-      if (url) new Audio(url).play().catch(err => console.error(err));
+      if (url) {
+        if (url.startsWith('tts:')) {
+          const [_, lang, text] = url.split(':');
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = lang;
+          window.speechSynthesis.speak(utterance);
+        } else {
+          new Audio(url).play().catch(err => console.error(err));
+        }
+      }
     }
   });
 
@@ -96,7 +105,7 @@ function checkSpelling() {
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data[0] && data[0].phonetics) {
-          const { us, uk } = extractAudios(data[0].phonetics);
+          const { us, uk } = extractAudios(data[0].phonetics, card.word);
           audioContainer.innerHTML = renderAudioButtons(us, uk);
         }
       })
@@ -134,10 +143,12 @@ async function submitRating(score) {
   } catch (err) { console.error(err); }
 }
 
-function extractAudios(ph) {
+function extractAudios(ph, word) {
   const audios = ph ? ph.map(p => p.audio).filter(Boolean) : [];
-  const us = audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '';
-  const uk = audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || us;
+  let us = audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '';
+  let uk = audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || us;
+  if (!us && word) us = `tts:en-US:${word}`;
+  if (!uk && word) uk = `tts:en-GB:${word}`;
   return { us, uk };
 }
 

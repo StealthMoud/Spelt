@@ -33,7 +33,16 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
       const playBtn = e.target.closest('[data-audio-url]');
       if (playBtn) {
         const url = playBtn.getAttribute('data-audio-url');
-        if (url) new Audio(url).play().catch(err => console.error(err));
+        if (url) {
+          if (url.startsWith('tts:')) {
+            const [_, lang, text] = url.split(':');
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            window.speechSynthesis.speak(utterance);
+          } else {
+            new Audio(url).play().catch(err => console.error(err));
+          }
+        }
         return;
       }
       
@@ -98,7 +107,7 @@ const closeBtnHtml = `
 async function handleCorrectSpelling(apiData, word) {
   const def = apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
   const ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
-  const { us, uk } = extractAudios(apiData.phonetics);
+  const { us, uk } = extractAudios(apiData.phonetics, word);
   try {
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
@@ -136,7 +145,7 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
     const data = await response.json();
     def = data[0].meanings[0]?.definitions[0]?.definition || def;
     ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
-    ({ us, uk } = extractAudios(data[0].phonetics));
+    ({ us, uk } = extractAudios(data[0].phonetics, suggestion));
   }
   const alts = suggestions.filter((_, i) => i !== activeIndex);
   const altChips = alts.length > 0 ? `<p style="font-size: 0.75rem; color: var(--text-muted); margin: 6px 0 2px;">Other suggestions: ` +
@@ -202,7 +211,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       const data = await response.json();
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
-      const { us, uk } = extractAudios(data[0].phonetics);
+      const { us, uk } = extractAudios(data[0].phonetics, correctWord);
       await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
         await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa });
@@ -218,12 +227,13 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
   } catch (err) { f.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`; }
 }
 
-function extractAudios(ph) {
+function extractAudios(ph, word) {
   const audios = ph ? ph.map(p => p.audio).filter(Boolean) : [];
-  return {
-    us: audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '',
-    uk: audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || ''
-  };
+  let us = audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '';
+  let uk = audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || us;
+  if (!us && word) us = `tts:en-US:${word}`;
+  if (!uk && word) uk = `tts:en-GB:${word}`;
+  return { us, uk };
 }
 
 function renderAudioButtons(us, uk) {
