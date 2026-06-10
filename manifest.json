@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling and dashboard sync.",
   "permissions": [
-    "storage"
+    "storage",
+    "identity"
   ],
   "action": {
     "default_popup": "popup/popup.html",

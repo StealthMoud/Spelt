@@ -555,39 +555,32 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <p class="confirm-message" style="margin-bottom: 4px;">Select a Gmail account to authenticate with <strong>Spelt</strong>:</p>
       
-      <div class="google-accounts-list" style="display: flex; flex-direction: column; gap: 8px; margin: 12px 0;">
-        <button class="google-account-row" data-email="stealthmoud@gmail.com">
-          <div class="google-avatar" style="background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">S</div>
+      <!-- Real profile container (populated dynamically) -->
+      <div id="chrome-profile-container" style="display: none; flex-direction: column; gap: 8px; margin: 8px 0;">
+        <p class="confirm-message" style="margin-bottom: 2px;">Use active Chrome profile:</p>
+        <button class="google-account-row" id="chrome-profile-btn" data-email="">
+          <div class="google-avatar" style="background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">👤</div>
           <div class="google-acc-info" style="display: flex; flex-direction: column; text-align: left; margin-left: 10px;">
-            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">StealthMoud</span>
-            <span class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">stealthmoud@gmail.com</span>
+            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">Chrome Profile User</span>
+            <span id="chrome-profile-email" class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">...</span>
           </div>
         </button>
-        <button class="google-account-row" data-email="guest.spelt@gmail.com">
-          <div class="google-avatar" style="background: var(--success); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">G</div>
-          <div class="google-acc-info" style="display: flex; flex-direction: column; text-align: left; margin-left: 10px;">
-            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">Guest Practitioner</span>
-            <span class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">guest.spelt@gmail.com</span>
-          </div>
-        </button>
-        <button class="google-account-row" id="google-use-different-acc">
-          <div class="google-avatar" style="background: hsla(0, 0%, 100%, 0.05); color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">+</div>
-          <div class="google-acc-info" style="display: flex; flex-direction: column; text-align: left; margin-left: 10px;">
-            <span class="google-name" style="font-size: 0.85rem; font-weight: 600;">Use another account</span>
-            <span class="google-email" style="font-size: 0.72rem; color: var(--text-muted);">Log in with a custom Gmail address</span>
-          </div>
-        </button>
+        <div class="auth-separator" style="margin: 8px 0;"><span>or connect custom Gmail</span></div>
       </div>
 
-      <!-- Hidden input for custom gmail -->
-      <div id="custom-gmail-input-container" style="display: none; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px;">
+      <!-- Input for custom gmail -->
+      <div id="custom-gmail-input-container" style="width: 100%;">
         <div class="input-group">
           <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Enter Gmail Address</label>
           <input type="email" id="custom-gmail-field" class="premium-input" placeholder="user@gmail.com" style="margin-bottom: 8px;">
         </div>
-        <button type="button" id="custom-gmail-submit-btn" class="action-btn" style="width: 100%;">Authorize</button>
+        <button type="button" id="custom-gmail-submit-btn" class="action-btn" style="width: 100%;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>Authorize</span>
+        </button>
       </div>
     </div>
   </div>

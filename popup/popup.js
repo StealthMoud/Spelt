@@ -71,10 +71,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         await checkSession();
       } else {
         authBtnText.textContent = 'Syncing...';
-        await loginWithGoogle('stealthmoud@gmail.com');
-        const words = await getWords();
-        await syncUserData(words);
-        await checkSession();
+        let email = '';
+        if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getProfileUserInfo) {
+          const info = await new Promise(resolve => chrome.identity.getProfileUserInfo(resolve));
+          email = info?.email;
+        }
+        if (email) {
+          await loginWithGoogle(email);
+          const words = await getWords();
+          await syncUserData(words);
+          await checkSession();
+        } else {
+          if (typeof chrome !== 'undefined' && chrome.tabs) {
+            chrome.tabs.create({ url: chrome.runtime.getURL('dashboard/dashboard.html') });
+          } else {
+            window.open('../dashboard/dashboard.html', '_blank');
+          }
+        }
       }
     } catch (err) {
       console.error(err);

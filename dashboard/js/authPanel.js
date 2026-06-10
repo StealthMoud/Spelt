@@ -65,37 +65,46 @@ function initGoogleAuthElements() {
   const googleLoginBtn = document.getElementById('google-login-btn');
   const googleModal = document.getElementById('google-auth-modal');
   const googleClose = document.getElementById('google-modal-close');
-  const googleAccs = document.querySelectorAll('.google-account-row[data-email]');
-  const customAccTrigger = document.getElementById('google-use-different-acc');
-  const customInputContainer = document.getElementById('custom-gmail-input-container');
   const customEmailField = document.getElementById('custom-gmail-field');
   const customEmailSubmit = document.getElementById('custom-gmail-submit-btn');
 
-  const openGoogleModal = () => {
-    customInputContainer.style.display = 'none';
+  const profileContainer = document.getElementById('chrome-profile-container');
+  const profileBtn = document.getElementById('chrome-profile-btn');
+  const profileEmail = document.getElementById('chrome-profile-email');
+
+  const openGoogleModal = async () => {
     customEmailField.value = '';
+    let activeEmail = '';
+    
+    if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getProfileUserInfo) {
+      const info = await new Promise(resolve => chrome.identity.getProfileUserInfo(resolve));
+      activeEmail = info?.email;
+    }
+
+    if (activeEmail) {
+      if (profileContainer) profileContainer.style.display = 'flex';
+      if (profileEmail) profileEmail.textContent = activeEmail;
+      if (profileBtn) profileBtn.setAttribute('data-email', activeEmail);
+    } else {
+      if (profileContainer) profileContainer.style.display = 'none';
+    }
     googleModal.classList.add('active');
   };
 
   googleLoginBtn.addEventListener('click', openGoogleModal);
   googleClose.addEventListener('click', () => googleModal.classList.remove('active'));
 
-  googleAccs.forEach(row => {
-    row.addEventListener('click', async () => {
-      const email = row.getAttribute('data-email');
+  if (profileBtn) {
+    profileBtn.addEventListener('click', async () => {
+      const email = profileBtn.getAttribute('data-email');
       googleModal.classList.remove('active');
       await handleAuthAction(() => loginWithGoogle(email), 'Connecting Google OAuth...', 'Authenticated successfully!');
     });
-  });
-
-  customAccTrigger.addEventListener('click', () => {
-    customInputContainer.style.display = 'block';
-    customEmailField.focus();
-  });
+  }
 
   customEmailSubmit.addEventListener('click', async () => {
     const email = customEmailField.value.trim();
-    if (!email.toLowerCase().endsWith('@gmail.com') && !email.toLowerCase().endsWith('@googlemail.com')) {
+    if (!email || !email.toLowerCase().endsWith('@gmail.com')) {
       alert('Please enter a valid Gmail address');
       return;
     }
