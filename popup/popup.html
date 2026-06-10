@@ -37,32 +37,37 @@
         </div>
       </div>
 
-      <!-- Quick Add Form -->
+      <!-- Spellcheck Sandbox -->
       <div class="quick-add-section">
-        <h3>Quick Add Word</h3>
+        <h3>Spellcheck Sandbox</h3>
         <form id="quick-add-form">
           <div class="input-wrapper">
-            <input type="text" id="word-input" class="premium-input" placeholder="Enter word..." autocomplete="off" required>
-          </div>
-          <div class="input-wrapper">
-            <input type="text" id="def-input" class="premium-input" placeholder="Definition (optional)..." autocomplete="off">
+            <input type="text" id="word-input" class="premium-input" placeholder="Type word to check spelling..." autocomplete="off" required style="text-align: center; font-size: 0.9rem; font-weight: 600;">
           </div>
           <button type="submit" class="submit-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span>Add Word</span>
+            <span id="popup-btn-text">Verify & Save</span>
           </button>
         </form>
-        <p id="feedback-msg" class="feedback-text"></p>
+        <div id="feedback-msg" class="feedback-text" style="display: none; padding: 10px; border-radius: var(--radius-xl); background: hsla(155, 10%, 15%, 0.5); border: 1px solid var(--border); margin-top: 10px; line-height: 1.35; text-align: left; box-sizing: border-box;"></div>
       </div>
     </main>
 
-    <!-- Mini Footer -->
+    <!-- Mini Footer with Session Info & One-click Google Sync -->
     <footer class="popup-footer">
-      <div class="session-info">
-        <span class="user-status-dot"></span>
-        <span id="user-email-display" class="user-label">Local Guest Profile</span>
+      <div class="session-info" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span id="popup-user-status-dot" class="user-status-dot"></span>
+          <span id="user-email-display" class="user-label">Local Guest Profile</span>
+        </div>
+        <button id="popup-auth-btn" class="dashboard-launch-btn" style="padding: 4px 10px; font-size: 0.72rem; border-radius: var(--radius-full); cursor: pointer; display: flex; align-items: center; gap: 4px; border: 1px solid var(--primary); background: hsla(155, 65%, 48%, 0.15); color: var(--primary-light);">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 10px; height: 10px;">
+            <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.767 5.767 0 0 1 8.2 12.75a5.767 5.767 0 0 1 5.79-5.765c1.498 0 2.861.549 3.927 1.453l3.023-3.023C19.09 3.73 16.7 2.75 13.99 2.75c-5.09 0-9.22 4.13-9.22 9.22s4.13 9.22 9.22 9.22c5.3 0 9.22-3.74 9.22-9.22 0-.622-.055-1.077-.17-1.465H12.24Z"/>
+          </svg>
+          <span id="popup-auth-btn-text">Sync</span>
+        </button>
       </div>
     </footer>
   </div>
