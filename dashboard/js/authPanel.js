@@ -1,4 +1,4 @@
-import { getSession, loginUser, registerUser, logoutUser, syncUserData, getSyncStats, loginWithGoogle, checkEmailExists } from '../../shared/auth.js';
+import { getSession, loginUser, registerUser, logoutUser, syncUserData, getSyncStats, loginWithGoogle, checkEmailExists, authenticateWithGoogle } from '../../shared/auth.js';
 import { getWords } from '../../shared/storage.js';
 import { updateSidebarUserDisplay } from './navigation.js';
 
@@ -77,20 +77,17 @@ function initGoogleAuthElements() {
   const googleClose = document.getElementById('google-modal-close');
   const customEmailField = document.getElementById('custom-gmail-field');
   const customEmailSubmit = document.getElementById('custom-gmail-submit-btn');
-
   const profileContainer = document.getElementById('chrome-profile-container');
   const profileBtn = document.getElementById('chrome-profile-btn');
   const profileEmail = document.getElementById('chrome-profile-email');
 
-  const openGoogleModal = async () => {
+  const openFallbackModal = async () => {
     customEmailField.value = '';
     let activeEmail = '';
-    
     if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getProfileUserInfo) {
       const info = await new Promise(resolve => chrome.identity.getProfileUserInfo(resolve));
       activeEmail = info?.email;
     }
-
     if (activeEmail) {
       if (profileContainer) profileContainer.style.display = 'flex';
       if (profileEmail) profileEmail.textContent = activeEmail;
@@ -101,7 +98,16 @@ function initGoogleAuthElements() {
     googleModal.classList.add('active');
   };
 
-  googleLoginBtn.addEventListener('click', openGoogleModal);
+  googleLoginBtn.addEventListener('click', async () => {
+    try {
+      googleModal.classList.remove('active');
+      await handleAuthAction(() => authenticateWithGoogle(), 'Connecting Google OAuth...', 'Authenticated successfully!');
+    } catch (err) {
+      console.warn('OAuth fallback triggered:', err.message);
+      await openFallbackModal();
+    }
+  });
+
   googleClose.addEventListener('click', () => googleModal.classList.remove('active'));
 
   if (profileBtn) {
@@ -124,23 +130,19 @@ function initGoogleAuthElements() {
 }
 
 async function handleLogout() {
-  await logoutUser();
-  await refreshSessionUI();
+  await logoutUser(); await refreshSessionUI();
   showAuthFeedback('Logged out of cloud session', 'var(--text-muted)');
 }
 
 async function handleAuthAction(authPromiseFn, loadingText, successText) {
   const feedback = document.getElementById('auth-feedback-msg');
   try {
-    feedback.textContent = loadingText;
-    feedback.style.color = 'var(--primary-light)';
+    feedback.textContent = loadingText; feedback.style.color = 'var(--primary-light)';
     await authPromiseFn();
-    feedback.textContent = successText;
-    feedback.style.color = 'var(--success)';
+    feedback.textContent = successText; feedback.style.color = 'var(--success)';
     await refreshSessionUI();
   } catch (err) {
-    feedback.textContent = err.message || 'Authentication error';
-    feedback.style.color = 'var(--danger)';
+    feedback.textContent = err.message || 'Authentication error'; feedback.style.color = 'var(--danger)';
   }
 }
 
@@ -149,19 +151,15 @@ async function handleCloudSync() {
   const syncBtn = document.getElementById('sync-now-btn');
   try {
     syncBtn.disabled = true;
-    feedback.textContent = 'Uploading vault and analysis data...';
-    feedback.style.color = 'var(--primary-light)';
-
+    feedback.textContent = 'Uploading vault and analysis data...'; feedback.style.color = 'var(--primary-light)';
     const words = await getWords();
     const result = await syncUserData(words);
     if (result.success) {
-      feedback.textContent = `Sync finished! Saved ${result.itemCount} items.`;
-      feedback.style.color = 'var(--success)';
+      feedback.textContent = `Sync finished! Saved ${result.itemCount} items.`; feedback.style.color = 'var(--success)';
       await refreshSessionUI();
     }
   } catch (err) {
-    feedback.textContent = err.message || 'Sync failed';
-    feedback.style.color = 'var(--danger)';
+    feedback.textContent = err.message || 'Sync failed'; feedback.style.color = 'var(--danger)';
   } finally {
     syncBtn.disabled = false;
   }
@@ -178,7 +176,6 @@ export async function refreshSessionUI() {
     activePanel.style.display = 'block';
     formsPanel.style.display = 'none';
     document.getElementById('sync-user-email').textContent = session.email;
-    
     const stats = await getSyncStats();
     const syncTimeStr = stats?.syncDate ? new Date(stats.syncDate).toLocaleString() : 'Never';
     document.getElementById('sync-last-date').textContent = `Last synchronized: ${syncTimeStr}`;
@@ -193,6 +190,5 @@ export async function refreshSessionUI() {
 
 function showAuthFeedback(msg, color) {
   const el = document.getElementById('auth-feedback-msg');
-  el.textContent = msg;
-  el.style.color = color;
+  el.textContent = msg; el.style.color = color;
 }

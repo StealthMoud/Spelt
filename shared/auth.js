@@ -145,3 +145,29 @@ export async function checkEmailExists(email) {
   const accounts = await getAuthStored('spelt_accounts') || {};
   return !!accounts[email.toLowerCase()];
 }
+
+// Official Google OAuth 2.0 retrieval flow using chrome.identity
+export async function authenticateWithGoogle() {
+  return new Promise((resolve, reject) => {
+    if (typeof chrome === 'undefined' || !chrome.identity || !chrome.identity.getAuthToken) {
+      reject(new Error('Chrome Identity API is not available'));
+      return;
+    }
+    chrome.identity.getAuthToken({ interactive: true }, async (token) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message || 'Google OAuth failed'));
+        return;
+      }
+      try {
+        const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`);
+        if (!response.ok) throw new Error('Failed to retrieve Google profile info');
+        const info = await response.json();
+        if (!info.email) throw new Error('Google email address not found in profile');
+        const session = await loginWithGoogle(info.email);
+        resolve(session);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
