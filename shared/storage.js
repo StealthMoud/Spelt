@@ -84,9 +84,10 @@ export async function addWord(wordData) {
     rep: 0,
     interval: 0,
     ef: 2.5,
-    nextDate: Date.now(), // due immediately
+    nextDate: wordData.nextDate !== undefined ? wordData.nextDate : Date.now(),
     createdAt: Date.now(),
-    history: []
+    history: [],
+    misspellings: Array.isArray(wordData.misspellings) ? wordData.misspellings : []
   };
 
   list.push(newWord);
@@ -95,8 +96,33 @@ export async function addWord(wordData) {
   return newWord;
 }
 
+// Register a misspelling event and force-enqueue card for SRS practice
+export async function registerMisspelling(correctWord, wrongSpelling, details = {}) {
+  const list = await getWords();
+  const wordObj = list.find(w => w.word.toLowerCase() === correctWord.toLowerCase());
+  if (wordObj) {
+    if (!wordObj.misspellings) wordObj.misspellings = [];
+    if (wrongSpelling && !wordObj.misspellings.includes(wrongSpelling) && wrongSpelling.toLowerCase() !== correctWord.toLowerCase()) {
+      wordObj.misspellings.push(wrongSpelling);
+    }
+    wordObj.rep = 0;
+    wordObj.interval = 1;
+    wordObj.nextDate = Date.now(); // due immediately for practice
+    await saveWords(list);
+    return wordObj;
+  } else {
+    return await addWord({
+      word: correctWord,
+      definition: details.definition,
+      transcription: details.transcription,
+      example: details.example,
+      misspellings: wrongSpelling ? [wrongSpelling] : []
+    });
+  }
+}
+
 // Update word SRS parameters based on review score
-export async function reviewWord(wordId, q) {
+export async function reviewWord(wordId, q, typedWrongWord = null) {
   const list = await getWords();
   const index = list.findIndex(w => w.id === wordId);
   if (index === -1) throw new Error('Word not found');
@@ -110,6 +136,13 @@ export async function reviewWord(wordId, q) {
   card.nextDate = nextDate;
   card.lastReviewedAt = Date.now();
   card.history.push({ date: Date.now(), q, interval });
+
+  if (typedWrongWord) {
+    if (!card.misspellings) card.misspellings = [];
+    if (!card.misspellings.includes(typedWrongWord) && typedWrongWord.toLowerCase() !== card.word.toLowerCase()) {
+      card.misspellings.push(typedWrongWord);
+    }
+  }
 
   await saveWords(list);
   await logActivity();

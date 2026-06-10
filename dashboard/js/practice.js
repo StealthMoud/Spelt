@@ -12,18 +12,9 @@ export async function initPractice(onDeckUpdated, onXpUpdated, triggerConfetti) 
   onXpUpdatedCallback = onXpUpdated;
   triggerConfettiFn = triggerConfetti;
   
-  // Set up event listeners once
-  const cardElement = document.getElementById('deck-card');
-  const checkBtn = document.getElementById('check-spelling-btn');
-  const spellingInput = document.getElementById('spelling-input');
-  
-  // Submit spelling on click or enter
-  checkBtn.addEventListener('click', checkSpelling);
-  spellingInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      checkSpelling();
-    }
+  document.getElementById('check-spelling-btn').addEventListener('click', checkSpelling);
+  document.getElementById('spelling-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
   });
 
   // SRS Rating buttons
@@ -102,6 +93,16 @@ function checkSpelling() {
   const backWord = document.getElementById('back-word-display');
   const backDef = document.getElementById('back-definition-display');
 
+  // Display past misspellings
+  const pastMsgContainer = document.getElementById('past-misspellings-container');
+  const pastMsgDisplay = document.getElementById('back-misspellings-display');
+  if (card.misspellings && card.misspellings.length > 0) {
+    pastMsgDisplay.textContent = card.misspellings.join(', ');
+    pastMsgContainer.style.display = 'flex';
+  } else {
+    pastMsgContainer.style.display = 'none';
+  }
+
   // Set correctness badge status and adjust streaks/XP
   if (isCorrect) {
     resultBadge.textContent = 'Correct';
@@ -163,17 +164,26 @@ async function submitRating(score) {
   if (!card) return;
 
   try {
-    await reviewWord(card.id, score);
+    const inputVal = document.getElementById('spelling-input').value.trim();
+    const isCorrect = inputVal.toLowerCase() === card.word.toLowerCase();
+
+    // Log rating and add typed wrong spelling if incorrect
+    await reviewWord(card.id, score, isCorrect ? null : inputVal);
     
-    // Unflip card, increment, show next
+    // Unflip card
     const cardElement = document.getElementById('deck-card');
     cardElement.classList.remove('flipped');
     
-    // Simple delay for flipping transition
-    setTimeout(async () => {
+    setTimeout(() => {
+      if (score < 3 || !isCorrect) {
+        // Repeat wrong card by pushing it back to session queue
+        dueCards.push(card);
+      }
       currentCardIndex += 1;
-      // reload deck from scratch to keep sync
-      await loadDeck();
+      if (onDeckUpdatedCallback) {
+        onDeckUpdatedCallback(dueCards.length - currentCardIndex);
+      }
+      showCurrentCard();
     }, 300);
   } catch (err) {
     console.error('Failed to log spelling rating:', err);

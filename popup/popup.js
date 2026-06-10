@@ -1,4 +1,4 @@
-import { getWords, addWord } from '../shared/storage.js';
+import { getWords, addWord, registerMisspelling } from '../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const wordInput = document.getElementById('word-input');
   const feedbackMsg = document.getElementById('feedback-msg');
 
-
   async function refreshStats() {
     try {
       const words = await getWords();
@@ -29,21 +28,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) { console.error(e); }
   }
 
-
-
   openDashBtn.addEventListener('click', () => {
     const url = typeof chrome !== 'undefined' && chrome.tabs ? chrome.runtime.getURL('dashboard/dashboard.html') : '../dashboard/dashboard.html';
     if (typeof chrome !== 'undefined' && chrome.tabs) chrome.tabs.create({ url });
     else window.open(url, '_blank');
   });
 
-
-
-  feedbackMsg.addEventListener('click', (e) => {
+  feedbackMsg.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-audio-url]');
     if (btn) {
       const url = btn.getAttribute('data-audio-url');
       if (url) new Audio(url).play().catch(err => console.error(err));
+      return;
+    }
+    const saveBtn = e.target.closest('#manual-correction-btn');
+    if (saveBtn) {
+      const correctVal = document.getElementById('manual-correction-input')?.value.trim();
+      const originalVal = saveBtn.getAttribute('data-original-word');
+      if (correctVal && originalVal) await handleManualCorrection(correctVal, originalVal);
     }
   });
 
@@ -63,11 +65,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
         const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
         const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
-        const ex = data[0].meanings[0]?.definitions[0]?.example || '';
         const { us, uk } = extractAudios(data[0].phonetics);
         const audioHtml = renderAudioButtons(us, uk);
 
-        await addWord({ word, definition: def, transcription: ipa, example: ex });
+        const farDate = Date.now() + 365 * 24 * 60 * 60 * 1000;
+        await addWord({ word, definition: def, transcription: ipa, nextDate: farDate });
         feedbackMsg.innerHTML = `
           <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correct Spelling!</h4>
           <p style="margin: 4px 0;"><strong>${word}</strong> ${ipa}</p>
@@ -76,39 +78,72 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
         wordInput.value = '';
         await refreshStats();
-
       } else {
         const suggestion = findSuggestion(lowerWord);
         if (suggestion) {
           feedbackMsg.innerHTML = `<p style="color: var(--primary-light);">Correcting spelling...</p>`;
           const sRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-          let def = 'No definition found', ipa = '/--/', ex = '', audioHtml = '';
+          let def = 'No definition found', ipa = '/--/', { us, uk } = { us: '', uk: '' };
           if (sRes.ok) {
             const sData = await sRes.json();
             def = sData[0].meanings[0]?.definitions[0]?.definition || def;
             ipa = sData[0].phonetics.find(p => p.text)?.text || ipa;
-            ex = sData[0].meanings[0]?.definitions[0]?.example || ex;
-            const { us, uk } = extractAudios(sData[0].phonetics);
-            audioHtml = renderAudioButtons(us, uk);
+            ({ us, uk } = extractAudios(sData[0].phonetics));
           }
-          await addWord({ word: suggestion, definition: def, transcription: ipa, example: ex });
+          const card = await registerMisspelling(suggestion, word, { definition: def, transcription: ipa });
+          const pastMsg = card.misspellings && card.misspellings.length > 1 ? `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 2px 0;"><strong>Past errors:</strong> ${card.misspellings.join(', ')}</p>` : '';
           feedbackMsg.innerHTML = `
             <h4 style="color: var(--danger); margin: 0 0 4px;">❌ Misspelled Word</h4>
             <p style="margin: 4px 0;">"${word}" is incorrect. Did you mean <strong>${suggestion}</strong>?</p>
-            ${audioHtml}
-            <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;">Saved correct word to practice deck.</p>
+            ${renderAudioButtons(us, uk)}${pastMsg}
+            <p style="font-size: 0.68rem; color: var(--text-muted); margin: 4px 0 0;">Saved correct word to practice deck.</p>
           `;
           wordInput.value = '';
           await refreshStats();
-
         } else {
-          feedbackMsg.innerHTML = `<h4 style="color: var(--danger);">❌ Spelling Error</h4><p>"${word}" is not recognized.</p>`;
+          feedbackMsg.innerHTML = `
+            <h4 style="color: var(--danger); margin: 0 0 4px;">❌ Spelling Error</h4>
+            <p style="font-size: 0.72rem; margin: 0 0 8px;">"${word}" is not recognized. If you know the correct spelling, enter it below:</p>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="manual-correction-input" class="premium-input" placeholder="Correct spelling..." style="width: 140px; padding: 4px 8px; font-size: 0.75rem;">
+              <button type="button" id="manual-correction-btn" data-original-word="${word}" class="submit-btn" style="width: 60px; padding: 4px; font-size: 0.75rem;">Save</button>
+            </div>
+          `;
         }
       }
-    } catch (err) {
-      feedbackMsg.innerHTML = `<p style="color: var(--danger);">Error: ${err.message}</p>`;
-    }
+    } catch (err) { feedbackMsg.innerHTML = `<p style="color: var(--danger);">Error: ${err.message}</p>`; }
   });
+
+  async function handleManualCorrection(correctWord, originalWord) {
+    try {
+      feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Verifying spelling...</p>';
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(correctWord.toLowerCase())}`);
+      if (response.ok) {
+        const data = await response.json();
+        const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+        const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
+        const { us, uk } = extractAudios(data[0].phonetics);
+
+        await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa });
+        feedbackMsg.innerHTML = `
+          <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
+          <p style="margin: 4px 0;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
+          ${renderAudioButtons(us, uk)}
+        `;
+        wordInput.value = '';
+        await refreshStats();
+      } else {
+        feedbackMsg.innerHTML = `
+          <h4 style="color: var(--danger);">❌ Word Not Found</h4>
+          <p style="font-size: 0.72rem; margin: 0 0 8px;">"${correctWord}" is not recognized either.</p>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="manual-correction-input" class="premium-input" placeholder="Correct spelling..." value="${correctWord}" style="width: 140px; padding: 4px 8px; font-size: 0.75rem;">
+            <button type="button" id="manual-correction-btn" data-original-word="${originalWord}" class="submit-btn" style="width: 60px; padding: 4px; font-size: 0.75rem;">Save</button>
+          </div>
+        `;
+      }
+    } catch (err) { feedbackMsg.innerHTML = `<p style="color: var(--danger);">Error: ${err.message}</p>`; }
+  }
 
   function extractAudios(phonetics) {
     let us = '', uk = '';
@@ -128,10 +163,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderAudioButtons(us, uk) {
-    let html = '';
-    if (us) html += `<button type="button" class="audio-play-btn" data-audio-url="${us}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>US</span></button>`;
-    if (uk) html += `<button type="button" class="audio-play-btn" data-audio-url="${uk}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>UK</span></button>`;
-    return html ? `<div style="display: flex; gap: 6px; margin: 8px 0 4px;">${html}</div>` : '';
+    const b = (u, l) => u ? `<button type="button" class="audio-play-btn" data-audio-url="${u}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>${l}</span></button>` : '';
+    return (us || uk) ? `<div style="display: flex; gap: 6px; margin: 8px 0 4px;">${b(us, 'US')}${b(uk, 'UK')}</div>` : '';
   }
 
   function findSuggestion(word) {
