@@ -1,11 +1,16 @@
-import { getWords, reviewWord } from '../../shared/storage.js';
+import { getWords, reviewWord, addXp } from '../../shared/storage.js';
 
 let dueCards = [];
 let currentCardIndex = 0;
 let onDeckUpdatedCallback = null;
+let onXpUpdatedCallback = null;
+let triggerConfettiFn = null;
+let comboStreak = 0;
 
-export async function initPractice(onDeckUpdated) {
+export async function initPractice(onDeckUpdated, onXpUpdated, triggerConfetti) {
   onDeckUpdatedCallback = onDeckUpdated;
+  onXpUpdatedCallback = onXpUpdated;
+  triggerConfettiFn = triggerConfetti;
   
   // Set up event listeners once
   const cardElement = document.getElementById('deck-card');
@@ -97,15 +102,37 @@ function checkSpelling() {
   const backWord = document.getElementById('back-word-display');
   const backDef = document.getElementById('back-definition-display');
 
-  // Set correctness badge status
+  // Set correctness badge status and adjust streaks/XP
   if (isCorrect) {
     resultBadge.textContent = 'Correct';
     resultBadge.className = 'result-badge success';
     userTyped.style.color = 'var(--success)';
+    
+    comboStreak += 1;
+    const comboBadge = document.getElementById('combo-badge-container');
+    const comboCount = document.getElementById('combo-streak-count');
+    if (comboCount) comboCount.textContent = comboStreak;
+    if (comboBadge) comboBadge.style.display = 'flex';
+
+    if (triggerConfettiFn) {
+      triggerConfettiFn(document.getElementById('check-spelling-btn'));
+    }
+
+    addXp(10).then(() => {
+      if (onXpUpdatedCallback) onXpUpdatedCallback();
+    });
   } else {
     resultBadge.textContent = 'Incorrect';
     resultBadge.className = 'result-badge danger';
     userTyped.style.color = 'var(--danger)';
+
+    comboStreak = 0;
+    const comboBadge = document.getElementById('combo-badge-container');
+    if (comboBadge) comboBadge.style.display = 'none';
+
+    addXp(2).then(() => {
+      if (onXpUpdatedCallback) onXpUpdatedCallback();
+    });
   }
 
   userTyped.textContent = inputVal || '(Blank)';

@@ -124,3 +124,12 @@
   color: var(--text-muted);
   margin: 4px 0 0;
 }
+
+/* Practice View Grid columns setup */
+.practice-view-grid {
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+}

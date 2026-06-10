@@ -15,6 +15,17 @@
         <span class="brand-beta">SRS</span>
       </div>
 
+      <!-- XP Progress Tracker -->
+      <div class="sidebar-xp-container" style="padding: 0 12px 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <div class="xp-header" style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">
+          <span id="user-level-badge">Level 1 Novice</span>
+          <span id="user-xp-display">0 / 100 XP</span>
+        </div>
+        <div class="xp-bar-outer" style="height: 6px; background: hsla(0, 0%, 100%, 0.05); border: 1px solid var(--border); border-radius: var(--radius-full); margin-top: 6px; overflow: hidden;">
+          <div id="xp-bar-inner" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%); box-shadow: 0 0 8px var(--primary-glow); transition: width 0.4s var(--spring-curve);"></div>
+        </div>
+      </div>
+
       <nav class="sidebar-nav">
         <button class="nav-item active" data-target="practice-section">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -72,99 +83,133 @@
       
       <!-- VIEW: Practice -->
       <section id="practice-section" class="view-pane active">
-        <div class="pane-header">
-          <h2>Daily Practice Deck</h2>
-          <p class="pane-desc">Review vocabulary scheduled for today</p>
+        <div class="pane-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2>Daily Practice Deck</h2>
+            <p class="pane-desc">Review vocabulary scheduled for today</p>
+          </div>
+          <!-- Gamified Combo Flame -->
+          <div id="combo-badge-container" class="accent-time" style="display: none; align-items: center; gap: 4px; font-size: 0.85rem; padding: 4px 12px; background: hsla(35, 80%, 55%, 0.15); border-color: hsl(35, 80%, 55%);">
+            <span>🔥 Combo:</span>
+            <span id="combo-streak-count">0</span>
+          </div>
         </div>
 
-        <div class="practice-card-container">
-          <!-- Card Deck -->
-          <div id="deck-card" class="flashcard">
-            <!-- Front Face -->
-            <div class="card-face card-front">
-              <span class="card-hint-badge">Spelling Clues</span>
-              <div class="front-clues">
-                <div class="clue-item" id="front-def-container">
-                  <span class="clue-label">Definition</span>
-                  <p id="practice-definition" class="clue-text">Definition of the word.</p>
-                </div>
-                <div class="clue-item" id="front-example-container">
-                  <span class="clue-label">Context / Example</span>
-                  <p id="practice-example" class="clue-text">Example sentence with a blank __________.</p>
-                </div>
-                <div class="clue-row">
-                  <div class="clue-item" id="front-ipa-container">
-                    <span class="clue-label">Pronunciation</span>
-                    <p id="practice-transcription" class="clue-text">/pronunciation/</p>
+        <div class="practice-view-grid">
+          <!-- Column 1: SRS Practice Deck -->
+          <div class="practice-card-container">
+            <!-- Card Deck -->
+            <div id="deck-card" class="flashcard">
+              <!-- Front Face -->
+              <div class="card-face card-front">
+                <span class="card-hint-badge">Spelling Clues</span>
+                <div class="front-clues">
+                  <div class="clue-item" id="front-def-container">
+                    <span class="clue-label">Definition</span>
+                    <p id="practice-definition" class="clue-text">Definition of the word.</p>
                   </div>
-                  <div class="clue-item" id="front-trans-container">
-                    <span class="clue-label">Translation</span>
-                    <p id="practice-translation" class="clue-text">translation</p>
+                  <div class="clue-item" id="front-example-container">
+                    <span class="clue-label">Context / Example</span>
+                    <p id="practice-example" class="clue-text">Example sentence with a blank __________.</p>
                   </div>
+                  <div class="clue-row">
+                    <div class="clue-item" id="front-ipa-container">
+                      <span class="clue-label">Pronunciation</span>
+                      <p id="practice-transcription" class="clue-text">/pronunciation/</p>
+                    </div>
+                    <div class="clue-item" id="front-trans-container">
+                      <span class="clue-label">Translation</span>
+                      <p id="practice-translation" class="clue-text">translation</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Spelling Input Form -->
+                <div class="spelling-input-wrapper">
+                  <input type="text" id="spelling-input" class="premium-input spelling-practice-input" placeholder="Type the spelling here..." autocomplete="off">
+                  <button id="check-spelling-btn" class="action-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Check Spelling</span>
+                  </button>
                 </div>
               </div>
               
-              <!-- Spelling Input Form -->
-              <div class="spelling-input-wrapper">
-                <input type="text" id="spelling-input" class="premium-input spelling-practice-input" placeholder="Type the spelling here..." autocomplete="off">
-                <button id="check-spelling-btn" class="action-btn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  <span>Check Spelling</span>
-                </button>
+              <!-- Back Face -->
+              <div class="card-face card-back">
+                <span class="card-hint-badge">Spelling Verification</span>
+                
+                <div class="spelling-feedback-header">
+                  <div id="spelling-result-badge" class="result-badge success">Correct</div>
+                  <h1 id="back-word-display" class="practice-word">Vocabulary</h1>
+                </div>
+
+                <div class="back-details">
+                  <div class="detail-row user-spelling-row">
+                    <span class="detail-label">You typed:</span>
+                    <p id="user-typed-display" class="user-typed-text">vocubulary</p>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Definition:</span>
+                    <p id="back-definition-display" class="card-definition">The body of words used...</p>
+                  </div>
+                </div>
+
+                <!-- SRS Scoring Buttons -->
+                <div class="srs-rating-wrapper">
+                  <button class="srs-btn srs-again" data-score="1">
+                    <span>Again</span>
+                    <small class="srs-hint">Incorrect</small>
+                  </button>
+                  <button class="srs-btn srs-hard" data-score="3">
+                    <span>Hard</span>
+                    <small class="srs-hint">1d</small>
+                  </button>
+                  <button class="srs-btn srs-good" data-score="4">
+                    <span>Good</span>
+                    <small class="srs-hint">6d</small>
+                  </button>
+                  <button class="srs-btn srs-easy" data-score="5">
+                    <span>Easy</span>
+                    <small class="srs-hint">12d</small>
+                  </button>
+                </div>
               </div>
             </div>
-            
-            <!-- Back Face -->
-            <div class="card-face card-back">
-              <span class="card-hint-badge">Spelling Verification</span>
-              
-              <div class="spelling-feedback-header">
-                <div id="spelling-result-badge" class="result-badge success">Correct</div>
-                <h1 id="back-word-display" class="practice-word">Vocabulary</h1>
-              </div>
 
-              <div class="back-details">
-                <div class="detail-row user-spelling-row">
-                  <span class="detail-label">You typed:</span>
-                  <p id="user-typed-display" class="user-typed-text">vocubulary</p>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Definition:</span>
-                  <p id="back-definition-display" class="card-definition">The body of words used...</p>
-                </div>
-              </div>
-
-              <!-- SRS Scoring Buttons -->
-              <div class="srs-rating-wrapper">
-                <button class="srs-btn srs-again" data-score="1">
-                  <span>Again</span>
-                  <small class="srs-hint">Incorrect</small>
-                </button>
-                <button class="srs-btn srs-hard" data-score="3">
-                  <span>Hard</span>
-                  <small class="srs-hint">1d</small>
-                </button>
-                <button class="srs-btn srs-good" data-score="4">
-                  <span>Good</span>
-                  <small class="srs-hint">6d</small>
-                </button>
-                <button class="srs-btn srs-easy" data-score="5">
-                  <span>Easy</span>
-                  <small class="srs-hint">12d</small>
-                </button>
-              </div>
+            <!-- Empty State (No due reviews) -->
+            <div id="deck-empty-state" class="deck-empty-state" style="display: none;">
+              <svg class="complete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <h3>Deck Fully Reviewed!</h3>
+              <p>You have cleared all scheduled words for today. Add new words or check back tomorrow.</p>
             </div>
           </div>
 
-          <!-- Empty State (No due reviews) -->
-          <div id="deck-empty-state" class="deck-empty-state" style="display: none;">
-            <svg class="complete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            <h3>Deck Fully Reviewed!</h3>
-            <p>You have cleared all scheduled words for today. Add new words or check back tomorrow.</p>
+          <!-- Column 2: Spellcheck Sandbox (Easy & Playful) -->
+          <div class="sandbox-container" style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="sandbox-card" style="background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px;">
+              <span class="card-hint-badge">Spell & Learn Sandbox</span>
+              <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin: 4px 0 16px;">
+                Type any English word to check its spelling. If correct, we'll give you XP and save it. If misspelled, Spelt will suggest the correction and schedule it in your SRS queue to practice!
+              </p>
+              
+              <div class="input-group">
+                <input type="text" id="sandbox-spell-input" class="premium-input" placeholder="Type word here..." autocomplete="off" style="text-align: center; font-size: 1rem; font-weight: 600;">
+              </div>
+              <button id="sandbox-check-btn" class="action-btn" style="width: 100%; margin-top: 12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>Verify & Save</span>
+              </button>
+
+              <div id="sandbox-feedback" class="settings-group" style="display: none; padding: 14px; margin-top: 16px; background: hsla(245, 10%, 15%, 0.5); border-color: var(--border); box-sizing: border-box;">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
           </div>
         </div>
       </section>

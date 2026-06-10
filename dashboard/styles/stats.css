@@ -123,3 +123,39 @@
   font-variant-numeric: tabular-nums;
   color: var(--primary-light);
 }
+
+/* Confetti particles for correct spellings */
+.confetti-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1000;
+  animation: confetti-drift 1s ease-out forwards;
+}
+
+@keyframes confetti-drift {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.3) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Recommended button recommendation highlights */
+.srs-recommend {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 15px var(--primary-glow) !important;
+  background: hsla(245, 80%, 62%, 0.2) !important;
+  animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 5px var(--primary-glow); }
+  50% { box-shadow: 0 0 15px var(--primary-glow); }
+  100% { box-shadow: 0 0 5px var(--primary-glow); }
+}

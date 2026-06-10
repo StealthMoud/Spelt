@@ -144,4 +144,17 @@ export async function resetDb() {
   await setStored('spelt_words', []);
   await setStored('spelt_activity', {});
   await setStored('spelt_streak', { current: 0, lastDate: '' });
+  await setStored('spelt_xp', 0);
+}
+
+// Gamification XP Getters/Setters
+export async function getXp() {
+  return await getStored('spelt_xp') || 0;
+}
+
+export async function addXp(amount) {
+  let xp = await getXp();
+  xp += amount;
+  await setStored('spelt_xp', xp);
+  return xp;
 }
