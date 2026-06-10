@@ -1,46 +1,38 @@
 import { getWords, reviewWord, addXp } from '../../shared/storage.js';
 
-let dueCards = [];
-let currentCardIndex = 0;
-let onDeckUpdatedCallback = null;
-let onXpUpdatedCallback = null;
-let triggerConfettiFn = null;
-let comboStreak = 0;
+let dueCards = [], currentCardIndex = 0, onDeckUpdatedCallback = null, onXpUpdatedCallback = null, triggerConfettiFn = null, comboStreak = 0;
 
 export async function initPractice(onDeckUpdated, onXpUpdated, triggerConfetti) {
-  onDeckUpdatedCallback = onDeckUpdated;
-  onXpUpdatedCallback = onXpUpdated;
-  triggerConfettiFn = triggerConfetti;
+  onDeckUpdatedCallback = onDeckUpdated; onXpUpdatedCallback = onXpUpdated; triggerConfettiFn = triggerConfetti;
   
-  document.getElementById('check-spelling-btn').addEventListener('click', checkSpelling);
-  document.getElementById('spelling-input').addEventListener('keydown', (e) => {
+  document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
+  document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
   });
 
-  // SRS Rating buttons
-  const srsBtns = document.querySelectorAll('.srs-btn');
-  srsBtns.forEach(btn => {
+  document.querySelectorAll('.srs-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const score = parseInt(btn.getAttribute('data-score'), 10);
-      await submitRating(score);
+      await submitRating(parseInt(btn.getAttribute('data-score'), 10));
     });
+  });
+
+  window.addEventListener('keydown', async (e) => {
+    const cardEl = document.getElementById('deck-card');
+    if (!cardEl || !cardEl.classList.contains('flipped')) return;
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+    if (e.key === '1') { e.preventDefault(); await submitRating(1); }
+    else if (e.key === '2') { e.preventDefault(); await submitRating(3); }
+    else if (e.key === '3') { e.preventDefault(); await submitRating(4); }
+    else if (e.key === '4') { e.preventDefault(); await submitRating(5); }
   });
 
   await loadDeck();
 }
 
 export async function loadDeck() {
-  const words = await getWords();
-  const now = Date.now();
-  
-  // Cards are due if nextDate is in the past
-  dueCards = words.filter(w => w.nextDate <= now);
+  dueCards = (await getWords()).filter(w => w.nextDate <= Date.now());
   currentCardIndex = 0;
-  
-  if (onDeckUpdatedCallback) {
-    onDeckUpdatedCallback(dueCards.length);
-  }
-
+  onDeckUpdatedCallback?.(dueCards.length);
   showCurrentCard();
 }
 
@@ -50,35 +42,23 @@ function showCurrentCard() {
   const spellingInput = document.getElementById('spelling-input');
 
   if (dueCards.length === 0 || currentCardIndex >= dueCards.length) {
-    cardElement.style.display = 'none';
-    emptyState.style.display = 'flex';
-    return;
+    cardElement.style.display = 'none'; emptyState.style.display = 'flex'; return;
   }
 
-  cardElement.style.display = 'block';
-  emptyState.style.display = 'none';
-  cardElement.classList.remove('flipped');
-  spellingInput.value = '';
-  spellingInput.focus();
+  cardElement.style.display = 'block'; emptyState.style.display = 'none';
+  cardElement.classList.remove('flipped'); spellingInput.value = ''; spellingInput.focus();
 
   const card = dueCards[currentCardIndex];
-
-  // Set front clues
   document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
   document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
   document.getElementById('practice-translation').textContent = card.translation || '--';
-  
-  // Obscure word inside example sentence
-  const exampleText = card.example || 'No example sentence added.';
-  document.getElementById('practice-example').textContent = blankOutWord(exampleText, card.word);
+  document.getElementById('practice-example').textContent = blankOutWord(card.example || 'No example sentence added.', card.word);
 }
 
 function blankOutWord(sentence, word) {
   if (!sentence || !word) return '';
-  // Safe regex escape for special characters in search word
   const escaped = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-  const regex = new RegExp('\\b' + escaped + '\\b', 'gi');
-  return sentence.replace(regex, '__________');
+  return sentence.replace(new RegExp('\\b' + escaped + '\\b', 'gi'), '__________');
 }
 
 function checkSpelling() {
@@ -87,105 +67,55 @@ function checkSpelling() {
 
   const inputVal = document.getElementById('spelling-input').value.trim();
   const isCorrect = inputVal.toLowerCase() === card.word.toLowerCase();
-
   const resultBadge = document.getElementById('spelling-result-badge');
   const userTyped = document.getElementById('user-typed-display');
-  const backWord = document.getElementById('back-word-display');
-  const backDef = document.getElementById('back-definition-display');
 
-  // Display past misspellings
   const pastMsgContainer = document.getElementById('past-misspellings-container');
-  const pastMsgDisplay = document.getElementById('back-misspellings-display');
   if (card.misspellings && card.misspellings.length > 0) {
-    pastMsgDisplay.textContent = card.misspellings.join(', ');
+    document.getElementById('back-misspellings-display').textContent = card.misspellings.join(', ');
     pastMsgContainer.style.display = 'flex';
-  } else {
-    pastMsgContainer.style.display = 'none';
-  }
+  } else { pastMsgContainer.style.display = 'none'; }
 
-  // Set correctness badge status and adjust streaks/XP
   if (isCorrect) {
-    resultBadge.textContent = 'Correct';
-    resultBadge.className = 'result-badge success';
-    userTyped.style.color = 'var(--success)';
-    
+    resultBadge.textContent = 'Correct'; resultBadge.className = 'result-badge success'; userTyped.style.color = 'var(--success)';
     comboStreak += 1;
     const comboBadge = document.getElementById('combo-badge-container');
-    const comboCount = document.getElementById('combo-streak-count');
-    if (comboCount) comboCount.textContent = comboStreak;
-    if (comboBadge) comboBadge.style.display = 'flex';
-
-    if (triggerConfettiFn) {
-      triggerConfettiFn(document.getElementById('check-spelling-btn'));
-    }
-
-    addXp(10).then(() => {
-      if (onXpUpdatedCallback) onXpUpdatedCallback();
-    });
+    if (comboBadge) { comboBadge.style.display = 'flex'; document.getElementById('combo-streak-count').textContent = comboStreak; }
+    if (triggerConfettiFn) triggerConfettiFn(document.getElementById('check-spelling-btn'));
+    addXp(10).then(() => onXpUpdatedCallback?.());
   } else {
-    resultBadge.textContent = 'Incorrect';
-    resultBadge.className = 'result-badge danger';
-    userTyped.style.color = 'var(--danger)';
-
+    resultBadge.textContent = 'Incorrect'; resultBadge.className = 'result-badge danger'; userTyped.style.color = 'var(--danger)';
     comboStreak = 0;
     const comboBadge = document.getElementById('combo-badge-container');
     if (comboBadge) comboBadge.style.display = 'none';
-
-    addXp(2).then(() => {
-      if (onXpUpdatedCallback) onXpUpdatedCallback();
-    });
+    addXp(2).then(() => onXpUpdatedCallback?.());
   }
 
   userTyped.textContent = inputVal || '(Blank)';
-  backWord.textContent = card.word;
-  backDef.textContent = card.definition;
+  document.getElementById('back-word-display').textContent = card.word;
+  document.getElementById('back-definition-display').textContent = card.definition;
 
-  // Preset highlighted button recommendation
-  const srsButtons = document.querySelectorAll('.srs-btn');
-  srsButtons.forEach(btn => btn.classList.remove('srs-recommend'));
-  
-  if (isCorrect) {
-    document.querySelector('.srs-good').classList.add('srs-recommend');
-  } else {
-    document.querySelector('.srs-again').classList.add('srs-recommend');
-  }
+  document.querySelectorAll('.srs-btn').forEach(btn => btn.classList.remove('srs-recommend'));
+  document.querySelector(isCorrect ? '.srs-good' : '.srs-again').classList.add('srs-recommend');
 
-  // Flip card
   document.getElementById('deck-card').classList.add('flipped');
-  
-  // Shift focus to next step
-  setTimeout(() => {
-    document.querySelector('.srs-recommend')?.focus();
-  }, 300);
+  setTimeout(() => { document.querySelector('.srs-recommend')?.focus(); }, 300);
 }
 
 async function submitRating(score) {
   const card = dueCards[currentCardIndex];
   if (!card) return;
-
   try {
     const inputVal = document.getElementById('spelling-input').value.trim();
     const isCorrect = inputVal.toLowerCase() === card.word.toLowerCase();
-
-    // Log rating and add typed wrong spelling if incorrect
     await reviewWord(card.id, score, isCorrect ? null : inputVal);
     
-    // Unflip card
-    const cardElement = document.getElementById('deck-card');
-    cardElement.classList.remove('flipped');
-    
+    document.getElementById('deck-card').classList.remove('flipped');
     setTimeout(() => {
-      if (score < 3 || !isCorrect) {
-        // Repeat wrong card by pushing it back to session queue
-        dueCards.push(card);
-      }
+      if (score < 3 || !isCorrect) dueCards.push(card);
       currentCardIndex += 1;
-      if (onDeckUpdatedCallback) {
-        onDeckUpdatedCallback(dueCards.length - currentCardIndex);
-      }
+      onDeckUpdatedCallback?.(dueCards.length - currentCardIndex);
       showCurrentCard();
     }, 300);
-  } catch (err) {
-    console.error('Failed to log spelling rating:', err);
-  }
+  } catch (err) { console.error('Failed to log spelling rating:', err); }
 }
