@@ -3,48 +3,58 @@ import { getWords } from '../../shared/storage.js';
 import { updateSidebarUserDisplay } from './navigation.js';
 
 let onAuthChangedCallback = null;
+let authMode = 'login'; // 'login' or 'register'
 
 export function initAuthPanel(onAuthChanged) {
   onAuthChangedCallback = onAuthChanged;
 
-  const loginForm = document.getElementById('login-form');
-  const regForm = document.getElementById('register-form');
+  const authForm = document.getElementById('unified-auth-form');
   const logoutBtn = document.getElementById('logout-btn');
   const syncBtn = document.getElementById('sync-now-btn');
+  const modeToggleBtn = document.getElementById('auth-toggle-mode-btn');
 
-  loginForm.addEventListener('submit', (e) => {
+  authForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    handleAuthAction(() => {
-      const email = document.getElementById('login-email').value;
-      const pass = document.getElementById('login-password').value;
-      return loginUser(email, pass);
-    }, 'Logging in...', 'Login successful!');
+    const email = document.getElementById('auth-email').value.trim();
+    const pass = document.getElementById('auth-password').value;
+
+    if (authMode === 'login') {
+      handleAuthAction(() => loginUser(email, pass), 'Logging in...', 'Login successful!');
+    } else {
+      handleAuthAction(() => registerUser(email, pass), 'Creating cloud profile...', 'Profile created & backup synced!');
+    }
   });
 
-  regForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    handleAuthAction(() => {
-      const email = document.getElementById('register-email').value;
-      const pass = document.getElementById('register-password').value;
-      return registerUser(email, pass);
-    }, 'Creating account...', 'Account registered & backup configured!');
-  });
-
-  logoutBtn.addEventListener('click', async () => {
-    await logoutUser();
-    await refreshSessionUI();
-    showAuthFeedback('Logged out of cloud session', 'var(--text-muted)');
-  });
-
+  modeToggleBtn.addEventListener('click', toggleAuthMode);
+  logoutBtn.addEventListener('click', handleLogout);
   syncBtn.addEventListener('click', handleCloudSync);
 
-  // Google OAuth selection triggers
   initGoogleAuthElements();
+}
+
+function toggleAuthMode() {
+  const title = document.getElementById('auth-card-title');
+  const btnText = document.getElementById('auth-btn-text');
+  const modeLabel = document.getElementById('auth-mode-label');
+  const toggleBtn = document.getElementById('auth-toggle-mode-btn');
+
+  if (authMode === 'login') {
+    authMode = 'register';
+    title.textContent = 'Create Cloud Profile';
+    btnText.textContent = 'Register & Sync';
+    modeLabel.textContent = 'Already have an account?';
+    toggleBtn.textContent = 'Sign In';
+  } else {
+    authMode = 'login';
+    title.textContent = 'Sync & Secure Progress';
+    btnText.textContent = 'Sign In';
+    modeLabel.textContent = "Don't have an account?";
+    toggleBtn.textContent = 'Register';
+  }
 }
 
 function initGoogleAuthElements() {
   const googleLoginBtn = document.getElementById('google-login-btn');
-  const googleRegBtn = document.getElementById('google-register-btn');
   const googleModal = document.getElementById('google-auth-modal');
   const googleClose = document.getElementById('google-modal-close');
   const googleAccs = document.querySelectorAll('.google-account-row[data-email]');
@@ -60,14 +70,13 @@ function initGoogleAuthElements() {
   };
 
   googleLoginBtn.addEventListener('click', openGoogleModal);
-  googleRegBtn.addEventListener('click', openGoogleModal);
   googleClose.addEventListener('click', () => googleModal.classList.remove('active'));
 
   googleAccs.forEach(row => {
     row.addEventListener('click', async () => {
       const email = row.getAttribute('data-email');
       googleModal.classList.remove('active');
-      await handleAuthAction(() => loginWithGoogle(email), 'Redirecting to Google...', 'Authenticated with Google!');
+      await handleAuthAction(() => loginWithGoogle(email), 'Connecting Google OAuth...', 'Authenticated successfully!');
     });
   });
 
@@ -83,8 +92,14 @@ function initGoogleAuthElements() {
       return;
     }
     googleModal.classList.remove('active');
-    await handleAuthAction(() => loginWithGoogle(email), 'Authorizing Google...', 'Authenticated with Google!');
+    await handleAuthAction(() => loginWithGoogle(email), 'Authorizing Gmail credentials...', 'Authenticated successfully!');
   });
+}
+
+async function handleLogout() {
+  await logoutUser();
+  await refreshSessionUI();
+  showAuthFeedback('Logged out of cloud session', 'var(--text-muted)');
 }
 
 async function handleAuthAction(authPromiseFn, loadingText, successText) {
