@@ -55,14 +55,6 @@
           <span>Analytics</span>
         </button>
 
-        <button class="nav-item" data-target="auth-section">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-          <span id="nav-auth-label">Cloud Sync</span>
-        </button>
-
         <button class="nav-item" data-target="settings-section">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
@@ -73,8 +65,8 @@
       </nav>
 
       <div class="sidebar-footer">
-        <span class="user-indicator"></span>
-        <span id="sidebar-user-label" class="user-status-text">Guest Mode</span>
+        <span class="user-indicator active"></span>
+        <span id="sidebar-user-label" class="user-status-text">Local Profile</span>
       </div>
     </aside>
 
@@ -197,14 +189,8 @@
               </p>
               
               <div class="input-group">
-                <input type="text" id="sandbox-spell-input" class="premium-input" placeholder="Type word here..." autocomplete="off" style="text-align: center; font-size: 1rem; font-weight: 600;">
+                <input type="text" id="sandbox-spell-input" class="premium-input" placeholder="Type word & press Enter to verify..." autocomplete="off" style="text-align: center; font-size: 1rem; font-weight: 600;">
               </div>
-              <button id="sandbox-check-btn" class="action-btn" style="width: 100%; margin-top: 12px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                <span>Verify & Save</span>
-              </button>
 
               <div id="sandbox-feedback" class="settings-group" style="display: none; padding: 14px; margin-top: 16px; background: hsla(155, 10%, 15%, 0.5); border-color: var(--border); box-sizing: border-box;">
                 <!-- Filled dynamically -->
@@ -336,68 +322,7 @@
         </div>
       </section>
 
-      <!-- VIEW: Sync & Auth -->
-      <section id="auth-section" class="view-pane">
-        <div class="pane-header">
-          <h2>Cloud Synchronization</h2>
-          <p class="pane-desc">Save your track, sync vocabulary across devices, and secure progress</p>
-        </div>
 
-        <!-- User Logged In Interface -->
-        <div id="sync-panel-active" class="settings-group" style="display: none;">
-          <span class="settings-group-title">Active Cloud Session</span>
-          <div class="sync-status-row">
-            <div>
-              <h4 id="sync-user-email" style="margin: 0; font-size: 1.1rem; color: var(--primary-light);">Not Connected</h4>
-              <p id="sync-last-date" class="settings-desc" style="margin: 4px 0 0;">Last synchronized: Never</p>
-            </div>
-            <button id="sync-now-btn" class="action-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-              </svg>
-              <span>Sync Now</span>
-            </button>
-          </div>
-          
-          <div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;">
-            <button id="logout-btn" class="danger-btn" style="width: fit-content;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span>Log Out Profile</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Unified Login/Register Panel (Fast, Clean, Email-only) -->
-        <div id="auth-panel-forms" style="display: flex; justify-content: center; width: 100%;">
-          <div class="auth-card" style="max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 20px;">
-            <div style="text-align: center; border-bottom: 1px dashed var(--border); padding-bottom: 12px; margin-bottom: 4px;">
-              <h3 style="margin: 0; font-size: 1.2rem;">Sync & Secure Progress</h3>
-              <p style="font-size: 0.76rem; color: var(--text-muted); margin: 6px 0 0;">Synchronize your learning statistics, level progress, and SRS decks</p>
-            </div>
-
-            <form id="unified-auth-form" style="display: flex; flex-direction: column; gap: 14px;">
-              <div class="input-group" style="margin-bottom: 0;">
-                <label>Enter Gmail or Email Address</label>
-                <input type="email" id="auth-email" class="premium-input" placeholder="name@gmail.com" required autocomplete="email">
-              </div>
-
-              <p id="auth-form-subtext" style="font-size: 0.76rem; color: var(--text-muted); margin: -4px 0 2px; line-height: 1.35; text-align: center;">Enter your email to instantly sync your data with the cloud.</p>
-
-              <button type="submit" class="submit-btn" id="auth-submit-btn" style="padding: 12px; font-size: 0.9rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <span>Connect & Sync</span>
-              </button>
-            </form>
-          </div>
-        </div>
-        
-        <p id="auth-feedback-msg" class="feedback-text" style="margin-top: 12px; font-weight: 500; font-size: 0.85rem; text-align: center;"></p>
-      </section>
 
       <!-- VIEW: Settings -->
       <section id="settings-section" class="view-pane">

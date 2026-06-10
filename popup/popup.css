@@ -53,4 +53,34 @@ body { margin: 0; padding: 0; width: 330px; font-family: 'Outfit', sans-serif; b
 .session-info { display: flex; align-items: center; gap: 8px; }
 .user-status-dot { width: 6px; height: 6px; border-radius: 50%; background-color: var(--text-muted); box-shadow: 0 0 6px var(--border); transition: all 0.3s ease; }
 .user-status-dot.active { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-.user-label { font-size: 0.7rem; color: var(--text-muted); }
+
+.audio-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: hsla(0, 0%, 100%, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all var(--transition-slow) var(--spring-curve);
+}
+.audio-play-btn svg {
+  width: 12px;
+  height: 12px;
+}
+.audio-play-btn:hover {
+  background: hsla(155, 65%, 48%, 0.15);
+  border-color: var(--primary);
+  color: var(--text-main);
+  box-shadow: 0 2px 6px var(--primary-glow);
+  transform: translateY(-1px);
+}
+.audio-play-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+

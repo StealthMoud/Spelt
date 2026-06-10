@@ -3,7 +3,6 @@ import { initPractice, loadDeck } from './js/practice.js';
 import { initVault, reloadVault } from './js/vault.js';
 import { reloadAnalytics } from './js/analytics.js';
 import { initSettings } from './js/settings.js';
-import { initAuthPanel, refreshSessionUI } from './js/authPanel.js';
 import { initSandbox } from './js/sandbox.js';
 import { getXp } from '../shared/storage.js';
 
@@ -13,7 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initPractice(handleDeckUpdated, handleXpUpdated, triggerConfetti);
   await initVault(handleVaultUpdated);
   initSettings(handleDbRestored);
-  initAuthPanel(handleAuthChanged);
   initSandbox(handleXpUpdated, triggerConfetti);
 
   // Load initial displays
@@ -25,7 +23,6 @@ async function handleDbRestored() {
   await loadDeck();
   await reloadVault();
   await reloadAnalytics();
-  await refreshSessionUI();
   await refreshXpUI();
 }
 
@@ -37,8 +34,6 @@ async function handleViewChange(viewId) {
     await reloadVault();
   } else if (viewId === 'analytics-section') {
     await reloadAnalytics();
-  } else if (viewId === 'auth-section') {
-    await refreshSessionUI();
   }
 }
 
@@ -56,9 +51,6 @@ async function handleXpUpdated() {
   await reloadAnalytics(); // statistics could change
 }
 
-async function handleAuthChanged() {
-  await reloadAnalytics();
-}
 
 // Update gamification progress bars
 export async function refreshXpUI() {

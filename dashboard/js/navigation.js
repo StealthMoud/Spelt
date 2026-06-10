@@ -41,19 +41,3 @@ export function setDueReviewsBadge(count) {
   }
 }
 
-// Update authorization email tags in layouts
-export function updateSidebarUserDisplay(session) {
-  const userText = document.getElementById('sidebar-user-label');
-  const userIndicator = document.querySelector('.user-indicator');
-  const navAuthLabel = document.getElementById('nav-auth-label');
-
-  if (session) {
-    userText.textContent = session.email;
-    userIndicator.classList.add('active');
-    navAuthLabel.textContent = 'Backup Active';
-  } else {
-    userText.textContent = 'Guest Mode';
-    userIndicator.classList.remove('active');
-    navAuthLabel.textContent = 'Cloud Sync';
-  }
-}
