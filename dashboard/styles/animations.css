@@ -1,0 +1,84 @@
+/* Global CSS transitions and keyframe animations */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  70% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modal-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Base class assignments */
+.view-pane.active {
+  animation: fade-in 0.45s var(--spring-curve) forwards;
+}
+
+.flashcard {
+  animation: bounce-in 0.4s var(--spring-curve) forwards;
+}
+
+.modal-card {
+  animation: modal-slide-in 0.35s var(--spring-curve) forwards;
+}
+
+/* User account register / login panel styling side-by-side */
+.auth-flex-row {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+}
+
+.auth-card {
+  flex: 1;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+}
+
+.auth-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 10px;
+  color: var(--primary-light);
+}
+
+.sync-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: hsla(245, 80%, 62%, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 16px 20px;
+}

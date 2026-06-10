@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-dark: hsl(245, 15%, 7%);
+  --bg-card: hsla(245, 10%, 12%, 0.7);
+  --bg-card-hover: hsla(245, 10%, 15%, 0.75);
+  --bg-sidebar: hsl(245, 14%, 9%);
+  --border: hsla(245, 10%, 25%, 0.25);
+  --border-hover: hsla(245, 80%, 62%, 0.4);
+  --primary: hsl(245, 80%, 62%);
+  --primary-glow: hsla(245, 80%, 62%, 0.35);
+  --primary-light: hsl(245, 100%, 75%);
+  --text-main: hsl(0, 0%, 95%);
+  --text-muted: hsl(245, 10%, 65%);
+  
+  --success: hsl(145, 80%, 45%);
+  --success-glow: hsla(145, 80%, 45%, 0.35);
+  --danger: hsl(5, 80%, 55%);
+  --danger-glow: hsla(5, 80%, 55%, 0.3);
+  
+  --transition-slow: 0.4s;
+  --transition-fast: 0.2s;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  --spring-curve: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+h1, h2, h3, h4, h5 {
+  margin-top: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Custom Scrollbars for panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsla(245, 10%, 25%, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}

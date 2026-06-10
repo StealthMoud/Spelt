@@ -1,0 +1,198 @@
+/* Navigation items, inputs, and button components */
+
+/* Sidebar nav item */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xl);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-slow) var(--spring-curve);
+  position: relative;
+}
+
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  transition: transform var(--transition-fast) var(--spring-curve);
+}
+
+.nav-item:hover {
+  color: var(--text-main);
+  background: hsla(0, 0%, 100%, 0.02);
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  color: var(--primary-light);
+  background: hsla(245, 80%, 62%, 0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 15px var(--primary-glow), inset 0 0 10px hsla(245,80%,62%,0.15);
+}
+
+.nav-item.active svg {
+  transform: scale(1.1);
+  color: var(--primary-light);
+}
+
+.due-badge {
+  position: absolute;
+  right: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--primary);
+  border: 1px solid var(--primary-light);
+  color: var(--text-main);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+/* Inputs and Buttons */
+.premium-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: hsla(245, 80%, 62%, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  outline: none;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  transition: all var(--transition-slow) var(--spring-curve);
+}
+
+.premium-input:focus {
+  background: hsla(245, 80%, 62%, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 12px var(--primary-glow);
+  transform: scale(1.005);
+}
+
+.premium-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.premium-select {
+  background: hsla(245, 80%, 62%, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  color: var(--text-main);
+  padding: 10px 14px;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-slow) var(--spring-curve);
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='hsl(245, 10%, 65%)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  padding-right: 36px;
+}
+
+.premium-select:hover {
+  background-color: hsla(0, 0%, 100%, 0.05);
+  border-color: var(--border-hover);
+}
+
+.premium-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* Action button style */
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: hsla(245, 80%, 62%, 0.15);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-xl);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-slow) var(--spring-curve);
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s var(--spring-curve);
+}
+
+.action-btn:hover {
+  background: var(--primary);
+  color: var(--text-main);
+  box-shadow: 0 6px 15px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.action-btn:hover svg {
+  transform: rotate(90deg) scale(1.1);
+}
+
+.action-btn:active {
+  transform: scale(0.97);
+}
+
+.secondary-btn {
+  background: hsla(0, 0%, 100%, 0.02) !important;
+  border-color: var(--border) !important;
+  color: var(--text-main) !important;
+}
+
+.secondary-btn:hover {
+  background: hsla(0, 0%, 100%, 0.06) !important;
+  border-color: var(--border-hover) !important;
+  box-shadow: none !important;
+}
+
+.danger-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: hsla(5, 80%, 10%, 0.9);
+  border: 1px solid hsla(5, 80%, 55%, 0.3);
+  color: var(--danger);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-slow) var(--spring-curve);
+}
+
+.danger-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s var(--spring-curve);
+}
+
+.danger-btn:hover {
+  background: var(--danger);
+  color: var(--text-main);
+  box-shadow: 0 6px 20px var(--danger-glow);
+  transform: scale(1.05);
+}
+
+.danger-btn:hover svg {
+  transform: scale(1.15) rotate(-15deg);
+}

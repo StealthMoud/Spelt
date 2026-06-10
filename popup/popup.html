@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spelt Vocabulary</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="spelt-popup">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="logo-row">
+        <span class="logo-text">Spelt</span>
+        <button id="open-dash-btn" class="dashboard-launch-btn" title="Open Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+      </div>
+      <p class="subtitle">SRS Vocabulary practice</p>
+    </header>
+
+    <!-- Content stats -->
+    <main class="popup-main">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Due Reviews</div>
+          <div id="due-count" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Words</div>
+          <div id="total-count" class="stat-value">0</div>
+        </div>
+      </div>
+
+      <!-- Quick Add Form -->
+      <div class="quick-add-section">
+        <h3>Quick Add Word</h3>
+        <form id="quick-add-form">
+          <div class="input-wrapper">
+            <input type="text" id="word-input" class="premium-input" placeholder="Enter word..." autocomplete="off" required>
+          </div>
+          <div class="input-wrapper">
+            <input type="text" id="def-input" class="premium-input" placeholder="Definition (optional)..." autocomplete="off">
+          </div>
+          <button type="submit" class="submit-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Add Word</span>
+          </button>
+        </form>
+        <p id="feedback-msg" class="feedback-text"></p>
+      </div>
+    </main>
+
+    <!-- Mini Footer -->
+    <footer class="popup-footer">
+      <div class="session-info">
+        <span class="user-status-dot"></span>
+        <span id="user-email-display" class="user-label">Local Guest Profile</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
