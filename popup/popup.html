@@ -245,6 +245,23 @@
         </form>
       </div>
     </div>
+    <!-- MODAL: Custom Confirm Dialog -->
+    <div id="popup-confirm-modal" class="modal-overlay">
+      <div class="modal-card" style="max-width: 280px; text-align: center;">
+        <h3 id="popup-confirm-title" style="margin-top: 0; color: var(--danger); font-size: 0.95rem;">Confirm Action</h3>
+        <p id="popup-confirm-msg" style="font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 16px; line-height: 1.4;"></p>
+        <div class="modal-actions-row" style="justify-content: center; gap: 8px;">
+          <button type="button" id="popup-confirm-cancel-btn" class="submit-btn" style="padding: 6px 12px; font-size: 0.75rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; margin-right: 2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Cancel</span>
+          </button>
+          <button type="button" id="popup-confirm-ok-btn" class="submit-btn primary-save-btn" style="padding: 6px 12px; font-size: 0.75rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; margin-right: 2px;"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>OK</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="popup.js"></script>

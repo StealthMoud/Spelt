@@ -1,5 +1,6 @@
 // Compact database settings controller for Spelt extension popup
 import { getWords, saveWords, resetDb } from '../../shared/storage.js';
+import { showConfirm } from './vault.js';
 
 let onDbRestoredCallback = null;
 
@@ -37,7 +38,7 @@ async function exportDb() {
     a.click();
     URL.revokeObjectURL(url);
   } catch (e) {
-    alert('Export failed: ' + e.message);
+    showConfirm('Export Error', 'Export failed: ' + e.message, null, false);
   }
 }
 
@@ -50,23 +51,27 @@ async function importDb(e) {
       const words = JSON.parse(evt.target.result);
       if (!Array.isArray(words)) throw new Error('Invalid backup file');
       await saveWords(words);
-      alert('Library restored successfully!');
+      showConfirm('Success', 'Library restored successfully!', null, false);
       if (onDbRestoredCallback) {
         await onDbRestoredCallback();
       }
     } catch (err) {
-      alert('Import failed: ' + err.message);
+      showConfirm('Import Error', 'Import failed: ' + err.message, null, false);
     }
   };
   reader.readAsText(file);
 }
 
 async function wipeDb() {
-  if (confirm('Are you sure you want to delete all words and activity data? This action cannot be undone.')) {
-    await resetDb();
-    alert('Database purged successfully!');
-    if (onDbRestoredCallback) {
-      await onDbRestoredCallback();
+  showConfirm(
+    'Wipe Database',
+    'Are you sure you want to delete all words and activity data? This action cannot be undone.',
+    async () => {
+      await resetDb();
+      showConfirm('Purged', 'Database purged successfully!', null, false);
+      if (onDbRestoredCallback) {
+        await onDbRestoredCallback();
+      }
     }
-  }
+  );
 }

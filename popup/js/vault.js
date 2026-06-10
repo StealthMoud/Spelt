@@ -51,7 +51,7 @@ function renderList() {
       `;
       
       li.querySelector('.edit-btn').addEventListener('click', () => openModal(w));
-      li.querySelector('.delete-btn').addEventListener('click', () => deleteWord(w.id));
+      li.querySelector('.delete-btn').addEventListener('click', () => deleteWord(w));
       listEl.appendChild(li);
     });
   }
@@ -97,15 +97,50 @@ async function saveWord(e) {
     await reloadVaultList();
     if (onVaultUpdatedCallback) onVaultUpdatedCallback();
   } catch (err) {
-    alert(err.message || 'Save failed');
+    showConfirm('Error', err.message || 'Save failed', null, false);
   }
 }
 
-async function deleteWord(id) {
-  if (confirm('Delete this word from your vault?')) {
-    wordsList = wordsList.filter(w => w.id !== id);
-    await saveWords(wordsList);
-    await reloadVaultList();
-    if (onVaultUpdatedCallback) onVaultUpdatedCallback();
-  }
+function deleteWord(wordObj) {
+  showConfirm(
+    'Delete Word',
+    `Delete "${wordObj.word}" from your vault?`,
+    async () => {
+      wordsList = wordsList.filter(w => w.id !== wordObj.id);
+      await saveWords(wordsList);
+      await reloadVaultList();
+      if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+    }
+  );
+}
+
+export function showConfirm(title, message, onOk, showCancel = true) {
+  const modal = document.getElementById('popup-confirm-modal');
+  const titleEl = document.getElementById('popup-confirm-title');
+  const msgEl = document.getElementById('popup-confirm-msg');
+  const okBtn = document.getElementById('popup-confirm-ok-btn');
+  const cancelBtn = document.getElementById('popup-confirm-cancel-btn');
+
+  titleEl.textContent = title;
+  msgEl.textContent = message;
+  cancelBtn.style.display = showCancel ? 'inline-flex' : 'none';
+  modal.style.display = 'flex';
+
+  const close = () => {
+    modal.style.display = 'none';
+    cleanup();
+  };
+
+  const handleOk = async () => {
+    if (onOk) await onOk();
+    close();
+  };
+
+  const cleanup = () => {
+    okBtn.removeEventListener('click', handleOk);
+    cancelBtn.removeEventListener('click', close);
+  };
+
+  okBtn.addEventListener('click', handleOk);
+  cancelBtn.addEventListener('click', close);
 }
