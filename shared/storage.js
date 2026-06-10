@@ -46,8 +46,11 @@ export function calcSM2(q, prevRep, prevInt, prevEF) {
   ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
   if (ef < 1.3) ef = 1.3;
 
-  // Next review date in milliseconds (from now)
-  const nextDate = Date.now() + interval * 24 * 60 * 60 * 1000;
+  // Next review date — "Again" cards stay due immediately,
+  // successful reviews get pushed forward by the computed interval
+  const nextDate = q < 3
+    ? Date.now()
+    : Date.now() + interval * 24 * 60 * 60 * 1000;
 
   return { rep, interval, ef, nextDate };
 }
