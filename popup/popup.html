@@ -167,6 +167,17 @@
             <span>Add Word</span>
           </button>
         </div>
+        <div class="vault-sort-row">
+          <select id="vault-sort-field" class="premium-input vault-sort-select">
+            <option value="alpha">A — Z</option>
+            <option value="date">Date Added</option>
+            <option value="review">Next Review</option>
+          </select>
+          <button id="vault-sort-dir-btn" class="submit-btn vault-sort-dir-btn" data-dir="asc" title="Toggle sort direction">
+            <svg id="sort-dir-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            <span id="sort-dir-label">ASC</span>
+          </button>
+        </div>
         <div id="vault-list-container" class="vault-list-box">
           <div id="vault-list-empty">No words saved yet. Check spelling in the Sandbox to add some!</div>
           <ul id="popup-vault-list"></ul>

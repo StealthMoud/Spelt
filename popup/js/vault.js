@@ -12,6 +12,17 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('word-entry-form').addEventListener('submit', saveWord);
   document.getElementById('vault-search').addEventListener('input', renderList);
 
+  // Sort controls
+  document.getElementById('vault-sort-field')?.addEventListener('change', renderList);
+  document.getElementById('vault-sort-dir-btn')?.addEventListener('click', () => {
+    const btn = document.getElementById('vault-sort-dir-btn');
+    const current = btn.getAttribute('data-dir');
+    const next = current === 'asc' ? 'desc' : 'asc';
+    btn.setAttribute('data-dir', next);
+    document.getElementById('sort-dir-label').textContent = next.toUpperCase();
+    renderList();
+  });
+
   await reloadVaultList();
 }
 
@@ -24,13 +35,28 @@ function renderList() {
   const query = document.getElementById('vault-search').value.trim().toLowerCase();
   const listEl = document.getElementById('popup-vault-list');
   const emptyEl = document.getElementById('vault-list-empty');
+  const sortField = document.getElementById('vault-sort-field')?.value || 'alpha';
+  const sortDir = document.getElementById('vault-sort-dir-btn')?.getAttribute('data-dir') || 'asc';
 
   listEl.innerHTML = '';
   
-  const filtered = wordsList.filter(w => 
+  let filtered = wordsList.filter(w => 
     w.word.toLowerCase().includes(query) || 
     w.definition.toLowerCase().includes(query)
   );
+
+  // Apply sorting
+  filtered.sort((a, b) => {
+    let cmp = 0;
+    if (sortField === 'alpha') {
+      cmp = a.word.localeCompare(b.word, undefined, { sensitivity: 'base' });
+    } else if (sortField === 'date') {
+      cmp = (a.createdAt || 0) - (b.createdAt || 0);
+    } else if (sortField === 'review') {
+      cmp = (a.nextDate || 0) - (b.nextDate || 0);
+    }
+    return sortDir === 'desc' ? -cmp : cmp;
+  });
 
   if (filtered.length === 0) {
     emptyEl.style.display = 'block';

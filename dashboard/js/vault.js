@@ -16,6 +16,20 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('vault-search').addEventListener('input', renderVaultList);
   document.getElementById('vault-filter-status').addEventListener('change', renderVaultList);
 
+  // Sort controls
+  document.getElementById('vault-sort-field')?.addEventListener('change', renderVaultList);
+  document.getElementById('vault-sort-dir-btn')?.addEventListener('click', () => {
+    const btn = document.getElementById('vault-sort-dir-btn');
+    const current = btn.getAttribute('data-dir');
+    const next = current === 'asc' ? 'desc' : 'asc';
+    btn.setAttribute('data-dir', next);
+    document.getElementById('sort-dir-label').textContent = next.toUpperCase();
+    // Flip arrow direction visually
+    const icon = document.getElementById('sort-dir-icon');
+    if (icon) icon.style.transform = next === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)';
+    renderVaultList();
+  });
+
   await reloadVault();
 }
 
@@ -24,17 +38,19 @@ export async function reloadVault() {
   renderVaultList();
 }
 
-// Populate table rows based on filters
+// Populate table rows based on filters and sort
 function renderVaultList() {
   const query = document.getElementById('vault-search').value.trim().toLowerCase();
   const filter = document.getElementById('vault-filter-status').value;
+  const sortField = document.getElementById('vault-sort-field')?.value || 'alpha';
+  const sortDir = document.getElementById('vault-sort-dir-btn')?.getAttribute('data-dir') || 'asc';
   const tbody = document.getElementById('vault-list');
   const emptyState = document.getElementById('vault-empty-state');
   
   tbody.innerHTML = '';
   const now = Date.now();
 
-  const filtered = wordsList.filter(w => {
+  let filtered = wordsList.filter(w => {
     // Text search filter
     const matchesText = w.word.toLowerCase().includes(query) || 
                         w.definition.toLowerCase().includes(query) ||
@@ -51,6 +67,19 @@ function renderVaultList() {
     }
 
     return matchesText && matchesStatus;
+  });
+
+  // Apply sorting
+  filtered.sort((a, b) => {
+    let cmp = 0;
+    if (sortField === 'alpha') {
+      cmp = a.word.localeCompare(b.word, undefined, { sensitivity: 'base' });
+    } else if (sortField === 'date') {
+      cmp = (a.createdAt || 0) - (b.createdAt || 0);
+    } else if (sortField === 'review') {
+      cmp = (a.nextDate || 0) - (b.nextDate || 0);
+    }
+    return sortDir === 'desc' ? -cmp : cmp;
   });
 
   if (filtered.length === 0) {

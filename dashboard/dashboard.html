@@ -243,6 +243,15 @@
             <option value="new">New / Unpracticed</option>
             <option value="review">Learning / Active</option>
           </select>
+          <select id="vault-sort-field" class="premium-select">
+            <option value="alpha">Sort: A — Z</option>
+            <option value="date">Sort: Date Added</option>
+            <option value="review">Sort: Next Review</option>
+          </select>
+          <button id="vault-sort-dir-btn" class="action-btn vault-sort-dir-btn" data-dir="asc" title="Toggle sort direction" style="padding: 6px 10px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px; min-width: 60px; white-space: nowrap;">
+            <svg id="sort-dir-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            <span id="sort-dir-label">ASC</span>
+          </button>
         </div>
 
         <!-- Words List Table -->

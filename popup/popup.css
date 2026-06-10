@@ -89,6 +89,13 @@ body { margin: 0; padding: 0; width: 360px; font-family: 'Outfit', sans-serif; b
 .vault-filter-row .search-box { flex: 1; position: relative; }
 .search-icon-svg { position: absolute; left: 8px; top: 9px; width: 11px; height: 11px; color: var(--text-muted); }
 .vault-filter-row .premium-input { padding: 6px 10px 6px 26px; font-size: 0.74rem; }
+.vault-sort-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+.vault-sort-select { flex: 1; padding: 4px 8px !important; font-size: 0.68rem !important; color: var(--text-muted); background: hsla(155, 65%, 48%, 0.03); appearance: auto; cursor: pointer; }
+.vault-sort-select:focus { border-color: var(--primary); box-shadow: 0 0 6px var(--primary-glow); color: var(--text-main); }
+.vault-sort-dir-btn { padding: 4px 8px !important; font-size: 0.62rem !important; gap: 3px !important; min-width: 52px; white-space: nowrap; }
+.vault-sort-dir-btn svg { transition: transform 0.3s var(--spring-curve); }
+.vault-sort-dir-btn[data-dir="asc"] svg { transform: rotate(180deg); }
+.vault-sort-dir-btn[data-dir="desc"] svg { transform: rotate(0deg); }
 .vault-list-box { flex: 1; min-height: 250px; max-height: 290px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); padding: 5px; }
 .settings-content-wrapper { display: flex; flex-direction: column; gap: 10px; font-size: 0.72rem; }
 .settings-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
