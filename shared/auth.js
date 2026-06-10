@@ -138,3 +138,10 @@ export async function getSyncStats() {
     itemCount: user?.backupData?.length || 0
   };
 }
+
+// Check if email account exists in the client-side mock db
+export async function checkEmailExists(email) {
+  if (!email) return false;
+  const accounts = await getAuthStored('spelt_accounts') || {};
+  return !!accounts[email.toLowerCase()];
+}

@@ -82,3 +82,42 @@
   border-radius: var(--radius-xl);
   padding: 16px 20px;
 }
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 18px;
+  background: hsla(245, 80%, 62%, 0.15);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-xl);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-slow) var(--spring-curve);
+}
+
+.submit-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s var(--spring-curve);
+}
+
+.submit-btn:hover {
+  background: var(--primary);
+  color: var(--text-main);
+  box-shadow: 0 6px 15px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.submit-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.submit-btn:active {
+  transform: scale(0.97);
+}

@@ -1,4 +1,4 @@
-import { getSession, loginUser, registerUser, logoutUser, syncUserData, getSyncStats, loginWithGoogle } from '../../shared/auth.js';
+import { getSession, loginUser, registerUser, logoutUser, syncUserData, getSyncStats, loginWithGoogle, checkEmailExists } from '../../shared/auth.js';
 import { getWords } from '../../shared/storage.js';
 import { updateSidebarUserDisplay } from './navigation.js';
 
@@ -11,11 +11,11 @@ export function initAuthPanel(onAuthChanged) {
   const authForm = document.getElementById('unified-auth-form');
   const logoutBtn = document.getElementById('logout-btn');
   const syncBtn = document.getElementById('sync-now-btn');
-  const modeToggleBtn = document.getElementById('auth-toggle-mode-btn');
+  const emailInput = document.getElementById('auth-email');
 
   authForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = document.getElementById('auth-email').value.trim();
+    const email = emailInput.value.trim();
     const pass = document.getElementById('auth-password').value;
 
     if (authMode === 'login') {
@@ -25,31 +25,39 @@ export function initAuthPanel(onAuthChanged) {
     }
   });
 
-  modeToggleBtn.addEventListener('click', toggleAuthMode);
+  let checkTimeout = null;
+  emailInput.addEventListener('input', () => {
+    clearTimeout(checkTimeout);
+    checkTimeout = setTimeout(checkEmailState, 200);
+  });
+
   logoutBtn.addEventListener('click', handleLogout);
   syncBtn.addEventListener('click', handleCloudSync);
 
   initGoogleAuthElements();
 }
 
-function toggleAuthMode() {
-  const title = document.getElementById('auth-card-title');
-  const btnText = document.getElementById('auth-btn-text');
-  const modeLabel = document.getElementById('auth-mode-label');
-  const toggleBtn = document.getElementById('auth-toggle-mode-btn');
+async function checkEmailState() {
+  const emailInput = document.getElementById('auth-email');
+  const email = emailInput?.value.trim() || '';
+  const subtext = document.getElementById('auth-form-subtext');
+  const btn = document.getElementById('auth-submit-btn');
+  if (!btn) return;
 
-  if (authMode === 'login') {
-    authMode = 'register';
-    title.textContent = 'Create Cloud Profile';
-    btnText.textContent = 'Register & Sync';
-    modeLabel.textContent = 'Already have an account?';
-    toggleBtn.textContent = 'Sign In';
-  } else {
+  const valid = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const exists = valid && await checkEmailExists(email);
+  authMode = exists ? 'login' : 'register';
+
+  if (!valid) {
     authMode = 'login';
-    title.textContent = 'Sync & Secure Progress';
-    btnText.textContent = 'Sign In';
-    modeLabel.textContent = "Don't have an account?";
-    toggleBtn.textContent = 'Register';
+    if (subtext) { subtext.textContent = 'Enter email and password to sync your progress.'; subtext.style.color = 'var(--text-muted)'; }
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span id="auth-btn-text">Continue with Email</span>`;
+  } else if (exists) {
+    if (subtext) { subtext.textContent = 'Welcome back! Enter password to sign in.'; subtext.style.color = 'var(--primary-light)'; }
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg><span id="auth-btn-text">Sign In & Sync</span>`;
+  } else {
+    if (subtext) { subtext.textContent = 'New email! Enter a password to create your profile.'; subtext.style.color = 'var(--success)'; }
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg><span id="auth-btn-text">Register & Sync</span>`;
   }
 }
 
@@ -158,6 +166,7 @@ export async function refreshSessionUI() {
   } else {
     activePanel.style.display = 'none';
     formsPanel.style.display = 'flex';
+    checkEmailState();
   }
 
   if (onAuthChangedCallback) onAuthChangedCallback();

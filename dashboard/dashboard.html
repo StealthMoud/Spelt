@@ -398,15 +398,16 @@
                 <input type="password" id="auth-password" class="premium-input" placeholder="••••••••" required autocomplete="current-password">
               </div>
 
-              <button type="submit" class="submit-btn" id="auth-submit-btn" style="padding: 10px; font-size: 0.88rem;">
-                <span id="auth-btn-text">Sign In</span>
+              <p id="auth-form-subtext" style="font-size: 0.76rem; color: var(--text-muted); margin: -4px 0 2px; line-height: 1.35; text-align: center;">Enter email and password to sync your progress.</p>
+
+              <button type="submit" class="submit-btn" id="auth-submit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span id="auth-btn-text">Continue with Email</span>
               </button>
             </form>
-
-            <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
-              <span id="auth-mode-label">Don't have an account?</span>
-              <button type="button" id="auth-toggle-mode-btn" style="background: none; border: none; color: var(--primary-light); font-weight: 600; cursor: pointer; padding: 0 4px; text-decoration: underline; font-family: inherit;">Register</button>
-            </div>
           </div>
         </div>
         
