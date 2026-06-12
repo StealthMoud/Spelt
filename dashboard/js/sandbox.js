@@ -29,15 +29,21 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
     }
   });
 
-  // Space to refocus input when feedback card is showing
+  // Space: play audio on misspelling card, refocus input on correct card
   window.addEventListener('keydown', (e) => {
     if (e.key !== ' ') return;
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
     const f = document.getElementById('sandbox-feedback');
     if (!f || f.style.display === 'none') return;
     e.preventDefault();
-    const spellInput = document.getElementById('sandbox-spell-input');
-    if (spellInput) { spellInput.value = ''; spellInput.focus(); }
+    const acceptBtn = f.querySelector('.accept-suggestion-btn');
+    if (acceptBtn) {
+      const audioBtn = f.querySelector('.audio-play-btn');
+      if (audioBtn) audioBtn.click();
+    } else {
+      const spellInput = document.getElementById('sandbox-spell-input');
+      if (spellInput) { spellInput.value = ''; spellInput.focus(); }
+    }
   });
 
   const f = document.getElementById('sandbox-feedback');

@@ -107,6 +107,11 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
         if (suggestion && original) {
           await acceptSuggestion(suggestion, original);
         }
+      } else if (e.key === ' ') {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+        e.preventDefault();
+        const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
+        if (audioBtn) audioBtn.click();
       } else if (e.key === 'Escape') {
         e.preventDefault();
         const original = rejectBtn.getAttribute('data-original');
