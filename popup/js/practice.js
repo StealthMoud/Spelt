@@ -48,7 +48,7 @@ export async function initPractice(onDeckUpdated) {
 }
 
 export async function loadPracticeDeck() {
-  dueCards = (await getWords()).filter(w => w.nextDate <= Date.now());
+  dueCards = (await getWords()).filter(w => w.nextDate <= Date.now() && !w.mastered);
   currentIndex = 0;
   onDeckUpdatedCallback?.(dueCards.length);
   showPracticeCard();

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function refreshStats() {
     try {
       const words = await getWords();
-      const dueCount = words.filter(w => w.nextDate <= Date.now()).length;
+      const dueCount = words.filter(w => w.nextDate <= Date.now() && !w.mastered).length;
       dueCountEl.textContent = dueCount;
       totalCountEl.textContent = words.length;
       
@@ -48,4 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
 
   await refreshStats();
+
+  // immediately focus the sandbox input so user can start typing
+  document.getElementById('word-input')?.focus();
 });

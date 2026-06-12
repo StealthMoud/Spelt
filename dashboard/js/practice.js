@@ -47,7 +47,7 @@ export async function initPractice(onDeckUpdated, onXpUpdated, triggerConfetti) 
 }
 
 export async function loadDeck() {
-  dueCards = (await getWords()).filter(w => w.nextDate <= Date.now());
+  dueCards = (await getWords()).filter(w => w.nextDate <= Date.now() && !w.mastered);
   currentCardIndex = 0;
   onDeckUpdatedCallback?.(dueCards.length);
   showCurrentCard();

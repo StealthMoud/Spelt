@@ -2,6 +2,7 @@ import { getWords, addWord, saveWords } from '../../shared/storage.js';
 
 let wordsList = [];
 let onVaultUpdatedCallback = null;
+let selectedWordIds = new Set();
 
 export async function initVault(onVaultUpdated) {
   onVaultUpdatedCallback = onVaultUpdated;
@@ -13,21 +14,96 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('word-entry-form').addEventListener('submit', saveWordForm);
   
   // Search and status filter inputs
-  document.getElementById('vault-search').addEventListener('input', renderVaultList);
-  document.getElementById('vault-filter-status').addEventListener('change', renderVaultList);
+  document.getElementById('vault-search').addEventListener('input', () => {
+    selectedWordIds.clear();
+    renderVaultList();
+  });
+  document.getElementById('vault-filter-status').addEventListener('change', () => {
+    selectedWordIds.clear();
+    renderVaultList();
+  });
 
   // Sort controls
-  document.getElementById('vault-sort-field')?.addEventListener('change', renderVaultList);
+  document.getElementById('vault-sort-field')?.addEventListener('change', () => {
+    selectedWordIds.clear();
+    renderVaultList();
+  });
   document.getElementById('vault-sort-dir-btn')?.addEventListener('click', () => {
     const btn = document.getElementById('vault-sort-dir-btn');
     const current = btn.getAttribute('data-dir');
     const next = current === 'asc' ? 'desc' : 'asc';
     btn.setAttribute('data-dir', next);
     document.getElementById('sort-dir-label').textContent = next.toUpperCase();
-    // Flip arrow direction visually
     const icon = document.getElementById('sort-dir-icon');
     if (icon) icon.style.transform = next === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)';
+    selectedWordIds.clear();
     renderVaultList();
+  });
+
+  // Bulk action listeners
+  document.getElementById('vault-select-all')?.addEventListener('change', (e) => {
+    const checked = e.target.checked;
+    const query = document.getElementById('vault-search').value.trim().toLowerCase();
+    const filter = document.getElementById('vault-filter-status').value;
+    const now = Date.now();
+    
+    let filtered = wordsList.filter(w => {
+      const matchesText = w.word.toLowerCase().includes(query) || 
+                          w.definition.toLowerCase().includes(query) ||
+                          w.translation.toLowerCase().includes(query);
+      let matchesStatus = true;
+      if (filter === 'due') {
+        matchesStatus = w.nextDate <= now;
+      } else if (filter === 'new') {
+        matchesStatus = w.rep === 0;
+      } else if (filter === 'review') {
+        matchesStatus = w.rep > 0;
+      }
+      return matchesText && matchesStatus;
+    });
+
+    if (checked) {
+      filtered.forEach(w => selectedWordIds.add(w.id));
+    } else {
+      filtered.forEach(w => selectedWordIds.delete(w.id));
+    }
+    updateBulkUIState(filtered);
+  });
+
+  document.getElementById('vault-delete-selected')?.addEventListener('click', () => {
+    if (selectedWordIds.size === 0) return;
+    
+    const modal = document.getElementById('dashboard-confirm-modal');
+    const msg = document.getElementById('confirm-modal-msg');
+    const okBtn = document.getElementById('confirm-ok');
+    const cancelBtn = document.getElementById('confirm-cancel');
+
+    msg.textContent = `Are you sure you want to delete all ${selectedWordIds.size} selected words from your vault?`;
+    modal.classList.add('active');
+
+    const cleanup = () => {
+      okBtn.removeEventListener('click', handleOk);
+      cancelBtn.removeEventListener('click', handleCancel);
+    };
+
+    const close = () => {
+      modal.classList.remove('active');
+      cleanup();
+    };
+    
+    const handleOk = async () => {
+      wordsList = wordsList.filter(w => !selectedWordIds.has(w.id));
+      await saveWords(wordsList);
+      selectedWordIds.clear();
+      close();
+      await reloadVault();
+      if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+    };
+
+    const handleCancel = () => close();
+
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
   });
 
   await reloadVault();
@@ -35,6 +111,7 @@ export async function initVault(onVaultUpdated) {
 
 export async function reloadVault() {
   wordsList = await getWords();
+  selectedWordIds.clear();
   renderVaultList();
 }
 
@@ -52,7 +129,6 @@ function formatTimeUntil(nextDate) {
   return { text: `in ${months}mo`, color: 'var(--text-muted)' };
 }
 
-// Populate table rows based on filters and sort
 function renderVaultList() {
   const query = document.getElementById('vault-search').value.trim().toLowerCase();
   const filter = document.getElementById('vault-filter-status').value;
@@ -65,12 +141,10 @@ function renderVaultList() {
   const now = Date.now();
 
   let filtered = wordsList.filter(w => {
-    // Text search filter
     const matchesText = w.word.toLowerCase().includes(query) || 
                         w.definition.toLowerCase().includes(query) ||
                         w.translation.toLowerCase().includes(query);
     
-    // Dropdown status filter
     let matchesStatus = true;
     if (filter === 'due') {
       matchesStatus = w.nextDate <= now;
@@ -98,13 +172,18 @@ function renderVaultList() {
 
   if (filtered.length === 0) {
     emptyState.style.display = 'block';
+    updateBulkUIState([]);
   } else {
     emptyState.style.display = 'none';
     filtered.forEach(w => {
       const tr = document.createElement('tr');
       const review = formatTimeUntil(w.nextDate);
+      const isChecked = selectedWordIds.has(w.id) ? 'checked' : '';
       
       tr.innerHTML = `
+        <td style="padding-left: 12px; vertical-align: middle;">
+          <input type="checkbox" class="word-select-checkbox" data-id="${w.id}" ${isChecked} style="accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px; margin: 0; vertical-align: middle;">
+        </td>
         <td style="font-weight: 600; color: var(--primary-light);">${w.word}</td>
         <td>${w.definition || '--'}</td>
         <td>${w.translation || '--'}</td>
@@ -123,20 +202,68 @@ function renderVaultList() {
         </td>
       `;
 
-      // Event listeners for actions
+      tr.querySelector('.word-select-checkbox').addEventListener('change', (e) => {
+        if (e.target.checked) {
+          selectedWordIds.add(w.id);
+        } else {
+          selectedWordIds.delete(w.id);
+        }
+        updateBulkUIState(filtered);
+      });
       tr.querySelector('.edit-btn').addEventListener('click', () => openFormModal(w));
       tr.querySelector('.delete-btn').addEventListener('click', () => confirmDeleteWord(w));
 
       tbody.appendChild(tr);
     });
+    updateBulkUIState(filtered);
   }
+}
+
+function updateBulkUIState(filtered) {
+  const deleteBtn = document.getElementById('vault-delete-selected');
+  const selectAllCheckbox = document.getElementById('vault-select-all');
+  const selectedCountSpan = document.getElementById('vault-selected-count');
+
+  if (!deleteBtn || !selectAllCheckbox) return;
+
+  if (filtered.length === 0) {
+    deleteBtn.style.display = 'none';
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+    return;
+  }
+
+  const filteredSelected = filtered.filter(w => selectedWordIds.has(w.id));
+  
+  if (filteredSelected.length > 0) {
+    deleteBtn.style.display = 'inline-flex';
+    selectedCountSpan.textContent = filteredSelected.length;
+  } else {
+    deleteBtn.style.display = 'none';
+  }
+
+  if (filteredSelected.length === 0) {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+  } else if (filteredSelected.length === filtered.length) {
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.indeterminate = false;
+  } else {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = true;
+  }
+
+  // Update check states of visible elements
+  document.querySelectorAll('.word-select-checkbox').forEach(cb => {
+    const id = cb.getAttribute('data-id');
+    cb.checked = selectedWordIds.has(id);
+  });
 }
 
 function openFormModal(wordObj = null) {
   const modal = document.getElementById('word-form-modal');
   const title = document.getElementById('form-modal-title');
   
-  // Clear inputs
   document.getElementById('edit-word-id').value = wordObj ? wordObj.id : '';
   document.getElementById('form-word').value = wordObj ? wordObj.word : '';
   document.getElementById('form-definition').value = wordObj ? wordObj.definition : '';
@@ -166,14 +293,12 @@ async function saveWordForm(e) {
 
   try {
     if (id) {
-      // Edit mode
       const idx = wordsList.findIndex(w => w.id === id);
       if (idx !== -1) {
         wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, example, notes };
         await saveWords(wordsList);
       }
     } else {
-      // Add mode
       await addWord({ word, definition, transcription, translation, example, notes });
     }
     closeFormModal();

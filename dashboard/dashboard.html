@@ -220,12 +220,18 @@
               <h2>Word Vault</h2>
               <p class="pane-desc">Manage, search, and audit saved vocabulary</p>
             </div>
-            <button id="add-word-trigger-btn" class="action-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              <span>Add New Word</span>
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button id="vault-delete-selected" class="action-btn danger-btn" style="display: none; background: hsla(5, 80%, 15%, 0.3); border-color: var(--danger); color: var(--danger); padding: 8px 12px; font-size: 0.82rem; height: 36px; border-radius: var(--radius-xl); align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Delete Selected (<span id="vault-selected-count">0</span>)</span>
+              </button>
+              <button id="add-word-trigger-btn" class="action-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Add New Word</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -259,6 +265,9 @@
           <table class="vault-table">
             <thead>
               <tr>
+                <th style="width: 40px; text-align: left; padding-left: 12px;">
+                  <input type="checkbox" id="vault-select-all" style="accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px; margin: 0; vertical-align: middle;">
+                </th>
                 <th>Word</th>
                 <th>Definition</th>
                 <th>Translation</th>

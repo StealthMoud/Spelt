@@ -85,6 +85,43 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
       }
     });
   }
+
+  // Bind shortcuts: Enter to Accept, Escape to Reject / Close
+  window.addEventListener('keydown', async (e) => {
+    const sandboxTab = document.getElementById('sandbox-tab');
+    const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
+    if (!isSandboxActive) return;
+
+    const feedbackMsg = document.getElementById('feedback-msg');
+    if (!feedbackMsg || feedbackMsg.style.display === 'none') return;
+
+    const acceptBtn = document.querySelector('.accept-suggestion-btn');
+    const rejectBtn = document.querySelector('.reject-suggestion-btn');
+
+    if (acceptBtn && rejectBtn) {
+      if (e.key === 'Enter') {
+        if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
+        e.preventDefault();
+        const suggestion = acceptBtn.getAttribute('data-suggestion');
+        const original = acceptBtn.getAttribute('data-original');
+        if (suggestion && original) {
+          await acceptSuggestion(suggestion, original);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        const original = rejectBtn.getAttribute('data-original');
+        if (original) {
+          await showManualCorrectionForm(original);
+        }
+      }
+    } else {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        feedbackMsg.style.display = 'none';
+        document.getElementById('word-input')?.focus();
+      }
+    }
+  });
 }
 
 async function handleVerify() {
@@ -134,19 +171,20 @@ async function handleCorrectSpelling(apiData, word) {
         subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 4px 0 0;">This word is already in your Word Vault.</p>`;
       }
     } else {
-      await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 30 * 24 * 60 * 60 * 1000 });
+      await addWord({ word, definition: def, transcription: ipa, mastered: true });
       await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
       subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 4px 0 0;">Added to database.</p>`;
     }
     document.getElementById('feedback-msg').innerHTML = `
       ${closeBtnHtml}
-      <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correct Spelling!</h4>
-      <p style="margin: 4px 0;"><strong>${word}</strong> ${ipa}</p>
+      <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
+      <p style="margin: 6px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em;">${word} <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span></p>
       ${renderAudioButtons(us, uk)}
       <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;">${def}</p>
       ${subtext}
     `;
     document.getElementById('word-input').value = '';
+    document.getElementById('word-input')?.focus();
     if (reloadVaultListCallback) await reloadVaultListCallback();
   } catch (err) { document.getElementById('feedback-msg').innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`; }
 }
@@ -171,8 +209,9 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   }
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
-    <h4 style="color: var(--danger); margin: 0 0 4px;">❌ Misspelling Detected</h4>
-    <p style="margin: 4px 0;">"${originalWord}" is incorrect. Did you mean <strong>${suggestion}</strong>?</p>
+    <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
+    <p style="margin: 6px 0;">"${originalWord}" is incorrect. Did you mean:</p>
+    <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${suggestion}</p>
     ${renderAudioButtons(us, uk)}
     ${altChips}
     <div style="display: flex; gap: 6px; margin-top: 8px;">
@@ -207,6 +246,7 @@ async function acceptSuggestion(suggestion, original) {
     <p style="font-size: 0.65rem; color: var(--primary-light); margin: 4px 0 0;">Earned +2 XP (Effort points).</p>
   `;
   document.getElementById('word-input').value = '';
+  document.getElementById('word-input')?.focus();
   if (reloadVaultListCallback) await reloadVaultListCallback();
   if (loadPracticeDeckCallback) await loadPracticeDeckCallback();
 }
@@ -239,6 +279,7 @@ async function showManualCorrectionForm(originalWord, suggestions = [], wrongAtt
     </div>
     ${chipsHtml}
   `;
+  document.getElementById('manual-correction-input')?.focus();
 }
 
 async function handleManualCorrection(correctWord, originalWord, wrongAttempt = '') {
@@ -264,6 +305,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
         ${renderAudioButtons(us, uk)}
       `;
       document.getElementById('word-input').value = '';
+      document.getElementById('word-input')?.focus();
       if (reloadVaultListCallback) await reloadVaultListCallback();
       if (loadPracticeDeckCallback) await loadPracticeDeckCallback();
     } else {

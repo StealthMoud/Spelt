@@ -91,6 +91,7 @@ export async function addWord(wordData) {
     rep: 0,
     interval: 0,
     ef: 2.5,
+    mastered: wordData.mastered || false,
     nextDate: wordData.nextDate !== undefined ? wordData.nextDate : Date.now(),
     createdAt: Date.now(),
     history: [],
@@ -112,6 +113,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
     if (wrongSpelling && !wordObj.misspellings.includes(wrongSpelling) && wrongSpelling.toLowerCase() !== correctWord.toLowerCase()) {
       wordObj.misspellings.push(wrongSpelling);
     }
+    wordObj.mastered = false; // re-enter SRS if previously mastered
     wordObj.rep = 0;
     wordObj.interval = 1;
     wordObj.nextDate = Date.now(); // due immediately for practice
