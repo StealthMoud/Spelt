@@ -82,6 +82,10 @@ Back up your database as a clean JSON file and restore it on any device. Works s
 
 Spelt is designed to be fully navigable from the keyboard so you can study without moving your hands to the mouse.
 
+### Global Chrome Command
+* **Ctrl+Shift+S** (Mac: **Control+Shift+S**) opens the Spelt popup instantly from any webpage.
+* *To customize this shortcut, paste `chrome://extensions/shortcuts` into your Chrome address bar.*
+
 ### Spellcheck Sandbox
 | Hotkey | Context / State | Action |
 |---|---|---|
