@@ -19,6 +19,16 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
     await handleVerify();
   });
 
+  document.getElementById('word-input')?.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      const inputVal = e.target.value.trim();
+      if (inputVal) {
+        e.preventDefault();
+        await handleVerify();
+      }
+    }
+  });
+
   const feedbackMsg = document.getElementById('feedback-msg');
   if (feedbackMsg) {
     feedbackMsg.addEventListener('keydown', async (e) => {
@@ -88,6 +98,7 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
 
   // Bind shortcuts: Enter to Accept / Play audio, Escape to Reject / Close
   window.addEventListener('keydown', async (e) => {
+    if (e.defaultPrevented) return;
     const sandboxTab = document.getElementById('sandbox-tab');
     const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
     if (!isSandboxActive) return;

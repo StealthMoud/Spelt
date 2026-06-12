@@ -22,6 +22,7 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
 
   // Space always plays audio, Enter refocuses input on correct card
   window.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented) return;
     const f = document.getElementById('sandbox-feedback');
     if (!f || f.style.display === 'none') return;
 
