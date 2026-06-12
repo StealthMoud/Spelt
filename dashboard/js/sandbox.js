@@ -11,7 +11,22 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
   onXpUpdatedCallback = onXpUpdated; triggerConfettiFn = triggerConfetti;
   
   document.getElementById('sandbox-spell-input')?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleVerify(); }
+    if (e.key === 'Enter') {
+      const inputVal = e.target.value.trim();
+      if (!inputVal) {
+        const f = document.getElementById('sandbox-feedback');
+        if (f && f.style.display !== 'none') {
+          const primaryAudioBtn = f.querySelector('.audio-play-btn');
+          if (primaryAudioBtn) {
+            e.preventDefault();
+            primaryAudioBtn.click();
+          }
+        }
+      } else {
+        e.preventDefault();
+        handleVerify();
+      }
+    }
   });
 
   const f = document.getElementById('sandbox-feedback');
@@ -153,8 +168,9 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   f.innerHTML = `
     ${closeBtnHtml}
     <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
-    <p style="font-size: 0.8rem; margin: 4px 0;">"${originalWord}" is incorrect. Did you mean <strong style="color: var(--primary-light);">${suggestion}</strong>?</p>
+    <p style="font-size: 0.8rem; margin: 4px 0;">"${originalWord}" is incorrect. Did you mean <strong style="color: var(--primary-light);">${suggestion}</strong>${ipa !== '/--/' ? ` <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span>` : ''}?</p>
     ${renderAudioButtons(us, uk)}
+    ${def !== 'No definition found' ? `<p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p>` : ''}
     ${altChips}
     <div style="display: flex; gap: 8px; margin-top: 10px;">
       <button type="button" class="action-btn accept-suggestion-btn" data-suggestion="${suggestion}" data-original="${originalWord}" style="padding: 6px 12px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><polyline points="20 6 9 17 4 12"/></svg><span>Accept</span></button>

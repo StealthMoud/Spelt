@@ -86,7 +86,7 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
     });
   }
 
-  // Bind shortcuts: Enter to Accept, Escape to Reject / Close
+  // Bind shortcuts: Enter to Accept / Play audio, Escape to Reject / Close
   window.addEventListener('keydown', async (e) => {
     const sandboxTab = document.getElementById('sandbox-tab');
     const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
@@ -115,7 +115,17 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
         }
       }
     } else {
-      if (e.key === 'Escape') {
+      if (e.key === 'Enter') {
+        if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
+        const wordInput = document.getElementById('word-input');
+        if (wordInput && !wordInput.value.trim()) {
+          const primaryAudioBtn = feedbackMsg.querySelector('.audio-play-btn');
+          if (primaryAudioBtn) {
+            e.preventDefault();
+            primaryAudioBtn.click();
+          }
+        }
+      } else if (e.key === 'Escape') {
         e.preventDefault();
         feedbackMsg.style.display = 'none';
         document.getElementById('word-input')?.focus();
@@ -211,8 +221,9 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
     ${closeBtnHtml}
     <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
     <p style="margin: 6px 0;">"${originalWord}" is incorrect. Did you mean:</p>
-    <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${suggestion}</p>
+    <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${suggestion}${ipa !== '/--/' ? ` <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span>` : ''}</p>
     ${renderAudioButtons(us, uk)}
+    ${def !== 'No definition found' ? `<p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;">${def}</p>` : ''}
     ${altChips}
     <div style="display: flex; gap: 6px; margin-top: 8px;">
       <button type="button" class="submit-btn accept-suggestion-btn" data-suggestion="${suggestion}" data-original="${originalWord}" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
