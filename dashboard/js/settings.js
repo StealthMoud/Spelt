@@ -53,19 +53,68 @@ export function initSettings(onDbRestored) {
   const multiplierSelect = document.getElementById('setting-srs-multiplier');
   multiplierSelect?.addEventListener('change', saveMultiplierSetting);
   loadMultiplierSetting();
+
+  const targetLangSelect = document.getElementById('setting-target-lang');
+  targetLangSelect?.addEventListener('change', saveTargetLangSetting);
+  loadTargetLangSetting();
+
+  if (isExt) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local') {
+        if (changes.spelt_target_lang) {
+          const el = document.getElementById('setting-target-lang');
+          if (el) el.value = changes.spelt_target_lang.newValue || 'none';
+        }
+        if (changes.spelt_srs_multiplier) {
+          const el = document.getElementById('setting-srs-multiplier');
+          if (el) el.value = (changes.spelt_srs_multiplier.newValue || 1.0).toString();
+        }
+      }
+    });
+  }
 }
 
 async function saveMultiplierSetting() {
-  const mult = document.getElementById('setting-srs-multiplier').value;
-  if (isExt) await chrome.storage.local.set({ 'spelt_srs_multiplier': parseFloat(mult) });
+  const mult = parseFloat(document.getElementById('setting-srs-multiplier').value);
+  if (isExt) {
+    await chrome.storage.local.set({ 'spelt_srs_multiplier': mult });
+  } else {
+    localStorage.setItem('spelt_srs_multiplier', mult.toString());
+  }
 }
 
 async function loadMultiplierSetting() {
+  let val = 1.0;
   if (isExt) {
     const res = await chrome.storage.local.get('spelt_srs_multiplier');
-    const val = res.spelt_srs_multiplier || 1.0;
-    document.getElementById('setting-srs-multiplier').value = val.toString();
+    val = res.spelt_srs_multiplier || 1.0;
+  } else {
+    const stored = localStorage.getItem('spelt_srs_multiplier');
+    if (stored) val = parseFloat(stored);
   }
+  const selectEl = document.getElementById('setting-srs-multiplier');
+  if (selectEl) selectEl.value = val.toString();
+}
+
+async function saveTargetLangSetting() {
+  const lang = document.getElementById('setting-target-lang').value;
+  if (isExt) {
+    await chrome.storage.local.set({ 'spelt_target_lang': lang });
+  } else {
+    localStorage.setItem('spelt_target_lang', lang);
+  }
+}
+
+async function loadTargetLangSetting() {
+  let val = 'none';
+  if (isExt) {
+    const res = await chrome.storage.local.get('spelt_target_lang');
+    val = res.spelt_target_lang || 'none';
+  } else {
+    val = localStorage.getItem('spelt_target_lang') || 'none';
+  }
+  const selectEl = document.getElementById('setting-target-lang');
+  if (selectEl) selectEl.value = val;
 }
 
 function handleImport(e) {

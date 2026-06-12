@@ -17,6 +17,31 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_srs_multiplier: parseFloat(e.target.value) });
   });
 
+  // Target language sync
+  chrome.storage?.local.get('spelt_target_lang', (res) => {
+    const lang = res.spelt_target_lang || 'none';
+    const selectEl = document.getElementById('setting-target-lang');
+    if (selectEl) selectEl.value = lang;
+  });
+
+  document.getElementById('setting-target-lang')?.addEventListener('change', (e) => {
+    chrome.storage?.local.set({ spelt_target_lang: e.target.value });
+  });
+
+  // Keep setting values synchronized in real-time
+  chrome.storage?.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      if (changes.spelt_target_lang) {
+        const el = document.getElementById('setting-target-lang');
+        if (el) el.value = changes.spelt_target_lang.newValue || 'none';
+      }
+      if (changes.spelt_srs_multiplier) {
+        const el = document.getElementById('setting-srs-multiplier');
+        if (el) el.value = (changes.spelt_srs_multiplier.newValue || 1.0).toString();
+      }
+    }
+  });
+
   document.getElementById('export-db-btn').addEventListener('click', exportDb);
   
   const fileInput = document.getElementById('import-db-file');

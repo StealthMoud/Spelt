@@ -10,13 +10,21 @@ async function getStored(key) {
     const res = await chrome.storage.local.get(key);
     return res[key];
   }
-  return mockDb[key];
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : mockDb[key];
+  } catch (_) {
+    return mockDb[key];
+  }
 }
 
 async function setStored(key, value) {
   if (isExt) {
     await chrome.storage.local.set({ [key]: value });
   } else {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (_) {}
     mockDb[key] = value;
   }
 }
@@ -70,6 +78,25 @@ export async function saveWords(words) {
   await setStored('spelt_words', words);
 }
 
+// Helper to fetch translation from MyMemory API
+async function fetchTranslation(word, targetLang) {
+  if (!targetLang || targetLang === 'none') return '';
+  try {
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|${targetLang}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.responseData && data.responseData.translatedText) {
+        let text = data.responseData.translatedText.trim();
+        text = text.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+        return text;
+      }
+    }
+  } catch (err) {
+    console.error('Translation error:', err);
+  }
+  return '';
+}
+
 // Add a single word
 export async function addWord(wordData) {
   const list = await getWords();
@@ -79,12 +106,20 @@ export async function addWord(wordData) {
     throw new Error('Word already exists in library');
   }
 
+  let translation = wordData.translation?.trim() || '';
+  if (!translation) {
+    const targetLang = await getStored('spelt_target_lang');
+    if (targetLang && targetLang !== 'none') {
+      translation = await fetchTranslation(normalizedWord, targetLang);
+    }
+  }
+
   const newWord = {
     id: 'w_' + Math.random().toString(36).substr(2, 9),
     word: normalizedWord,
     definition: wordData.definition?.trim() || '',
     transcription: wordData.transcription?.trim() || '',
-    translation: wordData.translation?.trim() || '',
+    translation: translation,
     example: wordData.example?.trim() || '',
     tags: Array.isArray(wordData.tags) ? wordData.tags : [],
     notes: wordData.notes?.trim() || '',
@@ -117,6 +152,15 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
     wordObj.rep = 0;
     wordObj.interval = 1;
     wordObj.nextDate = Date.now(); // due immediately for practice
+
+    if (!wordObj.translation?.trim()) {
+      const targetLang = await getStored('spelt_target_lang');
+      if (targetLang && targetLang !== 'none') {
+        const tr = await fetchTranslation(correctWord, targetLang);
+        if (tr) wordObj.translation = tr;
+      }
+    }
+
     await saveWords(list);
     return wordObj;
   } else {
@@ -125,6 +169,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
       definition: details.definition,
       transcription: details.transcription,
       example: details.example,
+      translation: details.translation,
       misspellings: wrongSpelling ? [wrongSpelling] : []
     });
   }
@@ -136,15 +181,8 @@ export async function reviewWord(wordId, q, typedWrongWord = null) {
   const index = list.findIndex(w => w.id === wordId);
   if (index === -1) throw new Error('Word not found');
 
-  // Read user's spacing multiplier setting (defaults to 1.0)
-  let multiplier = 1.0;
-  try {
-    const stored = await getStored('spelt_srs_multiplier');
-    if (stored && !isNaN(stored)) multiplier = parseFloat(stored);
-  } catch (_) { /* fallback to 1.0 */ }
-
   const card = list[index];
-  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef, multiplier);
+  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef, 1.0);
 
   card.rep = rep;
   card.interval = interval;
