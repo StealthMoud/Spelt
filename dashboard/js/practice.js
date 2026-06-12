@@ -1,4 +1,4 @@
-import { getWords, reviewWord } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord } from '../../shared/storage.js';
 
 let dueCards = [], currentCardIndex = 0, onDeckUpdatedCallback = null, triggerConfettiFn = null, comboStreak = 0;
 
@@ -138,11 +138,19 @@ async function submitRating(score) {
   try {
     const inputVal = document.getElementById('spelling-input').value.trim();
     const isCorrect = inputVal.toLowerCase() === card.word.toLowerCase();
-    const updatedCard = await reviewWord(card.id, score, isCorrect ? null : inputVal);
+    
+    let updatedCard = null;
+    if (isCorrect && score >= 3) {
+      await deleteWord(card.id);
+    } else {
+      updatedCard = await reviewWord(card.id, score, isCorrect ? null : inputVal);
+    }
     
     document.getElementById('deck-card').classList.remove('flipped');
     setTimeout(() => {
-      if (score < 3 || !isCorrect) dueCards.push(updatedCard);
+      if (updatedCard) {
+        dueCards.push(updatedCard);
+      }
       currentCardIndex += 1;
       onDeckUpdatedCallback?.(dueCards.length - currentCardIndex);
       showCurrentCard();
