@@ -29,6 +29,17 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
     }
   });
 
+  // Space to refocus input when feedback card is showing
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== ' ') return;
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+    const f = document.getElementById('sandbox-feedback');
+    if (!f || f.style.display === 'none') return;
+    e.preventDefault();
+    const spellInput = document.getElementById('sandbox-spell-input');
+    if (spellInput) { spellInput.value = ''; spellInput.focus(); }
+  });
+
   const f = document.getElementById('sandbox-feedback');
   if (f) {
     f.addEventListener('keydown', async (e) => {

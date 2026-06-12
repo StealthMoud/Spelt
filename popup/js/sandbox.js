@@ -125,6 +125,11 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
             primaryAudioBtn.click();
           }
         }
+      } else if (e.key === ' ') {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+        e.preventDefault();
+        const wordInput = document.getElementById('word-input');
+        if (wordInput) { wordInput.value = ''; wordInput.focus(); }
       } else if (e.key === 'Escape') {
         e.preventDefault();
         feedbackMsg.style.display = 'none';
