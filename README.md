@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/banner.png" alt="Spelt Banner" width="720" />
-</p>
-
 <h1 align="center">Spelt</h1>
 
 <p align="center">
@@ -71,7 +67,7 @@ Hear how words are pronounced using local dialect audio (US/UK) fetched directly
 Earn XP for correct spellings in the Sandbox or by clearing daily practice decks. Track your daily consistency with a visual combo streak indicator.
 
 ### 📊 Full Dashboard
-Open the full-page dashboard (`dashboard.html`) for a wider workspace, including analytics calendars, retention heatmaps, and progress tracking.
+Right-click the Spelt extension icon and select **Options** to launch the full-page dashboard. It features a wider workspace, detailed review analytics, and progress calendars.
 
 ### 💾 Export / Import
 Back up your database as a clean JSON file and restore it on any device. Works seamlessly across both the popup and dashboard views.
@@ -150,7 +146,6 @@ Spelt/
 │   ├── icon-48.png
 │   └── icon-128.png
 └── docs/
-    ├── banner.png
     └── screenshot-popup.png
 ```
 
