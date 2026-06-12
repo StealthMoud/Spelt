@@ -108,7 +108,7 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
           await acceptSuggestion(suggestion, original);
         }
       } else if (e.key === ' ') {
-        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+        if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) audioBtn.click();
@@ -126,7 +126,6 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
         const wordInput = document.getElementById('word-input');
         if (wordInput) { wordInput.value = ''; wordInput.focus(); }
       } else if (e.key === ' ') {
-        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) audioBtn.click();

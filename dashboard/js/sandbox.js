@@ -26,7 +26,7 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
     if (!f || f.style.display === 'none') return;
 
     if (e.key === ' ') {
-      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
       e.preventDefault();
       const audioBtn = f.querySelector('.audio-play-btn');
       if (audioBtn) audioBtn.click();
