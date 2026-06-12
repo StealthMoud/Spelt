@@ -226,6 +226,13 @@ async function updateStreak(todayStr) {
   await setStored('spelt_streak', streak);
 }
 
+// Delete a single word by its ID
+export async function deleteWord(wordId) {
+  const list = await getWords();
+  const filtered = list.filter(w => w.id !== wordId);
+  await saveWords(filtered);
+}
+
 // Utility to clear everything
 export async function resetDb() {
   await setStored('spelt_words', []);
