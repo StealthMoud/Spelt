@@ -100,7 +100,7 @@ function checkSpelling() {
 
   const audioContainer = document.getElementById('back-audio-container');
   if (audioContainer) {
-    audioContainer.innerHTML = '';
+    audioContainer.innerHTML = renderAudioButtons(`tts:en-US:${card.word}`, `tts:en-GB:${card.word}`);
     fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(card.word.toLowerCase())}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {

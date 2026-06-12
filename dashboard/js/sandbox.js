@@ -155,7 +155,8 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   const suggestion = suggestions[activeIndex];
   f.innerHTML = '<p style="color: var(--primary-light);">Retrieving suggestions...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = 'No definition found', ipa = '/--/', { us, uk } = { us: '', uk: '' };
+  let def = 'No definition found', ipa = '/--/';
+  let us = `tts:en-US:${suggestion}`, uk = `tts:en-GB:${suggestion}`;
   if (response.ok) {
     const data = await response.json();
     def = data[0].meanings[0]?.definitions[0]?.definition || def;
