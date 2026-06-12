@@ -27,7 +27,7 @@ The idea is simple: type a word, check the spelling, and if it's wrong, Spelt sa
 
 ### 🔍 Spellcheck Sandbox
 Type any word and press **Enter** to check it against a dictionary API. 
-* **If spelled correctly**: Spelt saves the word with its definition, phonetics, and pronunciation, awards you XP, and marks it as Mastered.
+* **If spelled correctly**: Spelt saves the word with its definition, phonetics, and pronunciation, and marks it as Mastered.
 * **If misspelled**: Spelt shows suggested corrections. You can accept a suggestion, manual-correct it, or reject it. The misspelled word is queued for SRS practice.
 * Keyboard shortcuts let you verify, accept suggestions, play audio, and dismiss cards without touching your mouse.
 
@@ -63,8 +63,8 @@ A searchable, filterable vault to manage your vocabulary.
 ### 🔊 Pronunciation & Speech Synthesis Fallback
 Hear how words are pronounced using local dialect audio (US/UK) fetched directly from the dictionary API. If the API doesn't provide audio files for a word, Spelt automatically falls back to the browser's native `SpeechSynthesis` API with high-quality English voices, making sure pronunciation buttons are always visible and interactive.
 
-### 🔥 XP & Streaks
-Earn XP for correct spellings in the Sandbox or by clearing daily practice decks. Track your daily consistency with a visual combo streak indicator.
+### 🔥 Daily Streaks
+Keep your spelling practice consistent. Track your daily learning sessions with a visual combo streak indicator on the full dashboard.
 
 ### 📊 Full Dashboard
 Right-click the Spelt extension icon and select **Options** to launch the full-page dashboard. It features a wider workspace, detailed review analytics, and progress calendars.

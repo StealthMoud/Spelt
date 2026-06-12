@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, addXp } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -7,10 +7,9 @@ const spellingMap = {
 };
 const commonWords = ["accommodate", "definitely", "separate", "receive", "embarrass", "until", "government", "environment", "occurred", "threshold", "pronunciation", "calendar", "necessary", "writing", "colleague", "successful", "tomorrow"];
 
-let onXpUpdatedCallback = null, reloadVaultListCallback = null, loadPracticeDeckCallback = null;
+let reloadVaultListCallback = null, loadPracticeDeckCallback = null;
 
-export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
-  onXpUpdatedCallback = onXpUpdated;
+export function initSandbox(reloadVaultList, loadPracticeDeck) {
   reloadVaultListCallback = reloadVaultList;
   loadPracticeDeckCallback = loadPracticeDeck;
 
@@ -198,7 +197,6 @@ async function handleCorrectSpelling(apiData, word) {
       }
     } else {
       await addWord({ word, definition: def, transcription: ipa, mastered: true });
-      await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
       subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 4px 0 0;">Added to database.</p>`;
     }
     document.getElementById('feedback-msg').innerHTML = `
@@ -266,12 +264,10 @@ async function acceptSuggestion(suggestion, original) {
     ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
   }
   await registerMisspelling(suggestion, original, { definition: def, transcription: ipa });
-  await addXp(2); if (onXpUpdatedCallback) onXpUpdatedCallback();
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
     <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4>
     <p style="font-size: 0.68rem; margin: 4px 0;">Added correct word <strong>"${suggestion}"</strong> to practice queue.</p>
-    <p style="font-size: 0.65rem; color: var(--primary-light); margin: 4px 0 0;">Earned +2 XP (Effort points).</p>
   `;
   document.getElementById('word-input').value = '';
   document.getElementById('word-input')?.focus();
@@ -325,7 +321,6 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
         await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa });
       }
-      await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
         <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>

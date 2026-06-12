@@ -1,9 +1,9 @@
-import { getWords, reviewWord, addXp } from '../../shared/storage.js';
+import { getWords, reviewWord } from '../../shared/storage.js';
 
-let dueCards = [], currentCardIndex = 0, onDeckUpdatedCallback = null, onXpUpdatedCallback = null, triggerConfettiFn = null, comboStreak = 0;
+let dueCards = [], currentCardIndex = 0, onDeckUpdatedCallback = null, triggerConfettiFn = null, comboStreak = 0;
 
-export async function initPractice(onDeckUpdated, onXpUpdated, triggerConfetti) {
-  onDeckUpdatedCallback = onDeckUpdated; onXpUpdatedCallback = onXpUpdated; triggerConfettiFn = triggerConfetti;
+export async function initPractice(onDeckUpdated, triggerConfetti) {
+  onDeckUpdatedCallback = onDeckUpdated; triggerConfettiFn = triggerConfetti;
   
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
   document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
@@ -99,13 +99,11 @@ function checkSpelling() {
     const comboBadge = document.getElementById('combo-badge-container');
     if (comboBadge) { comboBadge.style.display = 'flex'; document.getElementById('combo-streak-count').textContent = comboStreak; }
     if (triggerConfettiFn) triggerConfettiFn(document.getElementById('check-spelling-btn'));
-    addXp(10).then(() => onXpUpdatedCallback?.());
   } else {
     resultBadge.textContent = 'Incorrect'; resultBadge.className = 'result-badge danger'; userTyped.style.color = 'var(--danger)';
     comboStreak = 0;
     const comboBadge = document.getElementById('combo-badge-container');
     if (comboBadge) comboBadge.style.display = 'none';
-    addXp(2).then(() => onXpUpdatedCallback?.());
   }
 
   userTyped.textContent = inputVal || '(Blank)';

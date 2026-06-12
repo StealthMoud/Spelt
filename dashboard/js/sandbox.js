@@ -1,14 +1,14 @@
-import { addWord, addXp, registerMisspelling, getWords, saveWords } from '../../shared/storage.js';
+import { addWord, registerMisspelling, getWords, saveWords } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'seperate': 'separate',
   'recieve': 'receive', 'goverment': 'government', 'enviroment': 'environment', 'pronounciation': 'pronunciation'
 };
 const commonWords = ["accommodate", "definitely", "separate", "receive", "embarrass", "until", "government", "environment", "occurred", "threshold", "pronunciation", "calendar", "necessary", "writing", "colleague", "successful", "tomorrow"];
-let onXpUpdatedCallback = null, triggerConfettiFn = null;
+let triggerConfettiFn = null;
 
-export function initSandbox(onXpUpdated, triggerConfetti) {
-  onXpUpdatedCallback = onXpUpdated; triggerConfettiFn = triggerConfetti;
+export function initSandbox(triggerConfetti) {
+  triggerConfettiFn = triggerConfetti;
   
   document.getElementById('sandbox-spell-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -148,9 +148,8 @@ async function handleCorrectSpelling(apiData, word) {
       } else { subtext = `<p style="font-size: 0.75rem; color: var(--text-muted); margin: 8px 0 0;">This word is already in your Word Vault.</p>`; }
     } else {
       await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 30 * 24 * 60 * 60 * 1000 });
-      await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
       if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
-      subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Earned +10 XP! Saved to database.</p>`;
+      subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Saved to database.</p>`;
     }
     document.getElementById('sandbox-feedback').innerHTML = `
       ${closeBtnHtml}
@@ -203,8 +202,7 @@ async function acceptSuggestion(suggestion, original) {
     def = data[0].meanings[0]?.definitions[0]?.definition || def; ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
   }
   await registerMisspelling(suggestion, original, { definition: def, transcription: ipa });
-  await addXp(2); if (onXpUpdatedCallback) onXpUpdatedCallback();
-  f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4><p style="font-size: 0.8rem; margin: 4px 0;">Added correct word <strong>"${suggestion}"</strong> to practice queue.</p><p style="font-size: 0.75rem; color: var(--primary-light); font-weight: 600; margin: 4px 0 0;">Earned +2 XP (Effort points).</p>`;
+  f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4><p style="font-size: 0.8rem; margin: 4px 0;">Added correct word <strong>"${suggestion}"</strong> to practice queue.</p>`;
   document.getElementById('sandbox-spell-input').value = '';
 }
 
@@ -247,9 +245,8 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
         await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa });
       }
-      await addXp(10); if (onXpUpdatedCallback) onXpUpdatedCallback();
       if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
-      f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 6px;">✅ Correction Saved!</h4><p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${correctWord} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span></p>${renderAudioButtons(us, uk)}<p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p><p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Earned +10 XP! Added to vault.</p>`;
+      f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 6px;">✅ Correction Saved!</h4><p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${correctWord} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span></p>${renderAudioButtons(us, uk)}<p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p><p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Added to vault.</p>`;
       document.getElementById('sandbox-spell-input').value = '';
     } else {
       const suggestions = await findSpellingSuggestions(correctWord);

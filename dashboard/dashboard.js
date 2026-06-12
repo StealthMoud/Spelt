@@ -4,15 +4,14 @@ import { initVault, reloadVault } from './js/vault.js';
 import { reloadAnalytics } from './js/analytics.js';
 import { initSettings } from './js/settings.js';
 import { initSandbox } from './js/sandbox.js';
-import { getXp } from '../shared/storage.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Bind views
   await initNavigation(handleViewChange);
-  await initPractice(handleDeckUpdated, handleXpUpdated, triggerConfetti);
+  await initPractice(handleDeckUpdated, triggerConfetti);
   await initVault(handleVaultUpdated);
   initSettings(handleDbRestored);
-  initSandbox(handleXpUpdated, triggerConfetti);
+  initSandbox(triggerConfetti);
 
   // Load initial displays
   await handleDbRestored();
@@ -23,7 +22,6 @@ async function handleDbRestored() {
   await loadDeck();
   await reloadVault();
   await reloadAnalytics();
-  await refreshXpUI();
 }
 
 // Reload tab contents when user clicks sidebar nav
@@ -46,33 +44,7 @@ async function handleVaultUpdated() {
   await reloadAnalytics();
 }
 
-async function handleXpUpdated() {
-  await refreshXpUI();
-  await reloadAnalytics(); // statistics could change
-}
 
-
-// Update gamification progress bars
-export async function refreshXpUI() {
-  const xp = await getXp();
-  const lvl = Math.floor(xp / 100) + 1;
-  const pct = xp % 100;
-
-  // Evocative titles
-  let title = 'Word Novice';
-  if (lvl === 2) title = 'Spelling Apprentice';
-  else if (lvl === 3) title = 'Orthography Knight';
-  else if (lvl === 4) title = 'Lexicon Champion';
-  else if (lvl >= 5) title = 'Spelling Sage';
-
-  const lvlBadge = document.getElementById('user-level-badge');
-  const xpText = document.getElementById('user-xp-display');
-  const barInner = document.getElementById('xp-bar-inner');
-
-  if (lvlBadge) lvlBadge.textContent = `Lvl ${lvl} ${title}`;
-  if (xpText) xpText.textContent = `${pct} / 100 XP`;
-  if (barInner) barInner.style.width = `${pct}%`;
-}
 
 // Particle confetti burst celebration
 export function triggerConfetti(targetElement) {

@@ -1,5 +1,5 @@
 // Compact reviews practice controller for Spelt extension popup
-import { getWords, reviewWord, addXp } from '../../shared/storage.js';
+import { getWords, reviewWord } from '../../shared/storage.js';
 
 let dueCards = [], currentIndex = 0, onDeckUpdatedCallback = null;
 
@@ -87,11 +87,10 @@ function checkSpelling() {
   
   if (isOk) {
     badge.textContent = 'Correct'; badge.className = 'result-badge success'; typedDisplay.style.color = 'var(--success)';
-    addXp(10).then(() => onDeckUpdatedCallback?.(dueCards.length - currentIndex));
   } else {
     badge.textContent = 'Incorrect'; badge.className = 'result-badge danger'; typedDisplay.style.color = 'var(--danger)';
-    addXp(2).then(() => onDeckUpdatedCallback?.(dueCards.length - currentIndex));
   }
+  onDeckUpdatedCallback?.(dueCards.length - currentIndex);
 
   typedDisplay.textContent = typed || '(Blank)';
   document.getElementById('back-word-display').textContent = card.word;
