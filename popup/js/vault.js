@@ -123,7 +123,7 @@ function renderList() {
     emptyEl.style.display = 'none';
     filtered.forEach(w => {
       const li = document.createElement('li');
-      li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 0.75rem; background: hsla(0,0%,100%,0.01); border-radius: 8px;";
+      li.className = 'vault-list-item';
       const review = formatTimeUntil(w.nextDate);
       const isChecked = selectedWordIds.has(w.id) ? 'checked' : '';
       
