@@ -85,13 +85,12 @@ Spelt is designed to be fully navigable from the keyboard so you can study witho
 ### Spellcheck Sandbox
 | Hotkey | Context / State | Action |
 |---|---|---|
-| **Enter** | Focused in input field | Verify word spelling |
+| **Enter** | Focused in input field (with text) | Verify word spelling |
 | **Enter** | Misspelling card visible | Accept top suggestion |
-| **Enter** | Correct feedback card visible (input empty) | Play pronunciation audio |
-| **Space** | Suggestion card visible (input not focused) | Play suggested word audio |
-| **Space** | Correct feedback card visible (input not focused) | Clear spelling input and refocus for the next word |
-| **Escape** | Misspelling card visible | Reject suggestion and focus manual correction |
-| **Escape** | Feedback/Correct card visible | Close the card and return to input |
+| **Enter** | Correct feedback card visible | Clear input and refocus for the next word |
+| **Space** | Any feedback card visible (input not focused) | Play pronunciation audio |
+| **Escape** | Misspelling card visible | Reject suggestion and open manual correction |
+| **Escape** | Correct feedback card visible | Close the card |
 
 ### Practice Deck
 | Hotkey | Context / State | Action |

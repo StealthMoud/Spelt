@@ -13,36 +13,31 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
   document.getElementById('sandbox-spell-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       const inputVal = e.target.value.trim();
-      if (!inputVal) {
-        const f = document.getElementById('sandbox-feedback');
-        if (f && f.style.display !== 'none') {
-          const primaryAudioBtn = f.querySelector('.audio-play-btn');
-          if (primaryAudioBtn) {
-            e.preventDefault();
-            primaryAudioBtn.click();
-          }
-        }
-      } else {
+      if (inputVal) {
         e.preventDefault();
         handleVerify();
       }
     }
   });
 
-  // Space: play audio on misspelling card, refocus input on correct card
+  // Space always plays audio, Enter refocuses input on correct card
   window.addEventListener('keydown', (e) => {
-    if (e.key !== ' ') return;
-    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
     const f = document.getElementById('sandbox-feedback');
     if (!f || f.style.display === 'none') return;
-    e.preventDefault();
-    const acceptBtn = f.querySelector('.accept-suggestion-btn');
-    if (acceptBtn) {
+
+    if (e.key === ' ') {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      e.preventDefault();
       const audioBtn = f.querySelector('.audio-play-btn');
       if (audioBtn) audioBtn.click();
-    } else {
-      const spellInput = document.getElementById('sandbox-spell-input');
-      if (spellInput) { spellInput.value = ''; spellInput.focus(); }
+    } else if (e.key === 'Enter') {
+      // On correct card (no accept btn), Enter clears and refocuses input
+      const acceptBtn = f.querySelector('.accept-suggestion-btn');
+      if (!acceptBtn) {
+        e.preventDefault();
+        const spellInput = document.getElementById('sandbox-spell-input');
+        if (spellInput) { spellInput.value = ''; spellInput.focus(); }
+      }
     }
   });
 
