@@ -1,5 +1,4 @@
-// Compact reviews practice controller for Spelt extension popup
-import { getWords, reviewWord } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord } from '../../shared/storage.js';
 
 let dueCards = [], currentIndex = 0, onDeckUpdatedCallback = null;
 
@@ -130,11 +129,19 @@ async function submitRating(score) {
   try {
     const typed = document.getElementById('spelling-input').value.trim();
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
-    const updatedCard = await reviewWord(card.id, score, isOk ? null : typed);
+    
+    let updatedCard = null;
+    if (isOk && score >= 3) {
+      await deleteWord(card.id);
+    } else {
+      updatedCard = await reviewWord(card.id, score, isOk ? null : typed);
+    }
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
-      if (score < 3 || !isOk) dueCards.push(updatedCard);
+      if (updatedCard) {
+        dueCards.push(updatedCard);
+      }
       currentIndex += 1;
       onDeckUpdatedCallback?.(dueCards.length - currentIndex);
       showPracticeCard();
