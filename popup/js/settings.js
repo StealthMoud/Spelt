@@ -7,16 +7,6 @@ let onDbRestoredCallback = null;
 export function initSettings(onDbRestored) {
   onDbRestoredCallback = onDbRestored;
 
-  // Spacing multiplier sync
-  chrome.storage?.local.get('spelt_srs_multiplier', (res) => {
-    const mult = res.spelt_srs_multiplier || '1.0';
-    document.getElementById('setting-srs-multiplier').value = mult;
-  });
-
-  document.getElementById('setting-srs-multiplier').addEventListener('change', (e) => {
-    chrome.storage?.local.set({ spelt_srs_multiplier: parseFloat(e.target.value) });
-  });
-
   // Target language sync
   chrome.storage?.local.get('spelt_target_lang', (res) => {
     const lang = res.spelt_target_lang || 'none';
@@ -34,10 +24,6 @@ export function initSettings(onDbRestored) {
       if (changes.spelt_target_lang) {
         const el = document.getElementById('setting-target-lang');
         if (el) el.value = changes.spelt_target_lang.newValue || 'none';
-      }
-      if (changes.spelt_srs_multiplier) {
-        const el = document.getElementById('setting-srs-multiplier');
-        if (el) el.value = (changes.spelt_srs_multiplier.newValue || 1.0).toString();
       }
     }
   });
