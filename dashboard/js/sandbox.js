@@ -31,11 +31,12 @@ export function initSandbox(onXpUpdated, triggerConfetti) {
       const audioBtn = f.querySelector('.audio-play-btn');
       if (audioBtn) audioBtn.click();
     } else if (e.key === 'Enter') {
-      // On correct card (no accept btn), Enter clears and refocuses input
+      // On correct card (no accept btn), Enter clears and refocuses input if empty
       const acceptBtn = f.querySelector('.accept-suggestion-btn');
       if (!acceptBtn) {
-        e.preventDefault();
         const spellInput = document.getElementById('sandbox-spell-input');
+        if (spellInput && spellInput.value.trim() !== '') return;
+        e.preventDefault();
         if (spellInput) { spellInput.value = ''; spellInput.focus(); }
       }
     }

@@ -122,8 +122,9 @@ export function initSandbox(onXpUpdated, reloadVaultList, loadPracticeDeck) {
     } else {
       if (e.key === 'Enter') {
         if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
-        e.preventDefault();
         const wordInput = document.getElementById('word-input');
+        if (wordInput && wordInput.value.trim() !== '') return;
+        e.preventDefault();
         if (wordInput) { wordInput.value = ''; wordInput.focus(); }
       } else if (e.key === ' ') {
         e.preventDefault();
