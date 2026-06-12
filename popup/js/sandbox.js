@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -187,17 +187,14 @@ async function handleCorrectSpelling(apiData, word) {
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
     let subtext = '';
+    
     if (existing) {
-      if (existing.misspellings && existing.misspellings.length > 0) {
-        existing.nextDate = Date.now() + 24 * 60 * 60 * 1000;
-        await saveWords(words);
-        subtext = `<p style="font-size: 0.68rem; color: var(--primary-light); margin: 4px 0 0;">You previously misspelled this word. Scheduled review tomorrow.</p>`;
-      } else {
-        subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 4px 0 0;">This word is already in your Word Vault.</p>`;
-      }
+      // if word was previously misspelled and now corrected, remove it from database
+      await deleteWord(existing.id);
+      subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 4px 0 0;">Correct! Misspelling removed from vault.</p>`;
     } else {
-      await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 30 * 24 * 60 * 60 * 1000, mastered: true });
-      subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 4px 0 0;">Added to database.</p>`;
+      // correct for the first time, don't save to the vault
+      subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 4px 0 0;">Correct spelling! (Not saved to vault)</p>`;
     }
     document.getElementById('feedback-msg').innerHTML = `
       ${closeBtnHtml}
