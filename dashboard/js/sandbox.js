@@ -1,4 +1,4 @@
-import { addWord, registerMisspelling, getWords, saveWords } from '../../shared/storage.js';
+import { addWord, registerMisspelling, getWords, saveWords, deleteWord } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'seperate': 'separate',
@@ -141,16 +141,18 @@ async function handleCorrectSpelling(apiData, word) {
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
     let subtext = '';
+    
     if (existing) {
-      if (existing.misspellings && existing.misspellings.length > 0) {
-        existing.nextDate = Date.now() + 24 * 60 * 60 * 1000; await saveWords(words);
-        subtext = `<p style="font-size: 0.75rem; color: var(--primary-light); font-weight: 600; margin: 8px 0 0;">You previously misspelled this word (${existing.misspellings.join(', ')}). Scheduled review tomorrow.</p>`;
-      } else { subtext = `<p style="font-size: 0.75rem; color: var(--text-muted); margin: 8px 0 0;">This word is already in your Word Vault.</p>`; }
+      // if word was previously misspelled and now corrected, remove it from database
+      await deleteWord(existing.id);
+      subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Correct! Misspelling removed from vault.</p>`;
     } else {
-      await addWord({ word, definition: def, transcription: ipa, nextDate: Date.now() + 30 * 24 * 60 * 60 * 1000 });
-      if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
-      subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Saved to database.</p>`;
+      // correct for the first time, don't save to the vault
+      subtext = `<p style="font-size: 0.75rem; color: var(--text-muted); margin: 8px 0 0;">Correct spelling! (Not saved to vault)</p>`;
     }
+    
+    if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
+    
     document.getElementById('sandbox-feedback').innerHTML = `
       ${closeBtnHtml}
       <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
