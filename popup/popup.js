@@ -1,7 +1,7 @@
 // Entry controller initializing views and database sync actions for Spelt popup
 import { getWords } from '../shared/storage.js';
 import { initNavigation } from './js/navigation.js';
-import { initPractice, loadPracticeDeck } from './js/practice.js';
+import { initPractice, loadPracticeDeck, syncPracticeDeck } from './js/practice.js';
 import { initVault, reloadVaultList } from './js/vault.js';
 import { initSettings } from './js/settings.js';
 import { initSandbox } from './js/sandbox.js';
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   await initVault(async () => {
     await refreshStats();
-    await loadPracticeDeck();
+    await syncPracticeDeck();
   });
   
   initSettings(async () => {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initSandbox(
     () => reloadVaultList(),
-    () => loadPracticeDeck()
+    () => syncPracticeDeck()
   );
 
   await refreshStats();

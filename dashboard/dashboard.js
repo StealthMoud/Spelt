@@ -1,5 +1,5 @@
 import { initNavigation, setDueReviewsBadge } from './js/navigation.js';
-import { initPractice, loadDeck } from './js/practice.js';
+import { initPractice, loadDeck, syncDeck } from './js/practice.js';
 import { initVault, reloadVault } from './js/vault.js';
 import { reloadAnalytics } from './js/analytics.js';
 import { initSettings } from './js/settings.js';
@@ -27,7 +27,7 @@ async function handleDbRestored() {
 // Reload tab contents when user clicks sidebar nav
 async function handleViewChange(viewId) {
   if (viewId === 'practice-section') {
-    await loadDeck();
+    await syncDeck();
   } else if (viewId === 'vault-section') {
     await reloadVault();
   } else if (viewId === 'analytics-section') {
@@ -40,7 +40,7 @@ function handleDeckUpdated(dueCount) {
 }
 
 async function handleVaultUpdated() {
-  await loadDeck();
+  await syncDeck();
   await reloadAnalytics();
 }
 
