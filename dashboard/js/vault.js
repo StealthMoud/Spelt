@@ -9,11 +9,21 @@ export async function initVault(onVaultUpdated) {
 
   // Bind actions
   document.getElementById('add-word-trigger-btn').addEventListener('click', () => openFormModal());
-  document.getElementById('form-modal-close').addEventListener('click', closeFormModal);
-  document.getElementById('form-cancel-btn').addEventListener('click', closeFormModal);
+  document.getElementById('form-modal-close').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeFormModal();
+  });
+  document.getElementById('form-cancel-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeFormModal();
+  });
   document.getElementById('word-entry-form').addEventListener('submit', saveWordForm);
 
-  document.getElementById('form-auto-fill-btn')?.addEventListener('click', async () => {
+  document.getElementById('form-auto-fill-btn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const wordInput = document.getElementById('form-word');
     const word = wordInput?.value.trim();
     if (!word) return;
@@ -69,7 +79,9 @@ export async function initVault(onVaultUpdated) {
     }
   });
 
-  document.getElementById('form-auto-translate-btn')?.addEventListener('click', async () => {
+  document.getElementById('form-auto-translate-btn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const wordInput = document.getElementById('form-word');
     const transInput = document.getElementById('form-translation');
     const word = wordInput?.value.trim();

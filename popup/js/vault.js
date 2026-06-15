@@ -9,10 +9,16 @@ export async function initVault(onVaultUpdated) {
   onVaultUpdatedCallback = onVaultUpdated;
 
   document.getElementById('add-word-btn').addEventListener('click', () => openModal());
-  document.getElementById('form-cancel-btn').addEventListener('click', closeModal);
+  document.getElementById('form-cancel-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal();
+  });
   document.getElementById('word-entry-form').addEventListener('submit', saveWord);
 
-  document.getElementById('form-auto-fill-btn')?.addEventListener('click', async () => {
+  document.getElementById('form-auto-fill-btn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const wordInput = document.getElementById('form-word');
     const word = wordInput?.value.trim();
     if (!word) return;
@@ -68,7 +74,9 @@ export async function initVault(onVaultUpdated) {
     }
   });
 
-  document.getElementById('form-auto-translate-btn')?.addEventListener('click', async () => {
+  document.getElementById('form-auto-translate-btn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const wordInput = document.getElementById('form-word');
     const transInput = document.getElementById('form-translation');
     const word = wordInput?.value.trim();
