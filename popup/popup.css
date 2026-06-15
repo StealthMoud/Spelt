@@ -22,7 +22,7 @@
 }
 
 body { margin: 0; padding: 0; width: 360px; font-family: 'Outfit', sans-serif; background-color: var(--bg-dark); color: var(--text-main); overflow: hidden; }
-.spelt-popup { display: flex; flex-direction: column; height: 500px; box-sizing: border-box; }
+.spelt-popup { display: flex; flex-direction: column; height: 530px; box-sizing: border-box; }
 .popup-header { padding: 12px 16px 6px; border-bottom: 1px solid var(--border); background: hsla(0,0%,0%,0.1); }
 .logo-row { display: flex; justify-content: space-between; align-items: center; }
 .logo-text { font-size: 1.3rem; font-weight: 700; background: linear-gradient(135deg, #ffffff 0%, var(--primary-light) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 8px var(--primary-glow)); }
@@ -67,13 +67,15 @@ body { margin: 0; padding: 0; width: 360px; font-family: 'Outfit', sans-serif; b
 .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--primary-light); }
 
 /* Flip Card Mechanics with spring transitions */
-.flashcard { position: relative; height: 260px; width: 100%; perspective: 1000px; margin-top: 6px; }
+.flashcard { position: relative; height: 290px; width: 100%; perspective: 1000px; margin-top: 6px; }
 .card-face { position: absolute; inset: 0; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: var(--radius-xl); border: 1px solid var(--border); background: var(--bg-card); backdrop-filter: blur(12px); box-sizing: border-box; display: flex; flex-direction: column; transition: transform 0.6s var(--spring-curve), border-color var(--transition-fast) ease; }
 .card-face:hover { border-color: var(--border-hover); }
 .card-front { transform: rotateY(0deg); z-index: 2; padding: 12px; }
 .card-back { transform: rotateY(180deg); padding: 12px; }
 .flashcard.flipped .card-front { transform: rotateY(-180deg); }
 .flashcard.flipped .card-back { transform: rotateY(0deg); }
+.back-details-list { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; }
+.back-details-list p { margin: 0; line-height: 1.3; }
 .clue-label { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 1px; }
 .clue-item p { margin: 0 0 4px; line-height: 1.3; font-size: 0.75rem; font-weight: 500; }
 .spelling-input-wrapper { display: flex; gap: 6px; margin-top: auto; }
