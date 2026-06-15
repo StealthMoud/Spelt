@@ -81,6 +81,10 @@
                 <span class="clue-label">Definition</span>
                 <p id="practice-definition"></p>
               </div>
+              <div id="practice-example-container" class="clue-item" style="display: none;">
+                <span class="clue-label">Example Context</span>
+                <p id="practice-example" style="font-style: italic; color: var(--primary-light);"></p>
+              </div>
               <div style="display: flex; gap: 12px; margin-top: 4px;">
                 <div class="clue-item" style="flex: 1;">
                   <span class="clue-label">Part of Speech</span>
@@ -125,6 +129,9 @@
               <p><strong>You typed:</strong> <span id="user-typed-display"></span></p>
               <p><strong>Definition:</strong> <span id="back-definition-display"></span></p>
               <p><strong>Part of Speech:</strong> <span id="back-part-of-speech-display" style="text-transform: capitalize; font-style: italic;"></span></p>
+              <div id="back-example-container" style="display: none;">
+                <p><strong>Example:</strong> <span id="back-example-display" style="font-style: italic; color: var(--primary-light);"></span></p>
+              </div>
               <div id="past-misspellings-container" style="display: none;">
                 <p><strong>Past errors:</strong> <span id="back-misspellings-display"></span></p>
               </div>
@@ -283,7 +290,13 @@
           <input type="hidden" id="edit-word-id">
           <div class="modal-input-item">
             <label>Word *</label>
-            <input type="text" id="form-word" class="premium-input" required autocomplete="off">
+            <div style="position: relative; display: flex; align-items: center; width: 100%;">
+              <input type="text" id="form-word" class="premium-input" required autocomplete="off" style="padding-right: 50px;">
+              <button type="button" id="form-auto-fill-btn" title="Auto-fill details from dictionary" style="position: absolute; right: 6px; background: hsla(170, 80%, 30%, 0.15); border: 1px solid var(--primary); color: var(--primary-light); padding: 2px 6px; font-size: 0.65rem; height: 20px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 2px; transition: all 0.2s ease; cursor: pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 8px; height: 8px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Auto</span>
+              </button>
+            </div>
           </div>
           <div class="modal-input-item">
             <label>Definition *</label>
@@ -307,6 +320,14 @@
           <div class="modal-input-item">
             <label>Part of Speech</label>
             <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
+          </div>
+          <div class="modal-input-item">
+            <label>Example Sentence</label>
+            <textarea id="form-example" class="premium-input textarea-item" placeholder="Use the word in a sentence..." autocomplete="off" style="height: 36px;"></textarea>
+          </div>
+          <div id="form-past-errors-container" class="modal-input-item" style="display: none; margin-bottom: 12px;">
+            <label>Past Spelling Errors</label>
+            <div id="form-past-errors-list" style="background: hsla(5, 80%, 15%, 0.1); border: 1px solid hsla(5, 80%, 35%, 0.25); color: var(--danger); font-style: italic; min-height: 20px; display: flex; align-items: center; padding: 4px 8px; font-size: 0.7rem; border-radius: var(--radius-md); word-break: break-all;"></div>
           </div>
           <div class="modal-actions-row">
             <button type="button" id="form-cancel-btn" class="submit-btn">

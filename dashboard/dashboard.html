@@ -92,6 +92,10 @@
                     <span class="clue-label">Definition</span>
                     <p id="practice-definition" class="clue-text">Definition of the word.</p>
                   </div>
+                  <div class="clue-item" id="practice-example-container" style="display: none;">
+                    <span class="clue-label">Example Context</span>
+                    <p id="practice-example" class="clue-text" style="font-style: italic; color: var(--primary-light);">Example sentence with a blank __________.</p>
+                  </div>
                   <div class="clue-item" id="front-pos-container">
                     <span class="clue-label">Part of Speech</span>
                     <p id="practice-part-of-speech" class="clue-text" style="text-transform: capitalize; font-style: italic;">noun</p>
@@ -148,6 +152,10 @@
                   <div class="detail-row">
                     <span class="detail-label">Part of Speech:</span>
                     <p id="back-part-of-speech-display" class="card-definition" style="text-transform: capitalize; font-style: italic;"></p>
+                  </div>
+                  <div class="detail-row" id="back-example-container" style="display: none;">
+                    <span class="detail-label">Example:</span>
+                    <p id="back-example-display" class="card-definition" style="font-style: italic; color: var(--primary-light);"></p>
                   </div>
                   <div class="detail-row" id="past-misspellings-container" style="display: none;">
                     <span class="detail-label">Past errors:</span>
@@ -270,6 +278,7 @@
                 <th>Word</th>
                 <th>Definition</th>
                 <th>Translation</th>
+                <th>Past Errors</th>
                 <th>Ease Factor</th>
                 <th>Repetitions</th>
                 <th>Next Review</th>
@@ -453,7 +462,13 @@
         <input type="hidden" id="edit-word-id">
         <div class="input-group">
           <label for="form-word">Word *</label>
-          <input type="text" id="form-word" class="premium-input" required autocomplete="off">
+          <div style="position: relative; display: flex; align-items: center; width: 100%;">
+            <input type="text" id="form-word" class="premium-input" required autocomplete="off" style="padding-right: 70px;">
+            <button type="button" id="form-auto-fill-btn" title="Auto-fill details from dictionary" class="action-btn" style="position: absolute; right: 6px; background: hsla(170, 80%, 30%, 0.15); border: 1px solid var(--primary); color: var(--primary-light); padding: 2px 8px; font-size: 0.75rem; height: 24px; border-radius: var(--radius-lg); display: flex; align-items: center; gap: 4px; transition: all 0.2s ease; cursor: pointer;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span>Auto</span>
+            </button>
+          </div>
         </div>
         <div class="input-group">
           <label for="form-definition">Definition *</label>
@@ -479,8 +494,16 @@
           <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
         </div>
         <div class="input-group">
+          <label for="form-example">Example Sentence</label>
+          <textarea id="form-example" class="premium-input premium-textarea" placeholder="Use the word in a sentence..." autocomplete="off"></textarea>
+        </div>
+        <div class="input-group">
           <label for="form-notes">Extra Notes</label>
           <input type="text" id="form-notes" class="premium-input" placeholder="Mnemonics or details..." autocomplete="off">
+        </div>
+        <div id="form-past-errors-container" class="input-group" style="display: none;">
+          <label>Past Spelling Errors</label>
+          <div id="form-past-errors-list" class="premium-input" style="background: hsla(5, 80%, 15%, 0.1); border: 1px solid hsla(5, 80%, 35%, 0.25); color: var(--danger); font-style: italic; min-height: 24px; display: flex; align-items: center; padding: 6px 12px; font-size: 0.8rem; border-radius: var(--radius-md); word-break: break-all;"></div>
         </div>
         <div class="modal-actions">
           <button type="button" id="form-cancel-btn" class="action-btn secondary-btn">

@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord, playWordAudio } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, saveWords } from '../../shared/storage.js';
 import { openFormModal } from './vault.js';
 
 let dueCards = [], currentCardIndex = 0, onDeckUpdatedCallback = null, triggerConfettiFn = null, comboStreak = 0;
@@ -95,6 +95,16 @@ function showCurrentCard() {
   document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
   document.getElementById('practice-translation').textContent = card.translation || '--';
   document.getElementById('practice-part-of-speech').textContent = card.partOfSpeech || 'unknown';
+
+  const exampleContainer = document.getElementById('front-example-container');
+  if (card.example) {
+    const escapedWord = card.word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const blankedExample = card.example.replace(new RegExp('\\b' + escapedWord + '\\b', 'gi'), '__________');
+    document.getElementById('practice-example').textContent = blankedExample;
+    exampleContainer.style.display = 'block';
+  } else {
+    exampleContainer.style.display = 'none';
+  }
 }
 
 function checkSpelling() {
@@ -107,8 +117,12 @@ function checkSpelling() {
   const userTyped = document.getElementById('user-typed-display');
 
   const pastMsgContainer = document.getElementById('past-misspellings-container');
-  if (card.misspellings && card.misspellings.length > 0) {
-    document.getElementById('back-misspellings-display').textContent = card.misspellings.join(', ');
+  let displayErrors = card.misspellings ? [...card.misspellings] : [];
+  if (!isCorrect && inputVal && !displayErrors.includes(inputVal) && inputVal.toLowerCase() !== card.word.toLowerCase()) {
+    displayErrors.push(inputVal);
+  }
+  if (displayErrors.length > 0) {
+    document.getElementById('back-misspellings-display').textContent = displayErrors.join(', ');
     pastMsgContainer.style.display = 'flex';
   } else { pastMsgContainer.style.display = 'none'; }
 
@@ -131,6 +145,14 @@ function checkSpelling() {
   document.getElementById('back-transcription-display').textContent = card.transcription || '/--/';
   document.getElementById('back-part-of-speech-display').textContent = card.partOfSpeech || 'unknown';
 
+  const backExampleContainer = document.getElementById('back-example-container');
+  if (card.example) {
+    document.getElementById('back-example-display').textContent = card.example;
+    backExampleContainer.style.display = 'flex';
+  } else {
+    backExampleContainer.style.display = 'none';
+  }
+
   const audioContainer = document.getElementById('back-audio-container');
   if (audioContainer) {
     audioContainer.innerHTML = renderAudioButtons(card.word);
@@ -152,7 +174,15 @@ async function submitRating(score) {
     
     let updatedCard = null;
     if (isCorrect && score >= 3) {
-      await deleteWord(card.id);
+      // Mark as mastered to preserve errors history in vault
+      const list = await getWords();
+      const wordObj = list.find(w => w.id === card.id);
+      if (wordObj) {
+        wordObj.mastered = true;
+        wordObj.rep = 0;
+        wordObj.interval = 30; // space it out
+        await saveWords(list);
+      }
     } else {
       updatedCard = await reviewWord(card.id, score, isCorrect ? null : inputVal);
     }

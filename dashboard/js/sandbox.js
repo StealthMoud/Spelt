@@ -136,9 +136,11 @@ async function handleCorrectSpelling(apiData, word) {
     let subtext = '';
     
     if (existing) {
-      // if word was previously misspelled and now corrected, remove it from database
-      await deleteWord(existing.id);
-      subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Correct! Misspelling removed from vault.</p>`;
+      // if word was previously misspelled and now corrected, mark as mastered instead of deleting to preserve history
+      existing.mastered = true;
+      existing.rep = 0;
+      await saveWords(words);
+      subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Correct! Misspelling marked as mastered in vault.</p>`;
     } else {
       // correct for the first time, don't save to the vault
       subtext = `<p style="font-size: 0.75rem; color: var(--text-muted); margin: 8px 0 0;">Correct spelling! (Not saved to vault)</p>`;
@@ -189,14 +191,16 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
 async function acceptSuggestion(suggestion, original) {
   const f = document.getElementById('sandbox-feedback'); f.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = 'No definition found', ipa = '/--/', partOfSpeech = '';
+  let def = 'No definition found', ipa = '/--/', partOfSpeech = '', example = '';
   if (response.ok) {
     const data = await response.json();
     def = data[0].meanings[0]?.definitions[0]?.definition || def; ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
     partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
+    example = extractExample(data[0]);
   }
-  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech });
-  f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4><p style="font-size: 0.8rem; margin: 4px 0;">Added correct word <strong>"${suggestion}"</strong> to practice queue.</p>`;
+  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech, example });
+  const exampleText = example ? `<p style="font-size: 0.8rem; color: var(--primary-light); font-style: italic; margin: 4px 0;">"${example}"</p>` : '';
+  f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4><p style="font-size: 0.8rem; margin: 4px 0;">Added correct word <strong>"${suggestion}"</strong> to practice queue.</p>${exampleText}`;
   document.getElementById('sandbox-spell-input').value = '';
 }
 
@@ -235,12 +239,14 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
       const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
-      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech });
+      const example = extractExample(data[0]);
+      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech, example });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
-        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech });
+        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech, example });
       }
       if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
-      f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 6px;">✅ Correction Saved!</h4><p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${correctWord} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span></p>${renderAudioButtons(correctWord)}<p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p><p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Added to vault.</p>`;
+      const exampleText = example ? `<p style="font-size: 0.8rem; color: var(--primary-light); font-style: italic; margin: 4px 0;">"${example}"</p>` : '';
+      f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 6px;">✅ Correction Saved!</h4><p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${correctWord} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span></p>${renderAudioButtons(correctWord)}<p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p>${exampleText}<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Added to vault.</p>`;
       document.getElementById('sandbox-spell-input').value = '';
     } else {
       const suggestions = await findSpellingSuggestions(correctWord);
@@ -294,4 +300,16 @@ function getLevenshteinDistance(a, b) {
     for (let j = 1; j <= a.length; j++) m[i][j] = b.charAt(i - 1) === a.charAt(j - 1) ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
   }
   return m[b.length][a.length];
+}
+
+function extractExample(apiData) {
+  if (!apiData || !apiData.meanings) return '';
+  for (const m of apiData.meanings) {
+    if (m.definitions) {
+      for (const d of m.definitions) {
+        if (d.example) return d.example.trim();
+      }
+    }
+  }
+  return '';
 }

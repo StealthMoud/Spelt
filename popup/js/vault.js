@@ -12,6 +12,62 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('form-cancel-btn').addEventListener('click', closeModal);
   document.getElementById('word-entry-form').addEventListener('submit', saveWord);
 
+  document.getElementById('form-auto-fill-btn')?.addEventListener('click', async () => {
+    const wordInput = document.getElementById('form-word');
+    const word = wordInput?.value.trim();
+    if (!word) return;
+
+    const fillBtn = document.getElementById('form-auto-fill-btn');
+    if (fillBtn) {
+      fillBtn.disabled = true;
+      fillBtn.style.opacity = '0.5';
+    }
+
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const first = data[0];
+        
+        const def = first.meanings[0]?.definitions[0]?.definition || '';
+        document.getElementById('form-definition').value = def;
+        
+        const ipa = first.phonetics.find(p => p.text)?.text || '';
+        document.getElementById('form-transcription').value = ipa;
+        
+        const pos = first.meanings[0]?.partOfSpeech || '';
+        document.getElementById('form-part-of-speech').value = pos;
+        
+        let example = '';
+        if (first.meanings) {
+          outerLoop: for (const m of first.meanings) {
+            if (m.definitions) {
+              for (const d of m.definitions) {
+                if (d.example) {
+                  example = d.example.trim();
+                  break outerLoop;
+                }
+              }
+            }
+          }
+        }
+        document.getElementById('form-example').value = example;
+      }
+
+      // Trigger auto translate
+      const translation = await translateWord(word);
+      document.getElementById('form-translation').value = translation;
+
+    } catch (err) {
+      console.error('Auto fill error:', err);
+    } finally {
+      if (fillBtn) {
+        fillBtn.disabled = false;
+        fillBtn.style.opacity = '1';
+      }
+    }
+  });
+
   document.getElementById('form-auto-translate-btn')?.addEventListener('click', async () => {
     const wordInput = document.getElementById('form-word');
     const transInput = document.getElementById('form-translation');
@@ -161,6 +217,7 @@ function renderList() {
               <span style="font-size: 0.58rem; color: ${review.color}; background: hsla(0,0%,100%,0.04); padding: 1px 5px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">${review.text}</span>
             </div>
             <span style="color: var(--text-muted); font-size: 0.65rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${w.definition || 'No definition'}</span>
+            ${w.misspellings && w.misspellings.length > 0 ? `<span style="color: var(--danger); font-size: 0.58rem; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Errors: ${w.misspellings.join(', ')}</span>` : ''}
           </div>
         </div>
         <div style="display: flex; gap: 4px; margin-left: 8px;">
@@ -238,6 +295,19 @@ export function openModal(wordObj = null) {
   document.getElementById('form-transcription').value = wordObj ? wordObj.transcription : '';
   document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
   document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
+  document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
+  
+  const pastContainer = document.getElementById('form-past-errors-container');
+  const pastList = document.getElementById('form-past-errors-list');
+  if (pastContainer && pastList) {
+    if (wordObj && wordObj.misspellings && wordObj.misspellings.length > 0) {
+      pastList.textContent = wordObj.misspellings.join(', ');
+      pastContainer.style.display = 'block';
+    } else {
+      pastContainer.style.display = 'none';
+    }
+  }
+
   document.getElementById('form-modal-title').textContent = wordObj ? 'Edit Word Details' : 'Add New Word';
   modal.style.display = 'flex';
   document.getElementById('form-word').focus();
@@ -255,16 +325,17 @@ async function saveWord(e) {
   const transcription = document.getElementById('form-transcription').value.trim();
   const translation = document.getElementById('form-translation').value.trim();
   const partOfSpeech = document.getElementById('form-part-of-speech').value.trim();
+  const example = document.getElementById('form-example').value.trim();
 
   try {
     if (id) {
       const idx = wordsList.findIndex(w => w.id === id);
       if (idx !== -1) {
-        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech };
+        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example };
         await saveWords(wordsList);
       }
     } else {
-      await addWord({ word, definition, transcription, translation, partOfSpeech });
+      await addWord({ word, definition, transcription, translation, partOfSpeech, example });
     }
     closeModal();
     await reloadVaultList();
