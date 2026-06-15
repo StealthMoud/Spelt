@@ -17,7 +17,7 @@
 
 Most spell checkers tell you something is wrong and move on. Spelt does the opposite — it remembers what you got wrong and makes sure you practice it until you actually know the spelling. No more googling "accommodate" for the fifth time this week.
 
-The idea is simple: type a word, check the spelling, and if it's wrong, Spelt saves the correction and queues it for spaced repetition review. Over time, your problem words surface less and less as you nail them. Once you spell a word correctly on the first try, it is marked as Mastered and automatically skipped from reviews.
+The idea is simple: type a word, check the spelling, and if it's wrong, Spelt saves the correction and queues it for spaced repetition review. Over time, your problem words surface less and less as you nail them. Spelt acts purely as a problem-word vault: if you check a correct spelling in the Sandbox, it is not added to your vault. If you successfully resolve a previously misspelled word during practice reviews, it is marked as Mastered and archived from your active study session.
 
 <p align="center">
   <img src="docs/screenshot-popup.png" alt="Spelt Popup Interface" width="360" />
