@@ -1,5 +1,5 @@
 // Compact word vault list and modal controller for Spelt extension popup
-import { getWords, addWord, saveWords } from '../../shared/storage.js';
+import { getWords, addWord, saveWords, translateWord } from '../../shared/storage.js';
 
 let wordsList = [];
 let onVaultUpdatedCallback = null;
@@ -11,6 +11,31 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('add-word-btn').addEventListener('click', () => openModal());
   document.getElementById('form-cancel-btn').addEventListener('click', closeModal);
   document.getElementById('word-entry-form').addEventListener('submit', saveWord);
+
+  document.getElementById('form-auto-translate-btn')?.addEventListener('click', async () => {
+    const wordInput = document.getElementById('form-word');
+    const transInput = document.getElementById('form-translation');
+    const word = wordInput?.value.trim();
+    if (!word) return;
+
+    const translateBtn = document.getElementById('form-auto-translate-btn');
+    if (translateBtn) {
+      translateBtn.disabled = true;
+      translateBtn.style.opacity = '0.5';
+    }
+
+    try {
+      const translation = await translateWord(word);
+      if (transInput) transInput.value = translation;
+    } catch (err) {
+      alert(err.message || 'Translation failed');
+    } finally {
+      if (translateBtn) {
+        translateBtn.disabled = false;
+        translateBtn.style.opacity = '1';
+      }
+    }
+  });
   
   // Search inputs
   document.getElementById('vault-search').addEventListener('input', () => {

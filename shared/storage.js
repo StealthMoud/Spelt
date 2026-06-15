@@ -96,7 +96,14 @@ async function fetchTranslation(word, targetLang) {
   }
   return '';
 }
-
+// Translate a word using the user's preferred target language
+export async function translateWord(word) {
+  const targetLang = await getStored('spelt_target_lang');
+  if (!targetLang || targetLang === 'none') {
+    throw new Error('Please configure a preferred language in Settings.');
+  }
+  return await fetchTranslation(word, targetLang);
+}
 // Add a single word
 export async function addWord(wordData) {
   const list = await getWords();

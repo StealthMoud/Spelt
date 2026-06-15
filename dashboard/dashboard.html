@@ -462,7 +462,12 @@
           </div>
           <div class="input-group">
             <label for="form-translation">Translation</label>
-            <input type="text" id="form-translation" class="premium-input" autocomplete="off">
+            <div style="position: relative; display: flex; align-items: center; width: 100%;">
+              <input type="text" id="form-translation" class="premium-input" autocomplete="off" style="padding-right: 28px;">
+              <button type="button" id="form-auto-translate-btn" title="Auto-translate word" style="position: absolute; right: 6px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px; transition: color var(--transition-fast) ease, transform 0.2s ease;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </button>
+            </div>
           </div>
         </div>
         <div class="input-group">
