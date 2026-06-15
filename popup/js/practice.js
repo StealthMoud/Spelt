@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord, playWordAudio, saveWords } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, saveWords, censorWordInExample, getFallbackExample } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], currentIndex = 0, onDeckUpdatedCallback = null;
@@ -97,9 +97,9 @@ function showPracticeCard() {
   document.getElementById('practice-part-of-speech').textContent = card.partOfSpeech || 'unknown';
 
   const exampleContainer = document.getElementById('practice-example-container');
-  if (card.example) {
-    const escapedWord = card.word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const blankedExample = card.example.replace(new RegExp('\\b' + escapedWord + '\\b', 'gi'), '__________');
+  const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
+  if (rawExample) {
+    const blankedExample = censorWordInExample(card.word, rawExample);
     document.getElementById('practice-example').textContent = blankedExample;
     exampleContainer.style.display = 'block';
   } else {
@@ -130,8 +130,9 @@ function checkSpelling() {
   document.getElementById('back-part-of-speech-display').textContent = card.partOfSpeech || 'unknown';
 
   const backExampleContainer = document.getElementById('back-example-container');
-  if (card.example) {
-    document.getElementById('back-example-display').textContent = card.example;
+  const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
+  if (rawExample) {
+    document.getElementById('back-example-display').textContent = rawExample;
     backExampleContainer.style.display = 'block';
   } else {
     backExampleContainer.style.display = 'none';

@@ -121,14 +121,17 @@ export async function addWord(wordData) {
     }
   }
 
+  const partOfSpeechVal = wordData.partOfSpeech?.trim() || '';
+  const exampleVal = wordData.example?.trim() || getFallbackExample(normalizedWord, partOfSpeechVal);
+
   const newWord = {
     id: 'w_' + Math.random().toString(36).substr(2, 9),
     word: normalizedWord,
     definition: wordData.definition?.trim() || '',
     transcription: wordData.transcription?.trim() || '',
-    partOfSpeech: wordData.partOfSpeech?.trim() || '',
+    partOfSpeech: partOfSpeechVal,
     translation: translation,
-    example: wordData.example?.trim() || '',
+    example: exampleVal,
     tags: Array.isArray(wordData.tags) ? wordData.tags : [],
     notes: wordData.notes?.trim() || '',
     rep: 0,
@@ -171,6 +174,10 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
 
     if (details.partOfSpeech && !wordObj.partOfSpeech) {
       wordObj.partOfSpeech = details.partOfSpeech;
+    }
+
+    if (!wordObj.example?.trim()) {
+      wordObj.example = details.example?.trim() || getFallbackExample(correctWord, wordObj.partOfSpeech || details.partOfSpeech || '');
     }
 
     await saveWords(list);
@@ -291,4 +298,65 @@ export async function resetDb() {
   await setStored('spelt_words', []);
   await setStored('spelt_activity', {});
   await setStored('spelt_streak', { current: 0, lastDate: '' });
+}
+
+// Dynamic fallback example sentence generator for context clues
+export function getFallbackExample(word, partOfSpeech = '') {
+  const cleanWord = word.trim();
+  const lowerWord = cleanWord.toLowerCase();
+  const map = {
+    'accommodate': 'The hotel can accommodate up to three hundred guests.',
+    'definitely': 'We will definitely attend the conference next week.',
+    'separate': 'Please separate the recycling from the general waste.',
+    'receive': 'Did you receive the email I sent you yesterday?',
+    'embarrass': 'I did not mean to embarrass you in front of the team.',
+    'until': 'We will wait here until the rain finally stops.',
+    'government': 'The new government promised to lower taxes.',
+    'environment': 'We must do more to protect our natural environment.',
+    'occurred': 'The accident occurred at the corner of the street.',
+    'threshold': 'He paused on the threshold before entering the room.',
+    'pronunciation': 'His pronunciation of the word was perfectly clear.',
+    'calendar': 'She marked the meeting date on her wall calendar.',
+    'necessary': 'It is necessary to wear a helmet when riding a bike.',
+    'writing': 'He is currently writing a novel about his travels.',
+    'colleague': 'My colleague helped me finish the project on time.',
+    'successful': 'The launch of the new product was highly successful.',
+    'tomorrow': 'We plan to start our journey early tomorrow morning.',
+    'beach': 'The children spent all day playing on the sandy beach.',
+    'easy': 'The test was very easy and everyone passed it.',
+    'again': 'Please try to spell the word again if you make a mistake.'
+  };
+
+  if (map[lowerWord]) return map[lowerWord];
+
+  const pos = partOfSpeech.trim().toLowerCase();
+  if (pos.includes('noun')) {
+    return `The local guide showed us where to find the best ${cleanWord} in town.`;
+  } else if (pos.includes('verb')) {
+    return `They decided to ${cleanWord} the process to make it more efficient.`;
+  } else if (pos.includes('adjective') || pos.includes('adj')) {
+    const article = /^[aeiou]/i.test(lowerWord) ? 'an' : 'a';
+    return `It was ${article} ${cleanWord} moment that changed everything for us.`;
+  } else if (pos.includes('adverb') || pos.includes('adv')) {
+    return `She completed the assignment ${cleanWord} before the deadline.`;
+  } else {
+    return `Could you please use the word ${cleanWord} in a proper sentence?`;
+  }
+}
+
+// Censor the word (including its inflections) in the example sentence
+export function censorWordInExample(word, example) {
+  if (!example) return '';
+  const escapedWord = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  let pattern = escapedWord;
+  if (word.endsWith('e') && word.length > 2) {
+    pattern = escapedWord.slice(0, -1) + '(?:e)?';
+  }
+  let regex;
+  if (word.length >= 4) {
+    regex = new RegExp('\\b' + pattern + '[a-z]*\\b', 'gi');
+  } else {
+    regex = new RegExp('\\b' + pattern + '(?:s|es|ed|ing|d|r|er|est|ly|y|ies|ied|ier|iest)?\\b', 'gi');
+  }
+  return example.replace(regex, '__________');
 }
