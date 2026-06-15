@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -176,6 +176,14 @@ const closeBtnHtml = `
 async function handleCorrectSpelling(apiData, word) {
   const def = apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
   const ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
+  const partOfSpeech = apiData.meanings[0]?.partOfSpeech || '';
+  const example = extractExample(apiData) || getFallbackExample(word, partOfSpeech);
+  
+  let translation = '';
+  try {
+    translation = await translateWord(word);
+  } catch (_) {}
+
   try {
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
@@ -188,17 +196,31 @@ async function handleCorrectSpelling(apiData, word) {
       existing.interval = 30;
       existing.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
       await saveWords(words);
-      subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 4px 0 0;">Correct! Misspelling marked as mastered in vault.</p>`;
+      subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 8px 0 0; text-align: center;">Correct! Misspelling marked as mastered in vault.</p>`;
     } else {
       // correct for the first time, don't save to the vault
-      subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 4px 0 0;">Correct spelling! (Not saved to vault)</p>`;
+      subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 8px 0 0; text-align: center;">Correct spelling! (Not saved to vault)</p>`;
     }
+    
     document.getElementById('feedback-msg').innerHTML = `
       ${closeBtnHtml}
       <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
       <p style="margin: 6px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em;">${word} <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span></p>
       ${renderAudioButtons(word)}
-      <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;">${def}</p>
+      
+      <div class="feedback-details">
+        <div class="feedback-meta-row">
+          ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
+          ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+        ${example ? `
+          <div class="feedback-example">
+            <span class="clue-label">Example</span>
+            <p class="feedback-example-text">"${example}"</p>
+          </div>
+        ` : ''}
+      </div>
       ${subtext}
     `;
     document.getElementById('word-input').value = '';
@@ -212,12 +234,22 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   const suggestion = suggestions[activeIndex];
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Retrieving suggestions...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = 'No definition found', ipa = '/--/';
+  let def = 'No definition found', ipa = '/--/', partOfSpeech = '', example = '';
   if (response.ok) {
     const data = await response.json();
     def = data[0].meanings[0]?.definitions[0]?.definition || def;
     ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
+    partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
+    example = extractExample(data[0]);
   }
+  if (!example && partOfSpeech) {
+    example = getFallbackExample(suggestion, partOfSpeech);
+  }
+  let translation = '';
+  try {
+    translation = await translateWord(suggestion);
+  } catch (_) {}
+
   let altChips = '';
   const alts = suggestions.filter((_, i) => i !== activeIndex);
   if (alts.length > 0) {
@@ -227,10 +259,24 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
     <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
-    <p style="margin: 6px 0;">"${originalWord}" is incorrect. Did you mean:</p>
+    <p style="margin: 6px 0; font-size: 0.74rem;">"${originalWord}" is incorrect. Did you mean:</p>
     <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${suggestion}${ipa !== '/--/' ? ` <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span>` : ''}</p>
     ${renderAudioButtons(suggestion)}
-    ${def !== 'No definition found' ? `<p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;">${def}</p>` : ''}
+    
+    <div class="feedback-details">
+      <div class="feedback-meta-row">
+        ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
+        ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
+      </div>
+      <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+      ${example ? `
+        <div class="feedback-example">
+          <span class="clue-label">Example</span>
+          <p class="feedback-example-text">"${example}"</p>
+        </div>
+      ` : ''}
+    </div>
+    
     ${altChips}
     <div style="display: flex; gap: 6px; margin-top: 8px;">
       <button type="button" class="submit-btn accept-suggestion-btn" data-suggestion="${suggestion}" data-original="${originalWord}" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
@@ -312,19 +358,36 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
       const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
-      const example = extractExample(data[0]);
+      const example = extractExample(data[0]) || getFallbackExample(correctWord, partOfSpeech);
       
+      let translation = '';
+      try {
+        translation = await translateWord(correctWord);
+      } catch (_) {}
+
       await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech, example });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
         await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech, example });
       }
-      const exampleText = example ? `<p style="font-size: 0.65rem; color: var(--primary-light); font-style: italic; margin: 4px 0 0;">"${example}"</p>` : '';
+      
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
         <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
         <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
-        <p style="font-size: 0.68rem; color: var(--text-muted); margin: 2px 0;"><strong>Definition:</strong> ${def}</p>
-        ${exampleText}
+        
+        <div class="feedback-details">
+          <div class="feedback-meta-row">
+            ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
+            ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
+          </div>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+          ${example ? `
+            <div class="feedback-example">
+              <span class="clue-label">Example</span>
+              <p class="feedback-example-text">"${example}"</p>
+            </div>
+          ` : ''}
+        </div>
         ${renderAudioButtons(correctWord)}
       `;
       document.getElementById('word-input').value = '';

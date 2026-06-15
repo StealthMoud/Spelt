@@ -26,10 +26,10 @@ The idea is simple: type a word, check the spelling, and if it's wrong, Spelt sa
 ## Features
 
 ### 🔍 Spellcheck Sandbox
-Type any word and press **Enter** to check it against a dictionary API. 
-* **If spelled correctly**: Spelt saves the word with its definition, phonetics, and pronunciation, and marks it as Mastered.
-* **If misspelled**: Spelt shows suggested corrections. You can accept a suggestion, manual-correct it, or reject it. The misspelled word is queued for SRS practice.
-* Keyboard shortcuts let you verify, accept suggestions, play audio, and dismiss cards without touching your mouse.
+Type any word and press **Enter** to check it against the dictionary API.
+* **Metadata Rich Feedback**: Verified words and misspelling suggestions display detailed dictionary information including **Part of Speech**, **Example Sentences** (with inflections auto-censored on practice prompts), and **Auto-Translation** (if target language is configured).
+* **Fuzzy Matches**: Automatically identifies misspelled inputs and retrieves correct suggestion candidates.
+* **Keyboard Hotkeys**: Press Enter to verify / accept suggestions, Space to play audio, and Escape to reject or close.
 
 <p align="center">
   <img src="docs/screenshot-sandbox-correct.png" alt="Sandbox Correct Spelling" width="340" />
@@ -38,10 +38,11 @@ Type any word and press **Enter** to check it against a dictionary API.
 </p>
 
 ### 🗂️ SRS Practice Deck
-Words you got wrong show up as flashcards. You see the definition, phonetics, and sample sentences (if available). 
-* Type the spelling and press **Enter** to check.
-* Rate your review using the SM-2 buttons or numeric shortcuts (`1`-`4`).
-* Mastered words are automatically excluded from the deck to keep your reviews focused.
+Spelling errors show up as spaced repetition flashcards using the SuperMemo-2 (SM-2) algorithm.
+* **Contextual Clues**: Front of card displays definitions, inflected part of speech, and the word censored inside a contextual example sentence.
+* **Dynamic SRS Interval Hints**: Rating buttons dynamically calculate and display future intervals based on card metrics.
+* **Shortcut Helper Badges**: Keyboard overlay indicators (Again `1` to Mastered `5`) guide fast reviews.
+* **Interactive Mastered State**: Dedicated "Mastered" rating button (with confirmation modal) archives cards directly.
 
 <p align="center">
   <img src="docs/screenshot-practice-prompt.png" alt="Practice Card Front" width="340" />
@@ -49,16 +50,21 @@ Words you got wrong show up as flashcards. You see the definition, phonetics, an
   <img src="docs/screenshot-practice-result.png" alt="Practice Card Back" width="340" />
 </p>
 
-### 🔑 Word Vault & Bulk Operations
-A searchable, filterable vault to manage your vocabulary.
-* **Smart Filtering**: Filter by card status (Due, New, Active/Learning).
-* **Sorting**: Sort by alphabetical order, date added, or next review date (ascending or descending).
-* **Relative Countdown Badges**: See exactly how much time is left until a word is due for review (e.g., "Due now", "in 2h", "in 3d", "in 1mo").
-* **Bulk Editing**: Select multiple words (or check the Select All box) to perform bulk deletes in a single action.
+### 🔑 Word Vault & Advanced Operations
+A highly premium searchable interface to inspect and manage your vocabulary.
+* **Advanced Status Filters**: Quickly filter words by *All Words*, *Active*, *Mastered*, or *Due Now*.
+* **Precision Sorting**: Order cards alphabetically, by date added, or by next review date (ascending/descending).
+* **Relative Countdown Badges**: Display exact scheduling durations (e.g. "Due now", "in 12d", "in 1mo").
+* **Bulk Re-study & Delete**: Select multiple items (or check Select All) to delete or demaster cards in a single bulk sweep.
 
 <p align="center">
   <img src="docs/screenshot-vault.png" alt="Word Vault List and Sorting" width="340" />
 </p>
+
+### 💎 Elite Premium Aesthetics
+* **Glassmorphism Theme**: Translucent cards (`backdrop-filter: blur(12px)`) styled with radial glow backdrops and double-bordering.
+* **Micro-Animations**: Custom spring easing curves (`cubic-bezier(0.175, 0.885, 0.32, 1.275)`) drive smooth icon bounces, active tab slider bars, inputs focused glows, and list items sliding rightwards on hover.
+* **Security Wipes**: Wiping the database requires manually entering a random 6-character uppercase captcha with copy/paste fully restricted.
 
 ### 🔊 Pronunciation & Speech Synthesis Fallback
 Hear how words are pronounced using local dialect audio (US/UK) fetched directly from the dictionary API. If the API doesn't provide audio files for a word, Spelt automatically falls back to the browser's native `SpeechSynthesis` API with high-quality English voices, making sure pronunciation buttons are always visible and interactive.
@@ -94,9 +100,10 @@ Spelt is designed to be fully navigable from the keyboard so you can study witho
 |---|---|---|
 | **Enter** | Front of card (input focused) | Check spelling and flip card |
 | **1** | Back of card (flipped) | Rate as **Again** (reset interval) |
-| **2** | Back of card (flipped) | Rate as **Hard** (comes back in 1 day) |
-| **3** | Back of card (flipped) | Rate as **Good** (standard progression) |
-| **4** | Back of card (flipped) | Rate as **Easy** (longer interval jump) |
+| **2** | Back of card (flipped) | Rate as **Hard** (comes back in 1d / calculated interval) |
+| **3** | Back of card (flipped) | Rate as **Good** (standard SM-2 progression) |
+| **4** | Back of card (flipped) | Rate as **Easy** (long interval jump) |
+| **5** | Back of card (flipped) | Rate as **Mastered** (archive word with confirmation) |
 
 ---
 
