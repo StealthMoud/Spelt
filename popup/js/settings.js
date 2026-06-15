@@ -109,6 +109,8 @@ async function wipeDb() {
       if (onDbRestoredCallback) {
         await onDbRestoredCallback();
       }
-    }
+    },
+    true,
+    'StealthMoud/Spelt'
   );
 }
