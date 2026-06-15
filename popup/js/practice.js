@@ -64,10 +64,22 @@ export async function initPractice(onDeckUpdated) {
     });
   });
 
-  // only allow 1-5 for ratings and space for pronunciation, block other keys untill user rates card
   window.addEventListener('keydown', async (e) => {
     const cardEl = document.getElementById('popup-deck-card');
-    if (!cardEl || !cardEl.classList.contains('flipped')) return;
+    if (!cardEl) return;
+
+    if (!cardEl.classList.contains('flipped')) {
+      if (e.key === ' ') {
+        const isTyping = document.activeElement === document.getElementById('spelling-input');
+        if (!isTyping) {
+          e.preventDefault();
+          e.stopPropagation();
+          const playBtn = document.querySelector('#practice-audio-container .audio-play-btn');
+          if (playBtn) playBtn.click();
+        }
+      }
+      return;
+    }
 
     if (e.key === '1') {
       e.preventDefault();
