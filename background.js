@@ -5,7 +5,13 @@ const FILES_TO_WATCH = [
   'http://localhost:8080/manifest.json',
   'http://localhost:8080/popup/popup.html',
   'http://localhost:8080/popup/popup.css',
-  'http://localhost:8080/popup/popup.js'
+  'http://localhost:8080/popup/popup.js',
+  'http://localhost:8080/popup/js/navigation.js',
+  'http://localhost:8080/popup/js/practice.js',
+  'http://localhost:8080/popup/js/sandbox.js',
+  'http://localhost:8080/popup/js/vault.js',
+  'http://localhost:8080/popup/js/settings.js',
+  'http://localhost:8080/shared/storage.js'
 ];
 
 let lastModifiedTimes = {};
