@@ -100,6 +100,7 @@ async function importDb(e) {
 }
 
 async function wipeDb() {
+  const captcha = Math.random().toString(36).substring(2, 8).toUpperCase();
   showConfirm(
     'Wipe Database',
     'Are you sure you want to delete all words and activity data? This action cannot be undone.',
@@ -111,6 +112,6 @@ async function wipeDb() {
       }
     },
     true,
-    'StealthMoud/Spelt'
+    captcha
   );
 }
