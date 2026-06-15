@@ -1,5 +1,5 @@
 // Tab switching navigation controller for Spelt extension popup
-export function initNavigation() {
+export function initNavigation(onTabChanged) {
   const tabs = document.querySelectorAll('.tab-btn');
   const panes = document.querySelectorAll('.tab-pane');
 
@@ -24,6 +24,8 @@ export function initNavigation() {
       } else if (target === 'vault-tab') {
         document.getElementById('vault-search')?.focus();
       }
+
+      if (onTabChanged) onTabChanged(target);
     });
   });
 

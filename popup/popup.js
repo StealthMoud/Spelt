@@ -26,7 +26,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) { console.error(e); }
   }
 
-  initNavigation();
+  initNavigation(async (targetTab) => {
+    await refreshStats();
+    if (targetTab === 'practice-tab') {
+      await syncPracticeDeck();
+    } else if (targetTab === 'vault-tab') {
+      await reloadVaultList();
+    }
+  });
   
   await initPractice(() => refreshStats());
   
@@ -45,6 +52,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     () => reloadVaultList(),
     () => syncPracticeDeck()
   );
+
+  // Manual refresh button listener with spin micro-animation
+  const refreshBtn = document.getElementById('popup-refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      const svg = refreshBtn.querySelector('svg');
+      if (svg) {
+        svg.style.transform = 'rotate(360deg)';
+        svg.style.transition = 'transform 0.5s ease-in-out';
+      }
+      await refreshStats();
+      await syncPracticeDeck();
+      await reloadVaultList();
+      setTimeout(() => {
+        if (svg) {
+          svg.style.transition = 'none';
+          svg.style.transform = 'none';
+        }
+      }, 500);
+    });
+  }
 
   await refreshStats();
 

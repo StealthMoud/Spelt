@@ -10,12 +10,17 @@
   <div class="spelt-popup">
     <!-- Header -->
     <header class="popup-header">
-      <div class="logo-row">
-        <span class="logo-text">Spelt</span>
-        <div class="session-info">
-          <span class="user-status-dot active"></span>
-          <span class="user-label">Local Profile</span>
+      <div class="logo-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="logo-text">Spelt</span>
+          <div class="session-info">
+            <span class="user-status-dot active"></span>
+            <span class="user-label">Local Profile</span>
+          </div>
         </div>
+        <button id="popup-refresh-btn" class="table-icon-btn" title="Refresh data" style="background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 4px; border-radius: 6px; transition: all var(--transition-fast) ease;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px; display: block;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
       </div>
       
       <!-- Tab Navigation -->
