@@ -205,7 +205,7 @@ function updateBulkUIState(filtered) {
   });
 }
 
-function openModal(wordObj = null) {
+export function openModal(wordObj = null) {
   const modal = document.getElementById('word-form-modal');
   document.getElementById('edit-word-id').value = wordObj ? wordObj.id : '';
   document.getElementById('form-word').value = wordObj ? wordObj.word : '';

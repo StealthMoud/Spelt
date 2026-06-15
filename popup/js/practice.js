@@ -1,4 +1,5 @@
 import { getWords, reviewWord, deleteWord } from '../../shared/storage.js';
+import { openModal } from './vault.js';
 
 let dueCards = [], currentIndex = 0, onDeckUpdatedCallback = null;
 
@@ -8,6 +9,14 @@ export async function initPractice(onDeckUpdated) {
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
   document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
+  });
+
+  document.querySelectorAll('.practice-edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card = dueCards[currentIndex];
+      if (card) openModal(card);
+    });
   });
 
   document.querySelectorAll('#practice-tab .srs-btn').forEach(btn => {

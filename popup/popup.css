@@ -175,3 +175,15 @@ kbd:hover { color: var(--text-main); }
 @keyframes slideDownFadeIn { from { transform: translateY(-6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes pulse-glow { 0% { transform: scale(1); } 100% { transform: scale(1.02); } }
 @keyframes badgePulse { 0% { transform: scale(1); box-shadow: 0 0 4px var(--primary-glow); } 100% { transform: scale(1.08); box-shadow: 0 0 10px var(--primary-glow); } }
+
+.practice-edit-btn {
+  color: var(--text-muted);
+  transition: all var(--transition-fast) ease;
+}
+.practice-edit-btn:hover {
+  color: var(--primary-light) !important;
+  transform: scale(1.1);
+}
+.practice-edit-btn:active {
+  transform: scale(0.95);
+}

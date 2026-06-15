@@ -260,7 +260,7 @@ function updateBulkUIState(filtered) {
   });
 }
 
-function openFormModal(wordObj = null) {
+export function openFormModal(wordObj = null) {
   const modal = document.getElementById('word-form-modal');
   const title = document.getElementById('form-modal-title');
   
