@@ -434,8 +434,19 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
     okBtn.style.cursor = match ? 'pointer' : 'not-allowed';
   };
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+  };
+
+  const handlePreventCopy = (e) => {
+    e.preventDefault();
+  };
+
   if (expectedConfirmText) {
     inputField.addEventListener('input', handleInput);
+    inputField.addEventListener('paste', handlePaste);
+    inputLabel.addEventListener('copy', handlePreventCopy);
+    inputLabel.addEventListener('selectstart', handlePreventCopy);
   }
 
   const close = () => {
@@ -456,6 +467,9 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
     cancelBtn.removeEventListener('click', close);
     if (expectedConfirmText) {
       inputField.removeEventListener('input', handleInput);
+      inputField.removeEventListener('paste', handlePaste);
+      inputLabel.removeEventListener('copy', handlePreventCopy);
+      inputLabel.removeEventListener('selectstart', handlePreventCopy);
     }
   };
 
