@@ -69,13 +69,21 @@ export async function initPractice(onDeckUpdated) {
     if (!cardEl) return;
 
     if (!cardEl.classList.contains('flipped')) {
+      const spellInput = document.getElementById('spelling-input');
+      const isTyping = document.activeElement === spellInput;
+
       if (e.key === ' ') {
-        const isTyping = document.activeElement === document.getElementById('spelling-input');
         if (!isTyping) {
           e.preventDefault();
           e.stopPropagation();
           const playBtn = document.querySelector('#practice-audio-container .audio-play-btn');
           if (playBtn) playBtn.click();
+        }
+      } else if (e.key === 'Enter') {
+        if (!isTyping) {
+          e.preventDefault();
+          e.stopPropagation();
+          spellInput?.focus();
         }
       }
       return;
