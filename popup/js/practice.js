@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord, playWordAudio, saveWords, censorWordInExample, getFallbackExample } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2 } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], currentIndex = 0, onDeckUpdatedCallback = null;
@@ -211,6 +211,19 @@ function checkSpelling() {
     document.getElementById('back-misspellings-display').textContent = displayErrors.join(', ');
     pastContainer.style.display = 'block';
   } else { pastContainer.style.display = 'none'; }
+
+  // Calculate and update dynamic SRS button hints
+  const hardInterval = calcSM2(3, card.rep, card.interval, card.ef).interval;
+  const goodInterval = calcSM2(4, card.rep, card.interval, card.ef).interval;
+  const easyInterval = calcSM2(5, card.rep, card.interval, card.ef).interval;
+
+  const hardHint = document.querySelector('#practice-tab .srs-hard .srs-hint');
+  const goodHint = document.querySelector('#practice-tab .srs-good .srs-hint');
+  const easyHint = document.querySelector('#practice-tab .srs-easy .srs-hint');
+
+  if (hardHint) hardHint.textContent = `${hardInterval}d`;
+  if (goodHint) goodHint.textContent = `${goodInterval}d`;
+  if (easyHint) easyHint.textContent = `${easyInterval}d`;
 
   document.querySelectorAll('#practice-tab .srs-btn').forEach(btn => btn.classList.remove('srs-recommend'));
   document.querySelector(isOk ? '#practice-tab .srs-good' : '#practice-tab .srs-again').classList.add('srs-recommend');

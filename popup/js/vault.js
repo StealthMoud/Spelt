@@ -172,13 +172,13 @@ function formatTimeUntil(w) {
   const now = Date.now();
   if (nextDate <= now) return { text: 'Due now', color: 'var(--primary-light)' };
   const diff = nextDate - now;
-  const mins = Math.floor(diff / 60000);
-  const hrs = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
+  const mins = Math.round(diff / 60000);
+  const hrs = Math.round(diff / 3600000);
+  const days = Math.round(diff / 86400000);
   if (mins < 60) return { text: `in ${mins}m`, color: 'var(--warning, hsl(40,90%,55%))' };
   if (hrs < 24) return { text: `in ${hrs}h`, color: 'var(--text-muted)' };
   if (days < 30) return { text: `in ${days}d`, color: 'var(--text-muted)' };
-  const months = Math.floor(days / 30);
+  const months = Math.round(days / 30);
   return { text: `in ${months}mo`, color: 'var(--text-muted)' };
 }
 

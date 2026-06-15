@@ -42,9 +42,15 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0) {
     interval = 1; // reset
   } else {
     if (rep === 0) {
-      interval = 1;
-    } else if (rep === 1) {
-      interval = 6;
+      if (q === 3) interval = 1;
+      else if (q === 4) interval = 6;
+      else if (q === 5) interval = 12;
+      else interval = 1;
+    } else if (rep === 1 && prevInt === 1) {
+      if (q === 3) interval = 3;
+      else if (q === 4) interval = 6;
+      else if (q === 5) interval = 12;
+      else interval = 6;
     } else {
       interval = Math.round(prevInt * ef);
     }
