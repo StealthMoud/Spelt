@@ -139,6 +139,8 @@ async function handleCorrectSpelling(apiData, word) {
       // if word was previously misspelled and now corrected, mark as mastered instead of deleting to preserve history
       existing.mastered = true;
       existing.rep = 0;
+      existing.interval = 30;
+      existing.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
       await saveWords(words);
       subtext = `<p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Correct! Misspelling marked as mastered in vault.</p>`;
     } else {

@@ -164,7 +164,11 @@ export async function reloadVaultList() {
   renderList();
 }
 
-function formatTimeUntil(nextDate) {
+function formatTimeUntil(w) {
+  if (w.mastered) {
+    return { text: 'Mastered', color: 'var(--success)' };
+  }
+  const nextDate = w.nextDate;
   const now = Date.now();
   if (nextDate <= now) return { text: 'Due now', color: 'var(--primary-light)' };
   const diff = nextDate - now;
@@ -213,7 +217,7 @@ function renderList() {
     filtered.forEach(w => {
       const li = document.createElement('li');
       li.className = 'vault-list-item';
-      const review = formatTimeUntil(w.nextDate);
+      const review = formatTimeUntil(w);
       const isChecked = selectedWordIds.has(w.id) ? 'checked' : '';
       
       li.innerHTML = `

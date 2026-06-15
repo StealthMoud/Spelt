@@ -176,6 +176,7 @@ async function submitRating(score) {
         wordObj.mastered = true;
         wordObj.rep = 0;
         wordObj.interval = 30; // space it out
+        wordObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
         await saveWords(list);
       }
     } else {

@@ -146,7 +146,7 @@ export async function initVault(onVaultUpdated) {
                           w.translation.toLowerCase().includes(query);
       let matchesStatus = true;
       if (filter === 'due') {
-        matchesStatus = w.nextDate <= now;
+        matchesStatus = w.nextDate <= now && !w.mastered;
       } else if (filter === 'new') {
         matchesStatus = w.rep === 0;
       } else if (filter === 'review') {
@@ -208,7 +208,11 @@ export async function reloadVault() {
   renderVaultList();
 }
 
-function formatTimeUntil(nextDate) {
+function formatTimeUntil(w) {
+  if (w.mastered) {
+    return { text: 'Mastered', color: 'var(--success)' };
+  }
+  const nextDate = w.nextDate;
   const now = Date.now();
   if (nextDate <= now) return { text: 'Due now', color: 'var(--primary-light)' };
   const diff = nextDate - now;
@@ -240,7 +244,7 @@ function renderVaultList() {
     
     let matchesStatus = true;
     if (filter === 'due') {
-      matchesStatus = w.nextDate <= now;
+      matchesStatus = w.nextDate <= now && !w.mastered;
     } else if (filter === 'new') {
       matchesStatus = w.rep === 0;
     } else if (filter === 'review') {
@@ -270,7 +274,7 @@ function renderVaultList() {
     emptyState.style.display = 'none';
     filtered.forEach(w => {
       const tr = document.createElement('tr');
-      const review = formatTimeUntil(w.nextDate);
+      const review = formatTimeUntil(w);
       const isChecked = selectedWordIds.has(w.id) ? 'checked' : '';
       
       tr.innerHTML = `
