@@ -168,7 +168,7 @@ async function submitRating(score) {
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
     
     let updatedCard = null;
-    if (isOk && score >= 3) {
+    if (isOk && score === 5) {
       // Mark as mastered to preserve errors history in vault
       const list = await getWords();
       const wordObj = list.find(w => w.id === card.id);
