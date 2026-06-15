@@ -96,6 +96,9 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
     const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
     if (!isSandboxActive) return;
 
+    const activeEl = document.activeElement;
+    const isTyping = activeEl && (activeEl.id === 'word-input' || activeEl.id === 'manual-correction-input');
+
     const feedbackMsg = document.getElementById('feedback-msg');
     if (!feedbackMsg || feedbackMsg.style.display === 'none') return;
 
@@ -104,7 +107,7 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
 
     if (acceptBtn && rejectBtn) {
       if (e.key === 'Enter') {
-        if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
+        if (isTyping) return;
         e.preventDefault();
         const suggestion = acceptBtn.getAttribute('data-suggestion');
         const original = acceptBtn.getAttribute('data-original');
@@ -112,7 +115,7 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
           await acceptSuggestion(suggestion, original);
         }
       } else if (e.key === ' ') {
-        if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
+        if (isTyping) return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) audioBtn.click();
@@ -125,12 +128,13 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
       }
     } else {
       if (e.key === 'Enter') {
-        if (document.activeElement && document.activeElement.id === 'manual-correction-input') return;
+        if (isTyping) return;
         const wordInput = document.getElementById('word-input');
         if (wordInput && wordInput.value.trim() !== '') return;
         e.preventDefault();
         if (wordInput) { wordInput.value = ''; wordInput.focus(); }
       } else if (e.key === ' ') {
+        if (isTyping) return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) audioBtn.click();

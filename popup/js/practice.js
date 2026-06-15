@@ -65,6 +65,9 @@ export async function initPractice(onDeckUpdated) {
   });
 
   window.addEventListener('keydown', async (e) => {
+    const practiceTab = document.getElementById('practice-tab');
+    if (!practiceTab || !practiceTab.classList.contains('active')) return;
+
     const cardEl = document.getElementById('popup-deck-card');
     if (!cardEl) return;
 
