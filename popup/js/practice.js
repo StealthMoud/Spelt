@@ -183,7 +183,7 @@ async function submitRating(score) {
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
-      if (updatedCard) {
+      if (updatedCard && score < 3) {
         dueCards.push(updatedCard);
       }
       currentIndex += 1;

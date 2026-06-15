@@ -189,7 +189,7 @@ async function submitRating(score) {
     
     document.getElementById('deck-card').classList.remove('flipped');
     setTimeout(() => {
-      if (updatedCard) {
+      if (updatedCard && score < 3) {
         dueCards.push(updatedCard);
       }
       currentCardIndex += 1;
