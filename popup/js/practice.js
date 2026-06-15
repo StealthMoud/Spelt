@@ -164,6 +164,11 @@ function showPracticeCard() {
   } else {
     exampleContainer.style.display = 'none';
   }
+
+  const audioContainer = document.getElementById('practice-audio-container');
+  if (audioContainer) {
+    audioContainer.innerHTML = renderAudioButtons(card.word);
+  }
 }
 
 function checkSpelling() {
