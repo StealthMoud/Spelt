@@ -195,12 +195,12 @@
           </button>
         </div>
         <!-- Bulk Actions Bar -->
-        <div id="vault-bulk-row" style="display: none; align-items: center; justify-content: space-between; margin-bottom: 6px; padding: 4px 6px; background: hsla(155, 65%, 48%, 0.03); border: 1px solid var(--border); border-radius: 8px;">
+        <div id="vault-bulk-row" class="vault-bulk-row" style="display: none;">
           <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--text-muted); cursor: pointer; user-select: none;">
-            <input type="checkbox" id="vault-select-all" style="accent-color: var(--primary); width: 12px; height: 12px; cursor: pointer; margin: 0;">
+            <input type="checkbox" id="vault-select-all">
             <span>Select All (<span id="vault-selected-count">0</span>)</span>
           </label>
-          <button id="vault-delete-selected" class="submit-btn erase-btn" style="padding: 3px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px;">
+          <button id="vault-delete-selected" class="submit-btn erase-btn" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 8px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span>Delete Selected</span>
           </button>
