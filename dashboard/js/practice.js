@@ -16,15 +16,37 @@ export async function initPractice(onDeckUpdated, triggerConfetti) {
     });
   });
 
+  // only allow 1-4 for ratings and space for pronunciation, block other keys untill user rates card
   window.addEventListener('keydown', async (e) => {
     const cardEl = document.getElementById('deck-card');
     if (!cardEl || !cardEl.classList.contains('flipped')) return;
-    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
-    if (e.key === '1') { e.preventDefault(); await submitRating(1); }
-    else if (e.key === '2') { e.preventDefault(); await submitRating(3); }
-    else if (e.key === '3') { e.preventDefault(); await submitRating(4); }
-    else if (e.key === '4') { e.preventDefault(); await submitRating(5); }
-  });
+
+    if (e.key === '1') {
+      e.preventDefault();
+      e.stopPropagation();
+      await submitRating(1);
+    } else if (e.key === '2') {
+      e.preventDefault();
+      e.stopPropagation();
+      await submitRating(3);
+    } else if (e.key === '3') {
+      e.preventDefault();
+      e.stopPropagation();
+      await submitRating(4);
+    } else if (e.key === '4') {
+      e.preventDefault();
+      e.stopPropagation();
+      await submitRating(5);
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      const playBtn = document.querySelector('#back-audio-container .audio-play-btn') || document.querySelector('#deck-card .audio-play-btn');
+      if (playBtn) playBtn.click();
+    } else {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
 
   document.getElementById('deck-card')?.addEventListener('click', (e) => {
     const playBtn = e.target.closest('[data-audio-url]');
