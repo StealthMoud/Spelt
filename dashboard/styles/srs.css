@@ -3,7 +3,7 @@
 /* SRS Buttons */
 .srs-rating-wrapper {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   margin-top: auto;
 }
@@ -58,6 +58,12 @@
 
 .srs-easy:hover {
   background: hsla(145, 80%, 10%, 0.8);
+  border-color: var(--success);
+  box-shadow: 0 4px 12px var(--success-glow);
+}
+
+.srs-mastered:hover {
+  background: hsla(145, 80%, 15%, 0.8);
   border-color: var(--success);
   box-shadow: 0 4px 12px var(--success-glow);
 }

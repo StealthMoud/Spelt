@@ -21,11 +21,50 @@ export async function initPractice(onDeckUpdated) {
 
   document.querySelectorAll('#practice-tab .srs-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await submitRating(parseInt(btn.getAttribute('data-score'), 10));
+      const scoreAttr = btn.getAttribute('data-score');
+      if (scoreAttr === 'mastered') {
+        const card = dueCards[currentIndex];
+        if (!card) return;
+        const confirmTitle = 'Mark as Mastered?';
+        const confirmMsg = `Are you sure you want to mark "${card.word}" as Mastered? This will archive it and remove it from your active reviews.`;
+        
+        const modal = document.getElementById('popup-confirm-modal');
+        if (modal) {
+          document.getElementById('popup-confirm-title').textContent = confirmTitle;
+          document.getElementById('popup-confirm-msg').textContent = confirmMsg;
+          
+          const confirmBtn = document.getElementById('popup-confirm-ok-btn');
+          const cancelBtn = document.getElementById('popup-confirm-cancel-btn');
+          
+          const onConfirm = async () => {
+            modal.style.display = 'none';
+            cleanup();
+            await submitMasteredRating(card);
+          };
+          const onCancel = () => {
+            modal.style.display = 'none';
+            cleanup();
+          };
+          const cleanup = () => {
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+          };
+          
+          confirmBtn.addEventListener('click', onConfirm);
+          cancelBtn.addEventListener('click', onCancel);
+          modal.style.display = 'flex';
+        } else {
+          if (confirm(confirmMsg)) {
+            await submitMasteredRating(card);
+          }
+        }
+      } else {
+        await submitRating(parseInt(scoreAttr, 10));
+      }
     });
   });
 
-  // only allow 1-4 for ratings and space for pronunciation, block other keys untill user rates card
+  // only allow 1-5 for ratings and space for pronunciation, block other keys untill user rates card
   window.addEventListener('keydown', async (e) => {
     const cardEl = document.getElementById('popup-deck-card');
     if (!cardEl || !cardEl.classList.contains('flipped')) return;
@@ -46,12 +85,32 @@ export async function initPractice(onDeckUpdated) {
       e.preventDefault();
       e.stopPropagation();
       await submitRating(5);
+    } else if (e.key === '5') {
+      e.preventDefault();
+      e.stopPropagation();
+      const masteredBtn = document.querySelector('#practice-tab .srs-mastered');
+      if (masteredBtn) masteredBtn.click();
     } else if (e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
       const playBtn = document.querySelector('#back-audio-container .audio-play-btn') || document.querySelector('#popup-deck-card .audio-play-btn');
       if (playBtn) playBtn.click();
     } else {
+      // Allow confirming the modal via Enter/Space if confirm modal is active
+      const modal = document.getElementById('popup-confirm-modal');
+      if (modal && modal.style.display === 'flex') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          document.getElementById('popup-confirm-ok-btn')?.click();
+          return;
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          document.getElementById('popup-confirm-cancel-btn')?.click();
+          return;
+        }
+      }
       e.preventDefault();
       e.stopPropagation();
     }
@@ -188,6 +247,26 @@ async function submitRating(score) {
       if (updatedCard && score < 3) {
         dueCards.push(updatedCard);
       }
+      currentIndex += 1;
+      onDeckUpdatedCallback?.(dueCards.length - currentIndex);
+      showPracticeCard();
+    }, 200);
+  } catch (err) { console.error(err); }
+}
+
+async function submitMasteredRating(card) {
+  try {
+    const list = await getWords();
+    const wordObj = list.find(w => w.id === card.id);
+    if (wordObj) {
+      wordObj.mastered = true;
+      wordObj.rep = 0;
+      wordObj.interval = 30; // space it out
+      wordObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      await saveWords(list);
+    }
+    document.getElementById('popup-deck-card').classList.remove('flipped');
+    setTimeout(() => {
       currentIndex += 1;
       onDeckUpdatedCallback?.(dueCards.length - currentIndex);
       showPracticeCard();
