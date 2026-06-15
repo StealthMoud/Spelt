@@ -239,21 +239,7 @@ async function submitRating(score) {
     const typed = document.getElementById('spelling-input').value.trim();
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
     
-    let updatedCard = null;
-    if (isOk && score === 5) {
-      // Mark as mastered to preserve errors history in vault
-      const list = await getWords();
-      const wordObj = list.find(w => w.id === card.id);
-      if (wordObj) {
-        wordObj.mastered = true;
-        wordObj.rep = 0;
-        wordObj.interval = 30; // space it out
-        wordObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-        await saveWords(list);
-      }
-    } else {
-      updatedCard = await reviewWord(card.id, score, isOk ? null : typed);
-    }
+    const updatedCard = await reviewWord(card.id, score, isOk ? null : typed);
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
