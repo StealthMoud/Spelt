@@ -204,21 +204,33 @@
             <option value="date">Date Added</option>
             <option value="review">Next Review</option>
           </select>
+          <select id="vault-filter-status" class="premium-input vault-sort-select">
+            <option value="all">All Words</option>
+            <option value="learning">Active</option>
+            <option value="mastered">Mastered</option>
+            <option value="due">Due Now</option>
+          </select>
           <button id="vault-sort-dir-btn" class="submit-btn vault-sort-dir-btn" data-dir="asc" title="Toggle sort direction">
             <svg id="sort-dir-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
             <span id="sort-dir-label">ASC</span>
           </button>
         </div>
         <!-- Bulk Actions Bar -->
-        <div id="vault-bulk-row" class="vault-bulk-row" style="display: none;">
+        <div id="vault-bulk-row" class="vault-bulk-row" style="display: none; justify-content: space-between; align-items: center; gap: 6px;">
           <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--text-muted); cursor: pointer; user-select: none;">
             <input type="checkbox" id="vault-select-all">
             <span>Select All (<span id="vault-selected-count">0</span>)</span>
           </label>
-          <button id="vault-delete-selected" class="submit-btn erase-btn" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <span>Delete Selected</span>
-          </button>
+          <div style="display: flex; gap: 6px;">
+            <button id="vault-demaster-selected" class="submit-btn primary-save-btn" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 8px; background: hsla(155, 65%, 48%, 0.15); border-color: var(--primary); color: var(--primary-light);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              <span>Re-study Selected</span>
+            </button>
+            <button id="vault-delete-selected" class="submit-btn erase-btn" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Delete Selected</span>
+            </button>
+          </div>
         </div>
         <div id="vault-list-container" class="vault-list-box">
           <div id="vault-list-empty">No words saved yet. Check spelling in the Sandbox to add some!</div>

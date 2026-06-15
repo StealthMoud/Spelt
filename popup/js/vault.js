@@ -107,6 +107,12 @@ export async function initVault(onVaultUpdated) {
     renderList();
   });
 
+  // Filter control
+  document.getElementById('vault-filter-status')?.addEventListener('change', () => {
+    selectedWordIds.clear();
+    renderList();
+  });
+
   // Sort controls
   document.getElementById('vault-sort-field')?.addEventListener('change', () => {
     selectedWordIds.clear();
@@ -126,11 +132,7 @@ export async function initVault(onVaultUpdated) {
   // Bulk actions
   document.getElementById('vault-select-all')?.addEventListener('change', (e) => {
     const checked = e.target.checked;
-    const query = document.getElementById('vault-search').value.trim().toLowerCase();
-    const filtered = wordsList.filter(w => 
-      w.word.toLowerCase().includes(query) || 
-      w.definition.toLowerCase().includes(query)
-    );
+    const filtered = getFilteredWords();
     
     if (checked) {
       filtered.forEach(w => selectedWordIds.add(w.id));
@@ -147,6 +149,28 @@ export async function initVault(onVaultUpdated) {
       `Delete all ${selectedWordIds.size} selected words from your vault?`,
       async () => {
         wordsList = wordsList.filter(w => !selectedWordIds.has(w.id));
+        await saveWords(wordsList);
+        selectedWordIds.clear();
+        await reloadVaultList();
+        if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+      }
+    );
+  });
+
+  document.getElementById('vault-demaster-selected')?.addEventListener('click', () => {
+    if (selectedWordIds.size === 0) return;
+    showConfirm(
+      'Re-study Selected',
+      `Move all ${selectedWordIds.size} selected words back into your practice cycle?`,
+      async () => {
+        wordsList.forEach(w => {
+          if (selectedWordIds.has(w.id)) {
+            w.mastered = false;
+            w.rep = 0;
+            w.interval = 1;
+            w.nextDate = Date.now();
+          }
+        });
         await saveWords(wordsList);
         selectedWordIds.clear();
         await reloadVaultList();
@@ -182,8 +206,27 @@ function formatTimeUntil(w) {
   return { text: `in ${months}mo`, color: 'var(--text-muted)' };
 }
 
-function renderList() {
+function getFilteredWords() {
   const query = document.getElementById('vault-search').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('vault-filter-status')?.value || 'all';
+
+  let filtered = wordsList.filter(w => 
+    w.word.toLowerCase().includes(query) || 
+    w.definition.toLowerCase().includes(query)
+  );
+
+  if (statusFilter === 'learning') {
+    filtered = filtered.filter(w => !w.mastered);
+  } else if (statusFilter === 'mastered') {
+    filtered = filtered.filter(w => w.mastered);
+  } else if (statusFilter === 'due') {
+    filtered = filtered.filter(w => w.nextDate <= Date.now() && !w.mastered);
+  }
+
+  return filtered;
+}
+
+function renderList() {
   const listEl = document.getElementById('popup-vault-list');
   const emptyEl = document.getElementById('vault-list-empty');
   const sortField = document.getElementById('vault-sort-field')?.value || 'alpha';
@@ -191,10 +234,7 @@ function renderList() {
 
   listEl.innerHTML = '';
   
-  let filtered = wordsList.filter(w => 
-    w.word.toLowerCase().includes(query) || 
-    w.definition.toLowerCase().includes(query)
-  );
+  let filtered = getFilteredWords();
 
   // Apply sorting
   filtered.sort((a, b) => {
@@ -259,6 +299,7 @@ function updateBulkUIState(filtered) {
   const selectAllCheckbox = document.getElementById('vault-select-all');
   const selectedCountSpan = document.getElementById('vault-selected-count');
   const deleteBtn = document.getElementById('vault-delete-selected');
+  const demasterBtn = document.getElementById('vault-demaster-selected');
 
   if (!bulkRow) return;
 
@@ -278,18 +319,23 @@ function updateBulkUIState(filtered) {
     deleteBtn.disabled = true;
     deleteBtn.style.opacity = '0.5';
     deleteBtn.style.cursor = 'not-allowed';
-  } else if (filteredSelected.length === filtered.length) {
-    selectAllCheckbox.checked = true;
-    selectAllCheckbox.indeterminate = false;
-    deleteBtn.disabled = false;
-    deleteBtn.style.opacity = '1';
-    deleteBtn.style.cursor = 'pointer';
+    if (demasterBtn) {
+      demasterBtn.disabled = true;
+      demasterBtn.style.opacity = '0.5';
+      demasterBtn.style.cursor = 'not-allowed';
+    }
   } else {
-    selectAllCheckbox.checked = false;
-    selectAllCheckbox.indeterminate = true;
+    const isAll = filteredSelected.length === filtered.length;
+    selectAllCheckbox.checked = isAll;
+    selectAllCheckbox.indeterminate = !isAll;
     deleteBtn.disabled = false;
     deleteBtn.style.opacity = '1';
     deleteBtn.style.cursor = 'pointer';
+    if (demasterBtn) {
+      demasterBtn.disabled = false;
+      demasterBtn.style.opacity = '1';
+      demasterBtn.style.cursor = 'pointer';
+    }
   }
 
   // Update DOM checkbox checked states
