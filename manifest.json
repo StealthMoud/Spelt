@@ -2,11 +2,10 @@
   "manifest_version": 3,
   "name": "Spelt",
   "version": "1.0.0",
-  "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling and dashboard sync.",
+  "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling.",
   "permissions": [
     "storage"
   ],
-  "options_page": "dashboard/dashboard.html",
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

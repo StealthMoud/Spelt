@@ -64,13 +64,10 @@ A searchable, filterable vault to manage your vocabulary.
 Hear how words are pronounced using local dialect audio (US/UK) fetched directly from the dictionary API. If the API doesn't provide audio files for a word, Spelt automatically falls back to the browser's native `SpeechSynthesis` API with high-quality English voices, making sure pronunciation buttons are always visible and interactive.
 
 ### 🔥 Daily Streaks
-Keep your spelling practice consistent. Track your daily learning sessions with a visual combo streak indicator on the full dashboard.
-
-### 📊 Full Dashboard
-Right-click the Spelt extension icon and select **Options** to launch the full-page dashboard. It features a wider workspace, detailed review analytics, and progress calendars.
+Keep your spelling practice consistent. Track your daily learning sessions with a visual combo streak indicator.
 
 ### 💾 Export / Import
-Back up your database as a clean JSON file and restore it on any device. Works seamlessly across both the popup and dashboard views.
+Back up your database as a clean JSON file and restore it on any device.
 
 ---
 
@@ -130,17 +127,6 @@ Spelt/
 │       ├── vault.js       # Word list management
 │       ├── navigation.js  # Tab switching
 │       └── settings.js    # Export, import, wipe, SRS tuning
-├── dashboard/
-│   ├── dashboard.html     # Full-page dashboard
-│   ├── dashboard.css
-│   ├── dashboard.js
-│   └── js/
-│       ├── sandbox.js
-│       ├── practice.js
-│       ├── vault.js
-│       ├── analytics.js   # Streak, retention, heatmap stats
-│       ├── navigation.js
-│       └── settings.js
 ├── icons/
 │   ├── icon-16.png
 │   ├── icon-48.png
