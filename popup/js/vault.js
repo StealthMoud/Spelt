@@ -308,6 +308,7 @@ export function openModal(wordObj = null) {
   document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
   document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
   document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
+  document.getElementById('form-mastered').checked = wordObj ? (wordObj.mastered || false) : false;
   
   const pastContainer = document.getElementById('form-past-errors-container');
   const pastList = document.getElementById('form-past-errors-list');
@@ -338,16 +339,37 @@ async function saveWord(e) {
   const translation = document.getElementById('form-translation').value.trim();
   const partOfSpeech = document.getElementById('form-part-of-speech').value.trim();
   const example = document.getElementById('form-example').value.trim();
+  const mastered = document.getElementById('form-mastered').checked;
 
   try {
     if (id) {
       const idx = wordsList.findIndex(w => w.id === id);
       if (idx !== -1) {
-        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example };
+        const wasMastered = wordsList[idx].mastered;
+        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example, mastered };
+        if (mastered && !wasMastered) {
+          wordsList[idx].rep = 0;
+          wordsList[idx].interval = 30;
+          wordsList[idx].nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+        } else if (!mastered && wasMastered) {
+          wordsList[idx].mastered = false;
+          wordsList[idx].rep = 0;
+          wordsList[idx].interval = 1;
+          wordsList[idx].nextDate = Date.now();
+        }
         await saveWords(wordsList);
       }
     } else {
-      await addWord({ word, definition, transcription, translation, partOfSpeech, example });
+      const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, mastered });
+      if (mastered) {
+        const list = await getWords();
+        const wObj = list.find(w => w.id === addedWord.id);
+        if (wObj) {
+          wObj.interval = 30;
+          wObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+          await saveWords(list);
+        }
+      }
     }
     closeModal();
     await reloadVaultList();
