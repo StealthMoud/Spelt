@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], currentIndex = 0, onDeckUpdatedCallback = null;
@@ -58,18 +58,12 @@ export async function initPractice(onDeckUpdated) {
   }, true);
 
   document.getElementById('popup-deck-card')?.addEventListener('click', (e) => {
-    const playBtn = e.target.closest('[data-audio-url]');
+    const playBtn = e.target.closest('.audio-play-btn');
     if (playBtn) {
-      const url = playBtn.getAttribute('data-audio-url');
-      if (url) {
-        if (url.startsWith('tts:')) {
-          const [_, lang, text] = url.split(':');
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = lang;
-          window.speechSynthesis.speak(utterance);
-        } else {
-          new Audio(url).play().catch(err => console.error(err));
-        }
+      const word = playBtn.getAttribute('data-word');
+      const accent = playBtn.getAttribute('data-accent');
+      if (word && accent) {
+        playWordAudio(word, accent).catch(err => console.error(err));
       }
     }
   });
@@ -129,16 +123,7 @@ function checkSpelling() {
 
   const audioContainer = document.getElementById('back-audio-container');
   if (audioContainer) {
-    audioContainer.innerHTML = renderAudioButtons(`tts:en-US:${card.word}`, `tts:en-GB:${card.word}`);
-    fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(card.word.toLowerCase())}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data[0] && data[0].phonetics) {
-          const { us, uk } = extractAudios(data[0].phonetics, card.word);
-          audioContainer.innerHTML = renderAudioButtons(us, uk);
-        }
-      })
-      .catch(err => console.error(err));
+    audioContainer.innerHTML = renderAudioButtons(card.word);
   }
 
   const pastContainer = document.getElementById('past-misspellings-container');
@@ -180,16 +165,7 @@ async function submitRating(score) {
   } catch (err) { console.error(err); }
 }
 
-function extractAudios(ph, word) {
-  const audios = ph ? ph.map(p => p.audio).filter(Boolean) : [];
-  let us = audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '';
-  let uk = audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || us;
-  if (!us && word) us = `tts:en-US:${word}`;
-  if (!uk && word) uk = `tts:en-GB:${word}`;
-  return { us, uk };
-}
-
-function renderAudioButtons(us, uk) {
-  const b = (u, l) => u ? `<button type="button" class="audio-play-btn" data-audio-url="${u}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>${l}</span></button>` : '';
-  return (us || uk) ? `<div style="display: flex; gap: 6px; margin: 4px 0 4px;">${b(us, 'US')}${b(uk, 'UK')}</div>` : '';
+function renderAudioButtons(word) {
+  const b = (accent, label) => `<button type="button" class="audio-play-btn" data-word="${word}" data-accent="${accent}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>${label}</span></button>`;
+  return `<div style="display: flex; gap: 6px; margin: 4px 0 4px;">${b('us', 'US')}${b('uk', 'UK')}</div>`;
 }

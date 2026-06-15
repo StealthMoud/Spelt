@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -44,18 +44,12 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
       const closeBtn = e.target.closest('.feedback-close-btn');
       if (closeBtn) { feedbackMsg.style.display = 'none'; return; }
 
-      const playBtn = e.target.closest('[data-audio-url]');
+      const playBtn = e.target.closest('.audio-play-btn');
       if (playBtn) {
-        const url = playBtn.getAttribute('data-audio-url');
-        if (url) {
-          if (url.startsWith('tts:')) {
-            const [_, lang, text] = url.split(':');
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            window.speechSynthesis.speak(utterance);
-          } else {
-            new Audio(url).play().catch(err => console.error(err));
-          }
+        const word = playBtn.getAttribute('data-word');
+        const accent = playBtn.getAttribute('data-accent');
+        if (word && accent) {
+          playWordAudio(word, accent).catch(err => console.error(err));
         }
         return;
       }
@@ -182,7 +176,6 @@ const closeBtnHtml = `
 async function handleCorrectSpelling(apiData, word) {
   const def = apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
   const ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
-  const { us, uk } = extractAudios(apiData.phonetics, word);
   try {
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
@@ -200,7 +193,7 @@ async function handleCorrectSpelling(apiData, word) {
       ${closeBtnHtml}
       <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
       <p style="margin: 6px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em;">${word} <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span></p>
-      ${renderAudioButtons(us, uk)}
+      ${renderAudioButtons(word)}
       <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;">${def}</p>
       ${subtext}
     `;
@@ -216,12 +209,10 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Retrieving suggestions...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
   let def = 'No definition found', ipa = '/--/';
-  let us = `tts:en-US:${suggestion}`, uk = `tts:en-GB:${suggestion}`;
   if (response.ok) {
     const data = await response.json();
     def = data[0].meanings[0]?.definitions[0]?.definition || def;
     ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
-    ({ us, uk } = extractAudios(data[0].phonetics, suggestion));
   }
   let altChips = '';
   const alts = suggestions.filter((_, i) => i !== activeIndex);
@@ -234,7 +225,7 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
     <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
     <p style="margin: 6px 0;">"${originalWord}" is incorrect. Did you mean:</p>
     <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${suggestion}${ipa !== '/--/' ? ` <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span>` : ''}</p>
-    ${renderAudioButtons(us, uk)}
+    ${renderAudioButtons(suggestion)}
     ${def !== 'No definition found' ? `<p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;">${def}</p>` : ''}
     ${altChips}
     <div style="display: flex; gap: 6px; margin-top: 8px;">
@@ -312,7 +303,6 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       const data = await response.json();
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
-      const { us, uk } = extractAudios(data[0].phonetics, correctWord);
       
       await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
@@ -322,7 +312,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
         ${closeBtnHtml}
         <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
         <p style="margin: 4px 0;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
-        ${renderAudioButtons(us, uk)}
+        ${renderAudioButtons(correctWord)}
       `;
       document.getElementById('word-input').value = '';
       document.getElementById('word-input')?.focus();
@@ -335,18 +325,9 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
   } catch (err) { feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`; }
 }
 
-function extractAudios(ph, word) {
-  const audios = ph ? ph.map(p => p.audio).filter(Boolean) : [];
-  let us = audios.find(a => a.includes('-us') || a.includes('/us/')) || audios[0] || '';
-  let uk = audios.find(a => a.includes('-uk') || a.includes('/uk/')) || audios[1] || us;
-  if (!us && word) us = `tts:en-US:${word}`;
-  if (!uk && word) uk = `tts:en-GB:${word}`;
-  return { us, uk };
-}
-
-function renderAudioButtons(us, uk) {
-  const b = (u, l) => u ? `<button type="button" class="audio-play-btn" data-audio-url="${u}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>${l}</span></button>` : '';
-  return (us || uk) ? `<div style="display: flex; gap: 6px; margin: 8px 0 4px;">${b(us, 'US')}${b(uk, 'UK')}</div>` : '';
+function renderAudioButtons(word) {
+  const b = (accent, label) => `<button type="button" class="audio-play-btn" data-word="${word}" data-accent="${accent}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>${label}</span></button>`;
+  return `<div style="display: flex; gap: 6px; margin: 8px 0 4px;">${b('us', 'US')}${b('uk', 'UK')}</div>`;
 }
 
 async function findSuggestions(word) {

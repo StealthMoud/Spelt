@@ -240,6 +240,46 @@ export async function deleteWord(wordId) {
   await saveWords(filtered);
 }
 
+// Play high-quality human audio pronunciation with fallback
+export async function playWordAudio(word, accent) {
+  if (typeof window === 'undefined' || typeof Audio === 'undefined') return;
+  const cleanWord = word.trim().toLowerCase();
+  const suffix = accent === 'uk' ? 'gb' : 'us';
+  const primaryUrl = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${encodeURIComponent(cleanWord)}--_${suffix}_1.mp3`;
+
+  try {
+    const audio = new Audio(primaryUrl);
+    await audio.play();
+    return;
+  } catch (e) {
+    console.log('Google static audio failed, trying API dictionary fallback...');
+  }
+
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0] && data[0].phonetics) {
+        const audios = data[0].phonetics.map(p => p.audio).filter(Boolean);
+        const accentMatch = audios.find(a => a.includes(`-${accent}`) || a.includes(`/${accent}/`));
+        const fallbackAudio = accentMatch || audios[0];
+        if (fallbackAudio) {
+          const audio = new Audio(fallbackAudio);
+          await audio.play();
+          return;
+        }
+      }
+    }
+  } catch (e) {
+    console.log('Dictionary API fallback failed, using TTS...');
+  }
+
+  const lang = accent === 'uk' ? 'en-GB' : 'en-US';
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = lang;
+  window.speechSynthesis.speak(utterance);
+}
+
 // Utility to clear everything
 export async function resetDb() {
   await setStored('spelt_words', []);
