@@ -92,9 +92,9 @@
                     <span class="clue-label">Definition</span>
                     <p id="practice-definition" class="clue-text">Definition of the word.</p>
                   </div>
-                  <div class="clue-item" id="front-example-container">
-                    <span class="clue-label">Context / Example</span>
-                    <p id="practice-example" class="clue-text">Example sentence with a blank __________.</p>
+                  <div class="clue-item" id="front-pos-container">
+                    <span class="clue-label">Part of Speech</span>
+                    <p id="practice-part-of-speech" class="clue-text" style="text-transform: capitalize; font-style: italic;">noun</p>
                   </div>
                   <div class="clue-row">
                     <div class="clue-item" id="front-ipa-container">
@@ -144,6 +144,10 @@
                   <div class="detail-row">
                     <span class="detail-label">Definition:</span>
                     <p id="back-definition-display" class="card-definition">The body of words used...</p>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Part of Speech:</span>
+                    <p id="back-part-of-speech-display" class="card-definition" style="text-transform: capitalize; font-style: italic;"></p>
                   </div>
                   <div class="detail-row" id="past-misspellings-container" style="display: none;">
                     <span class="detail-label">Past errors:</span>
@@ -471,8 +475,8 @@
           </div>
         </div>
         <div class="input-group">
-          <label for="form-example">Example Sentence</label>
-          <textarea id="form-example" class="premium-input premium-textarea" autocomplete="off"></textarea>
+          <label for="form-part-of-speech">Part of Speech</label>
+          <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
         </div>
         <div class="input-group">
           <label for="form-notes">Extra Notes</label>

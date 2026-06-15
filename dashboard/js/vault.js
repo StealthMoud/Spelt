@@ -294,7 +294,7 @@ export function openFormModal(wordObj = null) {
   document.getElementById('form-definition').value = wordObj ? wordObj.definition : '';
   document.getElementById('form-transcription').value = wordObj ? wordObj.transcription : '';
   document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
-  document.getElementById('form-example').value = wordObj ? wordObj.example : '';
+  document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
   document.getElementById('form-notes').value = wordObj ? wordObj.notes : '';
 
   title.textContent = wordObj ? 'Edit Word Details' : 'Add New Word';
@@ -313,18 +313,18 @@ async function saveWordForm(e) {
   const definition = document.getElementById('form-definition').value.trim();
   const transcription = document.getElementById('form-transcription').value.trim();
   const translation = document.getElementById('form-translation').value.trim();
-  const example = document.getElementById('form-example').value.trim();
+  const partOfSpeech = document.getElementById('form-part-of-speech').value.trim();
   const notes = document.getElementById('form-notes').value.trim();
 
   try {
     if (id) {
       const idx = wordsList.findIndex(w => w.id === id);
       if (idx !== -1) {
-        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, example, notes };
+        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, notes };
         await saveWords(wordsList);
       }
     } else {
-      await addWord({ word, definition, transcription, translation, example, notes });
+      await addWord({ word, definition, transcription, translation, partOfSpeech, notes });
     }
     closeFormModal();
     await reloadVault();

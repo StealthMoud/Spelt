@@ -189,12 +189,13 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
 async function acceptSuggestion(suggestion, original) {
   const f = document.getElementById('sandbox-feedback'); f.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = 'No definition found', ipa = '/--/';
+  let def = 'No definition found', ipa = '/--/', partOfSpeech = '';
   if (response.ok) {
     const data = await response.json();
     def = data[0].meanings[0]?.definitions[0]?.definition || def; ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
+    partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
   }
-  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa });
+  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech });
   f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4><p style="font-size: 0.8rem; margin: 4px 0;">Added correct word <strong>"${suggestion}"</strong> to practice queue.</p>`;
   document.getElementById('sandbox-spell-input').value = '';
 }
@@ -233,9 +234,10 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       const data = await response.json();
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
-      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa });
+      const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
+      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
-        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa });
+        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech });
       }
       if (triggerConfettiFn) triggerConfettiFn(document.getElementById('sandbox-spell-input'));
       f.innerHTML = `${closeBtnHtml}<h4 style="color: var(--success); margin: 0 0 6px;">✅ Correction Saved!</h4><p style="font-size: 1.1rem; font-weight: 600; margin: 4px 0;">${correctWord} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">${ipa}</span></p>${renderAudioButtons(correctWord)}<p style="font-size: 0.8rem; line-height: 1.4; margin: 4px 0;"><strong>Meaning:</strong> ${def}</p><p style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin: 8px 0 0;">Added to vault.</p>`;

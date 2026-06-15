@@ -94,13 +94,7 @@ function showCurrentCard() {
   document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
   document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
   document.getElementById('practice-translation').textContent = card.translation || '--';
-  document.getElementById('practice-example').textContent = blankOutWord(card.example || 'No example sentence added.', card.word);
-}
-
-function blankOutWord(sentence, word) {
-  if (!sentence || !word) return '';
-  const escaped = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-  return sentence.replace(new RegExp('\\b' + escaped + '\\b', 'gi'), '__________');
+  document.getElementById('practice-part-of-speech').textContent = card.partOfSpeech || 'unknown';
 }
 
 function checkSpelling() {
@@ -135,6 +129,7 @@ function checkSpelling() {
   document.getElementById('back-word-display').textContent = card.word;
   document.getElementById('back-definition-display').textContent = card.definition;
   document.getElementById('back-transcription-display').textContent = card.transcription || '/--/';
+  document.getElementById('back-part-of-speech-display').textContent = card.partOfSpeech || 'unknown';
 
   const audioContainer = document.getElementById('back-audio-container');
   if (audioContainer) {

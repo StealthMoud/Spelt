@@ -126,6 +126,7 @@ export async function addWord(wordData) {
     word: normalizedWord,
     definition: wordData.definition?.trim() || '',
     transcription: wordData.transcription?.trim() || '',
+    partOfSpeech: wordData.partOfSpeech?.trim() || '',
     translation: translation,
     example: wordData.example?.trim() || '',
     tags: Array.isArray(wordData.tags) ? wordData.tags : [],
@@ -168,6 +169,10 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
       }
     }
 
+    if (details.partOfSpeech && !wordObj.partOfSpeech) {
+      wordObj.partOfSpeech = details.partOfSpeech;
+    }
+
     await saveWords(list);
     return wordObj;
   } else {
@@ -175,6 +180,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
       word: correctWord,
       definition: details.definition,
       transcription: details.transcription,
+      partOfSpeech: details.partOfSpeech,
       example: details.example,
       translation: details.translation,
       misspellings: wrongSpelling ? [wrongSpelling] : []

@@ -81,18 +81,20 @@
                 <span class="clue-label">Definition</span>
                 <p id="practice-definition"></p>
               </div>
-              <div class="clue-item">
-                <span class="clue-label">Context</span>
-                <p id="practice-example"></p>
+              <div style="display: flex; gap: 12px; margin-top: 4px;">
+                <div class="clue-item" style="flex: 1;">
+                  <span class="clue-label">Part of Speech</span>
+                  <p id="practice-part-of-speech" style="text-transform: capitalize; font-style: italic;"></p>
+                </div>
+                <div class="clue-item" style="flex: 1;">
+                  <span class="clue-label">Translation</span>
+                  <p id="practice-translation"></p>
+                </div>
               </div>
               <div style="display: flex; gap: 12px; margin-top: 4px;">
                 <div class="clue-item" style="flex: 1;">
                   <span class="clue-label">Pronunciation</span>
                   <p id="practice-transcription"></p>
-                </div>
-                <div class="clue-item" style="flex: 1;">
-                  <span class="clue-label">Translation</span>
-                  <p id="practice-translation"></p>
                 </div>
               </div>
             </div>
@@ -122,6 +124,7 @@
             <div class="back-details-list">
               <p><strong>You typed:</strong> <span id="user-typed-display"></span></p>
               <p><strong>Definition:</strong> <span id="back-definition-display"></span></p>
+              <p><strong>Part of Speech:</strong> <span id="back-part-of-speech-display" style="text-transform: capitalize; font-style: italic;"></span></p>
               <div id="past-misspellings-container" style="display: none;">
                 <p><strong>Past errors:</strong> <span id="back-misspellings-display"></span></p>
               </div>
@@ -302,8 +305,8 @@
             </div>
           </div>
           <div class="modal-input-item">
-            <label>Example Sentence</label>
-            <textarea id="form-example" class="premium-input textarea-item" autocomplete="off" style="height: 36px;"></textarea>
+            <label>Part of Speech</label>
+            <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
           </div>
           <div class="modal-actions-row">
             <button type="button" id="form-cancel-btn" class="submit-btn">

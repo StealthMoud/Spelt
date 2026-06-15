@@ -245,13 +245,14 @@ async function acceptSuggestion(suggestion, original) {
   const feedbackMsg = document.getElementById('feedback-msg');
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = 'No definition found', ipa = '/--/';
+  let def = 'No definition found', ipa = '/--/', partOfSpeech = '';
   if (response.ok) {
     const data = await response.json();
     def = data[0].meanings[0]?.definitions[0]?.definition || def;
     ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
+    partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
   }
-  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa });
+  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech });
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
     <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4>
@@ -303,10 +304,11 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       const data = await response.json();
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
+      const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
       
-      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa });
+      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
-        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa });
+        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech });
       }
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
