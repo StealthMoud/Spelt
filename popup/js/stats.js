@@ -140,11 +140,59 @@ export async function initStats() {
   const prevBtn = document.getElementById('cal-prev-btn');
   const nextBtn = document.getElementById('cal-next-btn');
 
+  const timeframeBtn = document.getElementById('stats-timeframe-btn');
+  const timeframeDropdown = document.getElementById('stats-timeframe-dropdown');
+  const timeframeLabel = document.getElementById('stats-timeframe-label');
+
   initCalendarDates();
   updateDateInputs();
 
+  function syncCustomSelect() {
+    if (!select || !timeframeLabel || !timeframeDropdown) return;
+    const val = select.value;
+    const activeOpt = timeframeDropdown.querySelector(`.custom-select-option[data-value="${val}"]`);
+    if (activeOpt) {
+      timeframeLabel.textContent = activeOpt.textContent;
+      timeframeDropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('active'));
+      activeOpt.classList.add('active');
+    }
+  }
+
   if (select) {
     select.value = currentStatsTimeframe;
+    syncCustomSelect();
+
+    if (timeframeBtn && timeframeDropdown) {
+      timeframeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = timeframeDropdown.style.display === 'none';
+        timeframeDropdown.style.display = isHidden ? 'block' : 'none';
+        
+        const headerRow = timeframeBtn.closest('.stats-header-row');
+        if (headerRow) {
+          headerRow.style.position = 'relative';
+          headerRow.style.zIndex = isHidden ? '60' : '';
+        }
+      });
+
+      timeframeDropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const val = opt.getAttribute('data-value');
+          select.value = val;
+          syncCustomSelect();
+          timeframeDropdown.style.display = 'none';
+          
+          const headerRow = timeframeBtn.closest('.stats-header-row');
+          if (headerRow) {
+            headerRow.style.zIndex = '';
+          }
+          
+          select.dispatchEvent(new Event('change'));
+        });
+      });
+    }
+
     if (customRange) {
       customRange.style.display = currentStatsTimeframe === 'custom' ? 'flex' : 'none';
     }
@@ -219,6 +267,18 @@ export async function initStats() {
   }
 
   window.addEventListener('click', (e) => {
+    // Close custom select dropdown if open
+    if (timeframeDropdown && timeframeDropdown.style.display !== 'none') {
+      if (!timeframeBtn.contains(e.target) && !timeframeDropdown.contains(e.target)) {
+        timeframeDropdown.style.display = 'none';
+        const headerRow = timeframeBtn.closest('.stats-header-row');
+        if (headerRow) {
+          headerRow.style.zIndex = '';
+        }
+      }
+    }
+
+    // Close calendar popover if open
     const popover = document.getElementById('stats-calendar-popover');
     if (popover && popover.style.display !== 'none') {
       const isClickInside = popover.contains(e.target) || 

@@ -308,7 +308,23 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               <span>Review History</span>
             </h4>
-            <select id="stats-timeframe-select" class="premium-input stats-timeframe-select">
+            
+            <div class="custom-select-wrapper">
+              <button type="button" id="stats-timeframe-btn" class="custom-select-trigger">
+                <span id="stats-timeframe-label">7 Days</span>
+                <svg class="select-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="stats-timeframe-dropdown" class="custom-select-dropdown" style="display: none;">
+                <div class="custom-select-option" data-value="7d">7 Days</div>
+                <div class="custom-select-option" data-value="30d">30 Days</div>
+                <div class="custom-select-option" data-value="6m">6 Months</div>
+                <div class="custom-select-option" data-value="1y">1 Year</div>
+                <div class="custom-select-option" data-value="custom">Custom...</div>
+              </div>
+            </div>
+
+            <!-- Hidden native select for backwards compatibility and easy form synchronization -->
+            <select id="stats-timeframe-select" style="display: none;">
               <option value="7d">7 Days</option>
               <option value="30d">30 Days</option>
               <option value="6m">6 Months</option>
