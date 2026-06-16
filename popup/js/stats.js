@@ -113,7 +113,14 @@ function handleCalDayClick(date) {
     }
     
     const popover = document.getElementById('stats-calendar-popover');
-    if (popover) popover.style.display = 'none';
+    if (popover) {
+      popover.style.display = 'none';
+      const chartPanel = popover.closest('.stats-panel');
+      if (chartPanel) {
+        chartPanel.style.zIndex = '';
+        chartPanel.style.position = '';
+      }
+    }
   }
   
   updateDateInputs();
@@ -145,6 +152,15 @@ export async function initStats() {
       if (customRange) {
         customRange.style.display = currentStatsTimeframe === 'custom' ? 'flex' : 'none';
       }
+      const popover = document.getElementById('stats-calendar-popover');
+      if (popover) {
+        popover.style.display = 'none';
+        const chartPanel = popover.closest('.stats-panel');
+        if (chartPanel) {
+          chartPanel.style.zIndex = '';
+          chartPanel.style.position = '';
+        }
+      }
       await renderStats();
     });
   }
@@ -155,6 +171,18 @@ export async function initStats() {
     if (popover) {
       const isHidden = popover.style.display === 'none';
       popover.style.display = isHidden ? 'flex' : 'none';
+      
+      const chartPanel = popover.closest('.stats-panel');
+      if (chartPanel) {
+        if (isHidden) {
+          chartPanel.style.zIndex = '50';
+          chartPanel.style.position = 'relative';
+        } else {
+          chartPanel.style.zIndex = '';
+          chartPanel.style.position = '';
+        }
+      }
+      
       if (isHidden) renderCalendar();
     }
   };
@@ -195,6 +223,11 @@ export async function initStats() {
                             e.target.closest('.cal-nav-btn');
       if (!isClickInside) {
         popover.style.display = 'none';
+        const chartPanel = popover.closest('.stats-panel');
+        if (chartPanel) {
+          chartPanel.style.zIndex = '';
+          chartPanel.style.position = '';
+        }
       }
     }
   });
