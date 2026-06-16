@@ -1965,3 +1965,45 @@ kbd:hover {
   border-bottom-right-radius: var(--radius-sm);
 }
 
+/* Review Forecast Panel Styles */
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.forecast-item {
+  background: hsla(155, 10%, 15%, 0.18);
+  border: 1px solid hsla(155, 12%, 24%, 0.1);
+  border-radius: var(--radius-md);
+  padding: 6px 4px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all var(--transition-fast) var(--spring-curve);
+}
+
+.forecast-item:hover {
+  border-color: var(--border-hover);
+  background: hsla(155, 65%, 48%, 0.04);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.forecast-day {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.forecast-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  text-shadow: 0 0 6px var(--primary-glow);
+}
+

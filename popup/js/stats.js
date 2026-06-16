@@ -595,6 +595,42 @@ export async function renderStats() {
     if (countMatureEl) countMatureEl.textContent = `${matureCount} (${Math.round(pctMature)}%)`;
     if (countMasteredEl) countMasteredEl.textContent = `${masteredCount} (${Math.round(pctMastered)}%)`;
 
+    // 2.5 Calculate Upcoming Review Forecast
+    let dueToday = 0;
+    let dueTomorrow = 0;
+    let dueWeek = 0;
+    let dueMonth = 0;
+
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const sevenDays = 7 * oneDay;
+    const thirtyDays = 30 * oneDay;
+
+    words.forEach(w => {
+      if (!w.mastered) {
+        const diff = w.nextDate - now;
+        if (diff <= 0) {
+          dueToday++;
+        } else if (diff <= oneDay) {
+          dueTomorrow++;
+        } else if (diff <= sevenDays) {
+          dueWeek++;
+        } else if (diff <= thirtyDays) {
+          dueMonth++;
+        }
+      }
+    });
+
+    const forecastTodayEl = document.getElementById('forecast-today');
+    const forecastTomorrowEl = document.getElementById('forecast-tomorrow');
+    const forecastWeekEl = document.getElementById('forecast-week');
+    const forecastMonthEl = document.getElementById('forecast-month');
+
+    if (forecastTodayEl) forecastTodayEl.textContent = dueToday;
+    if (forecastTomorrowEl) forecastTomorrowEl.textContent = dueTomorrow;
+    if (forecastWeekEl) forecastWeekEl.textContent = dueWeek;
+    if (forecastMonthEl) forecastMonthEl.textContent = dueMonth;
+
     // 3. Render vertical stacked bar chart
     const chartContainer = document.getElementById('stats-chart-container');
     if (chartContainer) {
