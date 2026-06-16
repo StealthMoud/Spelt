@@ -8,6 +8,7 @@
   ],
   "host_permissions": [
     "http://localhost:8080/*",
+    "http://localhost:8081/*",
     "https://tatoeba.org/*",
     "https://translate.googleapis.com/*",
     "https://api.dictionaryapi.dev/*",

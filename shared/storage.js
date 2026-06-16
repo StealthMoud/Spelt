@@ -485,3 +485,15 @@ export function censorWordInExample(word, example) {
   }
   return example.replace(regex, '__________');
 }
+
+// Log debug info to the local debug server
+export async function logDebug(data) {
+  try {
+    await fetch('http://localhost:8081/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (_) {}
+}
+

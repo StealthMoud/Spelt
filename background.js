@@ -1,7 +1,7 @@
 // Background service worker for Spelt extension
 // Implements zero-dependency local hot-reloading during development
 
-import { getWords, saveWords, fetchTranslation, fetchDynamicExample, isFallbackExample, getFallbackExample } from './shared/storage.js';
+import { getWords, saveWords, fetchTranslation, fetchDynamicExample, isFallbackExample, getFallbackExample, logDebug } from './shared/storage.js';
 
 const FILES_TO_WATCH = [
   'http://localhost:8080/manifest.json',
@@ -72,6 +72,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function runBackgroundRetranslate(targetLang) {
   try {
     const words = await getWords();
+    await logDebug({ type: 'start', count: words.length, targetLang });
     if (words.length === 0) return;
 
     // Process in batches of 5 to avoid hitting API rate limits
@@ -80,12 +81,17 @@ async function runBackgroundRetranslate(targetLang) {
       const batch = words.slice(i, i + batchSize);
       await Promise.all(batch.map(async (w) => {
         try {
+          const originalEx = w.example;
+          const isFallback = isFallbackExample(w.word, w.example);
+          
           // Fetch translation using Google Translate
           const translation = await fetchTranslation(w.word, targetLang);
           if (translation) w.translation = translation;
 
           // Fetch dictionary definition, transcription, example
+          let dictEx = '';
           const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w.word.toLowerCase())}`);
+          const dictOk = response.ok;
           if (response.ok) {
             const data = await response.json();
             const first = data[0];
@@ -99,40 +105,43 @@ async function runBackgroundRetranslate(targetLang) {
               const pos = first.meanings[0]?.partOfSpeech;
               if (pos) w.partOfSpeech = pos;
 
-              let example = '';
               if (first.meanings) {
                 outerLoop: for (const m of first.meanings) {
                   if (m.definitions) {
                     for (const d of m.definitions) {
                       if (d.example) {
-                        example = d.example.trim();
+                        dictEx = d.example.trim();
                         break outerLoop;
                       }
                     }
                   }
                 }
               }
-              if (!example) {
-                example = await fetchDynamicExample(w.word);
-              }
-              
-              if (example) {
-                w.example = example;
-              } else if (!w.example || isFallbackExample(w.word, w.example)) {
-                w.example = getFallbackExample(w.word, w.partOfSpeech || pos || '');
-              }
-            }
-          } else {
-            if (!w.example || isFallbackExample(w.word, w.example)) {
-              const example = await fetchDynamicExample(w.word);
-              if (example) {
-                w.example = example;
-              } else if (!w.example) {
-                w.example = getFallbackExample(w.word, w.partOfSpeech || '');
-              }
             }
           }
+
+          // Always try to fetch a premium dynamic example from Cambridge/Oxford/Tatoeba first
+          let newExample = await fetchDynamicExample(w.word);
+          if (!newExample) {
+            newExample = dictEx;
+          }
+          if (!newExample && (!w.example || isFallbackExample(w.word, w.example))) {
+            newExample = getFallbackExample(w.word, w.partOfSpeech || '');
+          }
+
+          if (newExample) {
+            w.example = newExample;
+          }
+
+          await logDebug({
+            word: w.word,
+            dictOk,
+            isFallback,
+            originalEx,
+            newEx: w.example
+          });
         } catch (err) {
+          await logDebug({ word: w.word, error: err.message });
           console.error(`Error refreshing "${w.word}" in background:`, err);
         }
       }));
@@ -141,6 +150,7 @@ async function runBackgroundRetranslate(targetLang) {
     }
 
     await saveWords(words);
+    await logDebug({ type: 'completed', count: words.length });
     
     // Notify the popup if it is open (fails silently if popup is closed)
     chrome.runtime.sendMessage({ action: 'retranslateCompleted', count: words.length }).catch(() => {});
