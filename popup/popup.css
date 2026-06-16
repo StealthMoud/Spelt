@@ -1720,6 +1720,7 @@ kbd:hover {
   border-top: 1px dashed hsla(155, 10%, 25%, 0.12);
   padding-top: 6px;
   animation: slideDownFadeIn var(--transition-fast) ease forwards;
+  position: relative;
 }
 
 .date-picker-group {
@@ -1731,10 +1732,17 @@ kbd:hover {
   flex: 1;
 }
 
+.date-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
 .date-input-field {
   flex: 1;
   font-size: 0.62rem !important;
-  padding: 2px 4px !important;
+  padding: 2px 18px 2px 4px !important;
   height: 20px !important;
   border-radius: var(--radius-sm) !important;
   cursor: pointer;
@@ -1744,8 +1752,128 @@ kbd:hover {
   outline: none;
 }
 
-.date-input-field::-webkit-calendar-picker-indicator {
-  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(110deg);
+.calendar-input-icon {
+  position: absolute;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  color: var(--primary);
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px var(--primary-glow));
+}
+
+/* Custom Calendar Popover styles with Glassmorphism */
+.stats-calendar-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  background: hsla(155, 12%, 10%, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px var(--primary-glow);
+  padding: 10px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.76rem;
+  color: var(--text-main);
+  padding: 0 2px;
+}
+
+.cal-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary);
   cursor: pointer;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast) ease;
+}
+.cal-nav-btn:hover {
+  color: var(--primary-light);
+  background: hsla(155, 65%, 48%, 0.12);
+  transform: scale(1.08);
+}
+.cal-nav-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+#cal-month-year {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--primary-light);
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--text-muted-dark);
+}
+
+.cal-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.cal-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-main);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast) ease;
+  user-select: none;
+}
+.cal-day-cell:hover {
+  background: hsla(155, 65%, 48%, 0.15);
+  color: var(--primary-light);
+}
+.cal-day-cell.other-month {
+  color: var(--text-muted-dark);
+  opacity: 0.45;
+}
+.cal-day-cell.selected {
+  background: var(--primary) !important;
+  color: var(--bg-dark) !important;
+  font-weight: 700;
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+.cal-day-cell.in-range {
+  background: hsla(155, 65%, 48%, 0.12);
+  color: var(--primary-light);
+  border-radius: 0;
+}
+.cal-day-cell.range-start {
+  border-top-left-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--radius-sm);
+}
+.cal-day-cell.range-end {
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
 }
 

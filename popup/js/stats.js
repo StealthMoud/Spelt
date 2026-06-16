@@ -1,6 +1,125 @@
 import { getWords, getStreak } from '../../shared/storage.js';
 
 let currentStatsTimeframe = '7d';
+let calCurrentMonth = new Date().getMonth();
+let calCurrentYear = new Date().getFullYear();
+let calStartDate = null;
+let calEndDate = null;
+
+function initCalendarDates() {
+  if (!calStartDate) {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    d.setHours(0, 0, 0, 0);
+    calStartDate = d;
+  }
+  if (!calEndDate) {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    calEndDate = d;
+  }
+}
+
+function updateDateInputs() {
+  const startInput = document.getElementById('stats-date-start');
+  const endInput = document.getElementById('stats-date-end');
+  if (startInput && calStartDate) {
+    startInput.value = calStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  if (endInput && calEndDate) {
+    endInput.value = calEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+function renderCalendar() {
+  const monthYearEl = document.getElementById('cal-month-year');
+  const daysGrid = document.getElementById('cal-days-grid');
+  if (!monthYearEl || !daysGrid) return;
+
+  const tempDate = new Date(calCurrentYear, calCurrentMonth, 1);
+  monthYearEl.textContent = tempDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+  daysGrid.innerHTML = '';
+
+  const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+  const firstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+  const prevMonthDays = new Date(calCurrentYear, calCurrentMonth, 0).getDate();
+  const currentMonthDays = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const day = prevMonthDays - i;
+    const cell = document.createElement('div');
+    cell.className = 'cal-day-cell other-month';
+    cell.textContent = day;
+    const prevDate = new Date(calCurrentYear, calCurrentMonth - 1, day);
+    cell.addEventListener('click', () => handleCalDayClick(prevDate));
+    daysGrid.appendChild(cell);
+  }
+
+  for (let day = 1; day <= currentMonthDays; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day-cell';
+    cell.textContent = day;
+    
+    const curDate = new Date(calCurrentYear, calCurrentMonth, day);
+    const time = curDate.getTime();
+    
+    const startStr = calStartDate ? calStartDate.toDateString() : '';
+    const endStr = calEndDate ? calEndDate.toDateString() : '';
+    const curStr = curDate.toDateString();
+
+    if (curStr === startStr || curStr === endStr) {
+      cell.classList.add('selected');
+    }
+    
+    if (calStartDate && calEndDate && time > calStartDate.getTime() && time < calEndDate.getTime()) {
+      cell.classList.add('in-range');
+      if (curDate.getDay() === 1) cell.classList.add('range-start');
+      if (curDate.getDay() === 0) cell.classList.add('range-end');
+    }
+    
+    cell.addEventListener('click', () => handleCalDayClick(curDate));
+    daysGrid.appendChild(cell);
+  }
+
+  const totalCellsDrawn = firstDay + currentMonthDays;
+  const remainingCells = 42 - totalCellsDrawn;
+  for (let day = 1; day <= remainingCells; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day-cell other-month';
+    cell.textContent = day;
+    const nextDate = new Date(calCurrentYear, calCurrentMonth + 1, day);
+    cell.addEventListener('click', () => handleCalDayClick(nextDate));
+    daysGrid.appendChild(cell);
+  }
+}
+
+function handleCalDayClick(date) {
+  if (!calStartDate || (calStartDate && calEndDate)) {
+    calStartDate = new Date(date);
+    calStartDate.setHours(0, 0, 0, 0);
+    calEndDate = null;
+  } else {
+    const clickedDate = new Date(date);
+    clickedDate.setHours(23, 59, 59, 999);
+    
+    if (clickedDate < calStartDate) {
+      calEndDate = new Date(calStartDate);
+      calEndDate.setHours(23, 59, 59, 999);
+      calStartDate = clickedDate;
+    } else {
+      calEndDate = clickedDate;
+    }
+    
+    const popover = document.getElementById('stats-calendar-popover');
+    if (popover) popover.style.display = 'none';
+  }
+  
+  updateDateInputs();
+  renderCalendar();
+  renderStats().catch(err => console.error(err));
+}
 
 /**
  * Initializes the statistics dashboard module
@@ -10,15 +129,11 @@ export async function initStats() {
   const customRange = document.getElementById('stats-custom-range');
   const dateStart = document.getElementById('stats-date-start');
   const dateEnd = document.getElementById('stats-date-end');
+  const prevBtn = document.getElementById('cal-prev-btn');
+  const nextBtn = document.getElementById('cal-next-btn');
 
-  if (dateStart && !dateStart.value) {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    dateStart.value = d.toISOString().split('T')[0];
-  }
-  if (dateEnd && !dateEnd.value) {
-    dateEnd.value = new Date().toISOString().split('T')[0];
-  }
+  initCalendarDates();
+  updateDateInputs();
 
   if (select) {
     select.value = currentStatsTimeframe;
@@ -34,11 +149,55 @@ export async function initStats() {
     });
   }
 
-  const handleDateChange = async () => {
-    await renderStats();
+  const togglePopover = (e) => {
+    e.stopPropagation();
+    const popover = document.getElementById('stats-calendar-popover');
+    if (popover) {
+      const isHidden = popover.style.display === 'none';
+      popover.style.display = isHidden ? 'flex' : 'none';
+      if (isHidden) renderCalendar();
+    }
   };
-  if (dateStart) dateStart.addEventListener('change', handleDateChange);
-  if (dateEnd) dateEnd.addEventListener('change', handleDateChange);
+
+  if (dateStart) dateStart.addEventListener('click', togglePopover);
+  if (dateEnd) dateEnd.addEventListener('click', togglePopover);
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      calCurrentMonth--;
+      if (calCurrentMonth < 0) {
+        calCurrentMonth = 11;
+        calCurrentYear--;
+      }
+      renderCalendar();
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      calCurrentMonth++;
+      if (calCurrentMonth > 11) {
+        calCurrentMonth = 0;
+        calCurrentYear++;
+      }
+      renderCalendar();
+    });
+  }
+
+  window.addEventListener('click', (e) => {
+    const popover = document.getElementById('stats-calendar-popover');
+    if (popover && popover.style.display !== 'none') {
+      const isClickInside = popover.contains(e.target) || 
+                            e.target.id === 'stats-date-start' || 
+                            e.target.id === 'stats-date-end' ||
+                            e.target.closest('.cal-nav-btn');
+      if (!isClickInside) {
+        popover.style.display = 'none';
+      }
+    }
+  });
 
   await renderStats();
 }
@@ -136,19 +295,10 @@ export async function renderStats() {
         });
       }
     } else if (timeframe === 'custom') {
-      const dateStartEl = document.getElementById('stats-date-start');
-      const dateEndEl = document.getElementById('stats-date-end');
+      initCalendarDates();
       
-      let startDate = new Date();
-      startDate.setDate(startDate.getDate() - 30);
-      let endDate = new Date();
-      
-      if (dateStartEl && dateStartEl.value) {
-        startDate = new Date(dateStartEl.value);
-      }
-      if (dateEndEl && dateEndEl.value) {
-        endDate = new Date(dateEndEl.value);
-      }
+      let startDate = new Date(calStartDate);
+      let endDate = calEndDate ? new Date(calEndDate) : new Date(calStartDate);
       
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 999);
@@ -160,7 +310,7 @@ export async function renderStats() {
       }
       
       const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
       
       if (diffDays <= 30) {
         barWidth = Math.min(20, Math.max(4, Math.floor(200 / Math.max(diffDays, 1))));
