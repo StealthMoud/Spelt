@@ -129,10 +129,9 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
     } else {
       if (e.key === 'Enter') {
         if (isTyping) return;
-        const wordInput = document.getElementById('word-input');
-        if (wordInput && wordInput.value.trim() !== '') return;
         e.preventDefault();
-        if (wordInput) { wordInput.value = ''; wordInput.focus(); }
+        const wordInput = document.getElementById('word-input');
+        if (wordInput) { wordInput.focus(); }
       } else if (e.key === ' ') {
         if (isTyping) return;
         e.preventDefault();
@@ -166,6 +165,7 @@ async function handleVerify() {
         feedbackMsg.setAttribute('data-original-query', word);
         feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify(suggestions));
         await renderMisspellingCard(word, suggestions, 0);
+        document.getElementById('word-input')?.blur();
       } else {
         await showManualCorrectionForm(word);
       }
@@ -234,7 +234,7 @@ async function handleCorrectSpelling(apiData, word) {
       ${subtext}
     `;
     document.getElementById('word-input').value = '';
-    document.getElementById('word-input')?.focus();
+    document.getElementById('word-input')?.blur();
     if (reloadVaultListCallback) await reloadVaultListCallback();
   } catch (err) { document.getElementById('feedback-msg').innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`; }
 }
@@ -354,7 +354,7 @@ async function acceptSuggestion(suggestion, original) {
     ${exampleText}
   `;
   document.getElementById('word-input').value = '';
-  document.getElementById('word-input')?.focus();
+  document.getElementById('word-input')?.blur();
   if (reloadVaultListCallback) await reloadVaultListCallback();
   if (loadPracticeDeckCallback) await loadPracticeDeckCallback();
 }
@@ -450,7 +450,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
         ${renderAudioButtons(correctWord)}
       `;
       document.getElementById('word-input').value = '';
-      document.getElementById('word-input')?.focus();
+      document.getElementById('word-input')?.blur();
       if (reloadVaultListCallback) await reloadVaultListCallback();
       if (loadPracticeDeckCallback) await loadPracticeDeckCallback();
     } else {
