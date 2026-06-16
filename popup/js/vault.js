@@ -1,5 +1,5 @@
 // Compact word vault list and modal controller for Spelt extension popup
-import { getWords, addWord, saveWords, translateWord } from '../../shared/storage.js';
+import { getWords, addWord, saveWords, translateWord, fetchCambridgePronunciation } from '../../shared/storage.js';
 
 let wordsList = [];
 let onVaultUpdatedCallback = null;
@@ -38,7 +38,18 @@ export async function initVault(onVaultUpdated) {
         const def = first.meanings[0]?.definitions[0]?.definition || '';
         document.getElementById('form-definition').value = def;
         
-        const ipa = first.phonetics.find(p => p.text)?.text || '';
+        let ipa = '';
+        try {
+          const cambridge = await fetchCambridgePronunciation(word);
+          if (cambridge.ukIpa && cambridge.usIpa) {
+            ipa = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+          } else {
+            ipa = cambridge.ukIpa || cambridge.usIpa || '';
+          }
+        } catch (_) {}
+        if (!ipa) {
+          ipa = first.phonetics.find(p => p.text)?.text || '';
+        }
         document.getElementById('form-transcription').value = ipa;
         
         const pos = first.meanings[0]?.partOfSpeech || '';

@@ -133,11 +133,23 @@ export async function addWord(wordData) {
   }
   const exampleVal = wordData.example?.trim() || await fetchDynamicExample(normalizedWord) || getFallbackExample(normalizedWord, partOfSpeechVal);
 
+  let transcriptionVal = wordData.transcription?.trim() || '';
+  if (!transcriptionVal || transcriptionVal === '/--/') {
+    try {
+      const cambridge = await fetchCambridgePronunciation(normalizedWord);
+      if (cambridge.ukIpa && cambridge.usIpa) {
+        transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+      } else {
+        transcriptionVal = cambridge.ukIpa || cambridge.usIpa || '';
+      }
+    } catch (_) {}
+  }
+
   const newWord = {
     id: 'w_' + Math.random().toString(36).substr(2, 9),
     word: normalizedWord,
     definition: definitionVal,
-    transcription: wordData.transcription?.trim() || '',
+    transcription: transcriptionVal,
     partOfSpeech: partOfSpeechVal,
     translation: translation,
     example: exampleVal,
@@ -289,6 +301,20 @@ export async function deleteWord(wordId) {
 export async function playWordAudio(word, accent) {
   if (typeof window === 'undefined' || typeof Audio === 'undefined') return;
   const cleanWord = word.trim().toLowerCase();
+
+  // 1. Try Cambridge Dictionary audio first
+  try {
+    const cambridge = await fetchCambridgePronunciation(cleanWord);
+    const cambridgeUrl = accent === 'uk' ? cambridge.ukAudio : cambridge.usAudio;
+    if (cambridgeUrl) {
+      const audio = new Audio(cambridgeUrl);
+      await audio.play();
+      return;
+    }
+  } catch (err) {
+    console.log('Cambridge pronunciation fetch failed, trying static fallback...');
+  }
+
   const suffix = accent === 'uk' ? 'gb' : 'us';
   const primaryUrl = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${encodeURIComponent(cleanWord)}--_${suffix}_1.mp3`;
 
@@ -560,5 +586,54 @@ export async function logDebug(data) {
       body: JSON.stringify(data)
     });
   } catch (_) {}
+}
+
+// Fetch accurate UK/US IPA transcriptions and MP3 URLs dynamically from Cambridge Dictionary
+export async function fetchCambridgePronunciation(word) {
+  const cleanWord = word.trim().toLowerCase();
+  const result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '' };
+  try {
+    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) return result;
+    const html = await res.text();
+
+    // Parse UK Audio & IPA
+    const ukRegex = /<span\s+class="uk dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
+    const ukMatch = ukRegex.exec(html);
+    if (ukMatch) {
+      const ukBlock = ukMatch[1];
+      const audioMatch = /<source\s+type="audio\/mpeg"\s+src="([^"]+)"/i.exec(ukBlock);
+      if (audioMatch) {
+        result.ukAudio = 'https://dictionary.cambridge.org' + audioMatch[1];
+      }
+      
+      const ipaRegex = /<span\s+class="ipa dipa[^>]*>([\s\S]*?)<\/span>\s*\//i;
+      const ipaMatch = ipaRegex.exec(ukBlock);
+      if (ipaMatch) {
+        result.ukIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
+      }
+    }
+
+    // Parse US Audio & IPA
+    const usRegex = /<span\s+class="us dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
+    const usMatch = usRegex.exec(html);
+    if (usMatch) {
+      const usBlock = usMatch[1];
+      const audioMatch = /<source\s+type="audio\/mpeg"\s+src="([^"]+)"/i.exec(usBlock);
+      if (audioMatch) {
+        result.usAudio = 'https://dictionary.cambridge.org' + audioMatch[1];
+      }
+      
+      const ipaRegex = /<span\s+class="ipa dipa[^>]*>([\s\S]*?)<\/span>\s*\//i;
+      const ipaMatch = ipaRegex.exec(usBlock);
+      if (ipaMatch) {
+        result.usIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
+      }
+    }
+  } catch (err) {
+    console.error('Cambridge pronunciation fetch error:', err);
+  }
+  return result;
 }
 

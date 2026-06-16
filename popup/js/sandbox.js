@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition, fetchCambridgePronunciation } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -179,7 +179,18 @@ const closeBtnHtml = `
 
 async function handleCorrectSpelling(apiData, word) {
   const def = await fetchDynamicDefinition(word) || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
-  const ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
+  let ipa = '';
+  try {
+    const cambridge = await fetchCambridgePronunciation(word);
+    if (cambridge.ukIpa && cambridge.usIpa) {
+      ipa = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+    } else {
+      ipa = cambridge.ukIpa || cambridge.usIpa || '';
+    }
+  } catch (_) {}
+  if (!ipa) {
+    ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
+  }
   const partOfSpeech = apiData.meanings[0]?.partOfSpeech || '';
   const example = extractExample(apiData) || await fetchDynamicExample(word) || getFallbackExample(word, partOfSpeech);
   
@@ -237,17 +248,29 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   const feedbackMsg = document.getElementById('feedback-msg');
   const suggestion = suggestions[activeIndex];
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Retrieving suggestions...</p>';
+  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '';
+  try {
+    const cambridge = await fetchCambridgePronunciation(suggestion);
+    if (cambridge.ukIpa && cambridge.usIpa) {
+      ipa = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+    } else {
+      ipa = cambridge.ukIpa || cambridge.usIpa || '';
+    }
+  } catch (_) {}
+
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = await fetchDynamicDefinition(suggestion), ipa = '/--/', partOfSpeech = '', example = '';
   if (response.ok) {
     const data = await response.json();
     if (!def) {
       def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
     }
-    ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
+    if (!ipa) {
+      ipa = data[0].phonetics.find(p => p.text)?.text || '';
+    }
     partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
     example = extractExample(data[0]);
   }
+  if (!ipa) ipa = '/--/';
   if (!example) {
     example = await fetchDynamicExample(suggestion) || getFallbackExample(suggestion, partOfSpeech);
   }
@@ -300,17 +323,29 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
 async function acceptSuggestion(suggestion, original) {
   const feedbackMsg = document.getElementById('feedback-msg');
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
+  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '';
+  try {
+    const cambridge = await fetchCambridgePronunciation(suggestion);
+    if (cambridge.ukIpa && cambridge.usIpa) {
+      ipa = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+    } else {
+      ipa = cambridge.ukIpa || cambridge.usIpa || '';
+    }
+  } catch (_) {}
+
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = await fetchDynamicDefinition(suggestion), ipa = '/--/', partOfSpeech = '', example = '';
   if (response.ok) {
     const data = await response.json();
     if (!def) {
       def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
     }
-    ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
+    if (!ipa) {
+      ipa = data[0].phonetics.find(p => p.text)?.text || '';
+    }
     partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
     example = extractExample(data[0]);
   }
+  if (!ipa) ipa = '/--/';
   await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech, example });
   const exampleText = example ? `<p style="font-size: 0.65rem; color: var(--primary-light); font-style: italic; margin: 4px 0 0;">"${example}"</p>` : '';
   feedbackMsg.innerHTML = `
@@ -360,11 +395,24 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
   const feedbackMsg = document.getElementById('feedback-msg');
   try {
     feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Verifying spelling...</p>';
+    let ipa = '';
+    try {
+      const cambridge = await fetchCambridgePronunciation(correctWord);
+      if (cambridge.ukIpa && cambridge.usIpa) {
+        ipa = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+      } else {
+        ipa = cambridge.ukIpa || cambridge.usIpa || '';
+      }
+    } catch (_) {}
+
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(correctWord.toLowerCase())}`);
     if (response.ok) {
       const data = await response.json();
       const def = await fetchDynamicDefinition(correctWord) || data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
-      const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
+      if (!ipa) {
+        ipa = data[0].phonetics.find(p => p.text)?.text || '';
+      }
+      if (!ipa) ipa = '/--/';
       const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
       const example = extractExample(data[0]) || await fetchDynamicExample(correctWord) || getFallbackExample(correctWord, partOfSpeech);
       
