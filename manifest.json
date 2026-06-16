@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling.",
   "permissions": [
-    "storage"
+    "storage",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "http://localhost:8080/*",
