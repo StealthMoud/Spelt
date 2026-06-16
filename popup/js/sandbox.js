@@ -205,13 +205,8 @@ async function handleCorrectSpelling(apiData, word) {
     let subtext = '';
     
     if (existing) {
-      // if word was previously misspelled and now corrected, mark as mastered instead of deleting to preserve history
-      existing.mastered = true;
-      existing.rep = 0;
-      existing.interval = 30;
-      existing.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      await saveWords(words);
-      subtext = `<p style="font-size: 0.68rem; color: var(--success); margin: 8px 0 0; text-align: center;">Correct! Misspelling marked as mastered in vault.</p>`;
+      // dont auto master it to keep the manual rule
+      subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 8px 0 0; text-align: center;">Correct spelling! (Already in vault)</p>`;
     } else {
       // correct for the first time, don't save to the vault
       subtext = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 8px 0 0; text-align: center;">Correct spelling! (Not saved to vault)</p>`;
