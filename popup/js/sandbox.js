@@ -323,6 +323,10 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
 async function acceptSuggestion(suggestion, original) {
   const feedbackMsg = document.getElementById('feedback-msg');
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
+  
+  const words = await getWords();
+  const exists = words.some(w => w.word.toLowerCase() === suggestion.toLowerCase());
+
   let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '';
   try {
     const cambridge = await fetchCambridgePronunciation(suggestion);
@@ -351,7 +355,7 @@ async function acceptSuggestion(suggestion, original) {
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
     <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4>
-    <p style="font-size: 0.68rem; margin: 4px 0;">Added correct word <strong>"${suggestion}"</strong> to practice queue.</p>
+    <p style="font-size: 0.68rem; margin: 4px 0;">${exists ? `Updated existing word <strong>"${suggestion}"</strong> in practice queue.` : `Added correct word <strong>"${suggestion}"</strong> to practice queue.`}</p>
     ${exampleText}
   `;
   document.getElementById('word-input').value = '';
@@ -395,6 +399,10 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
   const feedbackMsg = document.getElementById('feedback-msg');
   try {
     feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Verifying spelling...</p>';
+    
+    const words = await getWords();
+    const exists = words.some(w => w.word.toLowerCase() === correctWord.toLowerCase());
+
     let ipa = '';
     try {
       const cambridge = await fetchCambridgePronunciation(correctWord);
@@ -429,7 +437,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
         <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
-        <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
+        <p style="margin: 4px 0; font-size: 0.72rem;">${exists ? `Updated existing word <strong>${correctWord}</strong> (${originalWord} saved as misspelling).` : `Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).`}</p>
         
         <div class="feedback-details">
           <div class="feedback-meta-row">
