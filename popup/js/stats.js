@@ -207,7 +207,7 @@ export async function renderStats() {
         .filter(w => Array.isArray(w.misspellings) && w.misspellings.length > 0)
         // Sort descending by misspelling count
         .sort((a, b) => b.misspellings.length - a.misspellings.length)
-        .slice(0, 4); // top 4 leeches
+        .slice(0, 10); // top 10 leeches
 
       if (leeches.length === 0) {
         if (leechesEmpty) leechesEmpty.style.display = 'block';

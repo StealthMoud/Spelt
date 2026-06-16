@@ -67,7 +67,7 @@ Track your spelling metrics and study consistency with Anki-inspired analytics.
 * **Card Distribution Progress Bar**: Segmented progress bar detailing your cards divided by *New*, *Learning*, *Mature*, and *Mastered* states.
 * **7-Day Review History**: Stacked vertical bar chart comparing successful reviews against spelling errors daily.
 * **Button Choice Frequencies**: Clear horizontal progress gauges illustrating how frequently you press Again, Hard, Good, or Easy ratings.
-* **Leech List**: Highlights your top 4 most frequently misspelled vocabulary targets, including their failure counts and a list of your common typos.
+* **Leech List**: Highlights your top 10 most frequently misspelled vocabulary targets, including their failure counts and a list of your common typos.
 
 <p align="center">
   <img src="docs/screenshot-stats.png" alt="Statistics Dashboard" width="340" />
