@@ -485,6 +485,9 @@ body {
   flex-direction: column;
   gap: 8px;
   flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
 }
 
 .clue-item {
@@ -506,6 +509,8 @@ body {
   line-height: 1.35;
   font-size: 0.76rem;
   font-weight: 500;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .spelling-input-wrapper {
@@ -540,10 +545,15 @@ body {
   gap: 6px;
   font-size: 0.74rem;
   flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
 }
 .back-details-list p {
   margin: 0;
   line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .result-badge {
@@ -1038,6 +1048,8 @@ body {
   padding: 14px;
   width: 100%;
   max-width: 320px;
+  max-height: 90%; /* Prevent modal content from going out of the reponsive viewport frame */
+  overflow-y: auto;
   box-sizing: border-box;
   box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.7);
 }

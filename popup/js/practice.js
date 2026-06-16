@@ -1,7 +1,7 @@
 import { getWords, reviewWord, deleteWord, playWordAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2 } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
-let dueCards = [], currentIndex = 0, onDeckUpdatedCallback = null;
+let dueCards = [], onDeckUpdatedCallback = null;
 
 export async function initPractice(onDeckUpdated) {
   onDeckUpdatedCallback = onDeckUpdated;
@@ -14,7 +14,7 @@ export async function initPractice(onDeckUpdated) {
   document.querySelectorAll('.practice-edit-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const card = dueCards[currentIndex];
+      const card = dueCards[0];
       if (card) openModal(card);
     });
   });
@@ -23,7 +23,7 @@ export async function initPractice(onDeckUpdated) {
     btn.addEventListener('click', async () => {
       const scoreAttr = btn.getAttribute('data-score');
       if (scoreAttr === 'mastered') {
-        const card = dueCards[currentIndex];
+        const card = dueCards[0];
         if (!card) return;
         const confirmTitle = 'Mark as Mastered?';
         const confirmMsg = `Are you sure you want to mark "${card.word}" as Mastered? This will archive it and remove it from your active reviews.`;
@@ -155,8 +155,7 @@ export async function initPractice(onDeckUpdated) {
 
 export async function loadPracticeDeck() {
   dueCards = (await getWords()).filter(w => w.nextDate <= Date.now() && !w.mastered);
-  currentIndex = 0;
-  onDeckUpdatedCallback?.(dueCards.length);
+  onDeckUpdatedCallback?.();
   showPracticeCard();
 }
 
@@ -165,14 +164,14 @@ function showPracticeCard() {
   const emptyEl = document.getElementById('popup-deck-empty-state');
   const spellInput = document.getElementById('spelling-input');
 
-  if (dueCards.length === 0 || currentIndex >= dueCards.length) {
+  if (dueCards.length === 0) {
     cardEl.style.display = 'none'; emptyEl.style.display = 'flex'; return;
   }
 
   cardEl.style.display = 'flex'; emptyEl.style.display = 'none';
   cardEl.classList.remove('flipped'); spellInput.value = ''; spellInput.focus();
 
-  const card = dueCards[currentIndex];
+  const card = dueCards[0];
   document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
   document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
   document.getElementById('practice-translation').textContent = card.translation || '--';
@@ -195,7 +194,7 @@ function showPracticeCard() {
 }
 
 function checkSpelling() {
-  const card = dueCards[currentIndex];
+  const card = dueCards[0];
   if (!card) return;
 
   const typed = document.getElementById('spelling-input').value.trim();
@@ -208,7 +207,7 @@ function checkSpelling() {
   } else {
     badge.textContent = 'Incorrect'; badge.className = 'result-badge danger'; typedDisplay.style.color = 'var(--danger)';
   }
-  onDeckUpdatedCallback?.(dueCards.length - currentIndex);
+  onDeckUpdatedCallback?.();
 
   typedDisplay.textContent = typed || '(Blank)';
   document.getElementById('back-word-display').textContent = card.word;
@@ -261,7 +260,7 @@ function checkSpelling() {
 }
 
 async function submitRating(score) {
-  const card = dueCards[currentIndex];
+  const card = dueCards[0];
   if (!card) return;
   try {
     const typed = document.getElementById('spelling-input').value.trim();
@@ -271,11 +270,12 @@ async function submitRating(score) {
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
+      // Shift the queue elements to prevent already reviewed items from returning on refresh and reponsive syncs
+      dueCards.shift();
       if (updatedCard && score < 3) {
         dueCards.push(updatedCard);
       }
-      currentIndex += 1;
-      onDeckUpdatedCallback?.(dueCards.length - currentIndex);
+      onDeckUpdatedCallback?.();
       showPracticeCard();
     }, 200);
   } catch (err) { console.error(err); }
@@ -294,8 +294,8 @@ async function submitMasteredRating(card) {
     }
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
-      currentIndex += 1;
-      onDeckUpdatedCallback?.(dueCards.length - currentIndex);
+      dueCards.shift();
+      onDeckUpdatedCallback?.();
       showPracticeCard();
     }, 200);
   } catch (err) { console.error(err); }
@@ -315,7 +315,7 @@ export async function syncPracticeDeck() {
     return fresh ? fresh : card;
   }).filter(card => {
     const fresh = freshWords.find(w => w.id === card.id);
-    return fresh && !fresh.mastered;
+    return fresh && !fresh.mastered && fresh.nextDate <= now;
   });
 
   const existingIds = new Set(dueCards.map(c => c.id));
@@ -327,10 +327,6 @@ export async function syncPracticeDeck() {
 
   dueCards.push(...newDueCards);
   
-  if (currentIndex >= dueCards.length && dueCards.length > 0) {
-    currentIndex = dueCards.length - 1;
-  }
-  
-  onDeckUpdatedCallback?.(dueCards.length - currentIndex);
+  onDeckUpdatedCallback?.();
   showPracticeCard();
 }
