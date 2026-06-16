@@ -39,9 +39,21 @@ export function initSettings(onDbRestored) {
   document.getElementById('retranslate-all-btn')?.addEventListener('click', () => {
     showConfirm(
       'Refresh All Words',
-      'This will query Google Translate and the dictionary to refresh translations, definitions, and details for all saved words. Proceed?',
-      retranslateAll
+      'This will query Google Translate and the dictionary in the background to refresh all translations and details. You can close the popup once started. Proceed?',
+      triggerRetranslate
     );
+  });
+
+  // Listen for background translation tasks finished
+  chrome.runtime.onMessage.addListener(async (message) => {
+    if (message.action === 'retranslateCompleted') {
+      showConfirm('Update Complete', `Successfully refreshed translations and details for all ${message.count} words!`, null, false);
+      if (onDbRestoredCallback) {
+        await onDbRestoredCallback();
+      }
+    } else if (message.action === 'retranslateFailed') {
+      showConfirm('Update Failed', `Error during background update: ${message.error}`, null, false);
+    }
   });
 }
 
@@ -124,7 +136,7 @@ async function wipeDb() {
   );
 }
 
-async function retranslateAll() {
+async function triggerRetranslate() {
   const selectEl = document.getElementById('setting-target-lang');
   const targetLang = selectEl ? selectEl.value : 'none';
 
@@ -134,83 +146,25 @@ async function retranslateAll() {
   }
 
   const btn = document.getElementById('retranslate-all-btn');
-  const originalText = btn.innerHTML;
-  btn.disabled = true;
-  btn.style.opacity = '0.5';
-
-  try {
-    const words = await getWords();
-    if (words.length === 0) {
-      showConfirm('Library Empty', 'You do not have any words to refresh.', null, false);
-      return;
-    }
-
-    let progress = 0;
-    btn.querySelector('span').textContent = `Refreshing (0/${words.length})...`;
-
-    // Process in batches of 5 to avoid hitting API rate limits or concurrent request caps
-    const batchSize = 5;
-    for (let i = 0; i < words.length; i += batchSize) {
-      const batch = words.slice(i, i + batchSize);
-      await Promise.all(batch.map(async (w) => {
-        try {
-          // Fetch translation using Google Translate
-          const translation = await fetchTranslation(w.word, targetLang);
-          if (translation) w.translation = translation;
-
-          // Fetch dictionary definition, transcription, example
-          const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w.word.toLowerCase())}`);
-          if (response.ok) {
-            const data = await response.json();
-            const first = data[0];
-            if (first) {
-              const def = first.meanings[0]?.definitions[0]?.definition;
-              if (def) w.definition = def;
-
-              const ipa = first.phonetics.find(p => p.text)?.text;
-              if (ipa) w.transcription = ipa;
-
-              const pos = first.meanings[0]?.partOfSpeech;
-              if (pos) w.partOfSpeech = pos;
-
-              let example = '';
-              if (first.meanings) {
-                outerLoop: for (const m of first.meanings) {
-                  if (m.definitions) {
-                    for (const d of m.definitions) {
-                      if (d.example) {
-                        example = d.example.trim();
-                        break outerLoop;
-                      }
-                    }
-                  }
-                }
-              }
-              if (example) w.example = example;
-            }
-          }
-        } catch (err) {
-          console.error(`Error refreshing "${w.word}":`, err);
-        } finally {
-          progress++;
-          const span = btn.querySelector('span');
-          if (span) span.textContent = `Refreshing (${progress}/${words.length})...`;
-        }
-      }));
-      // brief pause between batches
-      await new Promise(resolve => setTimeout(resolve, 150));
-    }
-
-    await saveWords(words);
-    showConfirm('Success', `Successfully updated translations and details for all ${words.length} words!`, null, false);
-    if (onDbRestoredCallback) {
-      await onDbRestoredCallback();
-    }
-  } catch (err) {
-    showConfirm('Error', 'Refresh failed: ' + err.message, null, false);
-  } finally {
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.innerHTML = originalText;
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = 'Processing in background...';
   }
+
+  chrome.runtime.sendMessage({ action: 'retranslateAll', targetLang }, (response) => {
+    showConfirm(
+      'Background Task Started',
+      'Retranslation has been delegated to the background service worker. You can safely close the popup or keep using the app.',
+      null,
+      false
+    );
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      const span = btn.querySelector('span');
+      if (span) span.textContent = 'Refresh All Translations & Details';
+    }
+  });
 }
