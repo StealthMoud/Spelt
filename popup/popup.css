@@ -1721,6 +1721,7 @@ kbd:hover {
   padding-top: 6px;
   animation: slideDownFadeIn var(--transition-fast) ease forwards;
   position: relative;
+  z-index: 20;
 }
 
 .date-picker-group {
