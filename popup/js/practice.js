@@ -235,7 +235,7 @@ function checkSpelling() {
     displayErrors.push(typed);
   }
   if (displayErrors.length > 0) {
-    document.getElementById('back-misspellings-display').textContent = displayErrors.join(', ');
+    document.getElementById('back-misspellings-display').textContent = [...new Set(displayErrors)].join(', ');
     pastContainer.style.display = 'block';
   } else { pastContainer.style.display = 'none'; }
 

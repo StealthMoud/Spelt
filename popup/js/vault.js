@@ -269,7 +269,7 @@ function renderList() {
               <span class="review-pill" style="color: ${review.color}; border-color: ${review.color}25; background: ${review.color}10;">${review.text}</span>
             </div>
             <span style="color: var(--text-muted); font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px;">${w.definition || 'No definition'}</span>
-            ${w.misspellings && w.misspellings.length > 0 ? `<span class="error-tag">Errors: ${w.misspellings.join(', ')}</span>` : ''}
+            ${w.misspellings && w.misspellings.length > 0 ? `<span class="error-tag">Errors: ${[...new Set(w.misspellings)].join(', ')}</span>` : ''}
           </div>
         </div>
         <div style="display: flex; gap: 6px; margin-left: 8px;">
@@ -360,7 +360,7 @@ export function openModal(wordObj = null) {
   const pastList = document.getElementById('form-past-errors-list');
   if (pastContainer && pastList) {
     if (wordObj && wordObj.misspellings && wordObj.misspellings.length > 0) {
-      pastList.textContent = wordObj.misspellings.join(', ');
+      pastList.textContent = [...new Set(wordObj.misspellings)].join(', ');
       pastContainer.style.display = 'block';
     } else {
       pastContainer.style.display = 'none';

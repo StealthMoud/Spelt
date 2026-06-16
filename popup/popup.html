@@ -38,6 +38,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
           <span>Vault</span>
         </button>
+        <button class="tab-btn" data-tab="stats-tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Stats</span>
+        </button>
         <button class="tab-btn" data-tab="settings-tab">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>Settings</span>
@@ -241,7 +245,98 @@
         </div>
       </section>
       
-      <!-- TAB 4: SETTINGS -->
+      <!-- TAB 4: STATS -->
+      <section id="stats-tab" class="tab-pane">
+        <div class="stats-overview-row">
+          <div class="stat-glass-card">
+            <span class="stat-glass-label">Retention</span>
+            <div id="stats-retention" class="stat-glass-value">0%</div>
+            <span class="stat-glass-sub" id="stats-retention-sub">0 correct reviews</span>
+          </div>
+          <div class="stat-glass-card">
+            <span class="stat-glass-label">Reviews</span>
+            <div id="stats-total-reviews" class="stat-glass-value">0</div>
+            <span class="stat-glass-sub">all-time count</span>
+          </div>
+          <div class="stat-glass-card">
+            <span class="stat-glass-label">Streak</span>
+            <div id="stats-streak" class="stat-glass-value">0d</div>
+            <span class="stat-glass-sub" id="stats-streak-sub">best 0d</span>
+          </div>
+        </div>
+
+        <div class="stats-panel card-distribution-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            <span>Card Distribution</span>
+          </h4>
+          <div class="card-dist-bar-wrapper">
+            <div class="card-dist-bar">
+              <div id="dist-new-bar" class="dist-segment dist-new" style="width: 0%;"></div>
+              <div id="dist-learning-bar" class="dist-segment dist-learning" style="width: 0%;"></div>
+              <div id="dist-mature-bar" class="dist-segment dist-mature" style="width: 0%;"></div>
+              <div id="dist-mastered-bar" class="dist-segment dist-mastered" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="card-dist-legend">
+            <div class="legend-item dist-new">
+              <span class="legend-dot"></span>
+              <span class="legend-name">New:</span>
+              <span id="dist-new-count" class="legend-count">0</span>
+            </div>
+            <div class="legend-item dist-learning">
+              <span class="legend-dot"></span>
+              <span class="legend-name">Learning:</span>
+              <span id="dist-learning-count" class="legend-count">0</span>
+            </div>
+            <div class="legend-item dist-mature">
+              <span class="legend-dot"></span>
+              <span class="legend-name">Mature:</span>
+              <span id="dist-mature-count" class="legend-count">0</span>
+            </div>
+            <div class="legend-item dist-mastered">
+              <span class="legend-dot"></span>
+              <span class="legend-name">Mastered:</span>
+              <span id="dist-mastered-count" class="legend-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-panel chart-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Review History (Last 7 Days)</span>
+          </h4>
+          <div id="stats-chart-container" class="bar-chart-container">
+            <!-- Dynamically populated vertical bars -->
+          </div>
+        </div>
+
+        <div class="stats-panel buttons-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+            <span>Answer Buttons Distribution</span>
+          </h4>
+          <div id="button-dist-list" class="button-dist-list">
+            <!-- Dynamically populated button metrics -->
+          </div>
+        </div>
+
+        <div class="stats-panel leeches-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Hardest Words (Leech List)</span>
+          </h4>
+          <div id="stats-leeches-empty" class="leeches-empty-text" style="display: none;">
+            No spelling errors logged yet. Good job!
+          </div>
+          <ul id="stats-leeches-list" class="stats-leeches-list">
+            <!-- Dynamically populated leeches -->
+          </ul>
+        </div>
+      </section>
+
+      <!-- TAB 5: SETTINGS -->
       <section id="settings-tab" class="tab-pane">
         <div class="settings-content-wrapper">
           <div class="settings-block">

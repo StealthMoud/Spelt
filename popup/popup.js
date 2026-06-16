@@ -5,6 +5,7 @@ import { initPractice, loadPracticeDeck, syncPracticeDeck } from './js/practice.
 import { initVault, reloadVaultList } from './js/vault.js';
 import { initSettings } from './js/settings.js';
 import { initSandbox } from './js/sandbox.js';
+import { initStats, renderStats } from './js/stats.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const dueCountEl = document.getElementById('due-count'), totalCountEl = document.getElementById('total-count');
@@ -23,6 +24,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         badge.style.display = 'none';
       }
+      
+      // Keep stats dashboard synchronized on any database change
+      await renderStats();
     } catch (e) { console.error(e); }
   }
 
@@ -32,6 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       await syncPracticeDeck();
     } else if (targetTab === 'vault-tab') {
       await reloadVaultList();
+    } else if (targetTab === 'stats-tab') {
+      await renderStats();
     }
   });
   
@@ -52,6 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     () => reloadVaultList(),
     () => syncPracticeDeck()
   );
+
+  // Initialize stats dashboard logic
+  await initStats();
 
   // Manual refresh button listener with spin micro-animation
   const refreshBtn = document.getElementById('popup-refresh-btn');

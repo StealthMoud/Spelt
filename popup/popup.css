@@ -1298,3 +1298,396 @@ kbd:hover {
 .practice-edit-btn:active {
   transform: scale(0.93);
 }
+
+/* Statistics Dashboard Styling */
+.stats-overview-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.stat-glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 10px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-fast) var(--spring-curve);
+}
+.stat-glass-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px -4px var(--primary-glow);
+}
+.stat-glass-card:active {
+  transform: scale(0.96) translateY(0);
+}
+
+.stat-glass-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.stat-glass-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.stat-glass-sub {
+  font-size: 0.54rem;
+  color: var(--text-muted-dark);
+  margin-top: 1px;
+  font-weight: 500;
+}
+
+.stats-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 12px;
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color var(--transition-fast);
+}
+.stats-panel:hover {
+  border-color: var(--border-hover);
+}
+
+.stats-section-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  padding-bottom: 6px;
+}
+
+.title-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--primary);
+  filter: drop-shadow(0 0 4px var(--primary-glow));
+}
+
+/* Card States Distribution Progress Bar */
+.card-dist-bar-wrapper {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.card-dist-bar {
+  height: 8px;
+  border-radius: var(--radius-full);
+  display: flex;
+  overflow: hidden;
+  background: hsla(155, 20%, 6%, 0.5);
+  border: 1px solid hsla(155, 10%, 25%, 0.1);
+}
+
+.dist-segment {
+  height: 100%;
+  transition: width var(--transition-slow) var(--spring-curve);
+}
+.dist-segment.dist-new {
+  background: var(--text-muted-dark);
+}
+.dist-segment.dist-learning {
+  background: var(--warning);
+}
+.dist-segment.dist-mature {
+  background: var(--primary);
+}
+.dist-segment.dist-mastered {
+  background: var(--purple);
+}
+
+.card-dist-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  font-size: 0.68rem;
+  margin-top: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-main);
+  padding: 2px 0;
+}
+
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.legend-name {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.legend-count {
+  font-weight: 600;
+  margin-left: auto;
+  color: var(--text-main);
+}
+
+.legend-item.dist-new { color: var(--text-muted-dark); }
+.legend-item.dist-learning { color: var(--warning); }
+.legend-item.dist-mature { color: var(--primary-light); }
+.legend-item.dist-mastered { color: var(--purple); }
+
+/* Review History Stacked Bar Chart */
+.bar-chart-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 105px;
+  padding: 18px 4px 4px;
+  box-sizing: border-box;
+}
+
+.bar-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  position: relative;
+}
+
+.bar-track {
+  width: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  background: hsla(155, 20%, 6%, 0.35);
+  border-radius: 4px 4px 0 0;
+  border: 1px solid hsla(155, 10%, 25%, 0.1);
+  box-sizing: border-box;
+  overflow: visible;
+  transition: background var(--transition-fast) ease;
+}
+
+.bar-fill {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 3px 3px 0 0;
+  overflow: hidden;
+  transition: height var(--transition-slow) var(--spring-curve);
+}
+
+.bar-fill.empty {
+  background: hsla(155, 10%, 25%, 0.2);
+  border-radius: 1px;
+}
+
+.bar-segment {
+  width: 100%;
+  transition: height var(--transition-slow) var(--spring-curve);
+}
+.bar-segment.correct {
+  background: var(--success);
+  box-shadow: inset 0 2px 4px hsla(145, 80%, 75%, 0.3);
+}
+.bar-segment.incorrect {
+  background: var(--danger);
+  box-shadow: inset 0 2px 4px hsla(5, 85%, 75%, 0.3);
+}
+
+.bar-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.bar-hover-val {
+  position: absolute;
+  top: -15px;
+  font-size: 0.56rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  background: hsla(155, 20%, 6%, 0.9);
+  border: 1px solid var(--border-hover);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transform: translateY(2px);
+  pointer-events: none;
+  transition: opacity 0.2s var(--spring-curve), transform 0.2s var(--spring-curve);
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+.bar-column:hover .bar-hover-val {
+  opacity: 1;
+  transform: translateY(0);
+}
+.bar-column:hover .bar-track {
+  background: hsla(155, 65%, 48%, 0.06);
+  border-color: var(--border-hover);
+}
+
+/* Button Distribution Progress Indicators */
+.button-dist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.btn-dist-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.btn-dist-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+}
+
+.btn-dist-name {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.btn-dist-count {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.btn-dist-progress-track {
+  height: 5px;
+  background: hsla(155, 20%, 6%, 0.4);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid hsla(155, 10%, 25%, 0.05);
+}
+
+.btn-dist-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow) var(--spring-curve);
+}
+.btn-dist-progress-fill.again {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger-glow);
+}
+.btn-dist-progress-fill.hard {
+  background: var(--warning);
+  box-shadow: 0 0 6px var(--warning-glow);
+}
+.btn-dist-progress-fill.good {
+  background: var(--primary);
+  box-shadow: 0 0 6px var(--primary-glow);
+}
+.btn-dist-progress-fill.easy {
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success-glow);
+}
+
+/* Leeches & Hardest Words List */
+.leeches-empty-text {
+  font-size: 0.7rem;
+  color: var(--text-muted-dark);
+  text-align: center;
+  padding: 8px 0;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.stats-leeches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.leech-item {
+  background: hsla(155, 10%, 15%, 0.15);
+  border-left: 2px solid var(--danger);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: transform var(--transition-fast) var(--spring-curve), background var(--transition-fast) ease;
+  box-sizing: border-box;
+}
+.leech-item:hover {
+  transform: translateX(2px);
+  background: hsla(5, 85%, 55%, 0.04);
+}
+
+.leech-word-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leech-word-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-light);
+  letter-spacing: -0.01em;
+}
+
+.leech-count-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--danger);
+  background: hsla(5, 85%, 55%, 0.1);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  border: 1px solid hsla(5, 85%, 55%, 0.25);
+  box-shadow: 0 0 4px var(--danger-glow);
+}
+
+.leech-typos {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.leech-typos-list {
+  font-style: italic;
+  color: var(--danger);
+  font-weight: 600;
+}
+

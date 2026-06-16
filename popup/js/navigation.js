@@ -23,6 +23,8 @@ export function initNavigation(onTabChanged) {
         document.getElementById('spelling-input')?.focus();
       } else if (target === 'vault-tab') {
         document.getElementById('vault-search')?.focus();
+      } else if (target === 'stats-tab') {
+        document.activeElement?.blur();
       }
 
       if (onTabChanged) onTabChanged(target);

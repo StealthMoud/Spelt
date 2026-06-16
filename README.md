@@ -61,6 +61,18 @@ A highly premium searchable interface to inspect and manage your vocabulary.
   <img src="docs/screenshot-vault.png" alt="Word Vault List and Sorting" width="340" />
 </p>
 
+### 📊 Spaced Repetition Statistics Dashboard
+Track your spelling metrics and study consistency with Anki-inspired analytics.
+* **Core Metrics Summary**: Real-time correct review retention rates, total practice counts, and active consecutive streak logs (including a tracked all-time record).
+* **Card Distribution Progress Bar**: Segmented progress bar detailing your cards divided by *New*, *Learning*, *Mature*, and *Mastered* states.
+* **7-Day Review History**: Stacked vertical bar chart comparing successful reviews against spelling errors daily.
+* **Button Choice Frequencies**: Clear horizontal progress gauges illustrating how frequently you press Again, Hard, Good, or Easy ratings.
+* **Leech List**: Highlights your top 4 most frequently misspelled vocabulary targets, including their failure counts and a list of your common typos.
+
+<p align="center">
+  <img src="docs/screenshot-stats.png" alt="Statistics Dashboard" width="340" />
+</p>
+
 ### 💎 Elite Premium Aesthetics
 * **Glassmorphism Theme**: Translucent cards (`backdrop-filter: blur(12px)`) styled with radial glow backdrops and double-bordering.
 * **Micro-Animations**: Custom spring easing curves (`cubic-bezier(0.175, 0.885, 0.32, 1.275)`) drive smooth icon bounces, active tab slider bars, inputs focused glows, and list items sliding rightwards on hover.
@@ -132,6 +144,7 @@ Spelt/
 │       ├── sandbox.js     # Spellcheck sandbox controller
 │       ├── practice.js    # SRS flashcard practice
 │       ├── vault.js       # Word list management
+│       ├── stats.js       # Statistics dashboard controller
 │       ├── navigation.js  # Tab switching
 │       └── settings.js    # Export, import, wipe, SRS tuning
 ├── icons/
@@ -139,7 +152,8 @@ Spelt/
 │   ├── icon-48.png
 │   └── icon-128.png
 └── docs/
-    └── screenshot-popup.png
+    ├── screenshot-popup.png
+    └── screenshot-stats.png
 ```
 
 ---

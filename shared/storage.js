@@ -165,7 +165,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
   const wordObj = list.find(w => w.word.toLowerCase() === correctWord.toLowerCase());
   if (wordObj) {
     if (!wordObj.misspellings) wordObj.misspellings = [];
-    if (wrongSpelling && !wordObj.misspellings.includes(wrongSpelling) && wrongSpelling.toLowerCase() !== correctWord.toLowerCase()) {
+    if (wrongSpelling && wrongSpelling.toLowerCase() !== correctWord.toLowerCase()) {
       wordObj.misspellings.push(wrongSpelling);
     }
     wordObj.mastered = false; // re-enter SRS if previously mastered
@@ -232,7 +232,7 @@ export async function reviewWord(wordId, q, typedWrongWord = null) {
 
   if (typedWrongWord) {
     if (!card.misspellings) card.misspellings = [];
-    if (!card.misspellings.includes(typedWrongWord) && typedWrongWord.toLowerCase() !== card.word.toLowerCase()) {
+    if (typedWrongWord.toLowerCase() !== card.word.toLowerCase()) {
       card.misspellings.push(typedWrongWord);
     }
   }
@@ -253,7 +253,7 @@ async function logActivity() {
 
 // Recalculate streak based on days consecutive
 async function updateStreak(todayStr) {
-  const streak = await getStored('spelt_streak') || { current: 0, lastDate: '' };
+  const streak = await getStored('spelt_streak') || { current: 0, lastDate: '', max: 0 };
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
   if (streak.lastDate === yesterday) {
@@ -262,7 +262,20 @@ async function updateStreak(todayStr) {
     streak.current = 1;
   }
   streak.lastDate = todayStr;
+  
+  if (!streak.max) {
+    streak.max = streak.current;
+  }
+  if (streak.current > streak.max) {
+    streak.max = streak.current;
+  }
+  
   await setStored('spelt_streak', streak);
+}
+
+// Export streak values for statistics
+export async function getStreak() {
+  return await getStored('spelt_streak') || { current: 0, lastDate: '', max: 0 };
 }
 
 // Delete a single word by its ID
@@ -316,7 +329,7 @@ export async function playWordAudio(word, accent) {
 export async function resetDb() {
   await setStored('spelt_words', []);
   await setStored('spelt_activity', {});
-  await setStored('spelt_streak', { current: 0, lastDate: '' });
+  await setStored('spelt_streak', { current: 0, lastDate: '', max: 0 });
 }
 
 // Fetch a premium English definition dynamically from Cambridge or Oxford
