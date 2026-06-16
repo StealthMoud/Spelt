@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -181,7 +181,7 @@ async function handleCorrectSpelling(apiData, word) {
   const def = apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
   const ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
   const partOfSpeech = apiData.meanings[0]?.partOfSpeech || '';
-  const example = extractExample(apiData) || getFallbackExample(word, partOfSpeech);
+  const example = extractExample(apiData) || await fetchDynamicExample(word) || getFallbackExample(word, partOfSpeech);
   
   let translation = '';
   try {
@@ -246,8 +246,8 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
     partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
     example = extractExample(data[0]);
   }
-  if (!example && partOfSpeech) {
-    example = getFallbackExample(suggestion, partOfSpeech);
+  if (!example) {
+    example = await fetchDynamicExample(suggestion) || getFallbackExample(suggestion, partOfSpeech);
   }
   let translation = '';
   try {
@@ -362,7 +362,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
       const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
-      const example = extractExample(data[0]) || getFallbackExample(correctWord, partOfSpeech);
+      const example = extractExample(data[0]) || await fetchDynamicExample(correctWord) || getFallbackExample(correctWord, partOfSpeech);
       
       let translation = '';
       try {

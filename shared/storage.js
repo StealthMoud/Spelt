@@ -127,7 +127,7 @@ export async function addWord(wordData) {
   }
 
   const partOfSpeechVal = wordData.partOfSpeech?.trim() || '';
-  const exampleVal = wordData.example?.trim() || getFallbackExample(normalizedWord, partOfSpeechVal);
+  const exampleVal = wordData.example?.trim() || await fetchDynamicExample(normalizedWord) || getFallbackExample(normalizedWord, partOfSpeechVal);
 
   const newWord = {
     id: 'w_' + Math.random().toString(36).substr(2, 9),
@@ -182,7 +182,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
     }
 
     if (!wordObj.example?.trim()) {
-      wordObj.example = details.example?.trim() || getFallbackExample(correctWord, wordObj.partOfSpeech || details.partOfSpeech || '');
+      wordObj.example = details.example?.trim() || await fetchDynamicExample(correctWord) || getFallbackExample(correctWord, wordObj.partOfSpeech || details.partOfSpeech || '');
     }
 
     await saveWords(list);
@@ -305,43 +305,35 @@ export async function resetDb() {
   await setStored('spelt_streak', { current: 0, lastDate: '' });
 }
 
+// Fetch a real English sentence example dynamically from Tatoeba API
+export async function fetchDynamicExample(word) {
+  try {
+    const url = `https://tatoeba.org/en/api_v0/search?from=eng&to=eng&query=${encodeURIComponent(word)}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.results && data.results.length > 0) {
+        const wordLower = word.toLowerCase();
+        const matches = data.results.filter(r => 
+          r.lang === 'eng' && 
+          r.text.toLowerCase().includes(wordLower)
+        );
+        if (matches.length > 0) {
+          // Sort by sentence length to select the most concise and clean example first
+          matches.sort((a, b) => a.text.length - b.text.length);
+          return matches[0].text;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Tatoeba example fetch error:', err);
+  }
+  return '';
+}
+
 // Dynamic fallback example sentence generator for context clues (handles abstract nouns and reponsive academic phrasing)
 export function getFallbackExample(word, partOfSpeech = '') {
   const cleanWord = word.trim();
-  const lowerWord = cleanWord.toLowerCase();
-  const map = {
-    'accommodate': 'The hotel can accommodate up to three hundred guests.',
-    'definitely': 'We will definitely attend the conference next week.',
-    'separate': 'Please separate the recycling from the general waste.',
-    'receive': 'Did you receive the email I sent you yesterday?',
-    'embarrass': 'I did not mean to embarrass you in front of the team.',
-    'until': 'We will wait here until the rain finally stops.',
-    'government': 'The new government promised to lower taxes.',
-    'environment': 'We must do more to protect our natural environment.',
-    'occurred': 'The accident occurred at the corner of the street.',
-    'threshold': 'He paused on the threshold before entering the room.',
-    'pronunciation': 'His pronunciation of the word was perfectly clear.',
-    'calendar': 'She marked the meeting date on her wall calendar.',
-    'necessary': 'It is necessary to wear a helmet when riding a bike.',
-    'writing': 'He is currently writing a novel about his travels.',
-    'colleague': 'My colleague helped me finish the project on time.',
-    'successful': 'The launch of the new product was highly successful.',
-    'tomorrow': 'We plan to start our journey early tomorrow morning.',
-    'beach': 'The children spent all day playing on the sandy beach.',
-    'easy': 'The test was very easy and everyone passed it.',
-    'again': 'Please try to spell the word again if you make a mistake.',
-    'perseverance': 'Her perseverance in the face of multiple setbacks was truly inspiring.',
-    'society': 'A civilized society is judged by how it treats its most vulnerable members.',
-    'collaboration': 'Successful collaboration between the two teams led to a breakthrough.',
-    'analysis': 'The research team conducted a detailed analysis of the data.',
-    'correlation': 'There is a strong correlation between regular study and high test scores.',
-    'validation': 'The experiment provided validation for the scientist\'s theory.',
-    'assessment': 'The teacher conducted an assessment of the students\' language skills.',
-    'significant': 'The new results show a significant improvement over the previous trials.'
-  };
-
-  if (map[lowerWord]) return map[lowerWord];
-
   const pos = partOfSpeech.trim().toLowerCase();
   if (pos.includes('noun')) {
     return `Their discussion focused on the role of ${cleanWord} in modern society.`;

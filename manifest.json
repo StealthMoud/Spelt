@@ -6,6 +6,11 @@
   "permissions": [
     "storage"
   ],
+  "host_permissions": [
+    "https://tatoeba.org/*",
+    "https://translate.googleapis.com/*",
+    "https://api.dictionaryapi.dev/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
