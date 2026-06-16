@@ -119,6 +119,7 @@ function handleCalDayClick(date) {
       if (chartPanel) {
         chartPanel.style.zIndex = '';
         chartPanel.style.position = '';
+        chartPanel.classList.remove('calendar-open');
       }
     }
   }
@@ -159,6 +160,7 @@ export async function initStats() {
         if (chartPanel) {
           chartPanel.style.zIndex = '';
           chartPanel.style.position = '';
+          chartPanel.classList.remove('calendar-open');
         }
       }
       await renderStats();
@@ -177,9 +179,11 @@ export async function initStats() {
         if (isHidden) {
           chartPanel.style.zIndex = '50';
           chartPanel.style.position = 'relative';
+          chartPanel.classList.add('calendar-open');
         } else {
           chartPanel.style.zIndex = '';
           chartPanel.style.position = '';
+          chartPanel.classList.remove('calendar-open');
         }
       }
       
@@ -227,6 +231,7 @@ export async function initStats() {
         if (chartPanel) {
           chartPanel.style.zIndex = '';
           chartPanel.style.position = '';
+          chartPanel.classList.remove('calendar-open');
         }
       }
     }
