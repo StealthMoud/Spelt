@@ -127,12 +127,16 @@ export async function addWord(wordData) {
   }
 
   const partOfSpeechVal = wordData.partOfSpeech?.trim() || '';
+  let definitionVal = wordData.definition?.trim() || '';
+  if (!definitionVal || definitionVal === 'No definition found') {
+    definitionVal = await fetchDynamicDefinition(normalizedWord) || definitionVal;
+  }
   const exampleVal = wordData.example?.trim() || await fetchDynamicExample(normalizedWord) || getFallbackExample(normalizedWord, partOfSpeechVal);
 
   const newWord = {
     id: 'w_' + Math.random().toString(36).substr(2, 9),
     word: normalizedWord,
-    definition: wordData.definition?.trim() || '',
+    definition: definitionVal,
     transcription: wordData.transcription?.trim() || '',
     partOfSpeech: partOfSpeechVal,
     translation: translation,
@@ -179,6 +183,11 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
 
     if (details.partOfSpeech && !wordObj.partOfSpeech) {
       wordObj.partOfSpeech = details.partOfSpeech;
+    }
+
+    if (!wordObj.definition?.trim() || wordObj.definition === 'No definition found') {
+      const dynamicDef = details.definition?.trim() || await fetchDynamicDefinition(correctWord);
+      if (dynamicDef) wordObj.definition = dynamicDef;
     }
 
     if (!wordObj.example?.trim() || isFallbackExample(correctWord, wordObj.example)) {
@@ -308,6 +317,49 @@ export async function resetDb() {
   await setStored('spelt_words', []);
   await setStored('spelt_activity', {});
   await setStored('spelt_streak', { current: 0, lastDate: '' });
+}
+
+// Fetch a premium English definition dynamically from Cambridge or Oxford
+export async function fetchDynamicDefinition(word) {
+  const cleanWord = word.trim().toLowerCase();
+
+  // 1. Try Cambridge Dictionary
+  try {
+    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (res.ok) {
+      const html = await res.text();
+      const regex = /<div\s+class=\"def ddef_d[^>]*>([\s\S]*?)<\/div>/g;
+      let match;
+      if (match = regex.exec(html)) {
+        let text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        if (text.endsWith(':')) text = text.slice(0, -1).trim();
+        if (text) return text;
+      }
+    }
+  } catch (err) {
+    console.error('Cambridge definition fetch failed:', err);
+  }
+
+  // 2. Try Oxford Learner's Dictionary
+  try {
+    const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (res.ok) {
+      const html = await res.text();
+      const regex = /<span\s+class=\"def\"[^>]*>([\s\S]*?)<\/span>/g;
+      let match;
+      if (match = regex.exec(html)) {
+        let text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        if (text.endsWith(':')) text = text.slice(0, -1).trim();
+        if (text) return text;
+      }
+    }
+  } catch (err) {
+    console.error('Oxford definition fetch failed:', err);
+  }
+
+  return '';
 }
 
 // Fetch a real English sentence example dynamically from Cambridge, Oxford, or Tatoeba

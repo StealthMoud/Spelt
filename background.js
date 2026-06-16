@@ -1,7 +1,7 @@
 // Background service worker for Spelt extension
 // Implements zero-dependency local hot-reloading during development
 
-import { getWords, saveWords, fetchTranslation, fetchDynamicExample, isFallbackExample, getFallbackExample, logDebug } from './shared/storage.js';
+import { getWords, saveWords, fetchTranslation, fetchDynamicExample, isFallbackExample, getFallbackExample, logDebug, fetchDynamicDefinition } from './shared/storage.js';
 
 const FILES_TO_WATCH = [
   'http://localhost:8080/manifest.json',
@@ -89,6 +89,7 @@ async function runBackgroundRetranslate(targetLang) {
           if (translation) w.translation = translation;
 
           // Fetch dictionary definition, transcription, example
+          let dictDef = '';
           let dictEx = '';
           const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w.word.toLowerCase())}`);
           const dictOk = response.ok;
@@ -97,7 +98,7 @@ async function runBackgroundRetranslate(targetLang) {
             const first = data[0];
             if (first) {
               const def = first.meanings[0]?.definitions[0]?.definition;
-              if (def) w.definition = def;
+              if (def) dictDef = def;
 
               const ipa = first.phonetics.find(p => p.text)?.text;
               if (ipa) w.transcription = ipa;
@@ -118,6 +119,15 @@ async function runBackgroundRetranslate(targetLang) {
                 }
               }
             }
+          }
+
+          // Always try to fetch a premium dynamic definition first
+          let newDef = await fetchDynamicDefinition(w.word);
+          if (!newDef) {
+            newDef = dictDef;
+          }
+          if (newDef) {
+            w.definition = newDef;
           }
 
           // Always try to fetch a premium dynamic example from Cambridge/Oxford/Tatoeba first

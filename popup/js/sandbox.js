@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -178,7 +178,7 @@ const closeBtnHtml = `
 `;
 
 async function handleCorrectSpelling(apiData, word) {
-  const def = apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
+  const def = await fetchDynamicDefinition(word) || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
   const ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
   const partOfSpeech = apiData.meanings[0]?.partOfSpeech || '';
   const example = extractExample(apiData) || await fetchDynamicExample(word) || getFallbackExample(word, partOfSpeech);
@@ -238,10 +238,12 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   const suggestion = suggestions[activeIndex];
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Retrieving suggestions...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = 'No definition found', ipa = '/--/', partOfSpeech = '', example = '';
+  let def = await fetchDynamicDefinition(suggestion), ipa = '/--/', partOfSpeech = '', example = '';
   if (response.ok) {
     const data = await response.json();
-    def = data[0].meanings[0]?.definitions[0]?.definition || def;
+    if (!def) {
+      def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+    }
     ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
     partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
     example = extractExample(data[0]);
@@ -299,10 +301,12 @@ async function acceptSuggestion(suggestion, original) {
   const feedbackMsg = document.getElementById('feedback-msg');
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  let def = 'No definition found', ipa = '/--/', partOfSpeech = '', example = '';
+  let def = await fetchDynamicDefinition(suggestion), ipa = '/--/', partOfSpeech = '', example = '';
   if (response.ok) {
     const data = await response.json();
-    def = data[0].meanings[0]?.definitions[0]?.definition || def;
+    if (!def) {
+      def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+    }
     ipa = data[0].phonetics.find(p => p.text)?.text || ipa;
     partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
     example = extractExample(data[0]);
@@ -359,7 +363,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(correctWord.toLowerCase())}`);
     if (response.ok) {
       const data = await response.json();
-      const def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+      const def = await fetchDynamicDefinition(correctWord) || data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
       const ipa = data[0].phonetics.find(p => p.text)?.text || '/--/';
       const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
       const example = extractExample(data[0]) || await fetchDynamicExample(correctWord) || getFallbackExample(correctWord, partOfSpeech);
