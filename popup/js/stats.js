@@ -217,7 +217,7 @@ export async function renderStats() {
         leechesList.style.display = 'flex';
 
         leeches.forEach(w => {
-          const uniqueTypos = [...new Set(w.misspellings)];
+          const uniqueTypos = [...new Set(w.misspellings)].filter(Boolean);
           const item = document.createElement('li');
           item.className = 'leech-item';
           item.innerHTML = `

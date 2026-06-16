@@ -230,7 +230,7 @@ function checkSpelling() {
   }
 
   const pastContainer = document.getElementById('past-misspellings-container');
-  let displayErrors = card.misspellings ? [...card.misspellings] : [];
+  let displayErrors = card.misspellings ? card.misspellings.filter(Boolean) : [];
   if (!isOk && typed && !displayErrors.includes(typed) && typed.toLowerCase() !== card.word.toLowerCase()) {
     displayErrors.push(typed);
   }
@@ -283,6 +283,12 @@ async function submitRating(score) {
 
 async function submitMasteredRating(card) {
   try {
+    const typed = document.getElementById('spelling-input').value.trim();
+    const isOk = typed.toLowerCase() === card.word.toLowerCase();
+    
+    // Log review history and capture spelling attempt
+    await reviewWord(card.id, 5, isOk ? null : typed);
+
     const list = await getWords();
     const wordObj = list.find(w => w.id === card.id);
     if (wordObj) {

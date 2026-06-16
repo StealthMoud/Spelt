@@ -242,7 +242,7 @@ export async function reviewWord(wordId, q, typedWrongWord = null) {
   card.lastReviewedAt = Date.now();
   card.history.push({ date: Date.now(), q, interval });
 
-  if (typedWrongWord) {
+  if (typedWrongWord !== null && typedWrongWord !== undefined) {
     if (!card.misspellings) card.misspellings = [];
     if (typedWrongWord.toLowerCase() !== card.word.toLowerCase()) {
       card.misspellings.push(typedWrongWord);
