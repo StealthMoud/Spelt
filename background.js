@@ -1,7 +1,7 @@
 // Background service worker for Spelt extension
 // Implements zero-dependency local hot-reloading during development
 
-import { getWords, saveWords, fetchTranslation, fetchDynamicExample } from './shared/storage.js';
+import { getWords, saveWords, fetchTranslation, fetchDynamicExample, isFallbackExample, getFallbackExample } from './shared/storage.js';
 
 const FILES_TO_WATCH = [
   'http://localhost:8080/manifest.json',
@@ -115,12 +115,21 @@ async function runBackgroundRetranslate(targetLang) {
               if (!example) {
                 example = await fetchDynamicExample(w.word);
               }
-              if (example) w.example = example;
+              
+              if (example) {
+                w.example = example;
+              } else if (!w.example || isFallbackExample(w.word, w.example)) {
+                w.example = getFallbackExample(w.word, w.partOfSpeech || pos || '');
+              }
             }
           } else {
-            if (!w.example) {
+            if (!w.example || isFallbackExample(w.word, w.example)) {
               const example = await fetchDynamicExample(w.word);
-              if (example) w.example = example;
+              if (example) {
+                w.example = example;
+              } else if (!w.example) {
+                w.example = getFallbackExample(w.word, w.partOfSpeech || '');
+              }
             }
           }
         } catch (err) {
