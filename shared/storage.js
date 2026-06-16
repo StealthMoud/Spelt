@@ -84,17 +84,16 @@ export async function saveWords(words) {
   await setStored('spelt_words', words);
 }
 
-// Helper to fetch translation from MyMemory API
-async function fetchTranslation(word, targetLang) {
+// Helper to fetch translation from Google Translate API for highly accurate and reponsive single-word translation
+export async function fetchTranslation(word, targetLang) {
   if (!targetLang || targetLang === 'none') return '';
   try {
-    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|${targetLang}`);
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(word)}`;
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (data && data.responseData && data.responseData.translatedText) {
-        let text = data.responseData.translatedText.trim();
-        text = text.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-        return text;
+      if (data && data[0] && data[0][0] && data[0][0][0]) {
+        return data[0][0][0].trim();
       }
     }
   } catch (err) {
