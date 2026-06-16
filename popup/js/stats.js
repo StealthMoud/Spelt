@@ -1,10 +1,19 @@
 import { getWords, getStreak } from '../../shared/storage.js';
 
+let currentStatsTimeframe = '7d';
+
 /**
  * Initializes the statistics dashboard module
  */
 export async function initStats() {
-  // Stats is purely read-only, so we just need to render the contents on activation.
+  const select = document.getElementById('stats-timeframe-select');
+  if (select) {
+    select.value = currentStatsTimeframe;
+    select.addEventListener('change', async (e) => {
+      currentStatsTimeframe = e.target.value;
+      await renderStats();
+    });
+  }
   await renderStats();
 }
 
@@ -21,22 +30,85 @@ export async function renderStats() {
     let correctReviews = 0;
     const buttonCounts = { again: 0, hard: 0, good: 0, easy: 0 };
     
-    // Group historical reviews by date for the 7-day bar chart
-    // We will track the past 7 days: [today - 6 days, ..., today]
-    const past7Days = [];
+    const selectEl = document.getElementById('stats-timeframe-select');
+    const timeframe = selectEl ? selectEl.value : currentStatsTimeframe;
+    
+    const chartBuckets = [];
     const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      past7Days.push({
-        dateStr,
-        label: d.toLocaleDateString(undefined, { weekday: 'short' }),
-        fullDateLabel: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-        correct: 0,
-        incorrect: 0,
-        total: 0
-      });
+    let barWidth = 20;
+
+    if (timeframe === '7d') {
+      barWidth = 20;
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        chartBuckets.push({
+          dateStr,
+          type: 'day',
+          label: d.toLocaleDateString(undefined, { weekday: 'short' }),
+          fullDateLabel: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          correct: 0,
+          incorrect: 0,
+          total: 0
+        });
+      }
+    } else if (timeframe === '30d') {
+      barWidth = 6;
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        
+        let label = '';
+        if (i === 29) label = '30d';
+        else if (i === 15) label = '15d';
+        else if (i === 0) label = 'Today';
+
+        chartBuckets.push({
+          dateStr,
+          type: 'day',
+          label: label,
+          fullDateLabel: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          correct: 0,
+          incorrect: 0,
+          total: 0
+        });
+      }
+    } else if (timeframe === '6m') {
+      barWidth = 22;
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+        chartBuckets.push({
+          dateStr,
+          type: 'month',
+          label: d.toLocaleDateString(undefined, { month: 'short' }),
+          fullDateLabel: d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+          correct: 0,
+          incorrect: 0,
+          total: 0
+        });
+      }
+    } else if (timeframe === '1y') {
+      barWidth = 14;
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+        chartBuckets.push({
+          dateStr,
+          type: 'month',
+          label: d.toLocaleDateString(undefined, { month: 'short' }),
+          fullDateLabel: d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+          correct: 0,
+          incorrect: 0,
+          total: 0
+        });
+      }
     }
 
     // Process reviews and button distribution
@@ -53,16 +125,24 @@ export async function renderStats() {
           else if (h.q === 4) buttonCounts.good++;
           else if (h.q === 5) buttonCounts.easy++;
 
-          // Match review to one of the last 7 days
+          // Match review to one of the buckets
           if (h.date) {
-            const reviewDateStr = new Date(h.date).toISOString().split('T')[0];
-            const matchingDay = past7Days.find(day => day.dateStr === reviewDateStr);
-            if (matchingDay) {
-              matchingDay.total++;
+            const rDate = new Date(h.date);
+            let matchKey = '';
+            
+            if (timeframe === '7d' || timeframe === '30d') {
+              matchKey = rDate.toISOString().split('T')[0];
+            } else {
+              matchKey = `${rDate.getFullYear()}-${String(rDate.getMonth() + 1).padStart(2, '0')}`;
+            }
+
+            const matchingBucket = chartBuckets.find(b => b.dateStr === matchKey);
+            if (matchingBucket) {
+              matchingBucket.total++;
               if (isCorrect) {
-                matchingDay.correct++;
+                matchingBucket.correct++;
               } else {
-                matchingDay.incorrect++;
+                matchingBucket.incorrect++;
               }
             }
           }
@@ -134,32 +214,32 @@ export async function renderStats() {
     if (countMatureEl) countMatureEl.textContent = `${matureCount} (${Math.round(pctMature)}%)`;
     if (countMasteredEl) countMasteredEl.textContent = `${masteredCount} (${Math.round(pctMastered)}%)`;
 
-    // 3. Render vertical stacked bar chart (Last 7 Days)
+    // 3. Render vertical stacked bar chart
     const chartContainer = document.getElementById('stats-chart-container');
     if (chartContainer) {
       chartContainer.innerHTML = '';
       
-      // Find the highest review count in any single day to scale heights
-      const maxDayReviews = Math.max(...past7Days.map(d => d.total), 1);
+      // Find the highest review count in any single bucket to scale heights
+      const maxBucketReviews = Math.max(...chartBuckets.map(b => b.total), 1);
 
-      past7Days.forEach(day => {
-        const heightPercent = Math.max(0, (day.total / maxDayReviews) * 100);
-        const correctPct = day.total > 0 ? (day.correct / day.total) * 100 : 0;
-        const incorrectPct = day.total > 0 ? (day.incorrect / day.total) * 100 : 0;
+      chartBuckets.forEach(bucket => {
+        const heightPercent = Math.max(0, (bucket.total / maxBucketReviews) * 100);
+        const correctPct = bucket.total > 0 ? (bucket.correct / bucket.total) * 100 : 0;
+        const incorrectPct = bucket.total > 0 ? (bucket.incorrect / bucket.total) * 100 : 0;
 
         const col = document.createElement('div');
         col.className = 'bar-column';
         col.innerHTML = `
-          <div class="bar-hover-val">${day.total}</div>
-          <div class="bar-track">
-            ${day.total > 0 ? `
+          <div class="bar-hover-val">${bucket.total} ${bucket.total === 1 ? 'review' : 'reviews'}</div>
+          <div class="bar-track" style="width: ${barWidth}px;">
+            ${bucket.total > 0 ? `
               <div class="bar-fill" style="height: ${heightPercent}%;">
-                <div class="bar-segment correct" style="height: ${correctPct}%;" title="${day.correct} Correct on ${day.fullDateLabel}"></div>
-                <div class="bar-segment incorrect" style="height: ${incorrectPct}%;" title="${day.incorrect} Incorrect on ${day.fullDateLabel}"></div>
+                <div class="bar-segment correct" style="height: ${correctPct}%;" title="${bucket.correct} Correct ${bucket.type === 'month' ? 'in' : 'on'} ${bucket.fullDateLabel}"></div>
+                <div class="bar-segment incorrect" style="height: ${incorrectPct}%;" title="${bucket.incorrect} Incorrect ${bucket.type === 'month' ? 'in' : 'on'} ${bucket.fullDateLabel}"></div>
               </div>
             ` : `<div class="bar-fill empty" style="height: 4px;"></div>`}
           </div>
-          <span class="bar-label">${day.label}</span>
+          <span class="bar-label">${bucket.label}</span>
         `;
         chartContainer.appendChild(col);
       });

@@ -1463,6 +1463,24 @@ kbd:hover {
 .legend-item.dist-mature { color: var(--primary-light); }
 .legend-item.dist-mastered { color: var(--purple); }
 
+.stats-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+}
+
+.stats-timeframe-select {
+  width: auto !important;
+  font-size: 0.62rem !important;
+  padding: 2px 18px 2px 6px !important;
+  height: 20px !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer;
+}
+
 /* Review History Stacked Bar Chart */
 .bar-chart-container {
   display: flex;
