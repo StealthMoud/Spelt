@@ -1416,7 +1416,7 @@ kbd:hover {
   background: var(--warning);
 }
 .dist-segment.dist-mature {
-  background: var(--primary);
+  background: var(--primary-light);
 }
 .dist-segment.dist-mastered {
   background: var(--purple);
@@ -1443,6 +1443,7 @@ kbd:hover {
   height: 6px;
   border-radius: 50%;
   display: inline-block;
+  background-color: currentColor;
   box-shadow: 0 0 6px currentColor;
 }
 
