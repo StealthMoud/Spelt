@@ -192,8 +192,7 @@ async function setupRules() {
               ]
             },
             condition: {
-              urlFilter: "||dictionary.cambridge.org",
-              resourceTypes: ["xmlhttprequest", "media"]
+              urlFilter: "||dictionary.cambridge.org"
             }
           }
         ]

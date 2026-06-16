@@ -594,52 +594,82 @@ export async function logDebug(data) {
   } catch (_) {}
 }
 
-// Fetch accurate UK/US IPA transcriptions and MP3 URLs dynamically from Cambridge Dictionary
+// Fetch accurate UK/US IPA transcriptions and MP3 URLs dynamically from Cambridge or Oxford Learner's Dictionary
 export async function fetchCambridgePronunciation(word) {
   const cleanWord = word.trim().toLowerCase();
-  const result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '' };
+  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '' };
+  
+  // 1. Try Cambridge Dictionary first
   try {
     const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!res.ok) return result;
-    const html = await res.text();
+    if (res.ok) {
+      const html = await res.text();
+      const ukRegex = /<span\s+class="uk dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
+      const ukMatch = ukRegex.exec(html);
+      if (ukMatch) {
+        const ukBlock = ukMatch[1];
+        const audioMatch = /<source\s+type="audio\/mpeg"\s+src="([^"]+)"/i.exec(ukBlock);
+        if (audioMatch) {
+          result.ukAudio = 'https://dictionary.cambridge.org' + audioMatch[1];
+        }
+        const ipaRegex = /<span\s+class="ipa dipa[^>]*>([\s\S]*?)<\/span>\s*\//i;
+        const ipaMatch = ipaRegex.exec(ukBlock);
+        if (ipaMatch) {
+          result.ukIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
+        }
+      }
 
-    // Parse UK Audio & IPA
-    const ukRegex = /<span\s+class="uk dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
-    const ukMatch = ukRegex.exec(html);
-    if (ukMatch) {
-      const ukBlock = ukMatch[1];
-      const audioMatch = /<source\s+type="audio\/mpeg"\s+src="([^"]+)"/i.exec(ukBlock);
-      if (audioMatch) {
-        result.ukAudio = 'https://dictionary.cambridge.org' + audioMatch[1];
-      }
-      
-      const ipaRegex = /<span\s+class="ipa dipa[^>]*>([\s\S]*?)<\/span>\s*\//i;
-      const ipaMatch = ipaRegex.exec(ukBlock);
-      if (ipaMatch) {
-        result.ukIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
-      }
-    }
-
-    // Parse US Audio & IPA
-    const usRegex = /<span\s+class="us dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
-    const usMatch = usRegex.exec(html);
-    if (usMatch) {
-      const usBlock = usMatch[1];
-      const audioMatch = /<source\s+type="audio\/mpeg"\s+src="([^"]+)"/i.exec(usBlock);
-      if (audioMatch) {
-        result.usAudio = 'https://dictionary.cambridge.org' + audioMatch[1];
-      }
-      
-      const ipaRegex = /<span\s+class="ipa dipa[^>]*>([\s\S]*?)<\/span>\s*\//i;
-      const ipaMatch = ipaRegex.exec(usBlock);
-      if (ipaMatch) {
-        result.usIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
+      const usRegex = /<span\s+class="us dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
+      const usMatch = usRegex.exec(html);
+      if (usMatch) {
+        const usBlock = usMatch[1];
+        const audioMatch = /<source\s+type="audio\/mpeg"\s+src="([^"]+)"/i.exec(usBlock);
+        if (audioMatch) {
+          result.usAudio = 'https://dictionary.cambridge.org' + audioMatch[1];
+        }
+        const ipaRegex = /<span\s+class="ipa dipa[^>]*>([\s\S]*?)<\/span>\s*\//i;
+        const ipaMatch = ipaRegex.exec(usBlock);
+        if (ipaMatch) {
+          result.usIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
+        }
       }
     }
   } catch (err) {
-    console.error('Cambridge pronunciation fetch error:', err);
+    console.warn('Cambridge fetch error:', err);
   }
+
+  // 2. Fall back to Oxford Learner's Dictionary if Cambridge results are empty (due to 403 or other blocks)
+  const hasAudio = result.ukAudio || result.usAudio;
+  const hasIpa = result.ukIpa || result.usIpa;
+  if (!hasAudio || !hasIpa) {
+    try {
+      const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      if (res.ok) {
+        const html = await res.text();
+        
+        // Find UK Pronunciation Block
+        const ukRegex = /class="[^"]*pron-uk[^"]*"[^>]*data-src-mp3="([^"]+)"[\s\S]*?<span\s+class="phon">([^<]+)<\/span>/i;
+        const ukMatch = ukRegex.exec(html);
+        if (ukMatch) {
+          if (!result.ukAudio) result.ukAudio = ukMatch[1];
+          if (!result.ukIpa) result.ukIpa = ukMatch[2].trim();
+        }
+
+        // Find US Pronunciation Block
+        const usRegex = /class="[^"]*pron-us[^"]*"[^>]*data-src-mp3="([^"]+)"[\s\S]*?<span\s+class="phon">([^<]+)<\/span>/i;
+        const usMatch = usRegex.exec(html);
+        if (usMatch) {
+          if (!result.usAudio) result.usAudio = usMatch[1];
+          if (!result.usIpa) result.usIpa = usMatch[2].trim();
+        }
+      }
+    } catch (err) {
+      console.warn('Oxford fallback fetch error:', err);
+    }
+  }
+
   return result;
 }
 
