@@ -247,6 +247,9 @@ export async function reviewWord(wordId, q, typedWrongWord = null) {
     if (typedWrongWord.toLowerCase() !== card.word.toLowerCase()) {
       card.misspellings.push(typedWrongWord);
     }
+  } else {
+    // reset missspellings since they spelled it right in practice
+    card.misspellings = [];
   }
 
   await saveWords(list);

@@ -202,9 +202,9 @@ export async function renderStats() {
     if (leechesList) {
       leechesList.innerHTML = '';
       
-      // Filter words that have misspelled logs
+      // Filter words that have misspelled logs and are not mastered
       const leeches = words
-        .filter(w => Array.isArray(w.misspellings) && w.misspellings.length > 0)
+        .filter(w => !w.mastered && Array.isArray(w.misspellings) && w.misspellings.length > 0)
         // Sort descending by misspelling count
         .sort((a, b) => b.misspellings.length - a.misspellings.length)
         .slice(0, 10); // top 10 leeches
