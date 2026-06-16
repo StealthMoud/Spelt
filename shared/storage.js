@@ -310,29 +310,90 @@ export async function resetDb() {
   await setStored('spelt_streak', { current: 0, lastDate: '' });
 }
 
-// Fetch a real English sentence example dynamically from Tatoeba API
+// Fetch a real English sentence example dynamically from Cambridge, Oxford, or Tatoeba
 export async function fetchDynamicExample(word) {
+  const cleanWord = word.trim().toLowerCase();
+  
+  const pickBest = (list) => {
+    const filtered = list.filter(s => {
+      if (s.length < 20 || s.length > 150) return false;
+      if (/[\[\]\(\)\/=\|]/.test(s)) return false;
+      return true;
+    });
+    const target = filtered.length > 0 ? filtered : list;
+    if (target.length === 0) return '';
+    target.sort((a, b) => {
+      const diffA = Math.abs(a.length - 60);
+      const diffB = Math.abs(b.length - 60);
+      return diffA - diffB;
+    });
+    return target[0];
+  };
+
+  // 1. Try Cambridge Dictionary
   try {
-    const url = `https://tatoeba.org/en/api_v0/search?from=eng&to=eng&query=${encodeURIComponent(word)}`;
+    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (res.ok) {
+      const html = await res.text();
+      const regex = /<(div|span)\s+class=\"examp[^>]*>([\s\S]*?)<\/\1>/g;
+      let match;
+      const sentences = [];
+      while (match = regex.exec(html)) {
+        let text = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        if (text && text.toLowerCase().includes(cleanWord)) {
+          text = text.replace(/^\[[^\]]+\]\s*/, '').trim();
+          text = text.replace(/^(formal|informal|humorous|approving|disapproving|saying)\s+/i, '');
+          sentences.push(text);
+        }
+      }
+      const best = pickBest(sentences);
+      if (best) return best;
+    }
+  } catch (err) {
+    console.error('Cambridge example fetch failed:', err);
+  }
+
+  // 2. Try Oxford Learner's Dictionary
+  try {
+    const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (res.ok) {
+      const html = await res.text();
+      const regex = /<span\s+class=\"x\"[^>]*>([\s\S]*?)<\/span>/g;
+      let match;
+      const sentences = [];
+      while (match = regex.exec(html)) {
+        const text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        if (text && text.toLowerCase().includes(cleanWord)) {
+          sentences.push(text);
+        }
+      }
+      const best = pickBest(sentences);
+      if (best) return best;
+    }
+  } catch (err) {
+    console.error('Oxford example fetch failed:', err);
+  }
+
+  // 3. Try Tatoeba API
+  try {
+    const url = `https://tatoeba.org/en/api_v0/search?from=eng&to=eng&query=${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       if (data && data.results && data.results.length > 0) {
-        const wordLower = word.toLowerCase();
-        const matches = data.results.filter(r => 
-          r.lang === 'eng' && 
-          r.text.toLowerCase().includes(wordLower)
-        );
-        if (matches.length > 0) {
-          // Sort by sentence length to select the most concise and clean example first
-          matches.sort((a, b) => a.text.length - b.text.length);
-          return matches[0].text;
-        }
+        const sentences = data.results
+          .filter(r => r.lang === 'eng' && r.text.toLowerCase().includes(cleanWord))
+          .map(r => r.text);
+        const best = pickBest(sentences);
+        if (best) return best;
       }
     }
   } catch (err) {
     console.error('Tatoeba example fetch error:', err);
   }
+
   return '';
 }
 

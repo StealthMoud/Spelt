@@ -10,7 +10,9 @@
     "http://localhost:8080/*",
     "https://tatoeba.org/*",
     "https://translate.googleapis.com/*",
-    "https://api.dictionaryapi.dev/*"
+    "https://api.dictionaryapi.dev/*",
+    "https://dictionary.cambridge.org/*",
+    "https://www.oxfordlearnersdictionaries.com/*"
   ],
   "background": {
     "service_worker": "background.js",
