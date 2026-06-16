@@ -7,13 +7,39 @@ let currentStatsTimeframe = '7d';
  */
 export async function initStats() {
   const select = document.getElementById('stats-timeframe-select');
+  const customRange = document.getElementById('stats-custom-range');
+  const dateStart = document.getElementById('stats-date-start');
+  const dateEnd = document.getElementById('stats-date-end');
+
+  if (dateStart && !dateStart.value) {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    dateStart.value = d.toISOString().split('T')[0];
+  }
+  if (dateEnd && !dateEnd.value) {
+    dateEnd.value = new Date().toISOString().split('T')[0];
+  }
+
   if (select) {
     select.value = currentStatsTimeframe;
+    if (customRange) {
+      customRange.style.display = currentStatsTimeframe === 'custom' ? 'flex' : 'none';
+    }
     select.addEventListener('change', async (e) => {
       currentStatsTimeframe = e.target.value;
+      if (customRange) {
+        customRange.style.display = currentStatsTimeframe === 'custom' ? 'flex' : 'none';
+      }
       await renderStats();
     });
   }
+
+  const handleDateChange = async () => {
+    await renderStats();
+  };
+  if (dateStart) dateStart.addEventListener('change', handleDateChange);
+  if (dateEnd) dateEnd.addEventListener('change', handleDateChange);
+
   await renderStats();
 }
 
@@ -109,6 +135,109 @@ export async function renderStats() {
           total: 0
         });
       }
+    } else if (timeframe === 'custom') {
+      const dateStartEl = document.getElementById('stats-date-start');
+      const dateEndEl = document.getElementById('stats-date-end');
+      
+      let startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+      let endDate = new Date();
+      
+      if (dateStartEl && dateStartEl.value) {
+        startDate = new Date(dateStartEl.value);
+      }
+      if (dateEndEl && dateEndEl.value) {
+        endDate = new Date(dateEndEl.value);
+      }
+      
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      
+      if (startDate > endDate) {
+        const temp = startDate;
+        startDate = endDate;
+        endDate = temp;
+      }
+      
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays <= 30) {
+        barWidth = Math.min(20, Math.max(4, Math.floor(200 / Math.max(diffDays, 1))));
+        const current = new Date(startDate);
+        while (current <= endDate) {
+          const dateStr = current.toISOString().split('T')[0];
+          let label = '';
+          if (diffDays <= 7) {
+            label = current.toLocaleDateString(undefined, { weekday: 'short' });
+          } else {
+            const curTime = current.getTime();
+            const startVal = startDate.getTime();
+            const endVal = endDate.getTime();
+            const midVal = startVal + (endVal - startVal) / 2;
+            const threshold = 12 * 60 * 60 * 1000;
+            if (Math.abs(curTime - startVal) < threshold) {
+              label = current.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
+            } else if (Math.abs(curTime - endVal) < threshold) {
+              label = 'Today';
+            } else if (Math.abs(curTime - midVal) < threshold) {
+              label = current.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
+            }
+          }
+          chartBuckets.push({
+            dateStr,
+            type: 'day',
+            label,
+            fullDateLabel: current.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+            correct: 0,
+            incorrect: 0,
+            total: 0
+          });
+          current.setDate(current.getDate() + 1);
+        }
+      } else if (diffDays <= 180) {
+        const current = new Date(startDate);
+        while (current <= endDate) {
+          const weekStart = new Date(current);
+          const weekEnd = new Date(current);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+          if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
+          
+          chartBuckets.push({
+            dateStr: weekStart.toISOString().split('T')[0],
+            weekStart: new Date(weekStart),
+            weekEnd: new Date(weekEnd),
+            type: 'week',
+            label: `${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
+            fullDateLabel: `${weekStart.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`,
+            correct: 0,
+            incorrect: 0,
+            total: 0
+          });
+          
+          current.setDate(current.getDate() + 7);
+        }
+        barWidth = Math.min(20, Math.max(6, Math.floor(200 / chartBuckets.length)));
+      } else {
+        const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+        const limit = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+        while (current <= limit) {
+          const year = current.getFullYear();
+          const month = current.getMonth();
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+          chartBuckets.push({
+            dateStr,
+            type: 'month',
+            label: current.toLocaleDateString(undefined, { month: 'short' }),
+            fullDateLabel: current.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+            correct: 0,
+            incorrect: 0,
+            total: 0
+          });
+          current.setMonth(current.getMonth() + 1);
+        }
+        barWidth = Math.min(20, Math.max(6, Math.floor(200 / chartBuckets.length)));
+      }
     }
 
     // Process reviews and button distribution
@@ -128,15 +257,19 @@ export async function renderStats() {
           // Match review to one of the buckets
           if (h.date) {
             const rDate = new Date(h.date);
-            let matchKey = '';
+            const rTime = rDate.getTime();
             
-            if (timeframe === '7d' || timeframe === '30d') {
-              matchKey = rDate.toISOString().split('T')[0];
-            } else {
-              matchKey = `${rDate.getFullYear()}-${String(rDate.getMonth() + 1).padStart(2, '0')}`;
-            }
+            const matchingBucket = chartBuckets.find(b => {
+              if (b.type === 'day') {
+                return b.dateStr === rDate.toISOString().split('T')[0];
+              } else if (b.type === 'week') {
+                return rTime >= b.weekStart.getTime() && rTime <= b.weekEnd.getTime();
+              } else if (b.type === 'month') {
+                return b.dateStr === `${rDate.getFullYear()}-${String(rDate.getMonth() + 1).padStart(2, '0')}`;
+              }
+              return false;
+            });
 
-            const matchingBucket = chartBuckets.find(b => b.dateStr === matchKey);
             if (matchingBucket) {
               matchingBucket.total++;
               if (isCorrect) {
@@ -234,8 +367,8 @@ export async function renderStats() {
           <div class="bar-track" style="width: ${barWidth}px;">
             ${bucket.total > 0 ? `
               <div class="bar-fill" style="height: ${heightPercent}%;">
-                <div class="bar-segment correct" style="height: ${correctPct}%;" title="${bucket.correct} Correct ${bucket.type === 'month' ? 'in' : 'on'} ${bucket.fullDateLabel}"></div>
-                <div class="bar-segment incorrect" style="height: ${incorrectPct}%;" title="${bucket.incorrect} Incorrect ${bucket.type === 'month' ? 'in' : 'on'} ${bucket.fullDateLabel}"></div>
+                <div class="bar-segment correct" style="height: ${correctPct}%;" title="${bucket.correct} Correct ${bucket.type === 'day' ? 'on' : 'during'} ${bucket.fullDateLabel}"></div>
+                <div class="bar-segment incorrect" style="height: ${incorrectPct}%;" title="${bucket.incorrect} Incorrect ${bucket.type === 'day' ? 'on' : 'during'} ${bucket.fullDateLabel}"></div>
               </div>
             ` : `<div class="bar-fill empty" style="height: 4px;"></div>`}
           </div>

@@ -313,8 +313,22 @@
               <option value="30d">30 Days</option>
               <option value="6m">6 Months</option>
               <option value="1y">1 Year</option>
+              <option value="custom">Custom...</option>
             </select>
           </div>
+          
+          <!-- Custom Date Pickers Range Container -->
+          <div id="stats-custom-range" class="stats-custom-range" style="display: none;">
+            <div class="date-picker-group">
+              <span>From:</span>
+              <input type="date" id="stats-date-start" class="premium-input date-input-field">
+            </div>
+            <div class="date-picker-group">
+              <span>To:</span>
+              <input type="date" id="stats-date-end" class="premium-input date-input-field">
+            </div>
+          </div>
+
           <div id="stats-chart-container" class="bar-chart-container">
             <!-- Dynamically populated vertical bars -->
           </div>

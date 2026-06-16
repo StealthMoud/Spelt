@@ -1710,3 +1710,42 @@ kbd:hover {
   font-weight: 600;
 }
 
+/* Custom Date Pickers Range styling */
+.stats-custom-range {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  border-top: 1px dashed hsla(155, 10%, 25%, 0.12);
+  padding-top: 6px;
+  animation: slideDownFadeIn var(--transition-fast) ease forwards;
+}
+
+.date-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.date-input-field {
+  flex: 1;
+  font-size: 0.62rem !important;
+  padding: 2px 4px !important;
+  height: 20px !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer;
+  background: var(--bg-dark) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-main) !important;
+  outline: none;
+}
+
+.date-input-field::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(110deg);
+  cursor: pointer;
+}
+
