@@ -307,12 +307,18 @@ export async function playWordAudio(word, accent) {
     const cambridge = await fetchCambridgePronunciation(cleanWord);
     const cambridgeUrl = accent === 'uk' ? cambridge.ukAudio : cambridge.usAudio;
     if (cambridgeUrl) {
-      const audio = new Audio(cambridgeUrl);
-      await audio.play();
-      return;
+      // Fetch the audio file as a Blob to bypass Chrome Extension CORS limitations on cross-origin media sources
+      const response = await fetch(cambridgeUrl);
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const audio = new Audio(blobUrl);
+        await audio.play();
+        return;
+      }
     }
   } catch (err) {
-    console.log('Cambridge pronunciation fetch failed, trying static fallback...');
+    console.log('Cambridge pronunciation play failed, trying static fallback...', err);
   }
 
   const suffix = accent === 'uk' ? 'gb' : 'us';
