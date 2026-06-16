@@ -55,8 +55,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   initSandbox(
-    () => reloadVaultList(),
-    () => syncPracticeDeck()
+    async () => {
+      await reloadVaultList();
+      await refreshStats();
+    },
+    async () => {
+      await syncPracticeDeck();
+      await refreshStats();
+    }
   );
 
   // Initialize stats dashboard logic
