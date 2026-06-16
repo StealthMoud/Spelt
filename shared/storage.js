@@ -305,7 +305,7 @@ export async function resetDb() {
   await setStored('spelt_streak', { current: 0, lastDate: '' });
 }
 
-// Dynamic fallback example sentence generator for context clues
+// Dynamic fallback example sentence generator for context clues (handles abstract nouns and reponsive academic phrasing)
 export function getFallbackExample(word, partOfSpeech = '') {
   const cleanWord = word.trim();
   const lowerWord = cleanWord.toLowerCase();
@@ -329,21 +329,28 @@ export function getFallbackExample(word, partOfSpeech = '') {
     'tomorrow': 'We plan to start our journey early tomorrow morning.',
     'beach': 'The children spent all day playing on the sandy beach.',
     'easy': 'The test was very easy and everyone passed it.',
-    'again': 'Please try to spell the word again if you make a mistake.'
+    'again': 'Please try to spell the word again if you make a mistake.',
+    'perseverance': 'Her perseverance in the face of multiple setbacks was truly inspiring.',
+    'society': 'A civilized society is judged by how it treats its most vulnerable members.',
+    'collaboration': 'Successful collaboration between the two teams led to a breakthrough.',
+    'analysis': 'The research team conducted a detailed analysis of the data.',
+    'correlation': 'There is a strong correlation between regular study and high test scores.',
+    'validation': 'The experiment provided validation for the scientist\'s theory.',
+    'assessment': 'The teacher conducted an assessment of the students\' language skills.',
+    'significant': 'The new results show a significant improvement over the previous trials.'
   };
 
   if (map[lowerWord]) return map[lowerWord];
 
   const pos = partOfSpeech.trim().toLowerCase();
   if (pos.includes('noun')) {
-    return `The local guide showed us where to find the best ${cleanWord} in town.`;
+    return `Their discussion focused on the role of ${cleanWord} in modern society.`;
   } else if (pos.includes('verb')) {
-    return `They decided to ${cleanWord} the process to make it more efficient.`;
+    return `We must find a way to ${cleanWord} under these difficult circumstances.`;
   } else if (pos.includes('adjective') || pos.includes('adj')) {
-    const article = /^[aeiou]/i.test(lowerWord) ? 'an' : 'a';
-    return `It was ${article} ${cleanWord} moment that changed everything for us.`;
+    return `We need to take a ${cleanWord} approach to solve this problem.`;
   } else if (pos.includes('adverb') || pos.includes('adv')) {
-    return `She completed the assignment ${cleanWord} before the deadline.`;
+    return `The team worked ${cleanWord} to complete the project on time.`;
   } else {
     return `Could you please use the word ${cleanWord} in a proper sentence?`;
   }
