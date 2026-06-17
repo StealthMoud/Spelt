@@ -94,9 +94,14 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
     if (e.key === ' ' || e.code === 'Space') {
       const msg = document.getElementById('feedback-msg');
       if (msg) {
+        const sandboxTab = document.getElementById('sandbox-tab');
+        const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
+        const activeEl = document.activeElement;
+        const isTyping = activeEl && (activeEl.id === 'word-input' || activeEl.id === 'manual-correction-input') && activeEl.value.trim() !== '';
+        
         const testEl = document.createElement('p');
         testEl.className = 'global-space-debug';
-        testEl.textContent = 'Global Space Pressed! (listening)';
+        testEl.textContent = `defPrev: ${e.defaultPrevented}, sandboxAct: ${isSandboxActive}, isType: ${isTyping}, disp: ${msg.style.display}`;
         testEl.style.color = 'cyan';
         testEl.style.fontSize = '0.65rem';
         testEl.style.margin = '4px 0 0';
