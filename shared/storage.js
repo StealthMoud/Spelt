@@ -4,6 +4,18 @@
 const isExt = typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
 let mockDb = {}; // memory fallback for Node environment
 
+function triggerNetworkError() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('network-error'));
+  }
+}
+
+function triggerNetworkSuccess() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('network-success'));
+  }
+}
+
 // Helper to wrap storage calls in promise
 async function getStored(key) {
   if (isExt) {
@@ -91,13 +103,15 @@ export async function fetchTranslation(word, targetLang) {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(word)}`;
     const res = await fetch(url);
     if (res.ok) {
+      triggerNetworkSuccess();
       const data = await res.json();
       if (data && data[0] && data[0][0] && data[0][0][0]) {
         return data[0][0][0].trim();
       }
     }
   } catch (err) {
-    console.error('Translation error:', err);
+    triggerNetworkError();
+    console.info('Translation fetch failed:', err.message || err);
   }
   return '';
 }
@@ -313,6 +327,7 @@ export async function playWordAudio(word, accent) {
       // Fetch the audio file as a Blob to bypass Chrome Extension CORS limitations on cross-origin media sources
       const response = await fetch(cambridgeUrl);
       if (response.ok) {
+        triggerNetworkSuccess();
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         const audio = new Audio(blobUrl);
@@ -321,7 +336,8 @@ export async function playWordAudio(word, accent) {
       }
     }
   } catch (err) {
-    console.log('Cambridge pronunciation play failed, trying static fallback...', err);
+    triggerNetworkError();
+    console.info('Cambridge pronunciation play failed, trying static fallback...');
   }
 
   const suffix = accent === 'uk' ? 'gb' : 'us';
@@ -332,12 +348,13 @@ export async function playWordAudio(word, accent) {
     await audio.play();
     return;
   } catch (e) {
-    console.log('Google static audio failed, trying API dictionary fallback...');
+    console.info('Google static audio failed, trying API dictionary fallback...');
   }
 
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`);
     if (res.ok) {
+      triggerNetworkSuccess();
       const data = await res.json();
       if (data && data[0] && data[0].phonetics) {
         const audios = data[0].phonetics.map(p => p.audio).filter(Boolean);
@@ -351,7 +368,8 @@ export async function playWordAudio(word, accent) {
       }
     }
   } catch (e) {
-    console.log('Dictionary API fallback failed, using TTS...');
+    triggerNetworkError();
+    console.info('Dictionary API fallback failed, using TTS...');
   }
 
   const lang = accent === 'uk' ? 'en-GB' : 'en-US';
@@ -376,6 +394,7 @@ export async function fetchDynamicDefinition(word) {
     const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
+      triggerNetworkSuccess();
       const html = await res.text();
       const regex = /<div\s+class=\"def ddef_d[^>]*>([\s\S]*?)<\/div>/g;
       let match;
@@ -386,7 +405,8 @@ export async function fetchDynamicDefinition(word) {
       }
     }
   } catch (err) {
-    console.error('Cambridge definition fetch failed:', err);
+    triggerNetworkError();
+    console.info('Cambridge definition fetch failed:', err.message || err);
   }
 
   // 2. Try Oxford Learner's Dictionary
@@ -394,6 +414,7 @@ export async function fetchDynamicDefinition(word) {
     const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
+      triggerNetworkSuccess();
       const html = await res.text();
       const regex = /<span\s+class=\"def\"[^>]*>([\s\S]*?)<\/span>/g;
       let match;
@@ -404,7 +425,8 @@ export async function fetchDynamicDefinition(word) {
       }
     }
   } catch (err) {
-    console.error('Oxford definition fetch failed:', err);
+    triggerNetworkError();
+    console.info('Oxford definition fetch failed:', err.message || err);
   }
 
   return '';
@@ -435,6 +457,7 @@ export async function fetchDynamicExample(word) {
     const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
+      triggerNetworkSuccess();
       const html = await res.text();
       const regex = /<(div|span)\s+class=\"examp[^>]*>([\s\S]*?)<\/\1>/g;
       let match;
@@ -451,7 +474,8 @@ export async function fetchDynamicExample(word) {
       if (best) return best;
     }
   } catch (err) {
-    console.error('Cambridge example fetch failed:', err);
+    triggerNetworkError();
+    console.info('Cambridge example fetch failed:', err.message || err);
   }
 
   // 2. Try Oxford Learner's Dictionary
@@ -459,6 +483,7 @@ export async function fetchDynamicExample(word) {
     const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
+      triggerNetworkSuccess();
       const html = await res.text();
       const regex = /<span\s+class=\"x\"[^>]*>([\s\S]*?)<\/span>/g;
       let match;
@@ -473,7 +498,8 @@ export async function fetchDynamicExample(word) {
       if (best) return best;
     }
   } catch (err) {
-    console.error('Oxford example fetch failed:', err);
+    triggerNetworkError();
+    console.info('Oxford example fetch failed:', err.message || err);
   }
 
   // 3. Try Tatoeba API
@@ -481,6 +507,7 @@ export async function fetchDynamicExample(word) {
     const url = `https://tatoeba.org/en/api_v0/search?from=eng&to=eng&query=${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url);
     if (res.ok) {
+      triggerNetworkSuccess();
       const data = await res.json();
       if (data && data.results && data.results.length > 0) {
         const sentences = data.results
@@ -491,7 +518,8 @@ export async function fetchDynamicExample(word) {
       }
     }
   } catch (err) {
-    console.error('Tatoeba example fetch error:', err);
+    triggerNetworkError();
+    console.info('Tatoeba example fetch error:', err.message || err);
   }
 
   return '';
@@ -607,6 +635,7 @@ export async function fetchCambridgePronunciation(word) {
     const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
+      triggerNetworkSuccess();
       const html = await res.text();
       const ukRegex = /<span\s+class="uk dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
       const ukMatch = ukRegex.exec(html);
@@ -639,7 +668,8 @@ export async function fetchCambridgePronunciation(word) {
       }
     }
   } catch (err) {
-    console.warn('Cambridge fetch error:', err);
+    triggerNetworkError();
+    console.info('Cambridge fetch failed:', err.message || err);
   }
 
   // 2. Fall back to Oxford Learner's Dictionary if Cambridge results are empty (due to 403 or other blocks)
@@ -650,6 +680,7 @@ export async function fetchCambridgePronunciation(word) {
       const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
       const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
       if (res.ok) {
+        triggerNetworkSuccess();
         const html = await res.text();
         
         // Find UK Pronunciation Block
@@ -669,7 +700,8 @@ export async function fetchCambridgePronunciation(word) {
         }
       }
     } catch (err) {
-      console.warn('Oxford fallback fetch error:', err);
+      triggerNetworkError();
+      console.info('Oxford fallback fetch failed:', err.message || err);
     }
   }
 

@@ -119,6 +119,15 @@ body {
   padding: 2px 8px;
   border-radius: var(--radius-full);
   border: 1px solid hsla(155, 10%, 25%, 0.1);
+  transition: all var(--transition-slow) ease;
+}
+.session-info.offline {
+  background: hsla(5, 85%, 20%, 0.15);
+  border: 1px solid hsla(5, 85%, 55%, 0.25);
+}
+.session-info.connection-error {
+  background: hsla(38, 92%, 20%, 0.15);
+  border: 1px solid hsla(38, 92%, 50%, 0.25);
 }
 
 .user-status-dot {
@@ -131,6 +140,65 @@ body {
 .user-status-dot.active {
   background-color: var(--success);
   box-shadow: 0 0 8px var(--success);
+}
+
+@keyframes status-pulse {
+  0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--danger-glow)); }
+  50% { transform: scale(1.25); opacity: 0.8; filter: drop-shadow(0 0 6px var(--danger-glow)); }
+  100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--danger-glow)); }
+}
+@keyframes status-pulse-warning {
+  0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--warning-glow)); }
+  50% { transform: scale(1.25); opacity: 0.8; filter: drop-shadow(0 0 6px var(--warning-glow)); }
+  100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--warning-glow)); }
+}
+
+.user-status-dot.offline {
+  background-color: var(--danger);
+  box-shadow: 0 0 8px var(--danger);
+  animation: status-pulse 2.2s infinite ease-in-out;
+}
+.user-status-dot.connection-error {
+  background-color: var(--warning);
+  box-shadow: 0 0 8px var(--warning);
+  animation: status-pulse-warning 2.2s infinite ease-in-out;
+}
+
+/* Offline warning banner */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: hsla(5, 85%, 20%, 0.4);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid hsla(5, 85%, 55%, 0.2);
+  color: var(--text-main);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0 12px;
+  transition: all var(--transition-slow) var(--spring-curve);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+}
+.offline-banner.visible {
+  max-height: 32px;
+  padding: 6px 12px;
+  opacity: 1;
+}
+.offline-banner svg {
+  width: 13px;
+  height: 13px;
+  color: var(--danger);
+  flex-shrink: 0;
+}
+.offline-banner.connection-error {
+  background: hsla(38, 92%, 18%, 0.4);
+  border-bottom: 1px solid hsla(38, 92%, 50%, 0.2);
+}
+.offline-banner.connection-error svg {
+  color: var(--warning);
 }
 
 /* Tab Navigation with dynamic spring active bar */
