@@ -91,6 +91,20 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
 
   // Bind shortcuts: Enter to Accept / Play audio, Escape to Reject / Close
   window.addEventListener('keydown', async (e) => {
+    if (e.key === ' ' || e.code === 'Space') {
+      const msg = document.getElementById('feedback-msg');
+      if (msg) {
+        const testEl = document.createElement('p');
+        testEl.className = 'global-space-debug';
+        testEl.textContent = 'Global Space Pressed! (listening)';
+        testEl.style.color = 'cyan';
+        testEl.style.fontSize = '0.65rem';
+        testEl.style.margin = '4px 0 0';
+        testEl.style.textAlign = 'center';
+        msg.querySelectorAll('.global-space-debug').forEach(el => el.remove());
+        msg.appendChild(testEl);
+      }
+    }
     if (e.defaultPrevented) return;
     const sandboxTab = document.getElementById('sandbox-tab');
     const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
