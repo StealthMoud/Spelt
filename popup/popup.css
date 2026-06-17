@@ -1143,6 +1143,29 @@ body {
   transform: scale(0.96);
 }
 
+.audio-play-btn-mini {
+  background: hsla(155, 10%, 20%, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast) var(--spring-curve);
+  line-height: 1.2;
+}
+.audio-play-btn-mini:hover {
+  background: hsla(155, 65%, 48%, 0.15);
+  border-color: var(--primary);
+  color: var(--text-main);
+  transform: scale(1.08);
+}
+.audio-play-btn-mini:active {
+  transform: scale(0.94);
+}
+
 .feedback-close-btn {
   position: absolute;
   top: 8px;

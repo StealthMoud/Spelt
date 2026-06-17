@@ -1,5 +1,5 @@
 // Compact word vault list and modal controller for Spelt extension popup
-import { getWords, addWord, saveWords, translateWord, fetchCambridgePronunciation } from '../../shared/storage.js';
+import { getWords, addWord, saveWords, translateWord, fetchCambridgePronunciation, playWordAudio } from '../../shared/storage.js';
 
 let wordsList = [];
 let onVaultUpdatedCallback = null;
@@ -15,6 +15,24 @@ export async function initVault(onVaultUpdated) {
     closeModal();
   });
   document.getElementById('word-entry-form').addEventListener('submit', saveWord);
+
+  document.getElementById('form-play-uk')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const word = document.getElementById('form-word')?.value.trim();
+    if (word) {
+      playWordAudio(word, 'uk').catch(err => console.error(err));
+    }
+  });
+
+  document.getElementById('form-play-us')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const word = document.getElementById('form-word')?.value.trim();
+    if (word) {
+      playWordAudio(word, 'us').catch(err => console.error(err));
+    }
+  });
 
   document.getElementById('form-auto-fill-btn')?.addEventListener('click', async (e) => {
     e.preventDefault();

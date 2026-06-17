@@ -521,7 +521,13 @@
           <div class="modal-input-row">
             <div class="modal-input-item" style="flex: 1;">
               <label>Pronunciation</label>
-              <input type="text" id="form-transcription" class="premium-input" placeholder="/.../" autocomplete="off">
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input type="text" id="form-transcription" class="premium-input" placeholder="/.../" autocomplete="off" style="padding-right: 48px;">
+                <div class="form-audio-controls" style="position: absolute; right: 5px; display: flex; gap: 3px;">
+                  <button type="button" id="form-play-uk" class="audio-play-btn-mini" title="Play UK pronunciation">UK</button>
+                  <button type="button" id="form-play-us" class="audio-play-btn-mini" title="Play US pronunciation">US</button>
+                </div>
+              </div>
             </div>
             <div class="modal-input-item" style="flex: 1;">
               <label>Translation</label>
