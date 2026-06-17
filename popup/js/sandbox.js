@@ -115,7 +115,6 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
           await acceptSuggestion(suggestion, original);
         }
       } else if (e.key === ' ') {
-        if (isTyping) return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) {
@@ -137,7 +136,6 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         const wordInput = document.getElementById('word-input');
         if (wordInput) { wordInput.focus(); }
       } else if (e.key === ' ') {
-        if (isTyping) return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) {
