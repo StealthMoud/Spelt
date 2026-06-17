@@ -91,26 +91,6 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
 
   // Bind shortcuts: Enter to Accept / Play audio, Escape to Reject / Close
   window.addEventListener('keydown', async (e) => {
-    if (e.key === ' ' || e.code === 'Space') {
-      const msg = document.getElementById('feedback-msg');
-      if (msg) {
-        const sandboxTab = document.getElementById('sandbox-tab');
-        const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
-        const activeEl = document.activeElement;
-        const isTyping = activeEl && (activeEl.id === 'word-input' || activeEl.id === 'manual-correction-input') && activeEl.value.trim() !== '';
-        
-        const testEl = document.createElement('p');
-        testEl.className = 'global-space-debug';
-        testEl.textContent = `defPrev: ${e.defaultPrevented}, sandboxAct: ${isSandboxActive}, isType: ${isTyping}, disp: ${msg.style.display}`;
-        testEl.style.color = 'cyan';
-        testEl.style.fontSize = '0.65rem';
-        testEl.style.margin = '4px 0 0';
-        testEl.style.textAlign = 'center';
-        msg.querySelectorAll('.global-space-debug').forEach(el => el.remove());
-        msg.appendChild(testEl);
-      }
-    }
-    if (e.defaultPrevented) return;
     const sandboxTab = document.getElementById('sandbox-tab');
     const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
     if (!isSandboxActive) return;
@@ -124,33 +104,6 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
     const acceptBtn = document.querySelector('.accept-suggestion-btn');
     const rejectBtn = document.querySelector('.reject-suggestion-btn');
 
-    const debugPlay = () => {
-      const debugEl = document.createElement('p');
-      debugEl.className = 'sandbox-debug-msg';
-      debugEl.style.fontSize = '0.65rem';
-      debugEl.style.color = 'var(--warning)';
-      debugEl.style.margin = '4px 0 0';
-      debugEl.style.textAlign = 'center';
-      
-      const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
-      if (!audioBtn) {
-        debugEl.textContent = 'Debug: Play button element not found!';
-      } else {
-        const word = audioBtn.getAttribute('data-word');
-        const accent = audioBtn.getAttribute('data-accent') || 'us';
-        debugEl.textContent = `Debug: playing "${word}" (${accent})...`;
-        if (word) {
-          playWordAudio(word, accent)
-            .then(() => { debugEl.textContent += ' SUCCESS'; })
-            .catch(err => { debugEl.textContent += ` ERROR: ${err.message}`; });
-        } else {
-          debugEl.textContent = 'Debug: Word attribute is empty!';
-        }
-      }
-      feedbackMsg.querySelectorAll('.sandbox-debug-msg').forEach(el => el.remove());
-      feedbackMsg.appendChild(debugEl);
-    };
-
     if (acceptBtn && rejectBtn) {
       if (e.key === 'Enter') {
         if (isTyping) return;
@@ -162,7 +115,12 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         }
       } else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
-        debugPlay();
+        const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
+        if (audioBtn) {
+          const word = audioBtn.getAttribute('data-word');
+          const accent = audioBtn.getAttribute('data-accent') || 'us';
+          if (word) playWordAudio(word, accent).catch(err => console.error(err));
+        }
       } else if (e.key === 'Escape') {
         e.preventDefault();
         const original = rejectBtn.getAttribute('data-original');
@@ -178,7 +136,12 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         if (wordInput) { wordInput.focus(); }
       } else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
-        debugPlay();
+        const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
+        if (audioBtn) {
+          const word = audioBtn.getAttribute('data-word');
+          const accent = audioBtn.getAttribute('data-accent') || 'us';
+          if (word) playWordAudio(word, accent).catch(err => console.error(err));
+        }
       } else if (e.key === 'Escape') {
         e.preventDefault();
         feedbackMsg.style.display = 'none';
