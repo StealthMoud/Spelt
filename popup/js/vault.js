@@ -34,6 +34,33 @@ export async function initVault(onVaultUpdated) {
     }
   });
 
+  window.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('word-form-modal');
+    if (!modal || modal.style.display === 'none') return;
+
+    if (e.key === ' ' || e.key === 'Escape') {
+      const active = document.activeElement;
+      const isTyping = active && (
+        active.tagName === 'TEXTAREA' ||
+        (active.tagName === 'INPUT' && ['text', 'search', 'password', 'email', 'number', 'url'].includes(active.type))
+      );
+
+      if (isTyping) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.key === ' ') {
+        const word = document.getElementById('form-word')?.value.trim();
+        if (word) {
+          playWordAudio(word, 'uk').catch(err => console.error(err));
+        }
+      } else if (e.key === 'Escape') {
+        closeModal();
+      }
+    }
+  });
+
   document.getElementById('form-auto-fill-btn')?.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
