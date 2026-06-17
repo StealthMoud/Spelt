@@ -105,6 +105,33 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
     const acceptBtn = document.querySelector('.accept-suggestion-btn');
     const rejectBtn = document.querySelector('.reject-suggestion-btn');
 
+    const debugPlay = () => {
+      const debugEl = document.createElement('p');
+      debugEl.className = 'sandbox-debug-msg';
+      debugEl.style.fontSize = '0.65rem';
+      debugEl.style.color = 'var(--warning)';
+      debugEl.style.margin = '4px 0 0';
+      debugEl.style.textAlign = 'center';
+      
+      const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
+      if (!audioBtn) {
+        debugEl.textContent = 'Debug: Play button element not found!';
+      } else {
+        const word = audioBtn.getAttribute('data-word');
+        const accent = audioBtn.getAttribute('data-accent') || 'us';
+        debugEl.textContent = `Debug: playing "${word}" (${accent})...`;
+        if (word) {
+          playWordAudio(word, accent)
+            .then(() => { debugEl.textContent += ' SUCCESS'; })
+            .catch(err => { debugEl.textContent += ` ERROR: ${err.message}`; });
+        } else {
+          debugEl.textContent = 'Debug: Word attribute is empty!';
+        }
+      }
+      feedbackMsg.querySelectorAll('.sandbox-debug-msg').forEach(el => el.remove());
+      feedbackMsg.appendChild(debugEl);
+    };
+
     if (acceptBtn && rejectBtn) {
       if (e.key === 'Enter') {
         if (isTyping) return;
@@ -114,14 +141,9 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         if (suggestion && original) {
           await acceptSuggestion(suggestion, original);
         }
-      } else if (e.key === ' ') {
+      } else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
-        const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
-        if (audioBtn) {
-          const word = audioBtn.getAttribute('data-word');
-          const accent = audioBtn.getAttribute('data-accent') || 'us';
-          if (word) playWordAudio(word, accent).catch(err => console.error(err));
-        }
+        debugPlay();
       } else if (e.key === 'Escape') {
         e.preventDefault();
         const original = rejectBtn.getAttribute('data-original');
@@ -135,14 +157,9 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         e.preventDefault();
         const wordInput = document.getElementById('word-input');
         if (wordInput) { wordInput.focus(); }
-      } else if (e.key === ' ') {
+      } else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
-        const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
-        if (audioBtn) {
-          const word = audioBtn.getAttribute('data-word');
-          const accent = audioBtn.getAttribute('data-accent') || 'us';
-          if (word) playWordAudio(word, accent).catch(err => console.error(err));
-        }
+        debugPlay();
       } else if (e.key === 'Escape') {
         e.preventDefault();
         feedbackMsg.style.display = 'none';
