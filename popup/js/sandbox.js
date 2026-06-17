@@ -97,7 +97,7 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
     if (!isSandboxActive) return;
 
     const activeEl = document.activeElement;
-    const isTyping = activeEl && (activeEl.id === 'word-input' || activeEl.id === 'manual-correction-input');
+    const isTyping = activeEl && (activeEl.id === 'word-input' || activeEl.id === 'manual-correction-input') && activeEl.value.trim() !== '';
 
     const feedbackMsg = document.getElementById('feedback-msg');
     if (!feedbackMsg || feedbackMsg.style.display === 'none') return;
@@ -118,7 +118,11 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         if (isTyping) return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
-        if (audioBtn) audioBtn.click();
+        if (audioBtn) {
+          const word = audioBtn.getAttribute('data-word');
+          const accent = audioBtn.getAttribute('data-accent') || 'us';
+          if (word) playWordAudio(word, accent).catch(err => console.error(err));
+        }
       } else if (e.key === 'Escape') {
         e.preventDefault();
         const original = rejectBtn.getAttribute('data-original');
@@ -136,7 +140,11 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         if (isTyping) return;
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
-        if (audioBtn) audioBtn.click();
+        if (audioBtn) {
+          const word = audioBtn.getAttribute('data-word');
+          const accent = audioBtn.getAttribute('data-accent') || 'us';
+          if (word) playWordAudio(word, accent).catch(err => console.error(err));
+        }
       } else if (e.key === 'Escape') {
         e.preventDefault();
         feedbackMsg.style.display = 'none';
