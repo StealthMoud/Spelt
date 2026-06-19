@@ -85,6 +85,29 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         const originalVal = saveBtn.getAttribute('data-original-word');
         const wrongVal = saveBtn.getAttribute('data-wrong-attempt') || '';
         if (correctVal && originalVal) await handleManualCorrection(correctVal, originalVal, wrongVal);
+        return;
+      }
+
+      const acceptAnywayBtn = e.target.closest('.accept-anyway-btn');
+      if (acceptAnywayBtn) {
+        const correct = feedbackMsg.getAttribute('data-correct-word');
+        const original = feedbackMsg.getAttribute('data-original-word');
+        const wrong = feedbackMsg.getAttribute('data-wrong-attempt');
+        if (correct && original) {
+          await saveManualAnyway(correct, original, wrong);
+        }
+        return;
+      }
+
+      const editCorrectionBtn = e.target.closest('.edit-correction-btn');
+      if (editCorrectionBtn) {
+        const original = feedbackMsg.getAttribute('data-original-word');
+        const suggestions = JSON.parse(feedbackMsg.getAttribute('data-suggestions-list') || '[]');
+        const wrong = feedbackMsg.getAttribute('data-wrong-attempt');
+        if (original) {
+          await showManualCorrectionForm(original, suggestions, wrong);
+        }
+        return;
       }
     });
   }
@@ -103,6 +126,20 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
 
     const acceptBtn = document.querySelector('.accept-suggestion-btn');
     const rejectBtn = document.querySelector('.reject-suggestion-btn');
+    const acceptAnywayBtn = document.querySelector('.accept-anyway-btn');
+    const editCorrectionBtn = document.querySelector('.edit-correction-btn');
+
+    if (acceptAnywayBtn && editCorrectionBtn) {
+      if (e.key === 'Enter') {
+        if (isTyping) return;
+        e.preventDefault();
+        acceptAnywayBtn.click();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        editCorrectionBtn.click();
+      }
+      return;
+    }
 
     if (acceptBtn && rejectBtn) {
       if (e.key === 'Enter') {
@@ -459,10 +496,71 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       if (reloadVaultListCallback) await reloadVaultListCallback();
       if (loadPracticeDeckCallback) await loadPracticeDeckCallback();
     } else {
+      feedbackMsg.setAttribute('data-correct-word', correctWord);
+      feedbackMsg.setAttribute('data-original-word', originalWord);
+      feedbackMsg.setAttribute('data-wrong-attempt', wrongAttempt);
       const suggestions = await findSuggestions(correctWord);
-      await showManualCorrectionForm(originalWord, suggestions, correctWord);
+      feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify(suggestions));
+      feedbackMsg.innerHTML = `
+        ${closeBtnHtml}
+        <h4 style="color: var(--warning); margin: 0 0 4px;">⚠️ Unrecognized Word</h4>
+        <p style="font-size: 0.72rem; margin: 8px 0; line-height: 1.4;">"${correctWord}" is not recognized in the dictionary. It might be misspelled.</p>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button type="button" class="submit-btn accept-anyway-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Save Anyway</span>
+          </button>
+          <button type="button" class="submit-btn edit-correction-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem; background: hsla(5, 80%, 15%, 0.3); border-color: var(--danger); color: var(--danger);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Edit Spelling</span>
+          </button>
+        </div>
+      `;
     }
   } catch (err) { feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`; }
+}
+
+async function saveManualAnyway(correctWord, originalWord, wrongAttempt = '') {
+  const feedbackMsg = document.getElementById('feedback-msg');
+  feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
+  try {
+    const words = await getWords();
+    const exists = words.some(w => w.word.toLowerCase() === correctWord.toLowerCase());
+
+    const def = 'Custom word entry';
+    const partOfSpeech = '';
+    const example = getFallbackExample(correctWord, partOfSpeech);
+    
+    let translation = '';
+    try {
+      translation = await translateWord(correctWord);
+    } catch (_) {}
+
+    await registerMisspelling(correctWord, originalWord, { definition: def, transcription: '/--/', partOfSpeech, example });
+    if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
+      await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: '/--/', partOfSpeech, example });
+    }
+
+    feedbackMsg.innerHTML = `
+      ${closeBtnHtml}
+      <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
+      <p style="margin: 4px 0; font-size: 0.72rem;">${exists ? `Updated existing word <strong>${correctWord}</strong> (${originalWord} saved as misspelling).` : `Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).`}</p>
+      
+      <div class="feedback-details">
+        <div class="feedback-meta-row">
+          ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+      </div>
+      ${renderAudioButtons(correctWord)}
+    `;
+    document.getElementById('word-input').value = '';
+    document.getElementById('word-input')?.blur();
+    if (reloadVaultListCallback) await reloadVaultListCallback();
+    if (loadPracticeDeckCallback) await loadPracticeDeckCallback();
+  } catch (err) {
+    feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`;
+  }
 }
 
 function renderAudioButtons(word) {

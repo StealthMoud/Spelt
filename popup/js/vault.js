@@ -444,42 +444,63 @@ async function saveWord(e) {
   const example = document.getElementById('form-example').value.trim();
   const mastered = document.getElementById('form-mastered').checked;
 
-  try {
-    if (id) {
-      const idx = wordsList.findIndex(w => w.id === id);
-      if (idx !== -1) {
-        const wasMastered = wordsList[idx].mastered;
-        wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example, mastered };
-        if (mastered && !wasMastered) {
-          wordsList[idx].rep = 0;
-          wordsList[idx].interval = 30;
-          wordsList[idx].nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-        } else if (!mastered && wasMastered) {
-          wordsList[idx].mastered = false;
-          wordsList[idx].rep = 0;
-          wordsList[idx].interval = 1;
-          wordsList[idx].nextDate = Date.now();
+  const executeSave = async () => {
+    try {
+      if (id) {
+        const idx = wordsList.findIndex(w => w.id === id);
+        if (idx !== -1) {
+          const wasMastered = wordsList[idx].mastered;
+          wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example, mastered };
+          if (mastered && !wasMastered) {
+            wordsList[idx].rep = 0;
+            wordsList[idx].interval = 30;
+            wordsList[idx].nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+          } else if (!mastered && wasMastered) {
+            wordsList[idx].mastered = false;
+            wordsList[idx].rep = 0;
+            wordsList[idx].interval = 1;
+            wordsList[idx].nextDate = Date.now();
+          }
+          await saveWords(wordsList);
         }
-        await saveWords(wordsList);
+      } else {
+        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, mastered });
+        if (mastered) {
+          const list = await getWords();
+          const wObj = list.find(w => w.id === addedWord.id);
+          if (wObj) {
+            wObj.interval = 30;
+            wObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+            await saveWords(list);
+          }
+        }
       }
-    } else {
-      const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, mastered });
-      if (mastered) {
-        const list = await getWords();
-        const wObj = list.find(w => w.id === addedWord.id);
-        if (wObj) {
-          wObj.interval = 30;
-          wObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-          await saveWords(list);
-        }
+      closeModal();
+      await reloadVaultList();
+      if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+    } catch (err) {
+      showConfirm('Error', err.message || 'Save failed', null, false);
+    }
+  };
+
+  try {
+    const isOnline = navigator.onLine;
+    if (isOnline) {
+      const checkRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`);
+      if (!checkRes.ok) {
+        showConfirm(
+          'Unrecognized Word',
+          `"${word}" is not recognized in the dictionary. Do you want to save it anyway?`,
+          executeSave
+        );
+        return;
       }
     }
-    closeModal();
-    await reloadVaultList();
-    if (onVaultUpdatedCallback) onVaultUpdatedCallback();
   } catch (err) {
-    showConfirm('Error', err.message || 'Save failed', null, false);
+    console.warn('Word validation failed:', err);
   }
+
+  await executeSave();
 }
 
 function deleteWord(wordObj) {
