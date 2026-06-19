@@ -68,6 +68,9 @@ export async function initPractice(onDeckUpdated) {
     const practiceTab = document.getElementById('practice-tab');
     if (!practiceTab || !practiceTab.classList.contains('active')) return;
 
+    const editModal = document.getElementById('word-form-modal');
+    if (editModal && editModal.style.display === 'flex') return;
+
     const cardEl = document.getElementById('popup-deck-card');
     if (!cardEl) return;
 
@@ -76,12 +79,10 @@ export async function initPractice(onDeckUpdated) {
       const isTyping = document.activeElement === spellInput;
 
       if (e.key === ' ') {
-        if (!isTyping) {
-          e.preventDefault();
-          e.stopPropagation();
-          const playBtn = document.querySelector('#practice-audio-container .audio-play-btn');
-          if (playBtn) playBtn.click();
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        const playBtn = document.querySelector('#practice-audio-container .audio-play-btn');
+        if (playBtn) playBtn.click();
       } else if (e.key === 'Enter') {
         if (!isTyping) {
           e.preventDefault();
@@ -169,7 +170,7 @@ function showPracticeCard() {
   }
 
   cardEl.style.display = 'flex'; emptyEl.style.display = 'none';
-  cardEl.classList.remove('flipped'); spellInput.value = ''; spellInput.focus();
+  cardEl.classList.remove('flipped'); spellInput.value = '';
 
   const card = dueCards[0];
   document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';

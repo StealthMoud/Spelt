@@ -501,7 +501,7 @@ async function findSuggestions(word) {
     });
   }
   matches.sort((a, b) => a.dist - b.dist);
-  return [...new Set(matches.map(m => m.word))].slice(0, 4);
+  return [...new Set(matches.map(m => m.word).filter(w => w.toLowerCase() !== lower))].slice(0, 4);
 }
 
 function getLevenshtein(a, b) {

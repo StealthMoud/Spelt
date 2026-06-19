@@ -20,7 +20,7 @@ export function initNavigation(onTabChanged) {
       if (target === 'sandbox-tab') {
         document.getElementById('word-input')?.focus();
       } else if (target === 'practice-tab') {
-        document.getElementById('spelling-input')?.focus();
+        // No auto-focus on practice input to allow Enter key navigation
       } else if (target === 'vault-tab') {
         document.getElementById('vault-search')?.focus();
       } else if (target === 'stats-tab') {
