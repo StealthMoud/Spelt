@@ -2098,3 +2098,27 @@ kbd:hover {
   text-shadow: 0 0 6px var(--primary-glow);
 }
 
+/* Hide standard browser up/down number inputs spinners for a cleaner premium look and reponsive layout */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+#stats-leeches-custom-container:focus-within {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+#stats-leeches-custom-container .table-icon-btn:hover {
+  color: var(--primary-light) !important;
+  background: hsla(155, 65%, 48%, 0.1) !important;
+}
+
+#stats-leeches-custom-container .table-icon-btn:active {
+  transform: scale(0.9);
+}
+

@@ -308,18 +308,19 @@ export async function initStats() {
 
   const limitSelect = document.getElementById('stats-leeches-limit');
   const customInput = document.getElementById('stats-leeches-custom-val');
+  const customContainer = document.getElementById('stats-leeches-custom-container');
   if (limitSelect) limitSelect.value = currentLeechesLimit;
-  if (customInput) {
-    customInput.value = currentLeechesCustomVal;
-    customInput.style.display = currentLeechesLimit === 'custom' ? 'block' : 'none';
+  if (customInput) customInput.value = currentLeechesCustomVal;
+  if (customContainer) {
+    customContainer.style.display = currentLeechesLimit === 'custom' ? 'flex' : 'none';
   }
 
   document.getElementById('stats-leeches-limit')?.addEventListener('change', (e) => {
     currentLeechesLimit = e.target.value;
     chrome.storage?.local.set({ spelt_leeches_limit: currentLeechesLimit });
-    const cInput = document.getElementById('stats-leeches-custom-val');
-    if (cInput) {
-      cInput.style.display = currentLeechesLimit === 'custom' ? 'block' : 'none';
+    const cContainer = document.getElementById('stats-leeches-custom-container');
+    if (cContainer) {
+      cContainer.style.display = currentLeechesLimit === 'custom' ? 'flex' : 'none';
     }
     renderStats().catch(err => console.error(err));
   });
@@ -330,6 +331,26 @@ export async function initStats() {
     renderStats().catch(err => console.error(err));
   });
 
+  document.getElementById('stats-leeches-dec-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('stats-leeches-custom-val');
+    if (input) {
+      const newVal = Math.max(1, (parseInt(input.value, 10) || 15) - 1);
+      input.value = newVal;
+      input.dispatchEvent(new Event('input'));
+    }
+  });
+
+  document.getElementById('stats-leeches-inc-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('stats-leeches-custom-val');
+    if (input) {
+      const newVal = Math.min(500, (parseInt(input.value, 10) || 15) + 1);
+      input.value = newVal;
+      input.dispatchEvent(new Event('input'));
+    }
+  });
+
   // Listen for storage changes in real-time
   chrome.storage?.onChanged.addListener((changes, area) => {
     if (area === 'local') {
@@ -337,9 +358,9 @@ export async function initStats() {
         currentLeechesLimit = changes.spelt_leeches_limit.newValue || '10';
         const el = document.getElementById('stats-leeches-limit');
         if (el) el.value = currentLeechesLimit;
-        const cInput = document.getElementById('stats-leeches-custom-val');
-        if (cInput) {
-          cInput.style.display = currentLeechesLimit === 'custom' ? 'block' : 'none';
+        const cContainer = document.getElementById('stats-leeches-custom-container');
+        if (cContainer) {
+          cContainer.style.display = currentLeechesLimit === 'custom' ? 'flex' : 'none';
         }
         renderStats().catch(err => console.error(err));
       }
