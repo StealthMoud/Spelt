@@ -452,6 +452,20 @@
             </select>
           </div>
           <div class="settings-block">
+            <strong>Past Mistakes Display Limit</strong>
+            <p>Select how many past typos are shown on the back of the practice card.</p>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select id="setting-errors-limit" class="premium-input select-input" style="flex: 1; margin-top: 2px;">
+                <option value="5">Last 5 mistakes</option>
+                <option value="10">Last 10 mistakes</option>
+                <option value="50">Last 50 mistakes</option>
+                <option value="all">All mistakes</option>
+                <option value="custom">Custom count...</option>
+              </select>
+              <input type="number" id="setting-errors-custom-val" class="premium-input" style="width: 70px; display: none; padding: 5px; font-size: 0.72rem; margin-top: 2px;" min="1" max="500" value="15">
+            </div>
+          </div>
+          <div class="settings-block">
             <strong>Keyboard Shortcuts</strong>
             <p>Study efficiently without moving your hands to the mouse:</p>
             <div class="shortcut-list">

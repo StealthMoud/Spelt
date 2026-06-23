@@ -401,7 +401,7 @@ function updateBulkUIState(filtered) {
   });
 }
 
-export function openModal(wordObj = null) {
+export async function openModal(wordObj = null) {
   const modal = document.getElementById('word-form-modal');
   document.getElementById('edit-word-id').value = wordObj ? wordObj.id : '';
   document.getElementById('form-word').value = wordObj ? wordObj.word : '';
@@ -417,7 +417,24 @@ export function openModal(wordObj = null) {
   if (pastContainer && pastList) {
     const validErrors = wordObj && wordObj.misspellings ? wordObj.misspellings.filter(Boolean) : [];
     if (validErrors.length > 0) {
-      pastList.textContent = [...new Set(validErrors)].join(', ');
+      // Slice mistakes based on limit settings (allows selecting last 5, 10, 50, custom, or all)
+      let limit = 0;
+      try {
+        const settings = await chrome.storage?.local.get(['spelt_errors_limit', 'spelt_errors_custom_val']);
+        const errorsLimit = settings?.spelt_errors_limit || 'all';
+        if (errorsLimit === 'custom') {
+          limit = parseInt(settings?.spelt_errors_custom_val, 10) || 15;
+        } else if (errorsLimit !== 'all') {
+          limit = parseInt(errorsLimit, 10) || 5;
+        }
+      } catch (_) {}
+
+      let uniqueErrors = [...new Set(validErrors)];
+      if (limit > 0 && uniqueErrors.length > limit) {
+        uniqueErrors = uniqueErrors.slice(-limit);
+      }
+
+      pastList.textContent = uniqueErrors.join(', ');
       pastContainer.style.display = 'block';
     } else {
       pastContainer.style.display = 'none';

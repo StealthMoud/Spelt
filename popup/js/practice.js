@@ -194,7 +194,7 @@ function showPracticeCard() {
   }
 }
 
-function checkSpelling() {
+async function checkSpelling() {
   const card = dueCards[0];
   if (!card) return;
 
@@ -236,14 +236,31 @@ function checkSpelling() {
     displayErrors.push(typed);
   }
   if (displayErrors.length > 0) {
-    document.getElementById('back-misspellings-display').textContent = [...new Set(displayErrors)].join(', ');
+    // Slice mistakes based on limit settings (allows selecting last 5, 10, 50, custom, or all)
+    let limit = 0;
+    try {
+      const settings = await chrome.storage?.local.get(['spelt_errors_limit', 'spelt_errors_custom_val']);
+      const errorsLimit = settings?.spelt_errors_limit || 'all';
+      if (errorsLimit === 'custom') {
+        limit = parseInt(settings?.spelt_errors_custom_val, 10) || 15;
+      } else if (errorsLimit !== 'all') {
+        limit = parseInt(errorsLimit, 10) || 5;
+      }
+    } catch (_) {}
+
+    let uniqueErrors = [...new Set(displayErrors)];
+    if (limit > 0 && uniqueErrors.length > limit) {
+      uniqueErrors = uniqueErrors.slice(-limit);
+    }
+
+    document.getElementById('back-misspellings-display').textContent = uniqueErrors.join(', ');
     pastContainer.style.display = 'block';
   } else { pastContainer.style.display = 'none'; }
 
   // Calculate and update dynamic SRS button hints
-  const hardInterval = calcSM2(3, card.rep, card.interval, card.ef).interval;
-  const goodInterval = calcSM2(4, card.rep, card.interval, card.ef).interval;
-  const easyInterval = calcSM2(5, card.rep, card.interval, card.ef).interval;
+  const hardInterval = calcSM2(3, card.rep, card.interval, card.ef, 1.0, isOk).interval;
+  const goodInterval = calcSM2(4, card.rep, card.interval, card.ef, 1.0, isOk).interval;
+  const easyInterval = calcSM2(5, card.rep, card.interval, card.ef, 1.0, isOk).interval;
 
   const hardHint = document.querySelector('#practice-tab .srs-hard .srs-hint');
   const goodHint = document.querySelector('#practice-tab .srs-good .srs-hint');

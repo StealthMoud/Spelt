@@ -44,7 +44,7 @@ async function setStored(key, value) {
 // Compute SM-2 spaced repetition values
 // quality: 1 (Again), 3 (Hard), 4 (Good), 5 (Easy)
 // multiplier scales the computed interval (0.5 = faster, 1.5 = slower)
-export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0) {
+export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect = true) {
   let rep = prevRep;
   let interval = prevInt;
   let ef = prevEF;
@@ -64,8 +64,24 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0) {
       else if (q === 5) interval = 12;
       else interval = 6;
     } else {
-      interval = Math.round(prevInt * ef);
+      // Scale interval growth based on card rating (prevents flat intervals when user reivews)
+      let qualityMultiplier = 1.0;
+      if (q === 3) qualityMultiplier = 0.6;      // Hard
+      else if (q === 5) qualityMultiplier = 1.3; // Easy
+
+      interval = Math.round(prevInt * ef * qualityMultiplier);
+
+      // Keep progression strictly forward
+      if (interval <= prevInt) {
+        interval = prevInt + 1;
+      }
     }
+
+    // Penalty if spelled incorectly so they re-test sooner
+    if (!isCorrect) {
+      interval = Math.round(interval * 0.5);
+    }
+
     rep += 1;
   }
 
@@ -247,7 +263,8 @@ export async function reviewWord(wordId, q, typedWrongWord = null) {
   if (index === -1) throw new Error('Word not found');
 
   const card = list[index];
-  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef, 1.0);
+  const isCorrect = (typedWrongWord === null || typedWrongWord === undefined);
+  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef, 1.0, isCorrect);
 
   card.rep = rep;
   card.interval = interval;
