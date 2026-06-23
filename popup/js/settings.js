@@ -18,53 +18,12 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_target_lang: e.target.value });
   });
 
-  // Mistakes limit sync
-  chrome.storage?.local.get(['spelt_errors_limit', 'spelt_errors_custom_val'], (res) => {
-    const limit = res.spelt_errors_limit || 'all';
-    const customVal = res.spelt_errors_custom_val || 15;
-    
-    const limitSelect = document.getElementById('setting-errors-limit');
-    const customInput = document.getElementById('setting-errors-custom-val');
-    
-    if (limitSelect) limitSelect.value = limit;
-    if (customInput) {
-      customInput.value = customVal;
-      customInput.style.display = limit === 'custom' ? 'block' : 'none';
-    }
-  });
-
-  document.getElementById('setting-errors-limit')?.addEventListener('change', (e) => {
-    const val = e.target.value;
-    chrome.storage?.local.set({ spelt_errors_limit: val });
-    const customInput = document.getElementById('setting-errors-custom-val');
-    if (customInput) {
-      customInput.style.display = val === 'custom' ? 'block' : 'none';
-    }
-  });
-
-  document.getElementById('setting-errors-custom-val')?.addEventListener('input', (e) => {
-    const val = parseInt(e.target.value, 10) || 15;
-    chrome.storage?.local.set({ spelt_errors_custom_val: val });
-  });
-
   // Keep setting values synchronized in real-time
   chrome.storage?.onChanged.addListener((changes, area) => {
     if (area === 'local') {
       if (changes.spelt_target_lang) {
         const el = document.getElementById('setting-target-lang');
         if (el) el.value = changes.spelt_target_lang.newValue || 'none';
-      }
-      if (changes.spelt_errors_limit) {
-        const el = document.getElementById('setting-errors-limit');
-        if (el) el.value = changes.spelt_errors_limit.newValue || 'all';
-        const customInput = document.getElementById('setting-errors-custom-val');
-        if (customInput) {
-          customInput.style.display = (changes.spelt_errors_limit.newValue === 'custom') ? 'block' : 'none';
-        }
-      }
-      if (changes.spelt_errors_custom_val) {
-        const customInput = document.getElementById('setting-errors-custom-val');
-        if (customInput) customInput.value = changes.spelt_errors_custom_val.newValue || 15;
       }
     }
   });

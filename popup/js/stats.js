@@ -1,6 +1,8 @@
 import { getWords, getStreak } from '../../shared/storage.js';
 
 let currentStatsTimeframe = '7d';
+let currentLeechesLimit = '10';
+let currentLeechesCustomVal = 15;
 let calCurrentMonth = new Date().getMonth();
 let calCurrentYear = new Date().getFullYear();
 let calStartDate = null;
@@ -293,6 +295,59 @@ export async function initStats() {
           chartPanel.style.position = '';
           chartPanel.classList.remove('calendar-open');
         }
+      }
+    }
+  });
+
+  // Load leeches limit settings synchronously/blocking before first render
+  try {
+    const res = await chrome.storage?.local.get(['spelt_leeches_limit', 'spelt_leeches_custom_val']);
+    currentLeechesLimit = res?.spelt_leeches_limit || '10';
+    currentLeechesCustomVal = res?.spelt_leeches_custom_val || 15;
+  } catch (_) {}
+
+  const limitSelect = document.getElementById('stats-leeches-limit');
+  const customInput = document.getElementById('stats-leeches-custom-val');
+  if (limitSelect) limitSelect.value = currentLeechesLimit;
+  if (customInput) {
+    customInput.value = currentLeechesCustomVal;
+    customInput.style.display = currentLeechesLimit === 'custom' ? 'block' : 'none';
+  }
+
+  document.getElementById('stats-leeches-limit')?.addEventListener('change', (e) => {
+    currentLeechesLimit = e.target.value;
+    chrome.storage?.local.set({ spelt_leeches_limit: currentLeechesLimit });
+    const cInput = document.getElementById('stats-leeches-custom-val');
+    if (cInput) {
+      cInput.style.display = currentLeechesLimit === 'custom' ? 'block' : 'none';
+    }
+    renderStats().catch(err => console.error(err));
+  });
+
+  document.getElementById('stats-leeches-custom-val')?.addEventListener('input', (e) => {
+    currentLeechesCustomVal = parseInt(e.target.value, 10) || 15;
+    chrome.storage?.local.set({ spelt_leeches_custom_val: currentLeechesCustomVal });
+    renderStats().catch(err => console.error(err));
+  });
+
+  // Listen for storage changes in real-time
+  chrome.storage?.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      if (changes.spelt_leeches_limit) {
+        currentLeechesLimit = changes.spelt_leeches_limit.newValue || '10';
+        const el = document.getElementById('stats-leeches-limit');
+        if (el) el.value = currentLeechesLimit;
+        const cInput = document.getElementById('stats-leeches-custom-val');
+        if (cInput) {
+          cInput.style.display = currentLeechesLimit === 'custom' ? 'block' : 'none';
+        }
+        renderStats().catch(err => console.error(err));
+      }
+      if (changes.spelt_leeches_custom_val) {
+        currentLeechesCustomVal = changes.spelt_leeches_custom_val.newValue || 15;
+        const cInput = document.getElementById('stats-leeches-custom-val');
+        if (cInput) cInput.value = currentLeechesCustomVal;
+        renderStats().catch(err => console.error(err));
       }
     }
   });
@@ -699,12 +754,32 @@ export async function renderStats() {
     if (leechesList) {
       leechesList.innerHTML = '';
       
-      // Filter words that have misspelled logs and are not mastered
-      const leeches = words
+      // Get leeches display limit settings from memory to prevent async race conditions
+      let limit = 10;
+      if (currentLeechesLimit === 'custom') {
+        limit = currentLeechesCustomVal;
+      } else if (currentLeechesLimit === 'all') {
+        limit = words.length;
+      } else {
+        limit = parseInt(currentLeechesLimit, 10) || 10;
+      }
+      
+      // Filter words that have misspelled logs and are not mastered, keeping only unique words
+      const uniqueLeechesMap = new Map();
+      words
         .filter(w => !w.mastered && Array.isArray(w.misspellings) && w.misspellings.length > 0)
+        .forEach(w => {
+          const key = w.word.toLowerCase();
+          if (!uniqueLeechesMap.has(key) || uniqueLeechesMap.get(key).misspellings.length < w.misspellings.length) {
+            uniqueLeechesMap.set(key, w);
+          }
+        });
+
+      const allLeeches = Array.from(uniqueLeechesMap.values())
         // Sort descending by misspelling count
-        .sort((a, b) => b.misspellings.length - a.misspellings.length)
-        .slice(0, 10); // top 10 leeches
+        .sort((a, b) => b.misspellings.length - a.misspellings.length);
+
+      const leeches = allLeeches.slice(0, limit);
 
       if (leeches.length === 0) {
         if (leechesEmpty) leechesEmpty.style.display = 'block';

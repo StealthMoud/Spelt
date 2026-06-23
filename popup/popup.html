@@ -416,10 +416,22 @@
         </div>
 
         <div class="stats-panel leeches-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span>Hardest Words (Leech List)</span>
-          </h4>
+          <div class="stats-header-row">
+            <h4 class="stats-section-title" style="border-bottom: none; padding-bottom: 0;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>Hardest Words (Leech List)</span>
+            </h4>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <select id="stats-leeches-limit" class="premium-input vault-sort-select" style="width: 90px; height: 24px; padding: 2px 24px 2px 8px !important; font-size: 0.65rem !important;">
+                <option value="5">Top 5</option>
+                <option value="10" selected>Top 10</option>
+                <option value="50">Top 50</option>
+                <option value="all">All</option>
+                <option value="custom">Custom...</option>
+              </select>
+              <input type="number" id="stats-leeches-custom-val" class="premium-input" style="width: 48px; display: none; padding: 2px 6px; font-size: 0.65rem; height: 24px;" min="1" max="500" value="15">
+            </div>
+          </div>
           <div id="stats-leeches-empty" class="leeches-empty-text" style="display: none;">
             No spelling errors logged yet. Good job!
           </div>
@@ -450,20 +462,6 @@
               <option value="ko">Korean (한국어)</option>
               <option value="tr">Turkish (Türkçe)</option>
             </select>
-          </div>
-          <div class="settings-block">
-            <strong>Past Mistakes Display Limit</strong>
-            <p>Select how many past typos are shown on the back of the practice card.</p>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <select id="setting-errors-limit" class="premium-input select-input" style="flex: 1; margin-top: 2px;">
-                <option value="5">Last 5 mistakes</option>
-                <option value="10">Last 10 mistakes</option>
-                <option value="50">Last 50 mistakes</option>
-                <option value="all">All mistakes</option>
-                <option value="custom">Custom count...</option>
-              </select>
-              <input type="number" id="setting-errors-custom-val" class="premium-input" style="width: 70px; display: none; padding: 5px; font-size: 0.72rem; margin-top: 2px;" min="1" max="500" value="15">
-            </div>
           </div>
           <div class="settings-block">
             <strong>Keyboard Shortcuts</strong>

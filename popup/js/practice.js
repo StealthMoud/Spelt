@@ -194,7 +194,7 @@ function showPracticeCard() {
   }
 }
 
-async function checkSpelling() {
+function checkSpelling() {
   const card = dueCards[0];
   if (!card) return;
 
@@ -236,24 +236,7 @@ async function checkSpelling() {
     displayErrors.push(typed);
   }
   if (displayErrors.length > 0) {
-    // Slice mistakes based on limit settings (allows selecting last 5, 10, 50, custom, or all)
-    let limit = 0;
-    try {
-      const settings = await chrome.storage?.local.get(['spelt_errors_limit', 'spelt_errors_custom_val']);
-      const errorsLimit = settings?.spelt_errors_limit || 'all';
-      if (errorsLimit === 'custom') {
-        limit = parseInt(settings?.spelt_errors_custom_val, 10) || 15;
-      } else if (errorsLimit !== 'all') {
-        limit = parseInt(errorsLimit, 10) || 5;
-      }
-    } catch (_) {}
-
-    let uniqueErrors = [...new Set(displayErrors)];
-    if (limit > 0 && uniqueErrors.length > limit) {
-      uniqueErrors = uniqueErrors.slice(-limit);
-    }
-
-    document.getElementById('back-misspellings-display').textContent = uniqueErrors.join(', ');
+    document.getElementById('back-misspellings-display').textContent = [...new Set(displayErrors)].join(', ');
     pastContainer.style.display = 'block';
   } else { pastContainer.style.display = 'none'; }
 
