@@ -17,7 +17,7 @@ function triggerNetworkSuccess() {
 }
 
 // Helper to wrap storage calls in promise
-async function getStored(key) {
+export async function getStored(key) {
   if (isExt) {
     const res = await chrome.storage.local.get(key);
     return res[key];
@@ -30,7 +30,7 @@ async function getStored(key) {
   }
 }
 
-async function setStored(key, value) {
+export async function setStored(key, value) {
   if (isExt) {
     await chrome.storage.local.set({ [key]: value });
   } else {
@@ -163,6 +163,8 @@ export async function addWord(wordData) {
   }
   const exampleVal = wordData.example?.trim() || await fetchDynamicExample(normalizedWord) || getFallbackExample(normalizedWord, partOfSpeechVal);
 
+  const exampleTranslationVal = wordData.exampleTranslation?.trim() || '';
+
   let transcriptionVal = wordData.transcription?.trim() || '';
   if (!transcriptionVal || transcriptionVal === '/--/') {
     try {
@@ -183,6 +185,7 @@ export async function addWord(wordData) {
     partOfSpeech: partOfSpeechVal,
     translation: translation,
     example: exampleVal,
+    exampleTranslation: exampleTranslationVal,
     tags: Array.isArray(wordData.tags) ? wordData.tags : [],
     notes: wordData.notes?.trim() || '',
     rep: 0,
@@ -238,6 +241,15 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
         wordObj.example = dynamicEx;
       } else if (!wordObj.example) {
         wordObj.example = getFallbackExample(correctWord, wordObj.partOfSpeech || details.partOfSpeech || '');
+      }
+    }
+
+    if (details.example && details.example !== wordObj.example) {
+      wordObj.example = details.example;
+      wordObj.exampleTranslation = details.exampleTranslation || '';
+    } else {
+      if (details.exampleTranslation && !wordObj.exampleTranslation) {
+        wordObj.exampleTranslation = details.exampleTranslation;
       }
     }
 

@@ -1059,6 +1059,53 @@ body {
   cursor: pointer;
 }
 
+.translate-example-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast) var(--spring-curve);
+  flex-shrink: 0;
+  padding: 0;
+}
+.translate-example-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  transform: scale(1.08);
+  background: hsla(155, 65%, 48%, 0.05);
+}
+.translate-example-btn:active {
+  transform: scale(0.95);
+}
+.translate-example-btn.active {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  background: hsla(155, 65%, 48%, 0.1);
+}
+.translate-example-btn svg {
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.feedback-example-translation,
+#practice-example-translation,
+#back-example-translation-display {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--primary-light);
+  font-style: italic;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+
 .btn-row {
   display: flex;
   gap: 8px;

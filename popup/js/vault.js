@@ -1,5 +1,5 @@
 // Compact word vault list and modal controller for Spelt extension popup
-import { getWords, addWord, saveWords, translateWord, fetchCambridgePronunciation, playWordAudio } from '../../shared/storage.js';
+import { getWords, addWord, saveWords, translateWord, fetchCambridgePronunciation, playWordAudio, getStored, fetchTranslation } from '../../shared/storage.js';
 
 let wordsList = [];
 let onVaultUpdatedCallback = null;
@@ -450,7 +450,9 @@ async function saveWord(e) {
         const idx = wordsList.findIndex(w => w.id === id);
         if (idx !== -1) {
           const wasMastered = wordsList[idx].mastered;
-          wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example, mastered };
+          const oldEx = wordsList[idx].example;
+          const exampleTranslation = oldEx === example ? (wordsList[idx].exampleTranslation || '') : '';
+          wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example, exampleTranslation, mastered };
           if (mastered && !wasMastered) {
             wordsList[idx].rep = 0;
             wordsList[idx].interval = 30;

@@ -97,8 +97,14 @@
                 <p id="practice-definition"></p>
               </div>
               <div id="practice-example-container" class="clue-item" style="display: none;">
-                <span class="clue-label">Example Context</span>
-                <p id="practice-example" style="font-style: italic; color: var(--primary-light);"></p>
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                  <span class="clue-label" style="margin: 0;">Example Context</span>
+                  <button type="button" id="practice-translate-btn" class="translate-example-btn" title="Translate Example">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                  </button>
+                </div>
+                <p id="practice-example" style="font-style: italic; color: var(--primary-light); margin-top: 4px;"></p>
+                <p id="practice-example-translation" style="display: none;"></p>
               </div>
               <div style="display: flex; gap: 12px; margin-top: 4px;">
                 <div class="clue-item" style="flex: 1;">
@@ -148,7 +154,16 @@
               <p><strong>Definition:</strong> <span id="back-definition-display"></span></p>
               <p><strong>Part of Speech:</strong> <span id="back-part-of-speech-display" style="text-transform: capitalize; font-style: italic;"></span></p>
               <div id="back-example-container" style="display: none;">
-                <p><strong>Example:</strong> <span id="back-example-display" style="font-style: italic; color: var(--primary-light);"></span></p>
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                  <p style="margin: 0;"><strong>Example:</strong></p>
+                  <button type="button" id="back-translate-btn" class="translate-example-btn" title="Translate Example">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                  </button>
+                </div>
+                <p id="back-example-display" style="font-style: italic; color: var(--primary-light); margin-top: 4px;"></p>
+                <p id="back-example-translation-container" style="display: none; margin-top: 2px;">
+                  <strong>Translation:</strong> <span id="back-example-translation-display"></span>
+                </p>
               </div>
               <div id="past-misspellings-container" style="display: none;">
                 <p><strong>Past errors:</strong> <span id="back-misspellings-display" style="color: var(--danger); font-weight: 500;"></span></p>

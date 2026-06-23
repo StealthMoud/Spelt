@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord, playWordAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2 } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], onDeckUpdatedCallback = null;
@@ -9,6 +9,95 @@ export async function initPractice(onDeckUpdated) {
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
   document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
+  });
+
+  document.getElementById('practice-translate-btn')?.addEventListener('click', async () => {
+    const card = dueCards[0];
+    if (!card) return;
+    const transEl = document.getElementById('practice-example-translation');
+    const translateBtn = document.getElementById('practice-translate-btn');
+    if (!transEl || !translateBtn) return;
+    
+    if (transEl.style.display === 'block') {
+      transEl.style.display = 'none';
+      translateBtn.classList.remove('active');
+      return;
+    }
+    
+    const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
+    if (!rawExample) return;
+    
+    let trans = card.exampleTranslation;
+    if (!trans) {
+      const targetLang = await getStored('spelt_target_lang');
+      if (!targetLang || targetLang === 'none') {
+        alert('Please configure a preferred language in Settings first.');
+        return;
+      }
+      transEl.textContent = 'Translating...';
+      transEl.style.display = 'block';
+      trans = await fetchTranslation(rawExample, targetLang);
+      if (trans) {
+        card.exampleTranslation = trans;
+        const allWords = await getWords();
+        const wObj = allWords.find(w => w.id === card.id);
+        if (wObj) {
+          wObj.exampleTranslation = trans;
+          await saveWords(allWords);
+        }
+      } else {
+        transEl.textContent = 'Translation failed';
+        return;
+      }
+    }
+    transEl.textContent = `"${trans}"`;
+    transEl.style.display = 'block';
+    translateBtn.classList.add('active');
+  });
+
+  document.getElementById('back-translate-btn')?.addEventListener('click', async () => {
+    const card = dueCards[0];
+    if (!card) return;
+    const transEl = document.getElementById('back-example-translation-display');
+    const container = document.getElementById('back-example-translation-container');
+    const translateBtn = document.getElementById('back-translate-btn');
+    if (!transEl || !container || !translateBtn) return;
+    
+    if (container.style.display === 'block') {
+      container.style.display = 'none';
+      translateBtn.classList.remove('active');
+      return;
+    }
+    
+    const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
+    if (!rawExample) return;
+    
+    let trans = card.exampleTranslation;
+    if (!trans) {
+      const targetLang = await getStored('spelt_target_lang');
+      if (!targetLang || targetLang === 'none') {
+        alert('Please configure a preferred language in Settings first.');
+        return;
+      }
+      transEl.textContent = 'Translating...';
+      container.style.display = 'block';
+      trans = await fetchTranslation(rawExample, targetLang);
+      if (trans) {
+        card.exampleTranslation = trans;
+        const allWords = await getWords();
+        const wObj = allWords.find(w => w.id === card.id);
+        if (wObj) {
+          wObj.exampleTranslation = trans;
+          await saveWords(allWords);
+        }
+      } else {
+        transEl.textContent = 'Translation failed';
+        return;
+      }
+    }
+    transEl.textContent = `"${trans}"`;
+    container.style.display = 'block';
+    translateBtn.classList.add('active');
   });
 
   document.querySelectorAll('.practice-edit-btn').forEach(btn => {
@@ -179,6 +268,8 @@ function showPracticeCard() {
   document.getElementById('practice-part-of-speech').textContent = card.partOfSpeech || 'unknown';
 
   const exampleContainer = document.getElementById('practice-example-container');
+  const exampleTransEl = document.getElementById('practice-example-translation');
+  const translateBtn = document.getElementById('practice-translate-btn');
   const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
   if (rawExample) {
     const blankedExample = censorWordInExample(card.word, rawExample);
@@ -186,6 +277,13 @@ function showPracticeCard() {
     exampleContainer.style.display = 'block';
   } else {
     exampleContainer.style.display = 'none';
+  }
+  if (exampleTransEl) {
+    exampleTransEl.style.display = 'none';
+    exampleTransEl.textContent = '';
+  }
+  if (translateBtn) {
+    translateBtn.classList.remove('active');
   }
 
   const audioContainer = document.getElementById('practice-audio-container');
@@ -217,12 +315,24 @@ function checkSpelling() {
   document.getElementById('back-part-of-speech-display').textContent = card.partOfSpeech || 'unknown';
 
   const backExampleContainer = document.getElementById('back-example-container');
+  const backTransContainer = document.getElementById('back-example-translation-container');
+  const backTransDisplay = document.getElementById('back-example-translation-display');
+  const backTranslateBtn = document.getElementById('back-translate-btn');
   const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
   if (rawExample) {
     document.getElementById('back-example-display').textContent = rawExample;
     backExampleContainer.style.display = 'block';
   } else {
     backExampleContainer.style.display = 'none';
+  }
+  if (backTransContainer) {
+    backTransContainer.style.display = 'none';
+  }
+  if (backTransDisplay) {
+    backTransDisplay.textContent = '';
+  }
+  if (backTranslateBtn) {
+    backTranslateBtn.classList.remove('active');
   }
 
   const audioContainer = document.getElementById('back-audio-container');

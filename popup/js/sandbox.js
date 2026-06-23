@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition, fetchCambridgePronunciation } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition, fetchCambridgePronunciation, getStored, fetchTranslation } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -106,6 +106,53 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         const wrong = feedbackMsg.getAttribute('data-wrong-attempt');
         if (original) {
           await showManualCorrectionForm(original, suggestions, wrong);
+        }
+        return;
+      }
+
+      const translateBtn = e.target.closest('.translate-example-btn');
+      if (translateBtn) {
+        const container = translateBtn.closest('.feedback-example');
+        if (container) {
+          const textEl = container.querySelector('.feedback-example-text');
+          const transEl = container.querySelector('.feedback-example-translation');
+          if (textEl && transEl) {
+            if (transEl.style.display === 'block') {
+              transEl.style.display = 'none';
+              translateBtn.classList.remove('active');
+            } else {
+              let trans = transEl.textContent.trim().replace(/^"|"$/g, '');
+              if (!trans) {
+                const targetLang = await getStored('spelt_target_lang');
+                if (!targetLang || targetLang === 'none') {
+                  alert('Please configure a preferred language in Settings first.');
+                  return;
+                }
+                const rawExample = textEl.textContent.trim().replace(/^"|"$/g, '');
+                transEl.textContent = 'Translating...';
+                transEl.style.display = 'block';
+                const fetchedTrans = await fetchTranslation(rawExample, targetLang);
+                if (fetchedTrans) {
+                  trans = fetchedTrans;
+                  transEl.textContent = `"${trans}"`;
+                  const wordAttr = container.getAttribute('data-word');
+                  if (wordAttr) {
+                    const allWords = await getWords();
+                    const wObj = allWords.find(w => w.word.toLowerCase() === wordAttr.toLowerCase());
+                    if (wObj) {
+                      wObj.exampleTranslation = trans;
+                      await saveWords(allWords);
+                    }
+                  }
+                } else {
+                  transEl.textContent = 'Translation failed';
+                  return;
+                }
+              }
+              transEl.style.display = 'block';
+              translateBtn.classList.add('active');
+            }
+          }
         }
         return;
       }
@@ -244,6 +291,7 @@ async function handleCorrectSpelling(apiData, word) {
   try {
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
+    const exampleTranslation = existing ? (existing.exampleTranslation || '') : '';
     let subtext = '';
     
     if (existing) {
@@ -267,9 +315,15 @@ async function handleCorrectSpelling(apiData, word) {
         </div>
         <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
         ${example ? `
-          <div class="feedback-example">
-            <span class="clue-label">Example</span>
+          <div class="feedback-example" data-word="${word}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span class="clue-label" style="margin: 0;">Example</span>
+              <button type="button" class="translate-example-btn" title="Translate Example">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+              </button>
+            </div>
             <p class="feedback-example-text">"${example}"</p>
+            <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
           </div>
         ` : ''}
       </div>
@@ -311,6 +365,9 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   if (!example) {
     example = await fetchDynamicExample(suggestion) || getFallbackExample(suggestion, partOfSpeech);
   }
+  const words = await getWords();
+  const existing = words.find(w => w.word.toLowerCase() === suggestion.toLowerCase());
+  const exampleTranslation = existing ? (existing.exampleTranslation || '') : '';
   let translation = '';
   try {
     translation = await translateWord(suggestion);
@@ -336,9 +393,15 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
       </div>
       <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
       ${example ? `
-        <div class="feedback-example">
-          <span class="clue-label">Example</span>
+        <div class="feedback-example" data-word="${suggestion}">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <span class="clue-label" style="margin: 0;">Example</span>
+            <button type="button" class="translate-example-btn" title="Translate Example">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+            </button>
+          </div>
           <p class="feedback-example-text">"${example}"</p>
+          <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
         </div>
       ` : ''}
     </div>
@@ -460,15 +523,17 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       if (!ipa) ipa = '/--/';
       const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
       const example = extractExample(data[0]) || await fetchDynamicExample(correctWord) || getFallbackExample(correctWord, partOfSpeech);
+      const existing = words.find(w => w.word.toLowerCase() === correctWord.toLowerCase());
+      const exampleTranslation = existing ? (existing.exampleTranslation || '') : '';
       
       let translation = '';
       try {
         translation = await translateWord(correctWord);
       } catch (_) {}
 
-      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech, example });
+      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech, example, exampleTranslation });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
-        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech, example });
+        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech, example, exampleTranslation });
       }
       
       feedbackMsg.innerHTML = `
@@ -483,9 +548,15 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
           </div>
           <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
           ${example ? `
-            <div class="feedback-example">
-              <span class="clue-label">Example</span>
+            <div class="feedback-example" data-word="${correctWord}">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span class="clue-label" style="margin: 0;">Example</span>
+                <button type="button" class="translate-example-btn" title="Translate Example">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                </button>
+              </div>
               <p class="feedback-example-text">"${example}"</p>
+              <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
             </div>
           ` : ''}
         </div>
