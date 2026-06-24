@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord, playWordAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], onDeckUpdatedCallback = null;
@@ -53,6 +53,24 @@ export async function initPractice(onDeckUpdated) {
     transEl.textContent = `"${trans}"`;
     transEl.style.display = 'block';
     translateBtn.classList.add('active');
+  });
+
+  document.getElementById('practice-play-example-btn')?.addEventListener('click', () => {
+    const card = dueCards[0];
+    if (!card) return;
+    const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech || '');
+    if (rawExample) {
+      playSentenceAudio(rawExample, 'us');
+    }
+  });
+
+  document.getElementById('back-play-example-btn')?.addEventListener('click', () => {
+    const card = dueCards[0];
+    if (!card) return;
+    const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech || '');
+    if (rawExample) {
+      playSentenceAudio(rawExample, 'us');
+    }
   });
 
   document.getElementById('back-translate-btn')?.addEventListener('click', async () => {

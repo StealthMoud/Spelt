@@ -407,6 +407,16 @@ export async function playWordAudio(word, accent) {
   window.speechSynthesis.speak(utterance);
 }
 
+// Play full sentence using Web Speech API (speechSynthesis)
+export function playSentenceAudio(sentence, accent) {
+  if (typeof window === 'undefined' || typeof window.speechSynthesis === 'undefined') return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(sentence.trim());
+  utterance.lang = accent === 'uk' ? 'en-GB' : 'en-US';
+  utterance.rate = 0.95;
+  window.speechSynthesis.speak(utterance);
+}
+
 // Utility to clear everything
 export async function resetDb() {
   await setStored('spelt_words', []);

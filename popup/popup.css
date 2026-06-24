@@ -1147,7 +1147,7 @@ body {
   cursor: pointer;
 }
 
-.translate-example-btn {
+.translate-example-btn, .play-example-btn {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
@@ -1162,21 +1162,21 @@ body {
   flex-shrink: 0;
   padding: 0;
 }
-.translate-example-btn:hover {
+.translate-example-btn:hover, .play-example-btn:hover {
   border-color: var(--primary);
   color: var(--primary-light);
   transform: scale(1.08);
   background: hsla(155, 65%, 48%, 0.05);
 }
-.translate-example-btn:active {
+.translate-example-btn:active, .play-example-btn:active {
   transform: scale(0.95);
 }
-.translate-example-btn.active {
+.translate-example-btn.active, .play-example-btn.active {
   border-color: var(--primary);
   color: var(--primary-light);
   background: hsla(155, 65%, 48%, 0.1);
 }
-.translate-example-btn svg {
+.translate-example-btn svg, .play-example-btn svg {
   width: 12px;
   height: 12px;
   pointer-events: none;

@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition, fetchCambridgePronunciation, getStored, fetchTranslation } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, playSentenceAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition, fetchCambridgePronunciation, getStored, fetchTranslation } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -106,6 +106,15 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
         const wrong = feedbackMsg.getAttribute('data-wrong-attempt');
         if (original) {
           await showManualCorrectionForm(original, suggestions, wrong);
+        }
+        return;
+      }
+
+      const playExBtn = e.target.closest('.play-example-btn');
+      if (playExBtn) {
+        const sentence = playExBtn.getAttribute('data-sentence');
+        if (sentence) {
+          playSentenceAudio(sentence, 'us');
         }
         return;
       }
@@ -330,9 +339,14 @@ async function handleCorrectSpelling(apiData, word) {
           <div class="feedback-example" data-word="${word}">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
               <span class="clue-label" style="margin: 0;">Example</span>
-              <button type="button" class="translate-example-btn" title="Translate Example">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-              </button>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${example.replace(/"/g, '&quot;')}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                </button>
+                <button type="button" class="translate-example-btn" title="Translate Example">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                </button>
+              </div>
             </div>
             <p class="feedback-example-text">"${example}"</p>
             <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
@@ -408,9 +422,14 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
         <div class="feedback-example" data-word="${suggestion}">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <span class="clue-label" style="margin: 0;">Example</span>
-            <button type="button" class="translate-example-btn" title="Translate Example">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-            </button>
+            <div style="display: flex; gap: 4px;">
+              <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${example.replace(/"/g, '&quot;')}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              </button>
+              <button type="button" class="translate-example-btn" title="Translate Example">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+              </button>
+            </div>
           </div>
           <p class="feedback-example-text">"${example}"</p>
           <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
@@ -563,9 +582,14 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
             <div class="feedback-example" data-word="${correctWord}">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <span class="clue-label" style="margin: 0;">Example</span>
-                <button type="button" class="translate-example-btn" title="Translate Example">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-                </button>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${example.replace(/"/g, '&quot;')}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                  </button>
+                  <button type="button" class="translate-example-btn" title="Translate Example">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                  </button>
+                </div>
               </div>
               <p class="feedback-example-text">"${example}"</p>
               <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
