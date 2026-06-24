@@ -488,18 +488,51 @@ async function acceptSuggestion(suggestion, original) {
     }
   } catch (_) {}
 
-  const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
-  if (response.ok) {
-    const data = await response.json();
-    if (!def) {
-      def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+  let isInvalidWord = false;
+  try {
+    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(suggestion.toLowerCase())}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (!def || def === 'No definition found') {
+        def = data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+      }
+      if (!ipa) {
+        ipa = data[0].phonetics.find(p => p.text)?.text || '';
+      }
+      partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
+      example = extractExample(data[0]);
+    } else if (response.status === 404) {
+      if (!def || def === 'No definition found') {
+        isInvalidWord = true;
+      }
     }
-    if (!ipa) {
-      ipa = data[0].phonetics.find(p => p.text)?.text || '';
-    }
-    partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
-    example = extractExample(data[0]);
+  } catch (err) {
+    console.warn('Verify suggestion failed:', err);
   }
+
+  if (isInvalidWord) {
+    feedbackMsg.setAttribute('data-correct-word', suggestion);
+    feedbackMsg.setAttribute('data-original-word', original);
+    feedbackMsg.setAttribute('data-wrong-attempt', '');
+    feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify([]));
+    feedbackMsg.innerHTML = `
+      ${closeBtnHtml}
+      <h4 style="color: var(--warning); margin: 0 0 4px;">⚠️ Unrecognized Suggestion</h4>
+      <p style="font-size: 0.72rem; margin: 8px 0; line-height: 1.4;">"${suggestion}" is not recognized in the dictionary. It might be misspelled.</p>
+      <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <button type="button" class="submit-btn accept-anyway-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Save Anyway</span>
+        </button>
+        <button type="button" class="submit-btn edit-correction-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem; background: hsla(5, 80%, 15%, 0.3); border-color: var(--danger); color: var(--danger);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Edit Spelling</span>
+        </button>
+      </div>
+    `;
+    return;
+  }
+
   if (!ipa) ipa = '/--/';
   await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech, example });
   const exampleText = example ? `<p style="font-size: 0.65rem; color: var(--primary-light); font-style: italic; margin: 4px 0 0;">"${example}"</p>` : '';
