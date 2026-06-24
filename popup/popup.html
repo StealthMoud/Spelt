@@ -477,6 +477,150 @@
             <!-- Dynamically populated leeches -->
           </ul>
         </div>
+
+        <div class="stats-panel heatmap-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Activity Heatmap</span>
+          </h4>
+          <div id="stats-heatmap-container" class="heatmap-container">
+            <!-- Dynamically populated heatmap grid -->
+          </div>
+          <div id="stats-heatmap-legend" class="heatmap-legend">
+            <span class="heatmap-legend-label">Less</span>
+            <div class="heatmap-legend-cell" data-level="0"></div>
+            <div class="heatmap-legend-cell" data-level="1"></div>
+            <div class="heatmap-legend-cell" data-level="2"></div>
+            <div class="heatmap-legend-cell" data-level="3"></div>
+            <div class="heatmap-legend-cell" data-level="4"></div>
+            <span class="heatmap-legend-label">More</span>
+          </div>
+        </div>
+
+        <div class="stats-panel velocity-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>Learning Velocity</span>
+          </h4>
+          <div class="velocity-summary-row">
+            <div class="velocity-card">
+              <span class="velocity-val" id="velocity-this-week">0</span>
+              <span class="velocity-label">This Week</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="velocity-this-month">0</span>
+              <span class="velocity-label">This Month</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="velocity-total">0</span>
+              <span class="velocity-label">Total Words</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="velocity-mastered">0</span>
+              <span class="velocity-label">Mastered</span>
+            </div>
+          </div>
+          <div id="velocity-chart-container" class="velocity-chart-container">
+            <!-- Dynamically populated sparkline -->
+          </div>
+        </div>
+
+        <div class="stats-panel accuracy-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>Accuracy Trend</span>
+          </h4>
+          <div id="accuracy-trend-container" class="accuracy-trend-container">
+            <!-- Dynamically populated SVG line chart -->
+          </div>
+          <div id="accuracy-trend-summary" class="accuracy-trend-summary"></div>
+        </div>
+
+        <div class="stats-panel cefr-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>CEFR Level Distribution</span>
+          </h4>
+          <div id="cefr-dist-container" class="cefr-dist-container">
+            <!-- Dynamically populated horizontal bars -->
+          </div>
+        </div>
+
+        <div class="stats-panel response-time-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Response Time</span>
+          </h4>
+          <div class="response-time-summary-row">
+            <div class="velocity-card">
+              <span class="velocity-val" id="rt-avg">--</span>
+              <span class="velocity-label">Avg Time</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="rt-fastest">--</span>
+              <span class="velocity-label">Fastest</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="rt-slowest">--</span>
+              <span class="velocity-label">Slowest</span>
+            </div>
+          </div>
+          <div id="rt-trend-container" class="accuracy-trend-container">
+            <!-- Dynamically populated response time trend -->
+          </div>
+          <div id="rt-empty-msg" class="leeches-empty-text" style="display: none;">
+            Response time tracking starts with your next reviews.
+          </div>
+        </div>
+
+        <div class="stats-panel study-time-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Study Time</span>
+          </h4>
+          <div class="velocity-summary-row">
+            <div class="velocity-card">
+              <span class="velocity-val" id="study-total-time">--</span>
+              <span class="velocity-label">Total Time</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="study-avg-session">--</span>
+              <span class="velocity-label">Avg per Review</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="study-today-time">--</span>
+              <span class="velocity-label">Today</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-panel sandbox-activity-panel">
+          <h4 class="stats-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <span>Sandbox Activity</span>
+          </h4>
+          <div class="velocity-summary-row">
+            <div class="velocity-card">
+              <span class="velocity-val" id="sandbox-total-checks">0</span>
+              <span class="velocity-label">Total Checks</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="sandbox-correct-rate">--</span>
+              <span class="velocity-label">Correct Rate</span>
+            </div>
+            <div class="velocity-card">
+              <span class="velocity-val" id="sandbox-today-checks">0</span>
+              <span class="velocity-label">Today</span>
+            </div>
+          </div>
+          <div id="sandbox-activity-chart" class="velocity-chart-container">
+            <!-- Dynamically populated sandbox activity chart -->
+          </div>
+          <div id="sandbox-empty-msg" class="leeches-empty-text" style="display: none;">
+            No sandbox activity recorded yet. Start checking words!
+          </div>
+        </div>
+
       </section>
 
       <!-- TAB 5: SETTINGS -->

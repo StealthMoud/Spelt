@@ -274,7 +274,8 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
 }
 
 // Update word SRS parameters based on review score
-export async function reviewWord(wordId, q, typedWrongWord = null) {
+// responseTimeMs: optional ms elapsed from card shown to rating submitted
+export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeMs = null) {
   const list = await getWords();
   const index = list.findIndex(w => w.id === wordId);
   if (index === -1) throw new Error('Word not found');
@@ -288,7 +289,11 @@ export async function reviewWord(wordId, q, typedWrongWord = null) {
   card.ef = ef;
   card.nextDate = nextDate;
   card.lastReviewedAt = Date.now();
-  card.history.push({ date: Date.now(), q, interval });
+  const historyEntry = { date: Date.now(), q, interval };
+  if (responseTimeMs !== null && responseTimeMs > 0) {
+    historyEntry.rt = responseTimeMs;
+  }
+  card.history.push(historyEntry);
 
   if (typedWrongWord !== null && typedWrongWord !== undefined) {
     if (!card.misspellings) card.misspellings = [];
@@ -339,6 +344,28 @@ async function updateStreak(todayStr) {
 // Export streak values for statistics
 export async function getStreak() {
   return await getStored('spelt_streak') || { current: 0, lastDate: '', max: 0 };
+}
+
+// Export daily activity data for heatmap and analytics
+export async function getActivity() {
+  return await getStored('spelt_activity') || {};
+}
+
+// Log sandbox spelling-check activity for analytics
+export async function logSandboxActivity(result) {
+  const data = await getStored('spelt_sandbox_activity') || {};
+  const today = new Date().toISOString().split('T')[0];
+  if (!data[today]) data[today] = { checks: 0, correct: 0, misspelled: 0, notFound: 0 };
+  data[today].checks++;
+  if (result === 'correct') data[today].correct++;
+  else if (result === 'misspelled') data[today].misspelled++;
+  else if (result === 'not_found') data[today].notFound++;
+  await setStored('spelt_sandbox_activity', data);
+}
+
+// Read sandbox activity data for stats
+export async function getSandboxActivity() {
+  return await getStored('spelt_sandbox_activity') || {};
 }
 
 // Delete a single word by its ID

@@ -1,4 +1,155 @@
-import { getWords, getStreak } from '../../shared/storage.js';
+import { getWords, getStreak, getActivity, getSandboxActivity } from '../../shared/storage.js';
+
+let statsTooltipEl = null;
+
+function showStatsTooltip(x, y, text) {
+  if (!statsTooltipEl) {
+    statsTooltipEl = document.createElement('div');
+    statsTooltipEl.className = 'stats-tooltip';
+    document.body.appendChild(statsTooltipEl);
+  }
+  statsTooltipEl.innerHTML = text;
+  statsTooltipEl.style.left = `${x}px`;
+  statsTooltipEl.style.top = `${y}px`;
+  statsTooltipEl.classList.add('visible');
+}
+
+function hideStatsTooltip() {
+  if (statsTooltipEl) {
+    statsTooltipEl.classList.remove('visible');
+  }
+}
+
+function findBucketForDate(dateVal, buckets) {
+  if (!dateVal) return null;
+  const d = new Date(dateVal);
+  const time = d.getTime();
+  const dateStrDay = d.toISOString().split('T')[0];
+  const dateStrMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  
+  return buckets.find(b => {
+    if (b.type === 'day') {
+      return b.dateStr === dateStrDay;
+    } else if (b.type === 'week') {
+      return time >= b.weekStart.getTime() && time <= b.weekEnd.getTime();
+    } else if (b.type === 'month') {
+      return b.dateStr === dateStrMonth;
+    }
+    return false;
+  });
+}
+
+function drawSparkline(containerId, dataPoints, width = 300, height = 60, options = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  
+  if (dataPoints.length === 0 || Math.max(...dataPoints, 0) === 0) {
+    container.innerHTML = '<div class="leeches-empty-text">No activity data in this period.</div>';
+    return;
+  }
+  
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.style.overflow = 'visible';
+  
+  const maxVal = Math.max(...dataPoints, 1);
+  const minVal = 0; // always baseline at 0 for learning metrics
+  const range = maxVal - minVal;
+  
+  const paddingLeft = 10;
+  const paddingRight = 10;
+  const paddingTop = 8;
+  const paddingBottom = 8;
+  
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
+  
+  const points = dataPoints.map((val, idx) => {
+    const x = paddingLeft + (idx / Math.max(dataPoints.length - 1, 1)) * chartWidth;
+    const y = paddingTop + chartHeight - ((val - minVal) / range) * chartHeight;
+    return { x, y, val };
+  });
+  
+  // Create path
+  let pathD = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    pathD += ` L ${points[i].x} ${points[i].y}`;
+  }
+  
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', pathD);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', options.strokeColor || 'var(--primary)');
+  path.setAttribute('stroke-width', '2.5');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  
+  // Fill under path
+  let areaD = `${pathD} L ${points[points.length - 1].x} ${paddingTop + chartHeight} L ${points[0].x} ${paddingTop + chartHeight} Z`;
+  const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  area.setAttribute('d', areaD);
+  
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  const gradId = `spark-grad-${Math.random().toString(36).substr(2, 9)}`;
+  gradient.setAttribute('id', gradId);
+  gradient.setAttribute('x1', '0%');
+  gradient.setAttribute('y1', '0%');
+  gradient.setAttribute('x2', '0%');
+  gradient.setAttribute('y2', '100%');
+  
+  const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+  stop1.setAttribute('offset', '0%');
+  stop1.setAttribute('stop-color', options.strokeColor || 'var(--primary)');
+  stop1.setAttribute('stop-opacity', '0.2');
+  
+  const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+  stop2.setAttribute('offset', '100%');
+  stop2.setAttribute('stop-color', options.strokeColor || 'var(--primary)');
+  stop2.setAttribute('stop-opacity', '0');
+  
+  gradient.appendChild(stop1);
+  gradient.appendChild(stop2);
+  defs.appendChild(gradient);
+  svg.appendChild(defs);
+  
+  area.setAttribute('fill', `url(#${gradId})`);
+  svg.appendChild(area);
+  svg.appendChild(path);
+  
+  // Draw interactive dots
+  points.forEach((pt, idx) => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', pt.x.toString());
+    circle.setAttribute('cy', pt.y.toString());
+    circle.setAttribute('r', '2.5');
+    circle.setAttribute('fill', options.dotColor || 'var(--primary-light)');
+    circle.setAttribute('stroke', 'var(--bg-dark)');
+    circle.setAttribute('stroke-width', '1');
+    
+    circle.style.cursor = 'pointer';
+    circle.style.transition = 'all var(--transition-fast) ease';
+    
+    const label = options.labels ? options.labels[idx] : pt.val.toString();
+    const tooltipText = `<strong>${label}</strong><br/>${pt.val}${options.unit || ''}`;
+    
+    circle.addEventListener('mouseenter', (e) => {
+      circle.setAttribute('r', '4.5');
+      showStatsTooltip(e.clientX, e.clientY, tooltipText);
+    });
+    circle.addEventListener('mouseleave', () => {
+      circle.setAttribute('r', '2.5');
+      hideStatsTooltip();
+    });
+    
+    svg.appendChild(circle);
+  });
+  
+  container.appendChild(svg);
+}
 
 let currentStatsTimeframe = '7d';
 let currentLeechesLimit = '10';
@@ -379,10 +530,15 @@ export async function initStats() {
 /**
  * Computes metrics and renders the entire statistics panel dynamically
  */
+/**
+ * Computes metrics and renders the entire statistics panel dynamically
+ */
 export async function renderStats() {
   try {
     const words = await getWords();
     const streak = await getStreak();
+    const activity = await getActivity();
+    const sandboxActivity = await getSandboxActivity();
 
     // 1. Calculate General Summary metrics
     let totalReviews = 0;
@@ -564,8 +720,33 @@ export async function renderStats() {
       }
     }
 
-    // Process reviews and button distribution
+    // Initialize additional fields for each bucket
+    chartBuckets.forEach(b => {
+      b.created = 0;
+      b.rtSum = 0;
+      b.rtCount = 0;
+      b.sandboxChecks = 0;
+      b.sandboxCorrect = 0;
+    });
+
+    // Global Response Time & Study Time metrics
+    let globalRtSum = 0;
+    let globalRtCount = 0;
+    let globalRtMax = 0;
+    let globalRtMin = Infinity;
+    let todayStudyTimeMs = 0;
+    const todayDateStr = new Date().toISOString().split('T')[0];
+
+    // Process reviews, response times, button distribution, and created words
     words.forEach(w => {
+      // Binned words created
+      if (w.createdAt) {
+        const b = findBucketForDate(w.createdAt, chartBuckets);
+        if (b) {
+          b.created++;
+        }
+      }
+
       if (Array.isArray(w.history)) {
         w.history.forEach(h => {
           totalReviews++;
@@ -577,6 +758,25 @@ export async function renderStats() {
           else if (h.q === 3) buttonCounts.hard++;
           else if (h.q === 4) buttonCounts.good++;
           else if (h.q === 5) buttonCounts.easy++;
+
+          // Response time parsing
+          if (h.rt && typeof h.rt === 'number') {
+            globalRtSum += h.rt;
+            globalRtCount++;
+            if (h.rt > globalRtMax) globalRtMax = h.rt;
+            if (h.rt < globalRtMin) globalRtMin = h.rt;
+
+            // Today's study time
+            if (h.date && h.date.startsWith(todayDateStr)) {
+              todayStudyTimeMs += h.rt;
+            }
+
+            const bRt = findBucketForDate(h.date, chartBuckets);
+            if (bRt) {
+              bRt.rtSum += h.rt;
+              bRt.rtCount++;
+            }
+          }
 
           // Match review to one of the buckets
           if (h.date) {
@@ -604,6 +804,28 @@ export async function renderStats() {
             }
           }
         });
+      }
+    });
+
+    // Process Sandbox Activity data
+    let globalSandboxChecks = 0;
+    let globalSandboxCorrect = 0;
+    let globalSandboxToday = 0;
+
+    Object.entries(sandboxActivity).forEach(([dateKey, stats]) => {
+      const checks = stats.checks || 0;
+      const correct = stats.correct || 0;
+      globalSandboxChecks += checks;
+      globalSandboxCorrect += correct;
+      
+      if (dateKey === todayDateStr) {
+        globalSandboxToday = checks;
+      }
+      
+      const bSandbox = findBucketForDate(new Date(dateKey), chartBuckets);
+      if (bSandbox) {
+        bSandbox.sandboxChecks += checks;
+        bSandbox.sandboxCorrect += correct;
       }
     });
 
@@ -707,7 +929,7 @@ export async function renderStats() {
     if (forecastWeekEl) forecastWeekEl.textContent = dueWeek;
     if (forecastMonthEl) forecastMonthEl.textContent = dueMonth;
 
-    // 3. Render vertical stacked bar chart
+    // 3. Render vertical stacked bar chart (Review Counts)
     const chartContainer = document.getElementById('stats-chart-container');
     if (chartContainer) {
       chartContainer.innerHTML = '';
@@ -766,6 +988,215 @@ export async function renderStats() {
         `;
         btnContainer.appendChild(row);
       });
+    }
+
+    // NEW PANEL 1: Activity Heatmap
+    const heatmapContainer = document.getElementById('stats-heatmap-container');
+    if (heatmapContainer) {
+      heatmapContainer.innerHTML = '';
+      const tempDate = new Date();
+      // Go back 364 days so we show exactly 365 days including today
+      tempDate.setDate(tempDate.getDate() - 364);
+
+      for (let i = 0; i < 365; i++) {
+        const dateStr = tempDate.toISOString().split('T')[0];
+        const count = activity[dateStr] || 0;
+
+        let level = 0;
+        if (count > 0 && count <= 3) level = 1;
+        else if (count > 3 && count <= 8) level = 2;
+        else if (count > 8 && count <= 15) level = 3;
+        else if (count > 15) level = 4;
+
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-cell';
+        cell.setAttribute('data-level', level.toString());
+
+        const formattedDate = tempDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        const tooltipText = `<strong>${formattedDate}</strong><br/>${count} review${count === 1 ? '' : 's'}`;
+
+        cell.addEventListener('mouseenter', (e) => {
+          showStatsTooltip(e.clientX, e.clientY, tooltipText);
+        });
+        cell.addEventListener('mouseleave', () => {
+          hideStatsTooltip();
+        });
+
+        heatmapContainer.appendChild(cell);
+        tempDate.setDate(tempDate.getDate() + 1);
+      }
+    }
+
+    // NEW PANEL 2: Learning Velocity
+    const velThisWeek = words.filter(w => w.createdAt && (Date.now() - w.createdAt <= 7 * 24 * 60 * 60 * 1000)).length;
+    const velThisMonth = words.filter(w => w.createdAt && (Date.now() - w.createdAt <= 30 * 24 * 60 * 60 * 1000)).length;
+    
+    const velocityThisWeekEl = document.getElementById('velocity-this-week');
+    const velocityThisMonthEl = document.getElementById('velocity-this-month');
+    const velocityTotalEl = document.getElementById('velocity-total');
+    const velocityMasteredEl = document.getElementById('velocity-mastered');
+
+    if (velocityThisWeekEl) velocityThisWeekEl.textContent = velThisWeek;
+    if (velocityThisMonthEl) velocityThisMonthEl.textContent = velThisMonth;
+    if (velocityTotalEl) velocityTotalEl.textContent = words.length;
+    if (velocityMasteredEl) velocityMasteredEl.textContent = masteredCount;
+
+    const velPoints = chartBuckets.map(b => b.created);
+    const velLabels = chartBuckets.map(b => b.fullDateLabel);
+    drawSparkline('velocity-chart-container', velPoints, 320, 65, {
+      strokeColor: 'hsl(155, 65%, 48%)',
+      dotColor: 'hsl(155, 80%, 72%)',
+      labels: velLabels,
+      unit: ' words added'
+    });
+
+    // NEW PANEL 3: Accuracy Trend
+    const accPoints = chartBuckets.map(b => b.total > 0 ? Math.round((b.correct / b.total) * 100) : 0);
+    const accLabels = chartBuckets.map(b => b.fullDateLabel);
+    drawSparkline('accuracy-trend-container', accPoints, 320, 75, {
+      strokeColor: 'hsl(145, 80%, 45%)',
+      dotColor: 'hsl(145, 80%, 72%)',
+      labels: accLabels,
+      unit: '% accuracy'
+    });
+
+    const activeAccBuckets = chartBuckets.filter(b => b.total > 0);
+    const avgPeriodAcc = activeAccBuckets.length > 0 
+      ? Math.round((activeAccBuckets.reduce((acc, b) => acc + b.correct, 0) / activeAccBuckets.reduce((acc, b) => acc + b.total, 0)) * 100)
+      : null;
+    const peakPeriodAcc = activeAccBuckets.length > 0 ? Math.max(...activeAccBuckets.map(b => Math.round((b.correct / b.total) * 100))) : null;
+    const accuracyTrendSummaryEl = document.getElementById('accuracy-trend-summary');
+    if (accuracyTrendSummaryEl) {
+      if (avgPeriodAcc !== null) {
+        accuracyTrendSummaryEl.textContent = `Avg Period Accuracy: ${avgPeriodAcc}% (Peak: ${peakPeriodAcc}%)`;
+      } else {
+        accuracyTrendSummaryEl.textContent = 'No review activities recorded in this timeframe.';
+      }
+    }
+
+    // NEW PANEL 4: CEFR Level Distribution
+    const cefrCounts = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0, Unknown: 0 };
+    words.forEach(w => {
+      const lvl = (w.level || '').toUpperCase().trim();
+      if (cefrCounts[lvl] !== undefined) {
+        cefrCounts[lvl]++;
+      } else {
+        cefrCounts.Unknown++;
+      }
+    });
+
+    const cefrContainer = document.getElementById('cefr-dist-container');
+    if (cefrContainer) {
+      cefrContainer.innerHTML = '';
+      const totalWithLevel = Object.values(cefrCounts).reduce((a, b) => a + b, 0) || 1;
+      const levelsToShow = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+      if (cefrCounts.Unknown > 0) {
+        levelsToShow.push('Unknown');
+      }
+
+      levelsToShow.forEach(lvl => {
+        const count = cefrCounts[lvl];
+        const pct = Math.round((count / totalWithLevel) * 100);
+        
+        const row = document.createElement('div');
+        row.className = 'cefr-row';
+        row.innerHTML = `
+          <span class="cefr-label-badge">${lvl === 'Unknown' ? '?' : lvl}</span>
+          <div class="cefr-bar-wrapper">
+            <div class="cefr-bar-fill" style="width: ${pct}%;"></div>
+          </div>
+          <span class="cefr-count-label">${count} (${pct}%)</span>
+        `;
+        cefrContainer.appendChild(row);
+      });
+    }
+
+    // NEW PANEL 5: Response Time Insights
+    const avgRtEl = document.getElementById('rt-avg');
+    const fastestRtEl = document.getElementById('rt-fastest');
+    const slowestRtEl = document.getElementById('rt-slowest');
+    const rtEmptyMsg = document.getElementById('rt-empty-msg');
+    const rtTrendContainer = document.getElementById('rt-trend-container');
+
+    const formatRt = (ms) => {
+      if (ms === Infinity || ms === 0 || isNaN(ms)) return '--';
+      if (ms < 1000) return `${Math.round(ms)}ms`;
+      return `${(ms / 1000).toFixed(1)}s`;
+    };
+
+    if (globalRtCount > 0) {
+      if (avgRtEl) avgRtEl.textContent = formatRt(globalRtSum / globalRtCount);
+      if (fastestRtEl) fastestRtEl.textContent = formatRt(globalRtMin);
+      if (slowestRtEl) slowestRtEl.textContent = formatRt(globalRtMax);
+      if (rtEmptyMsg) rtEmptyMsg.style.display = 'none';
+      if (rtTrendContainer) rtTrendContainer.style.display = 'flex';
+
+      const rtPoints = chartBuckets.map(b => b.rtCount > 0 ? Math.round(b.rtSum / b.rtCount) : 0);
+      const rtLabels = chartBuckets.map(b => b.fullDateLabel);
+      drawSparkline('rt-trend-container', rtPoints, 320, 75, {
+        strokeColor: 'hsl(265, 80%, 65%)',
+        dotColor: 'hsl(265, 80%, 72%)',
+        labels: rtLabels,
+        unit: 'ms avg response'
+      });
+    } else {
+      if (avgRtEl) avgRtEl.textContent = '--';
+      if (fastestRtEl) fastestRtEl.textContent = '--';
+      if (slowestRtEl) slowestRtEl.textContent = '--';
+      if (rtEmptyMsg) rtEmptyMsg.style.display = 'block';
+      if (rtTrendContainer) rtTrendContainer.style.display = 'none';
+    }
+
+    // NEW PANEL 6: Study Time Estimation
+    const studyTotalTimeEl = document.getElementById('study-total-time');
+    const studyAvgSessionEl = document.getElementById('study-avg-session');
+    const studyTodayTimeEl = document.getElementById('study-today-time');
+
+    const formatStudyTime = (ms) => {
+      if (!ms || isNaN(ms)) return '0s';
+      const seconds = Math.floor(ms / 1000);
+      if (seconds < 60) return `${seconds}s`;
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
+      const hours = Math.floor(minutes / 60);
+      return `${hours}h ${minutes % 60}m`;
+    };
+
+    if (studyTotalTimeEl) studyTotalTimeEl.textContent = formatStudyTime(globalRtSum);
+    if (studyAvgSessionEl) studyAvgSessionEl.textContent = globalRtCount > 0 ? formatRt(globalRtSum / globalRtCount) : '--';
+    if (studyTodayTimeEl) studyTodayTimeEl.textContent = formatStudyTime(todayStudyTimeMs);
+
+    // NEW PANEL 7: Sandbox Activity Stats
+    const sandboxTotalChecksEl = document.getElementById('sandbox-total-checks');
+    const sandboxCorrectRateEl = document.getElementById('sandbox-correct-rate');
+    const sandboxTodayChecksEl = document.getElementById('sandbox-today-checks');
+    const sandboxEmptyMsg = document.getElementById('sandbox-empty-msg');
+    const sandboxActivityChart = document.getElementById('sandbox-activity-chart');
+
+    if (globalSandboxChecks > 0) {
+      if (sandboxTotalChecksEl) sandboxTotalChecksEl.textContent = globalSandboxChecks;
+      if (sandboxCorrectRateEl) {
+        const rate = Math.round((globalSandboxCorrect / globalSandboxChecks) * 100);
+        sandboxCorrectRateEl.textContent = `${rate}%`;
+      }
+      if (sandboxTodayChecksEl) sandboxTodayChecksEl.textContent = globalSandboxToday;
+      if (sandboxEmptyMsg) sandboxEmptyMsg.style.display = 'none';
+      if (sandboxActivityChart) sandboxActivityChart.style.display = 'flex';
+
+      const sandboxPoints = chartBuckets.map(b => b.sandboxChecks);
+      const sandboxLabels = chartBuckets.map(b => b.fullDateLabel);
+      drawSparkline('sandbox-activity-chart', sandboxPoints, 320, 65, {
+        strokeColor: 'hsl(38, 92%, 50%)',
+        dotColor: 'hsl(38, 92%, 72%)',
+        labels: sandboxLabels,
+        unit: ' checks'
+      });
+    } else {
+      if (sandboxTotalChecksEl) sandboxTotalChecksEl.textContent = '0';
+      if (sandboxCorrectRateEl) sandboxCorrectRateEl.textContent = '--';
+      if (sandboxTodayChecksEl) sandboxTodayChecksEl.textContent = '0';
+      if (sandboxEmptyMsg) sandboxEmptyMsg.style.display = 'block';
+      if (sandboxActivityChart) sandboxActivityChart.style.display = 'none';
     }
 
     // 5. Render Hardest Words (Leech List)

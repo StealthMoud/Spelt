@@ -1,4 +1,4 @@
-import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, playSentenceAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition, fetchCambridgePronunciation, getStored, fetchTranslation } from '../../shared/storage.js';
+import { getWords, addWord, registerMisspelling, saveWords, deleteWord, playWordAudio, playSentenceAudio, translateWord, getFallbackExample, fetchDynamicExample, fetchDynamicDefinition, fetchCambridgePronunciation, getStored, fetchTranslation, logSandboxActivity } from '../../shared/storage.js';
 
 const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -274,6 +274,7 @@ async function handleVerify() {
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`);
     if (response.ok) {
       const data = await response.json();
+      logSandboxActivity('correct').catch(() => {});
       await handleCorrectSpelling(data[0], word);
     } else {
       // Fallback check: see if Cambridge/Oxford has this word
@@ -313,15 +314,18 @@ async function handleVerify() {
             }
           ]
         };
+        logSandboxActivity('correct').catch(() => {});
         await handleCorrectSpelling(mockApiData, word);
       } else {
         const suggestions = await findSuggestions(lowerWord);
         if (suggestions.length > 0) {
+          logSandboxActivity('misspelled').catch(() => {});
           feedbackMsg.setAttribute('data-original-query', word);
           feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify(suggestions));
           await renderMisspellingCard(word, suggestions, 0);
           document.getElementById('word-input')?.blur();
         } else {
+          logSandboxActivity('not_found').catch(() => {});
           await showManualCorrectionForm(word);
         }
       }

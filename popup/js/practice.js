@@ -2,6 +2,7 @@ import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, sav
 import { openModal } from './vault.js';
 
 let dueCards = [], onDeckUpdatedCallback = null;
+let cardShownAt = 0; // timestamp when the current card was displayed, for response time tracking
 
 export async function initPractice(onDeckUpdated) {
   onDeckUpdatedCallback = onDeckUpdated;
@@ -294,6 +295,7 @@ function showPracticeCard() {
 
   cardEl.style.display = 'flex'; emptyEl.style.display = 'none';
   cardEl.classList.remove('flipped'); spellInput.value = '';
+  cardShownAt = Date.now(); // record when card was shown for response time
 
   const card = dueCards[0];
   document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
@@ -452,8 +454,9 @@ async function submitRating(score) {
   try {
     const typed = document.getElementById('spelling-input').value.trim();
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
+    const responseTime = cardShownAt > 0 ? Date.now() - cardShownAt : null;
     
-    const updatedCard = await reviewWord(card.id, score, isOk ? null : typed);
+    const updatedCard = await reviewWord(card.id, score, isOk ? null : typed, responseTime);
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
@@ -472,14 +475,16 @@ async function submitMasteredRating(card) {
   try {
     const typed = document.getElementById('spelling-input').value.trim();
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
+    const responseTime = cardShownAt > 0 ? Date.now() - cardShownAt : null;
     
     // Log review history and capture spelling attempt
-    await reviewWord(card.id, 5, isOk ? null : typed);
+    await reviewWord(card.id, 5, isOk ? null : typed, responseTime);
 
     const list = await getWords();
     const wordObj = list.find(w => w.id === card.id);
     if (wordObj) {
       wordObj.mastered = true;
+      wordObj.masteredAt = Date.now(); // timestamp for learning velocity analytics
       wordObj.rep = 0;
       wordObj.interval = 30; // space it out
       wordObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
