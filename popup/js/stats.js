@@ -286,6 +286,28 @@ function handleCalDayClick(date) {
  * Initializes the statistics dashboard module
  */
 export async function initStats() {
+  // Stats Sub-tabs navigation
+  const subtabBtns = document.querySelectorAll('.stats-subtab-btn');
+  const subtabPanes = document.querySelectorAll('.stats-subtab-content');
+  subtabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-subtab');
+      
+      subtabBtns.forEach(b => b.classList.remove('active'));
+      subtabPanes.forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+      });
+      
+      btn.classList.add('active');
+      const targetEl = document.getElementById(`stats-subtab-${target}`);
+      if (targetEl) {
+        targetEl.classList.add('active');
+        targetEl.style.display = 'flex';
+      }
+    });
+  });
+
   const select = document.getElementById('stats-timeframe-select');
   const customRange = document.getElementById('stats-custom-range');
   const dateStart = document.getElementById('stats-date-start');

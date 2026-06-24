@@ -283,341 +283,360 @@
       
       <!-- TAB 4: STATS -->
       <section id="stats-tab" class="tab-pane">
-        <div class="stats-overview-row">
-          <div class="stat-glass-card">
-            <span class="stat-glass-label">Retention</span>
-            <div id="stats-retention" class="stat-glass-value">0%</div>
-            <span class="stat-glass-sub" id="stats-retention-sub">0 correct reviews</span>
+        <!-- Sub-tabs Navigation -->
+        <div class="stats-subtabs-nav">
+          <button type="button" class="stats-subtab-btn active" data-subtab="overview">Overview</button>
+          <button type="button" class="stats-subtab-btn" data-subtab="vocabulary">Vocabulary</button>
+          <button type="button" class="stats-subtab-btn" data-subtab="activity">Activity</button>
+          <button type="button" class="stats-subtab-btn" data-subtab="performance">Performance</button>
+        </div>
+
+        <!-- Sub-tab 1: Overview -->
+        <div id="stats-subtab-overview" class="stats-subtab-content active">
+          <div class="stats-overview-row">
+            <div class="stat-glass-card">
+              <span class="stat-glass-label">Retention</span>
+              <div id="stats-retention" class="stat-glass-value">0%</div>
+              <span class="stat-glass-sub" id="stats-retention-sub">0 correct reviews</span>
+            </div>
+            <div class="stat-glass-card">
+              <span class="stat-glass-label">Reviews</span>
+              <div id="stats-total-reviews" class="stat-glass-value">0</div>
+              <span class="stat-glass-sub">all-time count</span>
+            </div>
+            <div class="stat-glass-card">
+              <span class="stat-glass-label">Streak</span>
+              <div id="stats-streak" class="stat-glass-value">0d</div>
+              <span class="stat-glass-sub" id="stats-streak-sub">best 0d</span>
+            </div>
           </div>
-          <div class="stat-glass-card">
-            <span class="stat-glass-label">Reviews</span>
-            <div id="stats-total-reviews" class="stat-glass-value">0</div>
-            <span class="stat-glass-sub">all-time count</span>
+
+          <div class="stats-panel card-distribution-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+              <span>Card Distribution</span>
+            </h4>
+            <div class="card-dist-bar-wrapper">
+              <div class="card-dist-bar">
+                <div id="dist-new-bar" class="dist-segment dist-new" style="width: 0%;"></div>
+                <div id="dist-learning-bar" class="dist-segment dist-learning" style="width: 0%;"></div>
+                <div id="dist-mature-bar" class="dist-segment dist-mature" style="width: 0%;"></div>
+                <div id="dist-mastered-bar" class="dist-segment dist-mastered" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="card-dist-legend">
+              <div class="legend-item dist-new">
+                <span class="legend-dot"></span>
+                <span class="legend-name">New:</span>
+                <span id="dist-new-count" class="legend-count">0</span>
+              </div>
+              <div class="legend-item dist-learning">
+                <span class="legend-dot"></span>
+                <span class="legend-name">Learning:</span>
+                <span id="dist-learning-count" class="legend-count">0</span>
+              </div>
+              <div class="legend-item dist-mature">
+                <span class="legend-dot"></span>
+                <span class="legend-name">Mature:</span>
+                <span id="dist-mature-count" class="legend-count">0</span>
+              </div>
+              <div class="legend-item dist-mastered">
+                <span class="legend-dot"></span>
+                <span class="legend-name">Mastered:</span>
+                <span id="dist-mastered-count" class="legend-count">0</span>
+              </div>
+            </div>
           </div>
-          <div class="stat-glass-card">
-            <span class="stat-glass-label">Streak</span>
-            <div id="stats-streak" class="stat-glass-value">0d</div>
-            <span class="stat-glass-sub" id="stats-streak-sub">best 0d</span>
+
+          <div class="stats-panel forecast-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M12 14v-4"/></svg>
+              <span>Review Forecast</span>
+            </h4>
+            <div class="forecast-grid">
+              <div class="forecast-item">
+                <span class="forecast-day">Today</span>
+                <span id="forecast-today" class="forecast-val">0</span>
+              </div>
+              <div class="forecast-item">
+                <span class="forecast-day">Tomorrow</span>
+                <span id="forecast-tomorrow" class="forecast-val">0</span>
+              </div>
+              <div class="forecast-item">
+                <span class="forecast-day">Next 7d</span>
+                <span id="forecast-week" class="forecast-val">0</span>
+              </div>
+              <div class="forecast-item">
+                <span class="forecast-day">Next 30d</span>
+                <span id="forecast-month" class="forecast-val">0</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="stats-panel card-distribution-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-            <span>Card Distribution</span>
-          </h4>
-          <div class="card-dist-bar-wrapper">
-            <div class="card-dist-bar">
-              <div id="dist-new-bar" class="dist-segment dist-new" style="width: 0%;"></div>
-              <div id="dist-learning-bar" class="dist-segment dist-learning" style="width: 0%;"></div>
-              <div id="dist-mature-bar" class="dist-segment dist-mature" style="width: 0%;"></div>
-              <div id="dist-mastered-bar" class="dist-segment dist-mastered" style="width: 0%;"></div>
+        <!-- Sub-tab 2: Vocabulary -->
+        <div id="stats-subtab-vocabulary" class="stats-subtab-content" style="display: none;">
+          <div class="stats-panel velocity-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span>Learning Velocity</span>
+            </h4>
+            <div class="velocity-summary-row">
+              <div class="velocity-card">
+                <span class="velocity-val" id="velocity-this-week">0</span>
+                <span class="velocity-label">This Week</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="velocity-this-month">0</span>
+                <span class="velocity-label">This Month</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="velocity-total">0</span>
+                <span class="velocity-label">Total Words</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="velocity-mastered">0</span>
+                <span class="velocity-label">Mastered</span>
+              </div>
+            </div>
+            <div id="velocity-chart-container" class="velocity-chart-container">
+              <!-- Dynamically populated sparkline -->
             </div>
           </div>
-          <div class="card-dist-legend">
-            <div class="legend-item dist-new">
-              <span class="legend-dot"></span>
-              <span class="legend-name">New:</span>
-              <span id="dist-new-count" class="legend-count">0</span>
+
+          <div class="stats-panel cefr-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <span>CEFR Level Distribution</span>
+            </h4>
+            <div id="cefr-dist-container" class="cefr-dist-container">
+              <!-- Dynamically populated horizontal bars -->
             </div>
-            <div class="legend-item dist-learning">
-              <span class="legend-dot"></span>
-              <span class="legend-name">Learning:</span>
-              <span id="dist-learning-count" class="legend-count">0</span>
+          </div>
+
+          <div class="stats-panel leeches-panel">
+            <div class="stats-header-row">
+              <h4 class="stats-section-title" style="border-bottom: none; padding-bottom: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Hardest Words (Leech List)</span>
+              </h4>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <select id="stats-leeches-limit" class="premium-input vault-sort-select" style="width: 90px; height: 24px; padding: 2px 24px 2px 8px !important; font-size: 0.65rem !important;">
+                  <option value="5">Top 5</option>
+                  <option value="10" selected>Top 10</option>
+                  <option value="50">Top 50</option>
+                  <option value="all">All</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <div id="stats-leeches-custom-container" style="display: none; align-items: center; gap: 3px; background: hsla(155, 20%, 6%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 4px; height: 24px; box-sizing: border-box; transition: all var(--transition-fast) ease;">
+                  <button type="button" id="stats-leeches-dec-btn" class="table-icon-btn" style="width: 16px; height: 16px; border: none; background: transparent; font-size: 0.6rem; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 0;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  <input type="number" id="stats-leeches-custom-val" class="premium-input" style="width: 30px; height: 20px; border: none; background: transparent; padding: 0; text-align: center; font-size: 0.65rem; margin: 0; box-shadow: none !important;" min="1" max="500" value="15">
+                  <button type="button" id="stats-leeches-inc-btn" class="table-icon-btn" style="width: 16px; height: 16px; border: none; background: transparent; font-size: 0.6rem; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 0;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                </div>
+              </div>
             </div>
-            <div class="legend-item dist-mature">
-              <span class="legend-dot"></span>
-              <span class="legend-name">Mature:</span>
-              <span id="dist-mature-count" class="legend-count">0</span>
+            <div id="stats-leeches-empty" class="leeches-empty-text" style="display: none;">
+              No spelling errors logged yet. Good job!
             </div>
-            <div class="legend-item dist-mastered">
-              <span class="legend-dot"></span>
-              <span class="legend-name">Mastered:</span>
-              <span id="dist-mastered-count" class="legend-count">0</span>
-            </div>
+            <ul id="stats-leeches-list" class="stats-leeches-list">
+              <!-- Dynamically populated leeches -->
+            </ul>
           </div>
         </div>
 
-        <div class="stats-panel forecast-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M12 14v-4"/></svg>
-            <span>Review Forecast</span>
-          </h4>
-          <div class="forecast-grid">
-            <div class="forecast-item">
-              <span class="forecast-day">Today</span>
-              <span id="forecast-today" class="forecast-val">0</span>
-            </div>
-            <div class="forecast-item">
-              <span class="forecast-day">Tomorrow</span>
-              <span id="forecast-tomorrow" class="forecast-val">0</span>
-            </div>
-            <div class="forecast-item">
-              <span class="forecast-day">Next 7d</span>
-              <span id="forecast-week" class="forecast-val">0</span>
-            </div>
-            <div class="forecast-item">
-              <span class="forecast-day">Next 30d</span>
-              <span id="forecast-month" class="forecast-val">0</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stats-panel chart-panel">
-          <div class="stats-header-row">
-            <h4 class="stats-section-title" style="border-bottom: none; padding-bottom: 0;">
+        <!-- Sub-tab 3: Activity -->
+        <div id="stats-subtab-activity" class="stats-subtab-content" style="display: none;">
+          <div class="stats-panel heatmap-panel">
+            <h4 class="stats-section-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span>Review History</span>
+              <span>Activity Heatmap</span>
             </h4>
-            
-            <div class="custom-select-wrapper">
-              <button type="button" id="stats-timeframe-btn" class="custom-select-trigger">
-                <span id="stats-timeframe-label">7 Days</span>
-                <svg class="select-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div id="stats-timeframe-dropdown" class="custom-select-dropdown" style="display: none;">
-                <div class="custom-select-option" data-value="7d">7 Days</div>
-                <div class="custom-select-option" data-value="30d">30 Days</div>
-                <div class="custom-select-option" data-value="6m">6 Months</div>
-                <div class="custom-select-option" data-value="1y">1 Year</div>
-                <div class="custom-select-option" data-value="custom">Custom...</div>
-              </div>
+            <div id="stats-heatmap-container" class="heatmap-container">
+              <!-- Dynamically populated heatmap grid -->
             </div>
-
-            <!-- Hidden native select for backwards compatibility and easy form synchronization -->
-            <select id="stats-timeframe-select" style="display: none;">
-              <option value="7d">7 Days</option>
-              <option value="30d">30 Days</option>
-              <option value="6m">6 Months</option>
-              <option value="1y">1 Year</option>
-              <option value="custom">Custom...</option>
-            </select>
+            <div id="stats-heatmap-legend" class="heatmap-legend">
+              <span class="heatmap-legend-label">Less</span>
+              <div class="heatmap-legend-cell" data-level="0"></div>
+              <div class="heatmap-legend-cell" data-level="1"></div>
+              <div class="heatmap-legend-cell" data-level="2"></div>
+              <div class="heatmap-legend-cell" data-level="3"></div>
+              <div class="heatmap-legend-cell" data-level="4"></div>
+              <span class="heatmap-legend-label">More</span>
+            </div>
           </div>
-          
-          <!-- Custom Date Pickers Range Container -->
-          <!-- Custom Date Pickers Range Container -->
-          <div id="stats-custom-range" class="stats-custom-range" style="display: none; position: relative;">
-            <div class="date-picker-group">
-              <span>From:</span>
-              <div class="date-input-wrapper">
-                <input type="text" id="stats-date-start" class="premium-input date-input-field" readonly>
-                <svg class="calendar-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </div>
-            </div>
-            <div class="date-picker-group">
-              <span>To:</span>
-              <div class="date-input-wrapper">
-                <input type="text" id="stats-date-end" class="premium-input date-input-field" readonly>
-                <svg class="calendar-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </div>
-            </div>
 
-            <!-- Custom Calendar Popover -->
-            <div id="stats-calendar-popover" class="stats-calendar-popover" style="display: none;">
-              <div class="cal-header">
-                <button type="button" id="cal-prev-btn" class="cal-nav-btn" title="Previous Month">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <div class="stats-panel chart-panel">
+            <div class="stats-header-row">
+              <h4 class="stats-section-title" style="border-bottom: none; padding-bottom: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>Review History</span>
+              </h4>
+              
+              <div class="custom-select-wrapper">
+                <button type="button" id="stats-timeframe-btn" class="custom-select-trigger">
+                  <span id="stats-timeframe-label">7 Days</span>
+                  <svg class="select-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <span id="cal-month-year"></span>
-                <button type="button" id="cal-next-btn" class="cal-nav-btn" title="Next Month">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
+                <div id="stats-timeframe-dropdown" class="custom-select-dropdown" style="display: none;">
+                  <div class="custom-select-option" data-value="7d">7 Days</div>
+                  <div class="custom-select-option" data-value="30d">30 Days</div>
+                  <div class="custom-select-option" data-value="6m">6 Months</div>
+                  <div class="custom-select-option" data-value="1y">1 Year</div>
+                  <div class="custom-select-option" data-value="custom">Custom...</div>
+                </div>
               </div>
-              <div class="cal-weekdays">
-                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
-              </div>
-              <div id="cal-days-grid" class="cal-days-grid"></div>
-            </div>
-          </div>
 
-          <div id="stats-chart-container" class="bar-chart-container">
-            <!-- Dynamically populated vertical bars -->
-          </div>
-        </div>
-
-        <div class="stats-panel buttons-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
-            <span>Answer Buttons Distribution</span>
-          </h4>
-          <div id="button-dist-list" class="button-dist-list">
-            <!-- Dynamically populated button metrics -->
-          </div>
-        </div>
-
-        <div class="stats-panel leeches-panel">
-          <div class="stats-header-row">
-            <h4 class="stats-section-title" style="border-bottom: none; padding-bottom: 0;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span>Hardest Words (Leech List)</span>
-            </h4>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <select id="stats-leeches-limit" class="premium-input vault-sort-select" style="width: 90px; height: 24px; padding: 2px 24px 2px 8px !important; font-size: 0.65rem !important;">
-                <option value="5">Top 5</option>
-                <option value="10" selected>Top 10</option>
-                <option value="50">Top 50</option>
-                <option value="all">All</option>
+              <!-- Hidden native select for backwards compatibility and easy form synchronization -->
+              <select id="stats-timeframe-select" style="display: none;">
+                <option value="7d">7 Days</option>
+                <option value="30d">30 Days</option>
+                <option value="6m">6 Months</option>
+                <option value="1y">1 Year</option>
                 <option value="custom">Custom...</option>
               </select>
-              <div id="stats-leeches-custom-container" style="display: none; align-items: center; gap: 3px; background: hsla(155, 20%, 6%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 4px; height: 24px; box-sizing: border-box; transition: all var(--transition-fast) ease;">
-                <button type="button" id="stats-leeches-dec-btn" class="table-icon-btn" style="width: 16px; height: 16px; border: none; background: transparent; font-size: 0.6rem; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 0;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
-                <input type="number" id="stats-leeches-custom-val" class="premium-input" style="width: 30px; height: 20px; border: none; background: transparent; padding: 0; text-align: center; font-size: 0.65rem; margin: 0; box-shadow: none !important;" min="1" max="500" value="15">
-                <button type="button" id="stats-leeches-inc-btn" class="table-icon-btn" style="width: 16px; height: 16px; border: none; background: transparent; font-size: 0.6rem; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 0;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
+            </div>
+            
+            <!-- Custom Date Pickers Range Container -->
+            <div id="stats-custom-range" class="stats-custom-range" style="display: none; position: relative;">
+              <div class="date-picker-group">
+                <span>From:</span>
+                <div class="date-input-wrapper">
+                  <input type="text" id="stats-date-start" class="premium-input date-input-field" readonly>
+                  <svg class="calendar-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+              </div>
+              <div class="date-picker-group">
+                <span>To:</span>
+                <div class="date-input-wrapper">
+                  <input type="text" id="stats-date-end" class="premium-input date-input-field" readonly>
+                  <svg class="calendar-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+              </div>
+
+              <!-- Custom Calendar Popover -->
+              <div id="stats-calendar-popover" class="stats-calendar-popover" style="display: none;">
+                <div class="cal-header">
+                  <button type="button" id="cal-prev-btn" class="cal-nav-btn" title="Previous Month">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <span id="cal-month-year"></span>
+                  <button type="button" id="cal-next-btn" class="cal-nav-btn" title="Next Month">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                </div>
+                <div class="cal-weekdays">
+                  <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                </div>
+                <div id="cal-days-grid" class="cal-days-grid"></div>
               </div>
             </div>
-          </div>
-          <div id="stats-leeches-empty" class="leeches-empty-text" style="display: none;">
-            No spelling errors logged yet. Good job!
-          </div>
-          <ul id="stats-leeches-list" class="stats-leeches-list">
-            <!-- Dynamically populated leeches -->
-          </ul>
-        </div>
 
-        <div class="stats-panel heatmap-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span>Activity Heatmap</span>
-          </h4>
-          <div id="stats-heatmap-container" class="heatmap-container">
-            <!-- Dynamically populated heatmap grid -->
+            <div id="stats-chart-container" class="bar-chart-container">
+              <!-- Dynamically populated vertical bars -->
+            </div>
           </div>
-          <div id="stats-heatmap-legend" class="heatmap-legend">
-            <span class="heatmap-legend-label">Less</span>
-            <div class="heatmap-legend-cell" data-level="0"></div>
-            <div class="heatmap-legend-cell" data-level="1"></div>
-            <div class="heatmap-legend-cell" data-level="2"></div>
-            <div class="heatmap-legend-cell" data-level="3"></div>
-            <div class="heatmap-legend-cell" data-level="4"></div>
-            <span class="heatmap-legend-label">More</span>
-          </div>
-        </div>
 
-        <div class="stats-panel velocity-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <span>Learning Velocity</span>
-          </h4>
-          <div class="velocity-summary-row">
-            <div class="velocity-card">
-              <span class="velocity-val" id="velocity-this-week">0</span>
-              <span class="velocity-label">This Week</span>
-            </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="velocity-this-month">0</span>
-              <span class="velocity-label">This Month</span>
-            </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="velocity-total">0</span>
-              <span class="velocity-label">Total Words</span>
-            </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="velocity-mastered">0</span>
-              <span class="velocity-label">Mastered</span>
+          <div class="stats-panel buttons-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+              <span>Answer Buttons Distribution</span>
+            </h4>
+            <div id="button-dist-list" class="button-dist-list">
+              <!-- Dynamically populated button metrics -->
             </div>
           </div>
-          <div id="velocity-chart-container" class="velocity-chart-container">
-            <!-- Dynamically populated sparkline -->
-          </div>
-        </div>
 
-        <div class="stats-panel accuracy-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <span>Accuracy Trend</span>
-          </h4>
-          <div id="accuracy-trend-container" class="accuracy-trend-container">
-            <!-- Dynamically populated SVG line chart -->
-          </div>
-          <div id="accuracy-trend-summary" class="accuracy-trend-summary"></div>
-        </div>
-
-        <div class="stats-panel cefr-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            <span>CEFR Level Distribution</span>
-          </h4>
-          <div id="cefr-dist-container" class="cefr-dist-container">
-            <!-- Dynamically populated horizontal bars -->
-          </div>
-        </div>
-
-        <div class="stats-panel response-time-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>Response Time</span>
-          </h4>
-          <div class="response-time-summary-row">
-            <div class="velocity-card">
-              <span class="velocity-val" id="rt-avg">--</span>
-              <span class="velocity-label">Avg Time</span>
+          <div class="stats-panel sandbox-activity-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              <span>Sandbox Activity</span>
+            </h4>
+            <div class="velocity-summary-row">
+              <div class="velocity-card">
+                <span class="velocity-val" id="sandbox-total-checks">0</span>
+                <span class="velocity-label">Total Checks</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="sandbox-correct-rate">--</span>
+                <span class="velocity-label">Correct Rate</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="sandbox-today-checks">0</span>
+                <span class="velocity-label">Today</span>
+              </div>
             </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="rt-fastest">--</span>
-              <span class="velocity-label">Fastest</span>
+            <div id="sandbox-activity-chart" class="velocity-chart-container">
+              <!-- Dynamically populated sandbox activity chart -->
             </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="rt-slowest">--</span>
-              <span class="velocity-label">Slowest</span>
-            </div>
-          </div>
-          <div id="rt-trend-container" class="accuracy-trend-container">
-            <!-- Dynamically populated response time trend -->
-          </div>
-          <div id="rt-empty-msg" class="leeches-empty-text" style="display: none;">
-            Response time tracking starts with your next reviews.
-          </div>
-        </div>
-
-        <div class="stats-panel study-time-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            <span>Study Time</span>
-          </h4>
-          <div class="velocity-summary-row">
-            <div class="velocity-card">
-              <span class="velocity-val" id="study-total-time">--</span>
-              <span class="velocity-label">Total Time</span>
-            </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="study-avg-session">--</span>
-              <span class="velocity-label">Avg per Review</span>
-            </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="study-today-time">--</span>
-              <span class="velocity-label">Today</span>
+            <div id="sandbox-empty-msg" class="leeches-empty-text" style="display: none;">
+              No sandbox activity recorded yet. Start checking words!
             </div>
           </div>
         </div>
 
-        <div class="stats-panel sandbox-activity-panel">
-          <h4 class="stats-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            <span>Sandbox Activity</span>
-          </h4>
-          <div class="velocity-summary-row">
-            <div class="velocity-card">
-              <span class="velocity-val" id="sandbox-total-checks">0</span>
-              <span class="velocity-label">Total Checks</span>
+        <!-- Sub-tab 4: Performance -->
+        <div id="stats-subtab-performance" class="stats-subtab-content" style="display: none;">
+          <div class="stats-panel accuracy-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Accuracy Trend</span>
+            </h4>
+            <div id="accuracy-trend-container" class="accuracy-trend-container">
+              <!-- Dynamically populated SVG line chart -->
             </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="sandbox-correct-rate">--</span>
-              <span class="velocity-label">Correct Rate</span>
+            <div id="accuracy-trend-summary" class="accuracy-trend-summary"></div>
+          </div>
+
+          <div class="stats-panel response-time-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Response Time</span>
+            </h4>
+            <div class="response-time-summary-row">
+              <div class="velocity-card">
+                <span class="velocity-val" id="rt-avg">--</span>
+                <span class="velocity-label">Avg Time</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="rt-fastest">--</span>
+                <span class="velocity-label">Fastest</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="rt-slowest">--</span>
+                <span class="velocity-label">Slowest</span>
+              </div>
             </div>
-            <div class="velocity-card">
-              <span class="velocity-val" id="sandbox-today-checks">0</span>
-              <span class="velocity-label">Today</span>
+            <div id="rt-trend-container" class="accuracy-trend-container">
+              <!-- Dynamically populated response time trend -->
+            </div>
+            <div id="rt-empty-msg" class="leeches-empty-text" style="display: none;">
+              Response time tracking starts with your next reviews.
             </div>
           </div>
-          <div id="sandbox-activity-chart" class="velocity-chart-container">
-            <!-- Dynamically populated sandbox activity chart -->
-          </div>
-          <div id="sandbox-empty-msg" class="leeches-empty-text" style="display: none;">
-            No sandbox activity recorded yet. Start checking words!
+
+          <div class="stats-panel study-time-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <span>Study Time</span>
+            </h4>
+            <div class="velocity-summary-row">
+              <div class="velocity-card">
+                <span class="velocity-val" id="study-total-time">--</span>
+                <span class="velocity-label">Total Time</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="study-avg-session">--</span>
+                <span class="velocity-label">Avg per Review</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="study-today-time">--</span>
+                <span class="velocity-label">Today</span>
+              </div>
+            </div>
           </div>
         </div>
 
