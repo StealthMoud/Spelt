@@ -744,7 +744,6 @@
         <h3 id="form-modal-title">Add New Word</h3>
         <form id="word-entry-form">
           <input type="hidden" id="edit-word-id">
-          <input type="hidden" id="form-level">
           <div class="modal-input-item">
             <label>Word *</label>
             <div style="position: relative; display: flex; align-items: center; width: 100%;">
@@ -780,9 +779,23 @@
               </div>
             </div>
           </div>
-          <div class="modal-input-item">
-            <label>Part of Speech</label>
-            <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
+          <div class="modal-input-row">
+            <div class="modal-input-item" style="flex: 1;">
+              <label>Part of Speech</label>
+              <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
+            </div>
+            <div class="modal-input-item" style="flex: 1;">
+              <label>CEFR Level</label>
+              <select id="form-level" class="premium-input select-input">
+                <option value="">None (Unknown)</option>
+                <option value="A1">A1 (Beginner)</option>
+                <option value="A2">A2 (Elementary)</option>
+                <option value="B1">B1 (Intermediate)</option>
+                <option value="B2">B2 (Upper-Intermediate)</option>
+                <option value="C1">C1 (Advanced)</option>
+                <option value="C2">C2 (Proficient)</option>
+              </select>
+            </div>
           </div>
           <div class="modal-input-item">
             <label>Example Sentence</label>

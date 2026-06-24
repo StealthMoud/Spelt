@@ -108,7 +108,7 @@ export async function initVault(onVaultUpdated) {
           ipa = first.phonetics.find(p => p.text)?.text || '';
         }
         document.getElementById('form-transcription').value = ipa;
-        document.getElementById('form-level').value = level;
+        document.getElementById('form-level').value = level ? level.toUpperCase().trim() : '';
         
         const pos = first.meanings[0]?.partOfSpeech || '';
         document.getElementById('form-part-of-speech').value = pos;
@@ -443,7 +443,7 @@ export function openModal(wordObj = null) {
   document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
   document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
   document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
-  document.getElementById('form-level').value = wordObj ? (wordObj.level || '') : '';
+  document.getElementById('form-level').value = wordObj ? (wordObj.level || '').toUpperCase().trim() : '';
   document.getElementById('form-mastered').checked = wordObj ? (wordObj.mastered || false) : false;
   
   currentFormMisspellings = wordObj && wordObj.misspellings ? [...wordObj.misspellings] : [];
