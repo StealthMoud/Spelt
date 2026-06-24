@@ -310,10 +310,19 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
   return card;
 }
 
+// Get YYYY-MM-DD date string in local timezone
+export function getLocalDateString(date = new Date()) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Track study streaks and daily activity
 async function logActivity() {
   const activity = await getStored('spelt_activity') || {};
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   activity[today] = (activity[today] || 0) + 1;
   await setStored('spelt_activity', activity);
   await updateStreak(today);
@@ -322,7 +331,7 @@ async function logActivity() {
 // Recalculate streak based on days consecutive
 async function updateStreak(todayStr) {
   const streak = await getStored('spelt_streak') || { current: 0, lastDate: '', max: 0 };
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
 
   if (streak.lastDate === yesterday) {
     streak.current += 1;
@@ -354,7 +363,7 @@ export async function getActivity() {
 // Log sandbox spelling-check activity for analytics
 export async function logSandboxActivity(result) {
   const data = await getStored('spelt_sandbox_activity') || {};
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   if (!data[today]) data[today] = { checks: 0, correct: 0, misspelled: 0, notFound: 0 };
   data[today].checks++;
   if (result === 'correct') data[today].correct++;

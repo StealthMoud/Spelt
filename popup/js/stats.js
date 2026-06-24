@@ -24,7 +24,7 @@ function findBucketForDate(dateVal, buckets) {
   if (!dateVal) return null;
   const d = new Date(dateVal);
   const time = d.getTime();
-  const dateStrDay = d.toISOString().split('T')[0];
+  const dateStrDay = getLocalDateString(d);
   const dateStrMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   
   return buckets.find(b => {
@@ -579,7 +579,7 @@ export async function renderStats() {
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(today.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = getLocalDateString(d);
         chartBuckets.push({
           dateStr,
           type: 'day',
@@ -595,7 +595,7 @@ export async function renderStats() {
       for (let i = 29; i >= 0; i--) {
         const d = new Date();
         d.setDate(today.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = getLocalDateString(d);
         
         let label = '';
         if (i === 29) label = '30d';
@@ -668,7 +668,7 @@ export async function renderStats() {
         barWidth = Math.min(20, Math.max(4, Math.floor(200 / Math.max(diffDays, 1))));
         const current = new Date(startDate);
         while (current <= endDate) {
-          const dateStr = current.toISOString().split('T')[0];
+          const dateStr = getLocalDateString(current);
           let label = '';
           if (diffDays <= 7) {
             label = current.toLocaleDateString(undefined, { weekday: 'short' });
@@ -706,7 +706,7 @@ export async function renderStats() {
           if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
           
           chartBuckets.push({
-            dateStr: weekStart.toISOString().split('T')[0],
+            dateStr: getLocalDateString(weekStart),
             weekStart: new Date(weekStart),
             weekEnd: new Date(weekEnd),
             type: 'week',
@@ -757,7 +757,7 @@ export async function renderStats() {
     let globalRtMax = 0;
     let globalRtMin = Infinity;
     let todayStudyTimeMs = 0;
-    const todayDateStr = new Date().toISOString().split('T')[0];
+    const todayDateStr = getLocalDateString();
 
     // Process reviews, response times, button distribution, and created words
     words.forEach(w => {
@@ -792,7 +792,7 @@ export async function renderStats() {
             if (h.date) {
               const hDateStr = (typeof h.date === 'string' && h.date.includes('-'))
                 ? h.date
-                : new Date(Number(h.date)).toISOString().split('T')[0];
+                : getLocalDateString(new Date(Number(h.date)));
               if (hDateStr === todayDateStr) {
                 todayStudyTimeMs += h.rt;
               }
@@ -812,7 +812,7 @@ export async function renderStats() {
             
             const matchingBucket = chartBuckets.find(b => {
               if (b.type === 'day') {
-                return b.dateStr === rDate.toISOString().split('T')[0];
+                return b.dateStr === getLocalDateString(rDate);
               } else if (b.type === 'week') {
                 return rTime >= b.weekStart.getTime() && rTime <= b.weekEnd.getTime();
               } else if (b.type === 'month') {
@@ -1019,14 +1019,31 @@ export async function renderStats() {
 
     // NEW PANEL 1: Activity Heatmap
     const heatmapContainer = document.getElementById('stats-heatmap-container');
+    const monthsContainer = document.getElementById('stats-heatmap-months');
+    const heatmapYearEl = document.getElementById('stats-heatmap-year');
     if (heatmapContainer) {
       heatmapContainer.innerHTML = '';
-      const tempDate = new Date();
-      // Go back 364 days so we show exactly 365 days including today
-      tempDate.setDate(tempDate.getDate() - 364);
+      if (monthsContainer) monthsContainer.innerHTML = '';
 
-      for (let i = 0; i < 365; i++) {
-        const dateStr = tempDate.toISOString().split('T')[0];
+      const tempDate = new Date();
+      const endYear = tempDate.getFullYear();
+      
+      // Go back 53 weeks (371 days) and align the start to a Monday to prevent jagged grid columns
+      const dayOfWeek = tempDate.getDay();
+      const offsetDays = 364 + (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+      tempDate.setDate(tempDate.getDate() - offsetDays);
+      const startYear = tempDate.getFullYear();
+
+      // Display Year Range
+      if (heatmapYearEl) {
+        heatmapYearEl.textContent = startYear === endYear ? `${startYear}` : `${startYear} - ${endYear}`;
+      }
+
+      let currentMonthName = '';
+      const totalDays = 371; // 53 weeks * 7 days
+
+      for (let i = 0; i < totalDays; i++) {
+        const dateStr = getLocalDateString(tempDate);
         const count = activity[dateStr] || 0;
 
         let level = 0;
@@ -1039,7 +1056,12 @@ export async function renderStats() {
         cell.className = 'heatmap-cell';
         cell.setAttribute('data-level', level.toString());
 
-        const formattedDate = tempDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        const formattedDate = tempDate.toLocaleDateString(undefined, { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        });
         const tooltipText = `<strong>${formattedDate}</strong><br/>${count} review${count === 1 ? '' : 's'}`;
 
         cell.addEventListener('mouseenter', (e) => {
@@ -1050,6 +1072,20 @@ export async function renderStats() {
         });
 
         heatmapContainer.appendChild(cell);
+
+        // Dynamically insert Month labels above the correct columns (weeks starting on Monday)
+        if (i % 7 === 0 && monthsContainer) {
+          const monthName = tempDate.toLocaleDateString(undefined, { month: 'short' });
+          if (monthName !== currentMonthName) {
+            const monthLabel = document.createElement('span');
+            monthLabel.className = 'heatmap-month-label';
+            monthLabel.textContent = monthName;
+            monthLabel.style.gridColumnStart = Math.floor(i / 7) + 1;
+            monthsContainer.appendChild(monthLabel);
+            currentMonthName = monthName;
+          }
+        }
+
         tempDate.setDate(tempDate.getDate() + 1);
       }
     }
