@@ -1,4 +1,4 @@
-import { getWords, getStreak, getActivity, getSandboxActivity, getSessions, getLocalDateString } from '../../shared/storage.js';
+import { getWords, getStreak, getSandboxActivity, getSessions, getLocalDateString } from '../../shared/storage.js';
 
 let statsTooltipEl = null;
 
@@ -559,7 +559,6 @@ export async function renderStats() {
   try {
     const words = await getWords();
     const streak = await getStreak();
-    const activity = await getActivity();
     const sandboxActivity = await getSandboxActivity();
 
     // 1. Calculate General Summary metrics
@@ -752,6 +751,7 @@ export async function renderStats() {
     });
 
     // Global Response Time & Study Time metrics
+    const reviewActivity = {};
     let globalRtSum = 0;
     let globalRtCount = 0;
     let globalRtMax = 0;
@@ -774,6 +774,14 @@ export async function renderStats() {
           totalReviews++;
           const isCorrect = h.q >= 3;
           if (isCorrect) correctReviews++;
+
+          // Track review activity per date
+          if (h.date) {
+            const hDateStr = (typeof h.date === 'string' && h.date.includes('-'))
+              ? h.date
+              : getLocalDateString(new Date(Number(h.date)));
+            reviewActivity[hDateStr] = (reviewActivity[hDateStr] || 0) + 1;
+          }
 
           // Button choice distribution
           if (h.q < 3) buttonCounts.again++;
@@ -1044,7 +1052,7 @@ export async function renderStats() {
 
       for (let i = 0; i < totalDays; i++) {
         const dateStr = getLocalDateString(tempDate);
-        const count = activity[dateStr] || 0;
+        const count = reviewActivity[dateStr] || 0;
 
         let level = 0;
         if (count > 0 && count <= 3) level = 1;
