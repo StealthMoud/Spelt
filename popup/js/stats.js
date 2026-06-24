@@ -1,4 +1,4 @@
-import { getWords, getStreak, getActivity, getSandboxActivity, getSessions } from '../../shared/storage.js';
+import { getWords, getStreak, getActivity, getSandboxActivity, getSessions, getLocalDateString } from '../../shared/storage.js';
 
 let statsTooltipEl = null;
 
