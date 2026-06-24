@@ -165,11 +165,23 @@ export function initSandbox(reloadVaultList, loadPracticeDeck) {
     const isSandboxActive = sandboxTab && (sandboxTab.classList.contains('active') || window.getComputedStyle(sandboxTab).display !== 'none');
     if (!isSandboxActive) return;
 
-    const activeEl = document.activeElement;
-    const isTyping = activeEl && (activeEl.id === 'word-input' || activeEl.id === 'manual-correction-input') && activeEl.value.trim() !== '';
+    const active = document.activeElement;
+    const isTyping = active && (
+      active.tagName === 'TEXTAREA' ||
+      (active.tagName === 'INPUT' && ['text', 'search', 'password', 'email', 'number', 'url'].includes(active.type))
+    );
 
     const feedbackMsg = document.getElementById('feedback-msg');
     if (!feedbackMsg || feedbackMsg.style.display === 'none') return;
+
+    if ((e.key === 't' || e.key === 'T') && !isTyping) {
+      const translateBtn = feedbackMsg.querySelector('.translate-example-btn');
+      if (translateBtn) {
+        e.preventDefault();
+        translateBtn.click();
+      }
+      return;
+    }
 
     const acceptBtn = document.querySelector('.accept-suggestion-btn');
     const rejectBtn = document.querySelector('.reject-suggestion-btn');

@@ -163,9 +163,25 @@ export async function initPractice(onDeckUpdated) {
     const cardEl = document.getElementById('popup-deck-card');
     if (!cardEl) return;
 
+    const active = document.activeElement;
+    const isTyping = active && (
+      active.tagName === 'TEXTAREA' ||
+      (active.tagName === 'INPUT' && ['text', 'search', 'password', 'email', 'number', 'url'].includes(active.type))
+    );
+
+    if ((e.key === 't' || e.key === 'T') && !isTyping) {
+      e.preventDefault();
+      e.stopPropagation();
+      const isFlipped = cardEl.classList.contains('flipped');
+      const btnId = isFlipped ? 'back-translate-btn' : 'practice-translate-btn';
+      const translateBtn = document.getElementById(btnId);
+      if (translateBtn) translateBtn.click();
+      return;
+    }
+
     if (!cardEl.classList.contains('flipped')) {
       const spellInput = document.getElementById('spelling-input');
-      const isTyping = document.activeElement === spellInput;
+      const isTypingSpell = document.activeElement === spellInput;
 
       if (e.key === ' ') {
         e.preventDefault();
@@ -173,7 +189,7 @@ export async function initPractice(onDeckUpdated) {
         const playBtn = document.querySelector('#practice-audio-container .audio-play-btn');
         if (playBtn) playBtn.click();
       } else if (e.key === 'Enter') {
-        if (!isTyping) {
+        if (!isTypingSpell) {
           e.preventDefault();
           e.stopPropagation();
           spellInput?.focus();

@@ -18,12 +18,27 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_target_lang: e.target.value });
   });
 
+  // Selection lookup sync
+  chrome.storage?.local.get('spelt_selection_lookup', (res) => {
+    const enabled = res.spelt_selection_lookup !== false;
+    const checkboxEl = document.getElementById('setting-selection-lookup');
+    if (checkboxEl) checkboxEl.checked = enabled;
+  });
+
+  document.getElementById('setting-selection-lookup')?.addEventListener('change', (e) => {
+    chrome.storage?.local.set({ spelt_selection_lookup: e.target.checked });
+  });
+
   // Keep setting values synchronized in real-time
   chrome.storage?.onChanged.addListener((changes, area) => {
     if (area === 'local') {
       if (changes.spelt_target_lang) {
         const el = document.getElementById('setting-target-lang');
         if (el) el.value = changes.spelt_target_lang.newValue || 'none';
+      }
+      if (changes.spelt_selection_lookup) {
+        const el = document.getElementById('setting-selection-lookup');
+        if (el) el.checked = changes.spelt_selection_lookup.newValue !== false;
       }
     }
   });

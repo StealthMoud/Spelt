@@ -239,6 +239,112 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initResizer();
 
+  function initSelectionLookup() {
+    const floatingBtn = document.createElement('button');
+    floatingBtn.id = 'floating-lookup-btn';
+    floatingBtn.className = 'floating-lookup-btn';
+    floatingBtn.type = 'button';
+    floatingBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Lookup</span>
+    `;
+    document.body.appendChild(floatingBtn);
+
+    let isSelectionLookupEnabled = true;
+
+    // Load initial setting
+    chrome.storage?.local.get('spelt_selection_lookup', (res) => {
+      isSelectionLookupEnabled = res.spelt_selection_lookup !== false;
+    });
+
+    // Watch for setting updates
+    chrome.storage?.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes.spelt_selection_lookup) {
+        isSelectionLookupEnabled = changes.spelt_selection_lookup.newValue !== false;
+        if (!isSelectionLookupEnabled) {
+          hideBtn();
+        }
+      }
+    });
+
+    function hideBtn() {
+      floatingBtn.classList.remove('visible');
+    }
+
+    document.addEventListener('selectionchange', () => {
+      if (!isSelectionLookupEnabled) return;
+      
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      
+      if (!text || text.length < 2 || text.length > 40 || text.includes('\n')) {
+        hideBtn();
+        return;
+      }
+      
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        
+        if (rect.width > 0 && rect.height > 0) {
+          const btnWidth = 72;
+          let left = rect.left + rect.width / 2;
+          let top = rect.top + window.scrollY;
+          
+          const viewportWidth = document.body.clientWidth || window.innerWidth;
+          if (left < btnWidth / 2) left = btnWidth / 2;
+          if (left > viewportWidth - btnWidth / 2) left = viewportWidth - btnWidth / 2;
+          
+          floatingBtn.style.left = `${left}px`;
+          floatingBtn.style.top = `${top}px`;
+          floatingBtn.classList.add('visible');
+        } else {
+          hideBtn();
+        }
+      } else {
+        hideBtn();
+      }
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (e.target.closest('#floating-lookup-btn')) return;
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection.toString().trim()) {
+          hideBtn();
+        }
+      }, 50);
+    });
+
+    floatingBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      if (text) {
+        selection.removeAllRanges();
+        hideBtn();
+        
+        const sandboxTabBtn = document.querySelector('.tab-btn[data-tab="sandbox-tab"]');
+        if (sandboxTabBtn) {
+          sandboxTabBtn.click();
+        }
+        
+        const wordInput = document.getElementById('word-input');
+        if (wordInput) {
+          wordInput.value = text;
+          const form = document.getElementById('quick-add-form');
+          if (form) {
+            form.dispatchEvent(new Event('submit'));
+          }
+        }
+      }
+    });
+  }
+
+  initSelectionLookup();
+
   // immediately focus the sandbox input so user can start typing
   document.getElementById('word-input')?.focus();
 });

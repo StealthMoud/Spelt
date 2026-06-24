@@ -487,6 +487,14 @@
             </select>
           </div>
           <div class="settings-block">
+            <strong>Text Selection Lookup</strong>
+            <p>Show a quick-lookup button when selecting text within the popup.</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+              <input type="checkbox" id="setting-selection-lookup" style="accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px; margin: 0;">
+              <label for="setting-selection-lookup" style="cursor: pointer; font-size: 0.72rem; color: var(--text-muted); user-select: none; margin: 0;">Enable selection lookup button</label>
+            </div>
+          </div>
+          <div class="settings-block">
             <strong>Keyboard Shortcuts</strong>
             <p>Study efficiently without moving your hands to the mouse:</p>
             <div class="shortcut-list">
@@ -497,6 +505,10 @@
               <div class="shortcut-row">
                 <span>Play Audio (Sandbox / practice)</span>
                 <kbd>Space</kbd>
+              </div>
+              <div class="shortcut-row">
+                <span>Translate Example</span>
+                <kbd>T</kbd>
               </div>
               <div class="shortcut-row">
                 <span>Verify / Accept suggestion / Refocus</span>
