@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation, fetchCambridgePronunciation } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], onDeckUpdatedCallback = null;
@@ -301,6 +301,36 @@ function showPracticeCard() {
   document.getElementById('practice-translation').textContent = card.translation || '--';
   document.getElementById('practice-part-of-speech').textContent = card.partOfSpeech || 'unknown';
 
+  const levelContainer = document.getElementById('practice-level-container');
+  const levelEl = document.getElementById('practice-level');
+  if (levelContainer && levelEl) {
+    if (card.level) {
+      levelEl.textContent = card.level;
+      levelContainer.style.display = 'block';
+    } else {
+      levelEl.textContent = '';
+      levelContainer.style.display = 'none';
+      (async () => {
+        try {
+          const cambridge = await fetchCambridgePronunciation(card.word);
+          if (cambridge.level) {
+            card.level = cambridge.level;
+            levelEl.textContent = card.level;
+            levelContainer.style.display = 'block';
+            const allWords = await getWords();
+            const wObj = allWords.find(w => w.id === card.id);
+            if (wObj) {
+              wObj.level = card.level;
+              await saveWords(allWords);
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to fetch level on-the-fly:', err);
+        }
+      })();
+    }
+  }
+
   const exampleContainer = document.getElementById('practice-example-container');
   const exampleTransEl = document.getElementById('practice-example-translation');
   const translateBtn = document.getElementById('practice-translate-btn');
@@ -347,6 +377,18 @@ function checkSpelling() {
   document.getElementById('back-definition-display').textContent = card.definition;
   document.getElementById('back-transcription-display').textContent = card.transcription || '/--/';
   document.getElementById('back-part-of-speech-display').textContent = card.partOfSpeech || 'unknown';
+
+  const backLevelRow = document.getElementById('back-level-row');
+  const backLevelDisplay = document.getElementById('back-level-display');
+  if (backLevelRow && backLevelDisplay) {
+    const activeLevel = card.level || document.getElementById('practice-level')?.textContent;
+    if (activeLevel) {
+      backLevelDisplay.textContent = activeLevel;
+      backLevelRow.style.display = 'block';
+    } else {
+      backLevelRow.style.display = 'none';
+    }
+  }
 
   const backExampleContainer = document.getElementById('back-example-container');
   const backTransContainer = document.getElementById('back-example-translation-container');

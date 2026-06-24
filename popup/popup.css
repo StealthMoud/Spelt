@@ -523,6 +523,11 @@ body {
   color: var(--primary-light);
   border: 1px solid hsla(155, 65%, 48%, 0.25);
 }
+.feedback-badge.level {
+  background: hsla(35, 90%, 55%, 0.12);
+  color: #f59e0b;
+  border: 1px solid hsla(35, 90%, 55%, 0.25);
+}
 .feedback-badge.trans {
   background: hsla(265, 80%, 65%, 0.12);
   color: var(--purple);

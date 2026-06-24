@@ -276,14 +276,54 @@ async function handleVerify() {
       const data = await response.json();
       await handleCorrectSpelling(data[0], word);
     } else {
-      const suggestions = await findSuggestions(lowerWord);
-      if (suggestions.length > 0) {
-        feedbackMsg.setAttribute('data-original-query', word);
-        feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify(suggestions));
-        await renderMisspellingCard(word, suggestions, 0);
-        document.getElementById('word-input')?.blur();
+      // Fallback check: see if Cambridge/Oxford has this word
+      let isWordValid = false;
+      let cambridgeData = null;
+      try {
+        cambridgeData = await fetchCambridgePronunciation(lowerWord);
+        if (cambridgeData.ukIpa || cambridgeData.usIpa || cambridgeData.level || cambridgeData.ukAudio) {
+          isWordValid = true;
+        }
+      } catch (_) {}
+      
+      if (!isWordValid) {
+        // Double check via dynamic definition
+        try {
+          const dynamicDef = await fetchDynamicDefinition(lowerWord);
+          if (dynamicDef && dynamicDef !== 'No definition found') {
+            isWordValid = true;
+          }
+        } catch (_) {}
+      }
+      
+      if (isWordValid) {
+        // Construct a mock apiData object and handle it as correct spelling
+        const mockApiData = {
+          word: lowerWord,
+          phonetics: [],
+          meanings: [
+            {
+              partOfSpeech: '',
+              definitions: [
+                {
+                  definition: 'No definition found',
+                  example: ''
+                }
+              ]
+            }
+          ]
+        };
+        await handleCorrectSpelling(mockApiData, word);
       } else {
-        await showManualCorrectionForm(word);
+        const suggestions = await findSuggestions(lowerWord);
+        if (suggestions.length > 0) {
+          feedbackMsg.setAttribute('data-original-query', word);
+          feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify(suggestions));
+          await renderMisspellingCard(word, suggestions, 0);
+          document.getElementById('word-input')?.blur();
+        } else {
+          await showManualCorrectionForm(word);
+        }
       }
     }
   } catch (err) { feedbackMsg.innerHTML = `<p style="color: var(--danger);">Error: ${err.message}</p>`; }
@@ -296,6 +336,7 @@ const closeBtnHtml = `
 async function handleCorrectSpelling(apiData, word) {
   const def = await fetchDynamicDefinition(word) || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
   let ipa = '';
+  let level = '';
   try {
     const cambridge = await fetchCambridgePronunciation(word);
     if (cambridge.ukIpa && cambridge.usIpa) {
@@ -303,6 +344,7 @@ async function handleCorrectSpelling(apiData, word) {
     } else {
       ipa = cambridge.ukIpa || cambridge.usIpa || '';
     }
+    level = cambridge.level || '';
   } catch (_) {}
   if (!ipa) {
     ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
@@ -318,7 +360,12 @@ async function handleCorrectSpelling(apiData, word) {
   try {
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
+    if (existing && level && !existing.level) {
+      existing.level = level;
+      await saveWords(words);
+    }
     const exampleTranslation = existing ? (existing.exampleTranslation || '') : '';
+    const wordLevel = (existing && existing.level) ? existing.level : level;
     let subtext = '';
     
     if (existing) {
@@ -334,6 +381,7 @@ async function handleCorrectSpelling(apiData, word) {
             data-part-of-speech="${partOfSpeech.replace(/"/g, '&quot;')}" 
             data-example="${example.replace(/"/g, '&quot;')}" 
             data-translation="${translation.replace(/"/g, '&quot;')}"
+            data-level="${wordLevel.replace(/"/g, '&quot;')}"
             style="width: auto; padding: 4px 10px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 11px; height: 11px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Add to Vault</span>
@@ -352,6 +400,7 @@ async function handleCorrectSpelling(apiData, word) {
       <div class="feedback-details">
         <div class="feedback-meta-row">
           ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
+          ${wordLevel ? `<span class="feedback-badge level">${wordLevel}</span>` : ''}
           ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
         </div>
         <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
@@ -385,7 +434,7 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   const feedbackMsg = document.getElementById('feedback-msg');
   const suggestion = suggestions[activeIndex];
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Retrieving suggestions...</p>';
-  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '';
+  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '', level = '';
   try {
     const cambridge = await fetchCambridgePronunciation(suggestion);
     if (cambridge.ukIpa && cambridge.usIpa) {
@@ -393,6 +442,7 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
     } else {
       ipa = cambridge.ukIpa || cambridge.usIpa || '';
     }
+    level = cambridge.level || '';
   } catch (_) {}
 
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);
@@ -435,6 +485,7 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
     <div class="feedback-details">
       <div class="feedback-meta-row">
         ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
+        ${level ? `<span class="feedback-badge level">${level}</span>` : ''}
         ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
       </div>
       <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
@@ -478,7 +529,7 @@ async function acceptSuggestion(suggestion, original) {
   const words = await getWords();
   const exists = words.some(w => w.word.toLowerCase() === suggestion.toLowerCase());
 
-  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '';
+  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '', level = '';
   try {
     const cambridge = await fetchCambridgePronunciation(suggestion);
     if (cambridge.ukIpa && cambridge.usIpa) {
@@ -486,6 +537,7 @@ async function acceptSuggestion(suggestion, original) {
     } else {
       ipa = cambridge.ukIpa || cambridge.usIpa || '';
     }
+    level = cambridge.level || '';
   } catch (_) {}
 
   let isInvalidWord = false;
@@ -534,7 +586,7 @@ async function acceptSuggestion(suggestion, original) {
   }
 
   if (!ipa) ipa = '/--/';
-  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech, example });
+  await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech, example, level });
   const exampleText = example ? `<p style="font-size: 0.65rem; color: var(--primary-light); font-style: italic; margin: 4px 0 0;">"${example}"</p>` : '';
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
@@ -588,6 +640,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
     const exists = words.some(w => w.word.toLowerCase() === correctWord.toLowerCase());
 
     let ipa = '';
+    let level = '';
     try {
       const cambridge = await fetchCambridgePronunciation(correctWord);
       if (cambridge.ukIpa && cambridge.usIpa) {
@@ -595,6 +648,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
       } else {
         ipa = cambridge.ukIpa || cambridge.usIpa || '';
       }
+      level = cambridge.level || '';
     } catch (_) {}
 
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(correctWord.toLowerCase())}`);
@@ -615,9 +669,9 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
         translation = await translateWord(correctWord);
       } catch (_) {}
 
-      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech, example, exampleTranslation });
+      await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech, example, exampleTranslation, level });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
-        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech, example, exampleTranslation });
+        await registerMisspelling(correctWord, wrongAttempt, { definition: def, transcription: ipa, partOfSpeech, example, exampleTranslation, level });
       }
       
       feedbackMsg.innerHTML = `
@@ -628,6 +682,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
         <div class="feedback-details">
           <div class="feedback-meta-row">
             ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
+            ${level ? `<span class="feedback-badge level">${level}</span>` : ''}
             ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
           </div>
           <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
@@ -811,6 +866,7 @@ async function handleAddToVault(btn) {
     const partOfSpeech = btn.getAttribute('data-part-of-speech') || '';
     const example = btn.getAttribute('data-example') || '';
     const translation = btn.getAttribute('data-translation') || '';
+    const level = btn.getAttribute('data-level') || '';
 
     await addWord({
       word,
@@ -818,7 +874,8 @@ async function handleAddToVault(btn) {
       transcription,
       partOfSpeech,
       example,
-      translation
+      translation,
+      level
     });
 
     feedbackMsg.innerHTML = `

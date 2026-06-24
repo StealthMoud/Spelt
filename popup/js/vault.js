@@ -94,6 +94,7 @@ export async function initVault(onVaultUpdated) {
         document.getElementById('form-definition').value = def;
         
         let ipa = '';
+        let level = '';
         try {
           const cambridge = await fetchCambridgePronunciation(word);
           if (cambridge.ukIpa && cambridge.usIpa) {
@@ -101,11 +102,13 @@ export async function initVault(onVaultUpdated) {
           } else {
             ipa = cambridge.ukIpa || cambridge.usIpa || '';
           }
+          level = cambridge.level || '';
         } catch (_) {}
         if (!ipa) {
           ipa = first.phonetics.find(p => p.text)?.text || '';
         }
         document.getElementById('form-transcription').value = ipa;
+        document.getElementById('form-level').value = level;
         
         const pos = first.meanings[0]?.partOfSpeech || '';
         document.getElementById('form-part-of-speech').value = pos;
@@ -440,6 +443,7 @@ export function openModal(wordObj = null) {
   document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
   document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
   document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
+  document.getElementById('form-level').value = wordObj ? (wordObj.level || '') : '';
   document.getElementById('form-mastered').checked = wordObj ? (wordObj.mastered || false) : false;
   
   currentFormMisspellings = wordObj && wordObj.misspellings ? [...wordObj.misspellings] : [];
@@ -463,8 +467,9 @@ async function saveWord(e) {
   const translation = document.getElementById('form-translation').value.trim();
   const partOfSpeech = document.getElementById('form-part-of-speech').value.trim();
   const example = document.getElementById('form-example').value.trim();
+  const level = document.getElementById('form-level').value.trim();
   const mastered = document.getElementById('form-mastered').checked;
-
+ 
   const executeSave = async () => {
     try {
       if (id) {
@@ -482,6 +487,7 @@ async function saveWord(e) {
             partOfSpeech, 
             example, 
             exampleTranslation, 
+            level,
             mastered,
             misspellings: currentFormMisspellings
           };
@@ -498,7 +504,7 @@ async function saveWord(e) {
           await saveWords(wordsList);
         }
       } else {
-        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, mastered, misspellings: currentFormMisspellings });
+        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, mastered, misspellings: currentFormMisspellings });
         if (mastered) {
           const list = await getWords();
           const wObj = list.find(w => w.id === addedWord.id);

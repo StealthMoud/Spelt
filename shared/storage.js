@@ -195,6 +195,7 @@ export async function addWord(wordData) {
     nextDate: wordData.nextDate !== undefined ? wordData.nextDate : Date.now(),
     createdAt: Date.now(),
     history: [],
+    level: wordData.level || '',
     misspellings: Array.isArray(wordData.misspellings) ? wordData.misspellings : []
   };
 
@@ -228,6 +229,9 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
 
     if (details.partOfSpeech && !wordObj.partOfSpeech) {
       wordObj.partOfSpeech = details.partOfSpeech;
+    }
+    if (details.level && !wordObj.level) {
+      wordObj.level = details.level;
     }
 
     if (!wordObj.definition?.trim() || wordObj.definition === 'No definition found') {
@@ -263,6 +267,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
       partOfSpeech: details.partOfSpeech,
       example: details.example,
       translation: details.translation,
+      level: details.level,
       misspellings: wrongSpelling ? [wrongSpelling] : []
     });
   }
@@ -667,7 +672,7 @@ export async function logDebug(data) {
 // Fetch accurate UK/US IPA transcriptions and MP3 URLs dynamically from Cambridge or Oxford Learner's Dictionary
 export async function fetchCambridgePronunciation(word) {
   const cleanWord = word.trim().toLowerCase();
-  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '' };
+  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '' };
   
   // 1. Try Cambridge Dictionary first
   try {
@@ -704,8 +709,19 @@ export async function fetchCambridgePronunciation(word) {
         if (ipaMatch) {
           result.usIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
         }
+        }
+        
+        // Extract CEFR level from Cambridge
+        const levelRegex = /<span\s+class="[^"]*(?:epp-xref|level|cefr)[^"]*"[^>]*>([\s\S]*?)<\/span>/gi;
+        let m;
+        while ((m = levelRegex.exec(html)) !== null) {
+          const txt = m[1].replace(/<[^>]*>/g, '').trim().toUpperCase();
+          if (/^[A-C][1-2]$/.test(txt)) {
+            result.level = txt;
+            break;
+          }
+        }
       }
-    }
   } catch (err) {
     triggerNetworkError();
     console.info('Cambridge fetch failed:', err.message || err);
@@ -736,6 +752,26 @@ export async function fetchCambridgePronunciation(word) {
         if (usMatch) {
           if (!result.usAudio) result.usAudio = usMatch[1];
           if (!result.usIpa) result.usIpa = usMatch[2].trim();
+        }
+
+        // Extract CEFR level from Oxford fallback
+        if (!result.level) {
+          const cefrRegex = /<span\s+class="cefr"[^>]*>([\s\S]*?)<\/span>/gi;
+          let m;
+          while ((m = cefrRegex.exec(html)) !== null) {
+            const txt = m[1].replace(/<[^>]*>/g, '').trim().toUpperCase();
+            if (/^[A-C][1-2]$/.test(txt)) {
+              result.level = txt;
+              break;
+            }
+          }
+        }
+        if (!result.level) {
+          const oxRegex = /data-ox(?:3000|5000)="([a-c][1-2])"/i;
+          const oxMatch = oxRegex.exec(html);
+          if (oxMatch) {
+            result.level = oxMatch[1].toUpperCase();
+          }
         }
       }
     } catch (err) {
