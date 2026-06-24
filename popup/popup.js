@@ -155,6 +155,90 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await refreshStats();
 
+  function initResizer() {
+    const handles = document.querySelectorAll('.resizer');
+    let startX, startY, startWidth, startHeight;
+    let activeHandle = null;
+
+    chrome.storage?.local.get(['spelt_popup_width', 'spelt_popup_height'], (res) => {
+      const width = res.spelt_popup_width || 360;
+      const height = res.spelt_popup_height || 530;
+      
+      document.body.style.width = width + 'px';
+      document.body.style.height = height + 'px';
+      document.documentElement.style.width = width + 'px';
+      document.documentElement.style.height = height + 'px';
+    });
+
+    handles.forEach(handle => {
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        activeHandle = handle;
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = parseInt(document.defaultView.getComputedStyle(document.body).width, 10);
+        startHeight = parseInt(document.defaultView.getComputedStyle(document.body).height, 10);
+        handle.classList.add('dragging');
+        
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDrag);
+      });
+    });
+
+    function drag(e) {
+      if (!activeHandle) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+
+      const isL = activeHandle.classList.contains('resizer-l') || activeHandle.classList.contains('resizer-bl') || activeHandle.classList.contains('resizer-tl');
+      const isR = activeHandle.classList.contains('resizer-r') || activeHandle.classList.contains('resizer-br') || activeHandle.classList.contains('resizer-tr');
+      const isB = activeHandle.classList.contains('resizer-b') || activeHandle.classList.contains('resizer-bl') || activeHandle.classList.contains('resizer-br');
+      const isT = activeHandle.classList.contains('resizer-t') || activeHandle.classList.contains('resizer-tl') || activeHandle.classList.contains('resizer-tr');
+
+      if (isR) {
+        newWidth = startWidth + dx;
+      } else if (isL) {
+        newWidth = startWidth - dx;
+      }
+
+      if (isB) {
+        newHeight = startHeight + dy;
+      } else if (isT) {
+        newHeight = startHeight - dy;
+      }
+
+      newWidth = Math.max(320, Math.min(800, newWidth));
+      newHeight = Math.max(400, Math.min(600, newHeight));
+
+      document.body.style.width = newWidth + 'px';
+      document.body.style.height = newHeight + 'px';
+      document.documentElement.style.width = newWidth + 'px';
+      document.documentElement.style.height = newHeight + 'px';
+    }
+
+    function stopDrag() {
+      if (activeHandle) {
+        activeHandle.classList.remove('dragging');
+        const finalWidth = parseInt(document.body.style.width, 10);
+        const finalHeight = parseInt(document.body.style.height, 10);
+        if (finalWidth && finalHeight) {
+          chrome.storage?.local.set({
+            spelt_popup_width: finalWidth,
+            spelt_popup_height: finalHeight
+          });
+        }
+        activeHandle = null;
+      }
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('mouseup', stopDrag);
+    }
+  }
+
+  initResizer();
+
   // immediately focus the sandbox input so user can start typing
   document.getElementById('word-input')?.focus();
 });

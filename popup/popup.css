@@ -35,17 +35,97 @@
   --radius-full: 9999px;
 }
 
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 360px;
+  height: 530px;
+  min-width: 320px;
+  max-width: 800px;
+  min-height: 400px;
+  max-height: 600px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-dark);
   background-image: 
     radial-gradient(circle at 50% 0%, hsla(155, 60%, 25%, 0.12) 0%, transparent 50%),
     radial-gradient(circle at 0% 100%, hsla(265, 50%, 20%, 0.08) 0%, transparent 40%);
   color: var(--text-main);
-  overflow: hidden;
+}
+
+/* Resizer border and corner handles */
+.resizer {
+  position: fixed;
+  background: transparent;
+  z-index: 100000;
+  transition: background-color var(--transition-fast);
+}
+.resizer:hover, .resizer.dragging {
+  background: hsla(155, 65%, 48%, 0.25);
+}
+.resizer-l {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: ew-resize;
+}
+.resizer-r {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: ew-resize;
+}
+.resizer-b {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: ns-resize;
+}
+.resizer-t {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: ns-resize;
+}
+.resizer-bl {
+  left: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+  z-index: 100001;
+}
+.resizer-br {
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+  z-index: 100001;
+}
+.resizer-tl {
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+  z-index: 100001;
+}
+.resizer-tr {
+  right: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+  z-index: 100001;
 }
 
 /* Base scrollbar styling */
@@ -67,7 +147,8 @@ body {
 .spelt-popup {
   display: flex;
   flex-direction: column;
-  height: 530px;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
 }
 
@@ -532,19 +613,26 @@ body {
 .card-front {
   transform: rotateY(0deg);
   z-index: 2;
+  pointer-events: auto;
   padding: 14px;
 }
 
 .card-back {
   transform: rotateY(180deg);
+  z-index: 1;
+  pointer-events: none;
   padding: 14px;
 }
 
 .flashcard.flipped .card-front {
   transform: rotateY(-180deg);
+  z-index: 1;
+  pointer-events: none;
 }
 .flashcard.flipped .card-back {
   transform: rotateY(0deg);
+  z-index: 2;
+  pointer-events: auto;
 }
 
 /* Clue structure on card face */
