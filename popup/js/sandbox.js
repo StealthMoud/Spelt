@@ -799,6 +799,45 @@ function isValidSuggestion(query, candidate, d) {
   return true;
 }
 
+async function isWordSpellingValid(word) {
+  const lower = word.toLowerCase();
+  
+  // 1. Vault check
+  try {
+    const vaultWords = await getWords();
+    if (vaultWords.some(w => w.word.toLowerCase() === lower)) return true;
+  } catch (_) {}
+  
+  // 2. Spelling map check
+  if (Object.values(spellingMap).includes(lower)) return true;
+  
+  // 3. Common words list check
+  if (commonWords.includes(lower)) return true;
+  
+  // 4. Dictionary API check
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lower)}`);
+    if (res.ok) return true;
+  } catch (_) {}
+  
+  // 5. Cambridge check
+  try {
+    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(lower)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (res.ok) {
+      const finalUrl = res.url.toLowerCase();
+      if (!finalUrl.endsWith('/english/') && !finalUrl.endsWith('/english')) {
+        const cambridge = await fetchCambridgePronunciation(lower);
+        if (cambridge.ukIpa || cambridge.usIpa || cambridge.level || cambridge.ukAudio) {
+          return true;
+        }
+      }
+    }
+  } catch (_) {}
+  
+  return false;
+}
+
 async function findSuggestions(word) {
   const lower = word.toLowerCase();
   if (spellingMap[lower]) return [spellingMap[lower]];
@@ -836,7 +875,15 @@ async function findSuggestions(word) {
     });
   }
   matches.sort((a, b) => a.dist - b.dist);
-  return [...new Set(matches.map(m => m.word).filter(w => w.toLowerCase() !== lower))].slice(0, 4);
+  const uniqueMatches = [...new Set(matches.map(m => m.word).filter(w => w.toLowerCase() !== lower))];
+  const validSuggestions = [];
+  for (const s of uniqueMatches) {
+    if (await isWordSpellingValid(s)) {
+      validSuggestions.push(s);
+      if (validSuggestions.length >= 4) break;
+    }
+  }
+  return validSuggestions;
 }
 
 function getLevenshtein(a, b) {

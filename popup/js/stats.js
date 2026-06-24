@@ -767,8 +767,13 @@ export async function renderStats() {
             if (h.rt < globalRtMin) globalRtMin = h.rt;
 
             // Today's study time
-            if (h.date && h.date.startsWith(todayDateStr)) {
-              todayStudyTimeMs += h.rt;
+            if (h.date) {
+              const hDateStr = (typeof h.date === 'string' && h.date.includes('-'))
+                ? h.date
+                : new Date(Number(h.date)).toISOString().split('T')[0];
+              if (hDateStr === todayDateStr) {
+                todayStudyTimeMs += h.rt;
+              }
             }
 
             const bRt = findBucketForDate(h.date, chartBuckets);
