@@ -810,3 +810,27 @@ export async function fetchCambridgePronunciation(word) {
   return result;
 }
 
+// Read continuous study session history
+export async function getSessions() {
+  return await getStored('spelt_sessions') || [];
+}
+
+// Log or update continuous study session
+export async function logSession(sessionData) {
+  const sessions = await getSessions();
+  const idx = sessions.findIndex(s => s.startTime === sessionData.startTime);
+  if (idx !== -1) {
+    sessions[idx] = sessionData;
+  } else {
+    sessions.push(sessionData);
+  }
+  
+  // Cap at 200 sessions to avoid unbounded storage usage
+  if (sessions.length > 200) {
+    sessions.shift();
+  }
+  
+  await setStored('spelt_sessions', sessions);
+}
+
+

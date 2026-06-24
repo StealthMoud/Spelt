@@ -1,4 +1,4 @@
-import { getWords, getStreak, getActivity, getSandboxActivity } from '../../shared/storage.js';
+import { getWords, getStreak, getActivity, getSandboxActivity, getSessions } from '../../shared/storage.js';
 
 let statsTooltipEl = null;
 
@@ -1162,9 +1162,39 @@ export async function renderStats() {
       return `${hours}h ${minutes % 60}m`;
     };
 
-    if (studyTotalTimeEl) studyTotalTimeEl.textContent = formatStudyTime(globalRtSum);
-    if (studyAvgSessionEl) studyAvgSessionEl.textContent = globalRtCount > 0 ? formatRt(globalRtSum / globalRtCount) : '--';
-    if (studyTodayTimeEl) studyTodayTimeEl.textContent = formatStudyTime(todayStudyTimeMs);
+    const formatSessionMinutes = (ms) => {
+      if (!ms || isNaN(ms)) return '--';
+      const mins = ms / 1000 / 60;
+      if (mins < 1) return `${Math.round(ms / 1000)}s`;
+      return `${mins.toFixed(1)}m`;
+    };
+
+    const sessions = await getSessions();
+    if (sessions.length > 0) {
+      const totalSessionTimeMs = sessions.reduce((sum, s) => sum + (s.endTime - s.startTime), 0);
+      const avgSessionTimeMs = totalSessionTimeMs / sessions.length;
+      
+      const startOfToday = new Date().setHours(0, 0, 0, 0);
+      const todaySessionTimeMs = sessions
+        .filter(s => s.startTime >= startOfToday)
+        .reduce((sum, s) => sum + (s.endTime - s.startTime), 0);
+
+      if (studyTotalTimeEl) studyTotalTimeEl.textContent = formatStudyTime(totalSessionTimeMs);
+      if (studyAvgSessionEl) {
+        studyAvgSessionEl.textContent = formatSessionMinutes(avgSessionTimeMs);
+        const label = studyAvgSessionEl.nextElementSibling;
+        if (label) label.textContent = 'Avg Session';
+      }
+      if (studyTodayTimeEl) studyTodayTimeEl.textContent = formatStudyTime(todaySessionTimeMs);
+    } else {
+      if (studyTotalTimeEl) studyTotalTimeEl.textContent = formatStudyTime(globalRtSum);
+      if (studyAvgSessionEl) {
+        studyAvgSessionEl.textContent = globalRtCount > 0 ? formatRt(globalRtSum / globalRtCount) : '--';
+        const label = studyAvgSessionEl.nextElementSibling;
+        if (label) label.textContent = 'Avg per Review';
+      }
+      if (studyTodayTimeEl) studyTodayTimeEl.textContent = formatStudyTime(todayStudyTimeMs);
+    }
 
     // NEW PANEL 7: Sandbox Activity Stats
     const sandboxTotalChecksEl = document.getElementById('sandbox-total-checks');

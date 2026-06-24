@@ -1,8 +1,31 @@
-import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation, fetchCambridgePronunciation } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation, fetchCambridgePronunciation, logSession } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], onDeckUpdatedCallback = null;
 let cardShownAt = 0; // timestamp when the current card was displayed, for response time tracking
+
+let currentSession = null;
+
+async function trackSession(q) {
+  if (!currentSession || (Date.now() - currentSession.endTime > 10 * 60 * 1000)) {
+    currentSession = {
+      startTime: Date.now(),
+      endTime: Date.now(),
+      reviewCount: 0,
+      correctCount: 0
+    };
+  }
+  currentSession.reviewCount++;
+  if (q >= 3) {
+    currentSession.correctCount++;
+  }
+  currentSession.endTime = Date.now();
+  try {
+    await logSession(currentSession);
+  } catch (err) {
+    console.error('Error logging session:', err);
+  }
+}
 
 export async function initPractice(onDeckUpdated) {
   onDeckUpdatedCallback = onDeckUpdated;
@@ -457,6 +480,7 @@ async function submitRating(score) {
     const responseTime = cardShownAt > 0 ? Date.now() - cardShownAt : null;
     
     const updatedCard = await reviewWord(card.id, score, isOk ? null : typed, responseTime);
+    await trackSession(score);
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
@@ -479,6 +503,7 @@ async function submitMasteredRating(card) {
     
     // Log review history and capture spelling attempt
     await reviewWord(card.id, 5, isOk ? null : typed, responseTime);
+    await trackSession(5);
 
     const list = await getWords();
     const wordObj = list.find(w => w.id === card.id);
