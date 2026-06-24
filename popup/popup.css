@@ -2257,3 +2257,41 @@ input[type="number"] {
   transform: scale(0.9);
 }
 
+.error-trash-chip {
+  background: hsla(5, 80%, 15%, 0.15);
+  border: 1px solid hsla(5, 80%, 35%, 0.3);
+  color: var(--danger);
+  font-style: normal;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 0.68rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.error-trash-chip:hover {
+  background: hsla(5, 80%, 25%, 0.25);
+  border-color: var(--danger);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.error-trash-chip:active {
+  transform: scale(0.96) translateY(0);
+}
+
+.error-trash-chip .delete-error-x {
+  font-weight: bold;
+  opacity: 0.7;
+  cursor: pointer;
+  padding-left: 2px;
+  transition: opacity var(--transition-fast) ease;
+}
+
+.error-trash-chip:hover .delete-error-x {
+  opacity: 1;
+}
+

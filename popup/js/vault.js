@@ -4,6 +4,7 @@ import { getWords, addWord, saveWords, translateWord, fetchCambridgePronunciatio
 let wordsList = [];
 let onVaultUpdatedCallback = null;
 let selectedWordIds = new Set();
+let currentFormMisspellings = [];
 
 export async function initVault(onVaultUpdated) {
   onVaultUpdatedCallback = onVaultUpdated;
@@ -15,6 +16,15 @@ export async function initVault(onVaultUpdated) {
     closeModal();
   });
   document.getElementById('word-entry-form').addEventListener('submit', saveWord);
+
+  document.getElementById('form-past-errors-list')?.addEventListener('click', (e) => {
+    const chip = e.target.closest('.error-trash-chip');
+    if (chip) {
+      const errorToRemove = chip.getAttribute('data-error');
+      currentFormMisspellings = currentFormMisspellings.filter(err => err !== errorToRemove);
+      renderPastErrorsList();
+    }
+  });
 
   document.getElementById('form-play-uk')?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -401,6 +411,26 @@ function updateBulkUIState(filtered) {
   });
 }
 
+function renderPastErrorsList() {
+  const pastContainer = document.getElementById('form-past-errors-container');
+  const pastList = document.getElementById('form-past-errors-list');
+  if (pastContainer && pastList) {
+    const validErrors = currentFormMisspellings.filter(Boolean);
+    if (validErrors.length > 0) {
+      pastList.innerHTML = [...new Set(validErrors)].map(err => `
+        <span class="error-trash-chip" data-error="${err}">
+          <span>${err}</span>
+          <span class="delete-error-x">&times;</span>
+        </span>
+      `).join('');
+      pastContainer.style.display = 'block';
+    } else {
+      pastList.innerHTML = '';
+      pastContainer.style.display = 'none';
+    }
+  }
+}
+
 export function openModal(wordObj = null) {
   const modal = document.getElementById('word-form-modal');
   document.getElementById('edit-word-id').value = wordObj ? wordObj.id : '';
@@ -412,17 +442,8 @@ export function openModal(wordObj = null) {
   document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
   document.getElementById('form-mastered').checked = wordObj ? (wordObj.mastered || false) : false;
   
-  const pastContainer = document.getElementById('form-past-errors-container');
-  const pastList = document.getElementById('form-past-errors-list');
-  if (pastContainer && pastList) {
-    const validErrors = wordObj && wordObj.misspellings ? wordObj.misspellings.filter(Boolean) : [];
-    if (validErrors.length > 0) {
-      pastList.textContent = [...new Set(validErrors)].join(', ');
-      pastContainer.style.display = 'block';
-    } else {
-      pastContainer.style.display = 'none';
-    }
-  }
+  currentFormMisspellings = wordObj && wordObj.misspellings ? [...wordObj.misspellings] : [];
+  renderPastErrorsList();
 
   document.getElementById('form-modal-title').textContent = wordObj ? 'Edit Word Details' : 'Add New Word';
   modal.style.display = 'flex';
@@ -452,7 +473,18 @@ async function saveWord(e) {
           const wasMastered = wordsList[idx].mastered;
           const oldEx = wordsList[idx].example;
           const exampleTranslation = oldEx === example ? (wordsList[idx].exampleTranslation || '') : '';
-          wordsList[idx] = { ...wordsList[idx], word, definition, transcription, translation, partOfSpeech, example, exampleTranslation, mastered };
+          wordsList[idx] = { 
+            ...wordsList[idx], 
+            word, 
+            definition, 
+            transcription, 
+            translation, 
+            partOfSpeech, 
+            example, 
+            exampleTranslation, 
+            mastered,
+            misspellings: currentFormMisspellings
+          };
           if (mastered && !wasMastered) {
             wordsList[idx].rep = 0;
             wordsList[idx].interval = 30;
@@ -466,7 +498,7 @@ async function saveWord(e) {
           await saveWords(wordsList);
         }
       } else {
-        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, mastered });
+        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, mastered, misspellings: currentFormMisspellings });
         if (mastered) {
           const list = await getWords();
           const wObj = list.find(w => w.id === addedWord.id);

@@ -639,6 +639,18 @@ function renderAudioButtons(word) {
   return `<div style="display: flex; gap: 6px; margin: 8px 0 4px;">${b('us', 'US')}${b('uk', 'UK')}</div>`;
 }
 
+function isValidSuggestion(query, candidate, d) {
+  const qLower = query.toLowerCase();
+  const cLower = candidate.toLowerCase();
+  if (qLower[0] !== cLower[0]) {
+    // If first letters differ and either word is short, reject larger distances
+    if (qLower.length <= 5 || cLower.length <= 5) {
+      return d < 2;
+    }
+  }
+  return true;
+}
+
 async function findSuggestions(word) {
   const lower = word.toLowerCase();
   if (spellingMap[lower]) return [spellingMap[lower]];
@@ -647,7 +659,9 @@ async function findSuggestions(word) {
     const vaultWords = await getWords();
     for (const w of vaultWords) {
       const d = getLevenshtein(lower, w.word.toLowerCase());
-      if (d < 3) matches.push({ word: w.word, dist: d });
+      if (d < 3 && isValidSuggestion(lower, w.word, d)) {
+        matches.push({ word: w.word, dist: d });
+      }
     }
   } catch (e) { console.error(e); }
   try {
@@ -658,7 +672,9 @@ async function findSuggestions(word) {
         const itemLower = item.word.toLowerCase();
         if (itemLower !== lower && !item.word.includes(' ')) {
           const d = getLevenshtein(lower, itemLower);
-          if (d < 4) matches.push({ word: item.word, dist: d });
+          if (d < 4 && isValidSuggestion(lower, item.word, d)) {
+            matches.push({ word: item.word, dist: d });
+          }
         }
       });
     }
@@ -666,7 +682,9 @@ async function findSuggestions(word) {
   if (matches.length === 0) {
     commonWords.forEach(w => {
       const d = getLevenshtein(lower, w.toLowerCase());
-      if (d < 3) matches.push({ word: w, dist: d });
+      if (d < 3 && isValidSuggestion(lower, w, d)) {
+        matches.push({ word: w, dist: d });
+      }
     });
   }
   matches.sort((a, b) => a.dist - b.dist);
