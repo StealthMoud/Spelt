@@ -345,6 +345,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initSelectionLookup();
 
+  // Listen for words added from the webpage context menu
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.action === 'wordAddedFromContextMenu') {
+      refreshStats();
+      syncPracticeDeck();
+      reloadVaultList();
+    }
+  });
+
   // immediately focus the sandbox input so user can start typing
   document.getElementById('word-input')?.focus();
 });

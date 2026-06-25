@@ -166,13 +166,19 @@ export async function addWord(wordData) {
   const exampleTranslationVal = wordData.exampleTranslation?.trim() || '';
 
   let transcriptionVal = wordData.transcription?.trim() || '';
-  if (!transcriptionVal || transcriptionVal === '/--/') {
+  let levelVal = wordData.level || '';
+  if (!transcriptionVal || transcriptionVal === '/--/' || !levelVal) {
     try {
       const cambridge = await fetchCambridgePronunciation(normalizedWord);
-      if (cambridge.ukIpa && cambridge.usIpa) {
-        transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
-      } else {
-        transcriptionVal = cambridge.ukIpa || cambridge.usIpa || '';
+      if (!transcriptionVal || transcriptionVal === '/--/') {
+        if (cambridge.ukIpa && cambridge.usIpa) {
+          transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+        } else {
+          transcriptionVal = cambridge.ukIpa || cambridge.usIpa || '';
+        }
+      }
+      if (!levelVal) {
+        levelVal = cambridge.level || '';
       }
     } catch (_) {}
   }
@@ -195,7 +201,7 @@ export async function addWord(wordData) {
     nextDate: wordData.nextDate !== undefined ? wordData.nextDate : Date.now(),
     createdAt: Date.now(),
     history: [],
-    level: wordData.level || '',
+    level: levelVal.toUpperCase().trim(),
     misspellings: Array.isArray(wordData.misspellings) ? wordData.misspellings : []
   };
 

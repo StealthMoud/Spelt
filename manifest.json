@@ -5,7 +5,11 @@
   "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling.",
   "permissions": [
     "storage",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "contextMenus",
+    "notifications",
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "http://localhost:8080/*",
@@ -40,6 +44,13 @@
         "mac": "Command+Shift+S"
       },
       "description": "Open Spelt Popup"
+    },
+    "add-selection-to-spelt": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Add selected text to Spelt Vault"
     }
   }
 }
