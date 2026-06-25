@@ -540,11 +540,19 @@ body {
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   margin-top: 4px;
 }
+.feedback-definition {
+  font-size: 0.82rem !important;
+  color: var(--text-muted);
+  margin: 4px 0 0 !important;
+  line-height: 1.45;
+}
+
 .feedback-example-text {
   font-style: italic;
   color: var(--primary-light);
-  font-size: 0.7rem !important;
+  font-size: 0.82rem !important;
   margin: 0 !important;
+  line-height: 1.45;
 }
 
 

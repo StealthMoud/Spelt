@@ -407,7 +407,7 @@ async function handleCorrectSpelling(apiData, word) {
           ${wordLevel ? `<span class="feedback-badge level">${wordLevel}</span>` : ''}
           ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
         </div>
-        <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+        <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
         ${example ? `
           <div class="feedback-example" data-word="${word}">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
@@ -492,7 +492,7 @@ async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
         ${level ? `<span class="feedback-badge level">${level}</span>` : ''}
         ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
       </div>
-      <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+      <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
       ${example ? `
         <div class="feedback-example" data-word="${suggestion}">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
@@ -689,7 +689,7 @@ async function handleManualCorrection(correctWord, originalWord, wrongAttempt = 
             ${level ? `<span class="feedback-badge level">${level}</span>` : ''}
             ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
           </div>
-          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+          <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
           ${example ? `
             <div class="feedback-example" data-word="${correctWord}">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
@@ -769,7 +769,7 @@ async function saveManualAnyway(correctWord, originalWord, wrongAttempt = '') {
         <div class="feedback-meta-row">
           ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
         </div>
-        <p style="font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0;"><strong>Definition:</strong> ${def}</p>
+        <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
       </div>
       ${renderAudioButtons(correctWord)}
     `;
