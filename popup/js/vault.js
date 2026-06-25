@@ -334,10 +334,10 @@ function renderList() {
           <input type="checkbox" class="word-select-checkbox" data-id="${w.id}" ${isChecked}>
           <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;">
             <div style="display: flex; align-items: center; gap: 6px;">
-              <strong style="color: var(--primary-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem;">${w.word}</strong>
+              <strong style="color: var(--primary-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem;">${w.word}</strong>
               <span class="review-pill" style="color: ${review.color}; border-color: ${review.color}25; background: ${review.color}10;">${review.text}</span>
             </div>
-            <span style="color: var(--text-muted); font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px;">${w.definition || 'No definition'}</span>
+            <span style="color: var(--text-muted); font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px;">${w.definition || 'No definition'}</span>
             ${w.misspellings && w.misspellings.filter(Boolean).length > 0 ? `<span class="error-tag">Errors: ${[...new Set(w.misspellings.filter(Boolean))].join(', ')}</span>` : ''}
           </div>
         </div>
