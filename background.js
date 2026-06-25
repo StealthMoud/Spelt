@@ -383,6 +383,20 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       await addSelectedWord(cleanWord, activeTab);
     } catch (err) {
       console.error('Error handling selection shortcut:', err);
+      const isFileOrRestricted = err.message && (
+        err.message.includes('Cannot access') || 
+        err.message.includes('restricted') || 
+        err.message.includes('file://')
+      );
+      
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+        title: 'Spelt Shortcut Error',
+        message: isFileOrRestricted 
+          ? 'To use shortcuts on local pages (file://), please toggle "Allow access to file URLs" in Spelt details on chrome://extensions.'
+          : (err.message || 'Failed to capture selection.')
+      });
     }
   }
 });
