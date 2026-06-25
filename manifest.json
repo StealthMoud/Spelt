@@ -47,8 +47,8 @@
     },
     "add-selection-to-spelt": {
       "suggested_key": {
-        "default": "Alt+A",
-        "mac": "Alt+A"
+        "default": "Alt+S",
+        "mac": "Alt+S"
       },
       "description": "Add selected text to Spelt Vault"
     }
