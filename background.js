@@ -357,7 +357,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
-// Handle custom command keyboard shortcut (e.g. Ctrl+Shift+Y / Cmd+Shift+Y)
+// Handle custom command keyboard shortcut (e.g. Alt+Shift+A / Option+Shift+A)
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'add-selection-to-spelt') {
     try {
