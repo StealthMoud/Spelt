@@ -18,9 +18,17 @@
             <span class="user-label">Local Profile</span>
           </div>
         </div>
-        <button id="popup-refresh-btn" class="table-icon-btn" title="Refresh data">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        </button>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <!-- Font Resizer Controls -->
+          <div class="font-resizer-controls" style="display: flex; align-items: center; gap: 2px; background: hsla(155, 10%, 15%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 3px;">
+            <button id="font-decrease-btn" class="table-icon-btn" title="Decrease text size" style="font-size: 0.65rem; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; padding: 0; color: var(--text-muted); cursor: pointer; border: none; background: none; border-radius: 2px;">A-</button>
+            <span id="font-scale-display" style="font-size: 0.62rem; color: var(--text-muted); min-width: 26px; text-align: center; font-weight: 600; user-select: none;">100%</span>
+            <button id="font-increase-btn" class="table-icon-btn" title="Increase text size" style="font-size: 0.75rem; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; padding: 0; color: var(--text-muted); cursor: pointer; border: none; background: none; border-radius: 2px;">A+</button>
+          </div>
+          <button id="popup-refresh-btn" class="table-icon-btn" title="Refresh data">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
       </div>
       
       <!-- Tab Navigation -->

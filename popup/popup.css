@@ -541,7 +541,7 @@ body {
   margin-top: 4px;
 }
 .feedback-definition {
-  font-size: 0.82rem !important;
+  font-size: 0.88rem !important;
   color: var(--text-muted);
   margin: 4px 0 0 !important;
   line-height: 1.45;
@@ -550,9 +550,20 @@ body {
 .feedback-example-text {
   font-style: italic;
   color: var(--primary-light);
-  font-size: 0.82rem !important;
+  font-size: 0.88rem !important;
   margin: 0 !important;
   line-height: 1.45;
+}
+
+.font-resizer-controls button {
+  transition: all var(--transition-fast) ease;
+}
+.font-resizer-controls button:hover {
+  color: var(--primary-light) !important;
+  background: hsla(155, 65%, 48%, 0.15) !important;
+}
+.font-resizer-controls button:active {
+  transform: scale(0.85);
 }
 
 
