@@ -44,7 +44,8 @@ export async function setStored(key, value) {
 // Compute SM-2 spaced repetition values
 // quality: 1 (Again), 3 (Hard), 4 (Good), 5 (Easy)
 // multiplier scales the computed interval (0.5 = faster, 1.5 = slower)
-export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect = true) {
+// errorWeight: adaptive multiplier based on accumulated error history (0.0–1.0)
+export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect = true, errorWeight = 1.0) {
   let rep = prevRep;
   let interval = prevInt;
   let ef = prevEF;
@@ -88,6 +89,13 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
   // Apply spacing multiplier from user settings
   interval = Math.max(1, Math.round(interval * multiplier));
 
+  // Apply error-weight: words with more accumulated errors get shorter intervals.
+  // The weight is computed externally from totalErrors and correctStreak.
+  // A weight of 1.0 means no change; 0.5 means intervals are halved.
+  if (errorWeight < 1.0) {
+    interval = Math.max(1, Math.round(interval * errorWeight));
+  }
+
   // Adjust Ease Factor (EF)
   ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
   if (ef < 1.3) ef = 1.3;
@@ -99,6 +107,15 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
     : Date.now() + interval * 24 * 60 * 60 * 1000;
 
   return { rep, interval, ef, nextDate };
+}
+
+// Compute the error-weight multiplier from a word's difficulty history.
+// totalErrors: lifetime count of all misspellings (never resets)
+// correctStreak: consecutive correct practice reviews
+// Returns a value between ~0.29 (very sticky) and 1.0 (no penalty)
+export function computeErrorWeight(totalErrors = 0, correctStreak = 0) {
+  if (totalErrors <= 0) return 1.0;
+  return 1.0 / (1 + (totalErrors * 0.12) / (1 + correctStreak * 0.4));
 }
 
 // Load all words from database
@@ -202,7 +219,9 @@ export async function addWord(wordData) {
     createdAt: Date.now(),
     history: [],
     level: levelVal.toUpperCase().trim(),
-    misspellings: Array.isArray(wordData.misspellings) ? wordData.misspellings : []
+    misspellings: Array.isArray(wordData.misspellings) ? wordData.misspellings : [],
+    totalErrors: wordData.totalErrors || 0,
+    correctStreak: 0
   };
 
   list.push(newWord);
@@ -220,6 +239,9 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
     if (wrongSpelling && wrongSpelling.toLowerCase() !== correctWord.toLowerCase()) {
       wordObj.misspellings.push(wrongSpelling);
     }
+    // Increment lifetime error counter (never resets)
+    wordObj.totalErrors = (wordObj.totalErrors || 0) + 1;
+    wordObj.correctStreak = 0; // reset streak on error
     wordObj.mastered = false; // re-enter SRS if previously mastered
     wordObj.rep = 0;
     wordObj.interval = 1;
@@ -287,8 +309,16 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
   if (index === -1) throw new Error('Word not found');
 
   const card = list[index];
+
+  // Ensure backward compatibility for words created before error-weight fields existed
+  if (card.totalErrors === undefined) card.totalErrors = (card.misspellings || []).length;
+  if (card.correctStreak === undefined) card.correctStreak = 0;
+
   const isCorrect = (typedWrongWord === null || typedWrongWord === undefined);
-  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef, 1.0, isCorrect);
+
+  // Compute error weight from accumulated difficulty history
+  const errorWeight = computeErrorWeight(card.totalErrors, card.correctStreak);
+  const { rep, interval, ef, nextDate } = calcSM2(q, card.rep, card.interval, card.ef, 1.0, isCorrect, errorWeight);
 
   card.rep = rep;
   card.interval = interval;
@@ -302,13 +332,21 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
   card.history.push(historyEntry);
 
   if (typedWrongWord !== null && typedWrongWord !== undefined) {
+    // Incorrect spelling during practice
     if (!card.misspellings) card.misspellings = [];
     if (typedWrongWord.toLowerCase() !== card.word.toLowerCase()) {
       card.misspellings.push(typedWrongWord);
     }
+    card.totalErrors = (card.totalErrors || 0) + 1;
+    card.correctStreak = 0;
   } else {
-    // reset missspellings since they spelled it right in practice
-    card.misspellings = [];
+    // Correct spelling — graduated forgiveness: require 3 consecutive correct
+    // reviews before clearing misspellings (prevents accidental/lucky clears)
+    card.correctStreak = (card.correctStreak || 0) + 1;
+    if (card.correctStreak >= 3) {
+      card.misspellings = [];
+      // Note: totalErrors is never reset — it's the permanent difficulty memory
+    }
   }
 
   await saveWords(list);
