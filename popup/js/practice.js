@@ -1,4 +1,4 @@
-import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation, fetchCambridgePronunciation, logSession } from '../../shared/storage.js';
+import { getWords, reviewWord, deleteWord, playWordAudio, playSentenceAudio, saveWords, censorWordInExample, getFallbackExample, calcSM2, getStored, fetchTranslation, fetchCambridgePronunciation, logSession, computeErrorWeight } from '../../shared/storage.js';
 import { openModal } from './vault.js';
 
 let dueCards = [], onDeckUpdatedCallback = null;
@@ -452,9 +452,12 @@ function checkSpelling() {
   } else { pastContainer.style.display = 'none'; }
 
   // Calculate and update dynamic SRS button hints
-  const hardInterval = calcSM2(3, card.rep, card.interval, card.ef, 1.0, isOk).interval;
-  const goodInterval = calcSM2(4, card.rep, card.interval, card.ef, 1.0, isOk).interval;
-  const easyInterval = calcSM2(5, card.rep, card.interval, card.ef, 1.0, isOk).interval;
+  const totalErrors = card.totalErrors !== undefined ? card.totalErrors : (card.misspellings || []).length;
+  const correctStreak = card.correctStreak || 0;
+  const errorWeight = computeErrorWeight(totalErrors, correctStreak);
+  const hardInterval = calcSM2(3, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
+  const goodInterval = calcSM2(4, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
+  const easyInterval = calcSM2(5, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
 
   const hardHint = document.querySelector('#practice-tab .srs-hard .srs-hint');
   const goodHint = document.querySelector('#practice-tab .srs-good .srs-hint');
