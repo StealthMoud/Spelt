@@ -2,6 +2,10 @@ import { getLocalDateString } from '../../../shared/storage.js';
 import { findBucketForDate } from './date_buckets.js';
 
 export function calculateSummary(words, sandboxActivity, chartBuckets) {
+  chartBuckets.forEach(b => {
+    b.created = 0; b.rtSum = 0; b.rtCount = 0; b.sandboxChecks = 0; b.sandboxCorrect = 0;
+  });
+
   let totalReviews = 0, correctReviews = 0;
   const buttonCounts = { again: 0, hard: 0, good: 0, easy: 0 };
   const reviewActivity = {};
