@@ -1,0 +1,68 @@
+/* Settings view blocks structure */
+.settings-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 0.72rem;
+}
+
+.settings-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px -4px rgba(0,0,0,0.3);
+  transition: border-color var(--transition-fast);
+}
+.settings-block:hover {
+  border-color: var(--border-hover);
+}
+.settings-block strong {
+  color: var(--primary-light);
+  font-weight: 600;
+  font-size: 0.76rem;
+}
+.settings-block p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.select-input {
+  font-size: 0.75rem;
+  padding: 5px !important;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.translate-example-btn, .play-example-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast) var(--spring-curve);
+  flex-shrink: 0;
+  padding: 0;
+}
+.translate-example-btn:hover, .play-example-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  transform: scale(1.08);
+  background: hsla(155, 65%, 48%, 0.05);
+}
+.translate-example-btn:active, .play-example-btn:active {
+  transform: scale(0.95);
+}
+.translate-example-btn.active, .play-example-btn.active {
+  border-color: var(--primary);
+  color: var(--primary-light);

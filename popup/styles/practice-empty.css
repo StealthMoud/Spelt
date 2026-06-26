@@ -1,0 +1,92 @@
+/* Empty Practice Deck state styling */
+.deck-empty-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-muted);
+  flex: 1;
+}
+.deck-empty-state[style*="display: flex"] {
+  display: flex;
+  animation: paneEnter var(--transition-slow) var(--spring-curve) forwards;
+}
+.deck-empty-state svg {
+  width: 44px;
+  height: 44px;
+  color: var(--success);
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 8px var(--success-glow));
+}
+.deck-empty-state h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+.deck-empty-state p {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+/* Vault view controls & list */
+.vault-filter-row {
+  display: flex;
+  gap: 6px;
+}
+.vault-filter-row .search-box {
+  flex: 1;
+  position: relative;
+}
+.search-icon-svg {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  color: var(--text-muted-dark);
+  transition: color var(--transition-fast) ease;
+}
+.vault-filter-row .premium-input {
+  padding: 6px 12px 6px 28px;
+  font-size: 0.74rem;
+}
+.vault-filter-row .premium-input:focus + svg {
+  color: var(--primary-light);
+}
+
+#add-word-btn {
+  background: hsla(155, 65%, 48%, 0.08) !important;
+  border: 1px solid hsla(155, 65%, 48%, 0.4) !important;
+  color: var(--primary-light) !important;
+  box-shadow: 0 0 10px hsla(155, 65%, 48%, 0.03);
+  font-size: 0.72rem !important;
+  padding: 6px 10px !important;
+  border-radius: var(--radius-md) !important;
+}
+#add-word-btn:hover {
+  background: var(--primary) !important;
+  color: var(--bg-dark) !important;
+  box-shadow: 0 0 15px hsla(155, 65%, 48%, 0.3);
+  transform: translateY(-1.5px);
+}
+#add-word-btn:active {
+  transform: scale(0.96);
+}
+
+.vault-sort-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.vault-sort-select {
+  flex: 1;
+  padding: 6px 26px 6px 10px !important;
+  font-size: 0.7rem !important;
+  color: var(--text-muted);
+  background: hsla(155, 20%, 6%, 0.4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;

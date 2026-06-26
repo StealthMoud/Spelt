@@ -1,0 +1,77 @@
+align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.result-badge.success {
+  background: hsla(145, 80%, 45%, 0.12);
+  color: var(--success);
+  border: 1px solid hsla(145, 80%, 45%, 0.35);
+  box-shadow: 0 0 8px var(--success-glow);
+}
+.result-badge.danger {
+  background: hsla(5, 80%, 55%, 0.12);
+  color: var(--danger);
+  border: 1px solid hsla(5, 80%, 55%, 0.35);
+  box-shadow: 0 0 8px var(--danger-glow);
+}
+
+/* Customized SRS Buttons (Bespoke Glowing Themes) */
+.srs-rating-wrapper {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid hsla(155, 10%, 25%, 0.15);
+}
+
+.srs-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 4px 5px;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: hsla(155, 10%, 15%, 0.35);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  transition: all var(--transition-fast) var(--spring-curve);
+  outline: none;
+}
+.srs-kbd {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-family: inherit;
+  font-size: 0.52rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.4;
+  transition: opacity var(--transition-fast) ease;
+}
+.srs-btn:hover .srs-kbd {
+  opacity: 0.85;
+  color: var(--text-main);
+}
+.srs-btn svg {
+  transition: transform var(--transition-slow) var(--spring-curve);
+}
+.srs-btn:hover {
+  transform: translateY(-2px);
+  color: var(--text-main);
+}
+.srs-btn:hover svg {
+  transform: scale(1.12);
+}
+.srs-btn:active {
+  transform: scale(0.95) translateY(0);
+}

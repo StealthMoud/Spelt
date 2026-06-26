@@ -1,0 +1,49 @@
+background: hsla(155, 65%, 48%, 0.1);
+}
+.translate-example-btn svg, .play-example-btn svg {
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.feedback-example-translation,
+#practice-example-translation,
+#back-example-translation-display {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--primary-light);
+  font-style: italic;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+.btn-row .submit-btn {
+  flex: 1;
+}
+
+.erase-btn {
+  background: hsla(5, 85%, 15%, 0.25);
+  border-color: var(--danger);
+  color: var(--danger);
+  padding: 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 2px;
+  transition: background var(--transition-fast) ease, transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+}
+.erase-btn:hover {
+  background: hsla(5, 85%, 20%, 0.45) !important;
+  border-color: var(--danger) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 2px 10px var(--danger-glow);
+  transform: translateY(-1px);
+}
+.erase-btn:active {
+  transform: scale(0.96) translateY(0);
+}

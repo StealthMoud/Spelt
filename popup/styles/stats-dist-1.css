@@ -1,0 +1,83 @@
+/* Card States Distribution Progress Bar */
+.card-dist-bar-wrapper {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.card-dist-bar {
+  height: 8px;
+  border-radius: var(--radius-full);
+  display: flex;
+  overflow: hidden;
+  background: hsla(155, 20%, 6%, 0.5);
+  border: 1px solid hsla(155, 10%, 25%, 0.1);
+}
+
+.dist-segment {
+  height: 100%;
+  transition: width var(--transition-slow) var(--spring-curve);
+}
+.dist-segment.dist-new {
+  background: var(--text-muted-dark);
+}
+.dist-segment.dist-learning {
+  background: var(--warning);
+}
+.dist-segment.dist-mature {
+  background: var(--primary-light);
+}
+.dist-segment.dist-mastered {
+  background: var(--purple);
+}
+
+.card-dist-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  font-size: 0.68rem;
+  margin-top: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-main);
+  padding: 2px 0;
+}
+
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.legend-name {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.legend-count {
+  font-weight: 600;
+  margin-left: auto;
+  color: var(--text-main);
+}
+
+.legend-item.dist-new { color: var(--text-muted-dark); }
+.legend-item.dist-learning { color: var(--warning); }
+.legend-item.dist-mature { color: var(--primary-light); }
+.legend-item.dist-mastered { color: var(--purple); }
+
+.stats-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+}
+
+/* Custom Select Dropdown (Timeframe select replacement) */

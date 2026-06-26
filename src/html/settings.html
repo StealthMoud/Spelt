@@ -1,0 +1,85 @@
+      <!-- TAB 5: SETTINGS -->
+      <section id="settings-tab" class="tab-pane">
+        <div class="settings-content-wrapper">
+          <div class="settings-block">
+            <strong>Auto-Translation Language</strong>
+            <p>Automatically fetch translations for new words in Sandbox or Vault.</p>
+            <select id="setting-target-lang" class="premium-input select-input">
+              <option value="none">None (Disabled)</option>
+              <option value="es">Spanish (Español)</option>
+              <option value="fr">French (Français)</option>
+              <option value="de">German (Deutsch)</option>
+              <option value="it">Italian (Italiano)</option>
+              <option value="pt">Portuguese (Português)</option>
+              <option value="ru">Russian (Русский)</option>
+              <option value="ar">Arabic (العربية)</option>
+              <option value="fa">Farsi / Persian (فارسی)</option>
+              <option value="zh">Chinese Simplified (简体中文)</option>
+              <option value="ja">Japanese (日本語)</option>
+              <option value="ko">Korean (한국어)</option>
+              <option value="tr">Turkish (Türkçe)</option>
+            </select>
+          </div>
+          <div class="settings-block">
+            <strong>Text Selection Lookup</strong>
+            <p>Show a quick-lookup button when selecting text within the popup.</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+              <input type="checkbox" id="setting-selection-lookup" style="accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px; margin: 0;">
+              <label for="setting-selection-lookup" style="cursor: pointer; font-size: 0.72rem; color: var(--text-muted); user-select: none; margin: 0;">Enable selection lookup button</label>
+            </div>
+          </div>
+          <div class="settings-block">
+            <strong>Keyboard Shortcuts</strong>
+            <p>Study efficiently without moving your hands to the mouse:</p>
+            <div class="shortcut-list">
+              <div class="shortcut-row">
+                <span>Launch Spelt</span>
+                <kbd>Cmd+Shift+S</kbd>
+              </div>
+              <div class="shortcut-row">
+                <span>Play Audio (Sandbox / practice)</span>
+                <kbd>Space</kbd>
+              </div>
+              <div class="shortcut-row">
+                <span>Translate Example</span>
+                <kbd>T</kbd>
+              </div>
+              <div class="shortcut-row">
+                <span>Verify / Accept suggestion / Refocus</span>
+                <kbd>Enter</kbd>
+              </div>
+              <div class="shortcut-row">
+                <span>Reject suggestion / Close card</span>
+                <kbd>Esc</kbd>
+              </div>
+              <div class="shortcut-row">
+                <span>Rate practice cards (Again — Easy)</span>
+                <kbd>1 — 4</kbd>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-block">
+            <strong>Database Operations</strong>
+            <div class="btn-row">
+              <button id="export-db-btn" class="submit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export</span>
+              </button>
+              <input type="file" id="import-db-file" style="display: none;" accept=".json">
+              <button id="import-db-trigger-btn" class="submit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Import</span>
+              </button>
+            </div>
+            <button id="retranslate-all-btn" class="submit-btn" style="margin-top: 8px; width: 100%; justify-content: center; background: hsla(265, 80%, 65%, 0.08); border-color: var(--purple); color: var(--purple-light);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 4px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <span>Refresh All Translations & Details</span>
+            </button>
+            <button id="wipe-db-btn" class="submit-btn erase-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Erase Database</span>
+            </button>
+          </div>
+        </div>
+      </section>

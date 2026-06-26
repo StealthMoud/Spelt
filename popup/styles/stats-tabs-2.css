@@ -1,0 +1,36 @@
+.stats-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 12px;
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color var(--transition-fast);
+}
+.stats-panel:hover {
+  border-color: var(--border-hover);
+}
+
+.stats-section-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  padding-bottom: 6px;
+}
+
+.title-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--primary);
+  filter: drop-shadow(0 0 4px var(--primary-glow));
+}

@@ -1,0 +1,61 @@
+        <!-- Sub-tab 4: Performance -->
+        <div id="stats-subtab-performance" class="stats-subtab-content" style="display: none;">
+          <div class="stats-panel accuracy-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Accuracy Trend</span>
+            </h4>
+            <div id="accuracy-trend-container" class="accuracy-trend-container">
+              <!-- Dynamically populated SVG line chart -->
+            </div>
+            <div id="accuracy-trend-summary" class="accuracy-trend-summary"></div>
+          </div>
+
+          <div class="stats-panel response-time-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Response Time</span>
+            </h4>
+            <div class="response-time-summary-row">
+              <div class="velocity-card">
+                <span class="velocity-val" id="rt-avg">--</span>
+                <span class="velocity-label">Avg Time</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="rt-fastest">--</span>
+                <span class="velocity-label">Fastest</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="rt-slowest">--</span>
+                <span class="velocity-label">Slowest</span>
+              </div>
+            </div>
+            <div id="rt-trend-container" class="accuracy-trend-container">
+              <!-- Dynamically populated response time trend -->
+            </div>
+            <div id="rt-empty-msg" class="leeches-empty-text" style="display: none;">
+              Response time tracking starts with your next reviews.
+            </div>
+          </div>
+
+          <div class="stats-panel study-time-panel">
+            <h4 class="stats-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <span>Study Time</span>
+            </h4>
+            <div class="velocity-summary-row">
+              <div class="velocity-card">
+                <span class="velocity-val" id="study-total-time">--</span>
+                <span class="velocity-label">Total Time</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="study-avg-session">--</span>
+                <span class="velocity-label">Avg per Review</span>
+              </div>
+              <div class="velocity-card">
+                <span class="velocity-val" id="study-today-time">--</span>
+                <span class="velocity-label">Today</span>
+              </div>
+            </div>
+          </div>
+        </div>

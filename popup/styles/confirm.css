@@ -1,0 +1,81 @@
+/* Micro Elements interaction */
+.audio-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: hsla(155, 10%, 20%, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 7px;
+  cursor: pointer;
+  transition: all var(--transition-fast) var(--spring-curve);
+}
+.audio-play-btn svg {
+  width: 10px;
+  height: 10px;
+  transition: transform var(--transition-fast) ease;
+}
+.audio-play-btn:hover {
+  background: hsla(155, 65%, 48%, 0.12);
+  border-color: var(--primary);
+  color: var(--text-main);
+  transform: scale(1.04);
+}
+.audio-play-btn:hover svg {
+  transform: scale(1.18);
+}
+.audio-play-btn:active {
+  transform: scale(0.96);
+}
+
+.audio-play-btn-mini {
+  background: hsla(155, 10%, 20%, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast) var(--spring-curve);
+  line-height: 1.2;
+}
+.audio-play-btn-mini:hover {
+  background: hsla(155, 65%, 48%, 0.15);
+  border-color: var(--primary);
+  color: var(--text-main);
+  transform: scale(1.08);
+}
+.audio-play-btn-mini:active {
+  transform: scale(0.94);
+}
+
+.feedback-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted-dark);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast) ease;
+}
+.feedback-close-btn:hover {
+  color: var(--text-main);
+  background: hsla(0, 0%, 100%, 0.05);
+  transform: scale(1.1);
+}
+.feedback-close-btn svg {
+  width: 12px;
+  height: 12px;
+}

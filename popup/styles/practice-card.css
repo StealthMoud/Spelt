@@ -1,0 +1,54 @@
+/* Practice Card depth elements and dividers */
+.flashcard {
+  position: relative;
+  height: 295px;
+  width: 100%;
+  perspective: 1200px;
+  margin-top: 4px;
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, hsla(155, 12%, 11%, 0.72) 0%, hsla(155, 12%, 8%, 0.72) 100%);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.6s var(--spring-curve), border-color var(--transition-fast) ease;
+}
+.card-face:hover {
+  border-color: var(--border-hover);
+}
+
+.card-front {
+  transform: rotateY(0deg);
+  z-index: 2;
+  pointer-events: auto;
+  padding: 14px;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  z-index: 1;
+  pointer-events: none;
+  padding: 14px;
+}
+
+.flashcard.flipped .card-front {
+  transform: rotateY(-180deg);
+  z-index: 1;
+  pointer-events: none;
+}
+.flashcard.flipped .card-back {
+  transform: rotateY(0deg);
+  z-index: 2;
+  pointer-events: auto;
+}

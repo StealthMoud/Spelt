@@ -1,0 +1,82 @@
+/* Checkbox styling customization */
+.word-select-checkbox, #vault-select-all {
+  accent-color: var(--primary);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: hsla(0, 0%, 100%, 0.02);
+  transition: all var(--transition-fast) var(--spring-curve);
+  flex-shrink: 0;
+  margin: 0;
+}
+.word-select-checkbox:hover, #vault-select-all:hover {
+  transform: scale(1.15);
+  border-color: var(--primary);
+}
+
+.review-pill {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: 1px solid currentColor;
+}
+
+.error-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--danger);
+  background: hsla(5, 80%, 55%, 0.08);
+  border: 1px solid hsla(5, 80%, 55%, 0.2);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-top: 2px;
+  width: fit-content;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.table-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: hsla(155, 10%, 20%, 0.25);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast) var(--spring-curve);
+  padding: 0;
+}
+.table-icon-btn svg {
+  width: 12px;
+  height: 12px;
+}
+.table-icon-btn:hover {
+  background: hsla(155, 65%, 48%, 0.12);
+  border-color: var(--primary);
+  color: var(--primary-light);
+  transform: scale(1.1);
+}
+.table-icon-btn.delete-btn:hover {
+  background: hsla(5, 85%, 15%, 0.4);
+  border-color: var(--danger);
+  color: var(--danger);
+  box-shadow: 0 0 8px var(--danger-glow);
+}
+.table-icon-btn:active {
+  transform: scale(0.94);
+}

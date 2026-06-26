@@ -1,0 +1,47 @@
+.vault-sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233acb81' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px;
+}
+.vault-sort-select:hover {
+  border-color: var(--border-hover);
+  color: var(--text-main);
+}
+.vault-sort-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 8px var(--primary-glow);
+  color: var(--text-main);
+}
+
+.vault-sort-dir-btn {
+  background: hsla(155, 10%, 15%, 0.35) !important;
+  border-color: var(--border) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  padding: 5px 8px !important;
+  gap: 3px !important;
+  min-width: 54px;
+  white-space: nowrap;
+  border-radius: var(--radius-md) !important;
+}
+.vault-sort-dir-btn:hover {
+  background: hsla(155, 65%, 48%, 0.12) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary-light) !important;
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+.vault-sort-dir-btn svg {
+  transition: transform var(--transition-slow) var(--spring-curve);
+}
+.vault-sort-dir-btn[data-dir="asc"] svg {
+  transform: rotate(180deg);
+}
+.vault-sort-dir-btn[data-dir="desc"] svg {
+  transform: rotate(0deg);
+}

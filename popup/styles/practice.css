@@ -1,0 +1,36 @@
+/* Practice View Detailing */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 8px 12px;
+  text-align: center;
+  box-shadow: 0 4px 16px -4px rgba(0,0,0,0.3);
+  transition: all var(--transition-fast) var(--spring-curve);
+}
+.stat-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -4px rgba(0,0,0,0.4);
+}
+.stat-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  text-shadow: 0 0 10px var(--primary-glow);
+}

@@ -1,0 +1,69 @@
+/* Details panel inside Sandbox feedback card */
+.feedback-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid hsla(155, 10%, 25%, 0.15);
+}
+.feedback-meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.feedback-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.feedback-badge.pos {
+  background: hsla(155, 65%, 48%, 0.12);
+  color: var(--primary-light);
+  border: 1px solid hsla(155, 65%, 48%, 0.25);
+}
+.feedback-badge.level {
+  background: hsla(35, 90%, 55%, 0.12);
+  color: #f59e0b;
+  border: 1px solid hsla(35, 90%, 55%, 0.25);
+}
+.feedback-badge.trans {
+  background: hsla(265, 80%, 65%, 0.12);
+  color: var(--purple);
+  border: 1px solid hsla(265, 80%, 65%, 0.25);
+}
+.feedback-example {
+  background: hsla(155, 10%, 15%, 0.25);
+  border-left: 2px solid hsla(155, 65%, 48%, 0.45);
+  padding: 4px 8px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin-top: 4px;
+}
+.feedback-definition {
+  font-size: 0.88rem !important;
+  color: var(--text-muted);
+  margin: 4px 0 0 !important;
+  line-height: 1.45;
+}
+
+.feedback-example-text {
+  font-style: italic;
+  color: var(--primary-light);
+  font-size: 0.88rem !important;
+  margin: 0 !important;
+  line-height: 1.45;
+}
+
+.font-resizer-controls button {
+  transition: all var(--transition-fast) ease;
+}
+.font-resizer-controls button:hover {
+  color: var(--primary-light) !important;
+  background: hsla(155, 65%, 48%, 0.15) !important;
+}
+.font-resizer-controls button:active {
+  transform: scale(0.85);
+}

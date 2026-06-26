@@ -1,0 +1,9 @@
+{
+  "name": "spelt",
+  "version": "1.0.0",
+  "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js"
+  }
+}

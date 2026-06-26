@@ -1,0 +1,63 @@
+const isExt = typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
+let mockDb = {}; // memory fallback for Node environment
+
+export function triggerNetworkError() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('network-error'));
+  }
+}
+
+export function triggerNetworkSuccess() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('network-success'));
+  }
+}
+
+export async function getStored(key) {
+  if (isExt) {
+    const res = await chrome.storage.local.get(key);
+    return res[key];
+  }
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : mockDb[key];
+  } catch (_) {
+    return mockDb[key];
+  }
+}
+
+export async function setStored(key, value) {
+  if (isExt) {
+    await chrome.storage.local.set({ [key]: value });
+  } else {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (_) {}
+    mockDb[key] = value;
+  }
+}
+
+export async function getWords() {
+  const words = await getStored('spelt_words');
+  return words || [];
+}
+
+export async function saveWords(words) {
+  await setStored('spelt_words', words);
+}
+
+export async function resetDb() {
+  await setStored('spelt_words', []);
+  await setStored('spelt_activity', {});
+  await setStored('spelt_streak', { current: 0, lastDate: '', max: 0 });
+}
+
+export async function logDebug(data) {
+  try {
+    await fetch('http://localhost:8081/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (_) {}
+}

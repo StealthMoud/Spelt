@@ -1,0 +1,84 @@
+    <!-- MODAL: Add Word Form -->
+    <div id="word-form-modal" class="modal-overlay">
+      <div class="modal-card">
+        <h3 id="form-modal-title">Add New Word</h3>
+        <form id="word-entry-form">
+          <input type="hidden" id="edit-word-id">
+          <div class="modal-input-item">
+            <label>Word *</label>
+            <div style="position: relative; display: flex; align-items: center; width: 100%;">
+              <input type="text" id="form-word" class="premium-input" required autocomplete="off" style="padding-right: 50px;">
+              <button type="button" id="form-auto-fill-btn" title="Auto-fill details from dictionary" style="position: absolute; right: 6px; background: hsla(170, 80%, 30%, 0.15); border: 1px solid var(--primary); color: var(--primary-light); padding: 2px 6px; font-size: 0.65rem; height: 20px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 2px; transition: all 0.2s ease; cursor: pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 8px; height: 8px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Auto</span>
+              </button>
+            </div>
+          </div>
+          <div class="modal-input-item">
+            <label>Definition *</label>
+            <textarea id="form-definition" class="premium-input textarea-item" required autocomplete="off"></textarea>
+          </div>
+          <div class="modal-input-row">
+            <div class="modal-input-item" style="flex: 1;">
+              <label>Pronunciation</label>
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input type="text" id="form-transcription" class="premium-input" placeholder="/.../" autocomplete="off" style="padding-right: 48px;">
+                <div class="form-audio-controls" style="position: absolute; right: 5px; display: flex; gap: 3px;">
+                  <button type="button" id="form-play-uk" class="audio-play-btn-mini" title="Play UK pronunciation">UK</button>
+                  <button type="button" id="form-play-us" class="audio-play-btn-mini" title="Play US pronunciation">US</button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-input-item" style="flex: 1;">
+              <label>Translation</label>
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input type="text" id="form-translation" class="premium-input" autocomplete="off" style="padding-right: 28px;">
+                <button type="button" id="form-auto-translate-btn" title="Auto-translate word" style="position: absolute; right: 6px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px; transition: color var(--transition-fast) ease, transform 0.2s ease;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-input-row">
+            <div class="modal-input-item" style="flex: 1;">
+              <label>Part of Speech</label>
+              <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
+            </div>
+            <div class="modal-input-item" style="flex: 1;">
+              <label>CEFR Level</label>
+              <select id="form-level" class="premium-input select-input">
+                <option value="">None (Unknown)</option>
+                <option value="A1">A1 (Beginner)</option>
+                <option value="A2">A2 (Elementary)</option>
+                <option value="B1">B1 (Intermediate)</option>
+                <option value="B2">B2 (Upper-Intermediate)</option>
+                <option value="C1">C1 (Advanced)</option>
+                <option value="C2">C2 (Proficient)</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-input-item">
+            <label>Example Sentence</label>
+            <textarea id="form-example" class="premium-input textarea-item" placeholder="Use the word in a sentence..." autocomplete="off" style="height: 36px;"></textarea>
+          </div>
+          <div class="modal-input-item" style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="form-mastered" style="accent-color: var(--primary); cursor: pointer; width: 13px; height: 13px; margin: 0; vertical-align: middle;">
+            <label for="form-mastered" style="cursor: pointer; font-size: 0.7rem; color: var(--text-muted); margin: 0; user-select: none;">Mark as Mastered</label>
+          </div>
+          <div id="form-past-errors-container" class="modal-input-item" style="display: none; margin-bottom: 12px;">
+            <label>Past Spelling Errors (Click to remove)</label>
+            <div id="form-past-errors-list" style="background: hsla(5, 80%, 15%, 0.05); border: 1px solid hsla(5, 80%, 35%, 0.15); display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; min-height: 20px; border-radius: var(--radius-sm);"></div>
+          </div>
+          <div class="modal-actions-row">
+            <button type="button" id="form-cancel-btn" class="submit-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; margin-right: 2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span>Cancel</span>
+            </button>
+            <button type="submit" class="submit-btn primary-save-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; margin-right: 2px;"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Save</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>

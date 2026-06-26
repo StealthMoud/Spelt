@@ -1,0 +1,53 @@
+/* Statistics Dashboard Styling */
+.stats-overview-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.stat-glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 10px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-fast) var(--spring-curve);
+}
+.stat-glass-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px -4px var(--primary-glow);
+}
+.stat-glass-card:active {
+  transform: scale(0.96) translateY(0);
+}
+
+.stat-glass-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.stat-glass-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.stat-glass-sub {
+  font-size: 0.54rem;
+  color: var(--text-muted-dark);
+  margin-top: 1px;
+  font-weight: 500;
+}

@@ -1,0 +1,92 @@
+/* Header detailing and separator styling */
+.popup-header {
+  padding: 12px 16px 6px;
+  border-bottom: 1px solid var(--border);
+  background: hsla(155, 20%, 6%, 0.45);
+  backdrop-filter: blur(12px);
+  position: relative;
+  z-index: 10;
+}
+.popup-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-hover), transparent);
+  opacity: 0.5;
+}
+
+.logo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.logo-text {
+  font-size: 1.35rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 0%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px var(--primary-glow));
+  letter-spacing: -0.02em;
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  background: hsla(155, 10%, 20%, 0.25);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid hsla(155, 10%, 25%, 0.1);
+  transition: all var(--transition-slow) ease;
+}
+.session-info.offline {
+  background: hsla(5, 85%, 20%, 0.15);
+  border: 1px solid hsla(5, 85%, 55%, 0.25);
+}
+.session-info.connection-error {
+  background: hsla(38, 92%, 20%, 0.15);
+  border: 1px solid hsla(38, 92%, 50%, 0.25);
+}
+
+.user-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--text-muted-dark);
+  transition: all var(--transition-fast) ease;
+}
+.user-status-dot.active {
+  background-color: var(--success);
+  box-shadow: 0 0 8px var(--success);
+}
+
+@keyframes status-pulse {
+  0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--danger-glow)); }
+  50% { transform: scale(1.25); opacity: 0.8; filter: drop-shadow(0 0 6px var(--danger-glow)); }
+  100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--danger-glow)); }
+}
+@keyframes status-pulse-warning {
+  0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--warning-glow)); }
+  50% { transform: scale(1.25); opacity: 0.8; filter: drop-shadow(0 0 6px var(--warning-glow)); }
+  100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px var(--warning-glow)); }
+}
+
+.user-status-dot.offline {
+  background-color: var(--danger);
+  box-shadow: 0 0 8px var(--danger);
+  animation: status-pulse 2.2s infinite ease-in-out;
+}
+.user-status-dot.connection-error {
+  background-color: var(--warning);
+  box-shadow: 0 0 8px var(--warning);
+  animation: status-pulse-warning 2.2s infinite ease-in-out;
+}

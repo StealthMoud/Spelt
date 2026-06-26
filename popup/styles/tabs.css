@@ -1,0 +1,83 @@
+/* Tab Navigation with dynamic spring active bar */
+.popup-tabs {
+  display: flex;
+  margin-top: 8px;
+  gap: 4px;
+}
+
+.tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  border-radius: var(--radius-md);
+  position: relative;
+  transition: all var(--transition-slow) var(--spring-curve);
+  outline: none;
+}
+.tab-btn svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.65;
+  transition: transform var(--transition-slow) var(--spring-curve), opacity var(--transition-fast) ease;
+}
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 15%;
+  width: 70%;
+  height: 2px;
+  background: var(--primary-light);
+  border-radius: var(--radius-full);
+  transform: scaleX(0);
+  transition: transform var(--transition-slow) var(--spring-curve);
+}
+.tab-btn:hover {
+  color: var(--text-main);
+  background: hsla(155, 65%, 48%, 0.04);
+}
+.tab-btn:hover svg {
+  transform: translateY(-2px) scale(1.1);
+  opacity: 0.95;
+}
+.tab-btn:active {
+  transform: scale(0.96);
+}
+.tab-btn.active {
+  color: var(--primary-light);
+  background: hsla(155, 65%, 48%, 0.08);
+  box-shadow: inset 0 0 10px hsla(155, 65%, 48%, 0.05);
+}
+.tab-btn.active svg {
+  color: var(--primary-light);
+  opacity: 1;
+  transform: translateY(-1px) scale(1.06);
+}
+.tab-btn.active::after {
+  transform: scaleX(1);
+}
+
+.due-badge {
+  position: absolute;
+  top: 1px;
+  right: 10px;
+  background-color: var(--primary);
+  color: var(--bg-dark);
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 6px;
+  line-height: 1;
+  box-shadow: 0 0 8px var(--primary-glow);
+  animation: badgePulse 2s infinite alternate;
+}

@@ -1,0 +1,21 @@
+/* Main content panel layouts */
+.popup-main {
+  flex: 1;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.tab-pane {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 12px;
+}
+.tab-pane.active {
+  display: flex;
+  animation: paneEnter var(--transition-slow) var(--spring-curve) forwards;
+}

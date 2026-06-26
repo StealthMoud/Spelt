@@ -1,0 +1,77 @@
+border: 1px solid hsla(5, 80%, 35%, 0.3);
+  color: var(--danger);
+  font-style: normal;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 0.68rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.error-trash-chip:hover {
+  background: hsla(5, 80%, 25%, 0.25);
+  border-color: var(--danger);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.error-trash-chip:active {
+  transform: scale(0.96) translateY(0);
+}
+
+.error-trash-chip .delete-error-x {
+  font-weight: bold;
+  opacity: 0.7;
+  cursor: pointer;
+  padding-left: 2px;
+  transition: opacity var(--transition-fast) ease;
+}
+
+.error-trash-chip:hover .delete-error-x {
+  opacity: 1;
+}
+
+.floating-lookup-btn {
+  position: fixed;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: hsla(155, 15%, 12%, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsla(155, 65%, 48%, 0.3);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 10px var(--primary-glow);
+  transform: translate(-50%, -100%) scale(0.9);
+  opacity: 0;
+  transition: opacity var(--transition-fast) ease, transform var(--transition-fast) var(--spring-curve);
+  pointer-events: none;
+}
+
+.floating-lookup-btn.visible {
+  opacity: 1;
+  transform: translate(-50%, -120%) scale(1);
+  pointer-events: auto;
+}
+
+.floating-lookup-btn:hover {
+  background: hsla(155, 65%, 48%, 0.15);
+  border-color: var(--primary);
+  color: var(--text-main);
+  box-shadow: 0 4px 20px var(--primary-glow);
+  transform: translate(-50%, -120%) scale(1.05);
+}
+
+.floating-lookup-btn:active {
+  transform: translate(-50%, -120%) scale(0.95);
+}

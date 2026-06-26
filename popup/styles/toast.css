@@ -1,0 +1,29 @@
+/* Floating Glass Toast feedback box */
+.feedback-text {
+  margin-top: 10px;
+  position: relative;
+  padding: 12px;
+  border-radius: var(--radius-xl);
+  background: hsla(155, 12%, 8%, 0.85);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.55);
+  line-height: 1.4;
+  text-align: left;
+  box-sizing: border-box;
+}
+.feedback-text[style*="display: block"] {
+  animation: slideDownFadeIn var(--transition-slow) var(--spring-curve) forwards;
+}
+.feedback-text p {
+  margin: 4px 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+.feedback-text h4 {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

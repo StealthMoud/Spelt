@@ -1,0 +1,87 @@
+/* Modals entry scales and visual overlay */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 12px;
+}
+.modal-overlay[style*="display: flex"] {
+  display: flex;
+  animation: paneEnter 0.22s ease forwards;
+}
+.modal-overlay[style*="display: flex"] .modal-card {
+  animation: modalPop 0.32s var(--spring-curve) forwards;
+}
+
+.modal-card {
+  background: linear-gradient(135deg, hsl(155, 20%, 8%) 0%, hsl(155, 18%, 5%) 100%);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-xl);
+  padding: 14px;
+  width: 100%;
+  max-width: 320px;
+  max-height: 90%; /* Prevent modal content from going out of the reponsive viewport frame */
+  overflow-y: auto;
+  box-sizing: border-box;
+  box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.7);
+}
+.modal-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  padding-bottom: 6px;
+}
+
+.modal-input-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+.modal-input-item label {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.modal-input-item .premium-input {
+  padding: 6px 10px;
+  font-size: 0.76rem;
+}
+.modal-input-item .textarea-item {
+  height: 38px;
+  resize: none;
+}
+.modal-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.modal-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  border-top: 1px solid hsla(155, 10%, 25%, 0.15);
+  padding-top: 8px;
+}
+
+.primary-save-btn {
+  background: var(--primary) !important;
+  color: var(--bg-dark) !important;
+  border-color: var(--primary) !important;
+}
+.primary-save-btn:hover {
+  background: var(--primary-light) !important;
+  color: var(--bg-dark) !important;
+  box-shadow: 0 2px 12px var(--primary-glow) !important;
+}

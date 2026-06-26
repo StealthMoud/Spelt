@@ -1,0 +1,65 @@
+/* Stats Sub-tabs Navigation */
+.stats-subtabs-nav {
+  display: flex;
+  background: hsla(155, 20%, 6%, 0.4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2px;
+  margin-bottom: 12px;
+  gap: 2px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+
+.stats-subtab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast) ease;
+  outline: none;
+  text-align: center;
+}
+
+.stats-subtab-btn:hover {
+  color: var(--text-main);
+  background: hsla(155, 10%, 25%, 0.1);
+}
+
+.stats-subtab-btn.active {
+  color: var(--primary-light);
+  background: hsla(155, 65%, 48%, 0.12);
+  border: 1px solid hsla(155, 65%, 48%, 0.2);
+  box-shadow: 0 2px 8px -2px rgba(16, 185, 129, 0.25);
+  font-weight: 700;
+}
+
+.stats-subtab-content {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-subtab-content.active {
+  display: flex;
+  animation: statsSubtabFadeIn 0.25s ease forwards;
+}
+
+@keyframes statsSubtabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

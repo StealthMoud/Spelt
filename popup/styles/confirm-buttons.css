@@ -1,0 +1,23 @@
+.alt-suggestion-chip, .manual-suggest-chip {
+  background: hsla(155, 65%, 48%, 0.08);
+  border: 1px solid hsla(155, 65%, 48%, 0.25);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-right: 4px;
+  transition: all var(--transition-fast) ease;
+}
+.alt-suggestion-chip:hover, .manual-suggest-chip:hover {
+  background: hsla(155, 65%, 48%, 0.18);
+  border-color: var(--primary);
+  color: var(--text-main);
+  box-shadow: 0 2px 8px var(--primary-glow);
+  transform: translateY(-1px);
+}
+.alt-suggestion-chip:active, .manual-suggest-chip:active {
+  transform: scale(0.96) translateY(0);
+}

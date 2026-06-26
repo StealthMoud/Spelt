@@ -1,0 +1,94 @@
+/* Resizer border and corner handles */
+.resizer {
+  position: fixed;
+  background: transparent;
+  z-index: 100000;
+  transition: background-color var(--transition-fast);
+}
+.resizer:hover, .resizer.dragging {
+  background: hsla(155, 65%, 48%, 0.25);
+}
+.resizer-l {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: ew-resize;
+}
+.resizer-r {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: ew-resize;
+}
+.resizer-b {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: ns-resize;
+}
+.resizer-t {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: ns-resize;
+}
+.resizer-bl {
+  left: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+  z-index: 100001;
+}
+.resizer-br {
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+  z-index: 100001;
+}
+.resizer-tl {
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+  z-index: 100001;
+}
+.resizer-tr {
+  right: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+  z-index: 100001;
+}
+
+/* Base scrollbar styling */
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: hsla(155, 65%, 48%, 0.15);
+  border-radius: var(--radius-full);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: hsla(155, 65%, 48%, 0.35);
+}
+
+.spelt-popup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}

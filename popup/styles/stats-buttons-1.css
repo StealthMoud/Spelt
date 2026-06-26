@@ -1,0 +1,76 @@
+/* Button Distribution Progress Indicators */
+.button-dist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.btn-dist-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.btn-dist-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+}
+
+.btn-dist-name {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.btn-dist-count {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.btn-dist-progress-track {
+  height: 5px;
+  background: hsla(155, 20%, 6%, 0.4);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid hsla(155, 10%, 25%, 0.05);
+}
+
+.btn-dist-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow) var(--spring-curve);
+}
+.btn-dist-progress-fill.again {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger-glow);
+}
+.btn-dist-progress-fill.hard {
+  background: var(--warning);
+  box-shadow: 0 0 6px var(--warning-glow);
+}
+.btn-dist-progress-fill.good {
+  background: var(--primary);
+  box-shadow: 0 0 6px var(--primary-glow);
+}
+.btn-dist-progress-fill.easy {
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success-glow);
+}
+
+/* Leeches & Hardest Words List */
+.leeches-empty-text {
+  font-size: 0.7rem;
+  color: var(--text-muted-dark);
+  text-align: center;
+  padding: 8px 0;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.stats-leeches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;

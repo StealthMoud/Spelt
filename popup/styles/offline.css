@@ -1,0 +1,36 @@
+/* Offline warning banner */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: hsla(5, 85%, 20%, 0.4);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid hsla(5, 85%, 55%, 0.2);
+  color: var(--text-main);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0 12px;
+  transition: all var(--transition-slow) var(--spring-curve);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+}
+.offline-banner.visible {
+  max-height: 32px;
+  padding: 6px 12px;
+  opacity: 1;
+}
+.offline-banner svg {
+  width: 13px;
+  height: 13px;
+  color: var(--danger);
+  flex-shrink: 0;
+}
+.offline-banner.connection-error {
+  background: hsla(38, 92%, 18%, 0.4);
+  border-bottom: 1px solid hsla(38, 92%, 50%, 0.2);
+}
+.offline-banner.connection-error svg {
+  color: var(--warning);
+}
