@@ -59,4 +59,23 @@
     font-size: 0.72rem !important;
     margin-top: 4px !important;
   }
+
+  /* Spelling Check Button */
+  #check-spelling-btn {
+    font-size: 1.1rem !important;
+    padding: 12px 24px !important;
+    background: linear-gradient(135deg, var(--primary), hsl(155, 75%, 38%)) !important;
+    color: var(--bg-dark) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px var(--primary-glow) !important;
+    border: 1px solid var(--primary-light) !important;
+  }
+  #check-spelling-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  #check-spelling-btn:hover {
+    transform: translateY(-1px) scale(1.02) !important;
+    box-shadow: 0 6px 20px var(--primary-glow) !important;
+  }
 }
