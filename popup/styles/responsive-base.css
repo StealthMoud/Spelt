@@ -27,6 +27,15 @@
     width: 18px !important;
     height: 18px !important;
   }
+  .tab-btn:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    right: -9px;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: hsla(155, 12%, 24%, 0.35);
+  }
 
   /* Main container scaling */
   .popup-main {
