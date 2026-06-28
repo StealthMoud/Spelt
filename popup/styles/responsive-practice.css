@@ -1,0 +1,62 @@
+@media (min-width: 640px) {
+  /* Practice Tab & Card scaling */
+  .stats-grid {
+    gap: 20px !important;
+    margin-bottom: 20px !important;
+  }
+  .stat-card {
+    padding: 18px 24px !important;
+  }
+  .stat-label {
+    font-size: 0.85rem !important;
+  }
+  .stat-value {
+    font-size: 2rem !important;
+  }
+
+  /* Dynamic Flashcard Height/Sizing */
+  .flashcard {
+    height: calc(100vh - 300px) !important;
+    min-height: 420px !important;
+    max-height: 550px !important;
+  }
+  .card-front, .card-back {
+    padding: 24px 28px !important;
+  }
+  .clue-label {
+    font-size: 0.85rem !important;
+    margin-bottom: 6px !important;
+  }
+  .clue-item p, #practice-definition, #back-definition-display {
+    font-size: 1.25rem !important;
+  }
+  .front-clues, .back-details-list {
+    gap: 16px !important;
+  }
+  #spelling-input, #back-word-display {
+    font-size: 1.6rem !important;
+    padding: 12px 16px !important;
+  }
+  #back-word-display {
+    font-size: 2.2rem !important;
+  }
+
+  /* SRS rating buttons */
+  .srs-rating-wrapper {
+    gap: 10px !important;
+    padding-top: 16px !important;
+  }
+  .srs-btn {
+    padding: 14px 8px 10px !important;
+    font-size: 0.95rem !important;
+  }
+  .srs-kbd {
+    font-size: 0.65rem !important;
+    top: 3px !important;
+    right: 6px !important;
+  }
+  .srs-hint {
+    font-size: 0.72rem !important;
+    margin-top: 4px !important;
+  }
+}

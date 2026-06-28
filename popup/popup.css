@@ -39,4 +39,5 @@
 @import url('./styles/stats-dashboard-2.css');
 @import url('./styles/stats-dashboard-3.css');
 @import url('./styles/stats-tooltips.css');
-@import url('./styles/responsive.css');
+@import url('./styles/responsive-base.css');
+@import url('./styles/responsive-practice.css');
