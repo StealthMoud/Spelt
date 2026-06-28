@@ -79,7 +79,7 @@ export async function renderStats() {
     renderAccuracyTrend(chartBuckets);
     renderSandboxActivity(summary.globalSandboxChecks, summary.globalSandboxCorrect, summary.globalSandboxToday, chartBuckets);
     renderResponseTime(summary.globalRtSum, summary.globalRtCount, summary.globalRtMin, summary.globalRtMax, chartBuckets);
-    renderStudyTime(summary.globalRtSum, summary.globalRtCount, summary.todayStudyTimeMs, sessions);
+    renderStudyTime(summary.globalRtSum, summary.globalRtCount, summary.todayStudyTimeMs, sessions, chartBuckets);
     renderLeeches(words, currentLeechesLimit, currentLeechesCustomVal);
   } catch (err) {
     console.error('Error calculating statistics:', err);

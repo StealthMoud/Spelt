@@ -34,10 +34,12 @@ export function renderResponseTime(globalRtSum, globalRtCount, globalRtMin, glob
   }
 }
 
-export function renderStudyTime(globalRtSum, globalRtCount, todayStudyTimeMs, sessions) {
+export function renderStudyTime(globalRtSum, globalRtCount, todayStudyTimeMs, sessions, chartBuckets) {
   const elTotal = document.getElementById('study-total-time');
   const elAvg = document.getElementById('study-avg-session');
   const elToday = document.getElementById('study-today-time');
+  const trendContainer = document.getElementById('study-trend-container');
+  const emptyMsg = document.getElementById('study-empty-msg');
 
   const formatStudyTime = (ms) => {
     if (!ms || isNaN(ms)) return '0s';
@@ -67,5 +69,22 @@ export function renderStudyTime(globalRtSum, globalRtCount, todayStudyTimeMs, se
       elAvg.textContent = globalRtCount > 0 ? (globalRtSum / globalRtCount < 1000 ? `${Math.round(globalRtSum / globalRtCount)}ms` : `${(globalRtSum / globalRtCount / 1000).toFixed(1)}s`) : '--';
       if (elAvg.nextElementSibling) elAvg.nextElementSibling.textContent = 'Avg per Review';
     }
+  }
+
+  const hasData = (sessions && sessions.length > 0) || globalRtCount > 0;
+  if (hasData) {
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    if (trendContainer) {
+      trendContainer.style.display = 'flex';
+      const points = chartBuckets.map(b => Number((b.studyTimeMs / 1000 / 60).toFixed(1)));
+      const labels = chartBuckets.map(b => b.fullDateLabel);
+      drawSparkline('study-trend-container', points, 320, 75, {
+        strokeColor: 'hsl(175, 75%, 45%)', dotColor: 'hsl(175, 75%, 72%)',
+        labels, unit: 'm study time'
+      });
+    }
+  } else {
+    if (emptyMsg) emptyMsg.style.display = 'block';
+    if (trendContainer) trendContainer.style.display = 'none';
   }
 }
