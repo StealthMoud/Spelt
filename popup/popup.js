@@ -9,6 +9,7 @@ import { initFontResizer } from './js/popup/font_resizer.js';
 import { initNetworkStatus } from './js/popup/network_status.js';
 import { initResizer } from './js/popup/resizer.js';
 import { initSelectionLookup } from './js/popup/selection_lookup.js';
+import { initMoveable } from './js/popup/moveable.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const dueCountEl = document.getElementById('due-count'), totalCountEl = document.getElementById('total-count');
@@ -72,6 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNetworkStatus();
   initResizer();
   initSelectionLookup();
+  initMoveable();
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message.action === 'wordAddedFromContextMenu') {
