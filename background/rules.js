@@ -33,10 +33,12 @@ export async function setupRules() {
 
 export function registerContextMenu() {
   chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.create({
-      id: 'add-to-spelt',
-      title: 'Add "%s" to Spelt Vault',
-      contexts: ['selection']
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: 'add-to-spelt',
+        title: 'Add "%s" to Spelt Vault',
+        contexts: ['selection']
+      });
     });
   });
 }
