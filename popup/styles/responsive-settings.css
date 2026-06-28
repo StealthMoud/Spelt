@@ -31,4 +31,42 @@
   .shortcut-row kbd { font-size: 0.8rem !important; padding: 4px 8px !important; }
   .btn-row { gap: 12px !important; margin-top: 12px !important; }
   #retranslate-all-btn, #wipe-db-btn { padding: 12px !important; font-size: 0.95rem !important; }
+
+  /* Modal scaling */
+  .modal-card {
+    max-width: 460px !important;
+    padding: 22px 26px !important;
+  }
+  .modal-card h3 {
+    font-size: 1.25rem !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 8px !important;
+  }
+  .modal-input-item {
+    gap: 4px !important;
+    margin-bottom: 12px !important;
+  }
+  .modal-input-item label {
+    font-size: 0.78rem !important;
+  }
+  .modal-input-item .premium-input {
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+  }
+  .modal-input-item .textarea-item {
+    height: 52px !important;
+  }
+  .modal-input-row {
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  .modal-actions-row {
+    margin-top: 18px !important;
+    padding-top: 12px !important;
+    gap: 10px !important;
+  }
+  .modal-actions-row .submit-btn {
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+  }
 }
