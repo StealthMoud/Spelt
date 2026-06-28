@@ -1,6 +1,6 @@
 import { getFallbackExample, computeErrorWeight, calcSM2 } from '../../../shared/storage.js';
 import { getDueCards, getOnDeckUpdated } from './state.js';
-import { renderAudioButtons } from './card.js';
+import { renderAudioButtons } from './helpers.js';
 
 export function checkSpelling() {
   const dueCards = getDueCards();
