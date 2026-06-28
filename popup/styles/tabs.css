@@ -3,6 +3,11 @@
   display: flex;
   margin-top: 8px;
   gap: 4px;
+  background: hsla(155, 12%, 5%, 0.45);
+  border: 1px solid hsla(155, 12%, 24%, 0.15);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .tab-btn {
@@ -12,14 +17,14 @@
   gap: 3px;
   padding: 6px 4px 8px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-muted);
   font-family: inherit;
   font-size: 0.68rem;
   font-weight: 600;
   cursor: pointer;
   flex: 1;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   position: relative;
   transition: all var(--transition-slow) var(--spring-curve);
   outline: none;
@@ -34,17 +39,19 @@
   content: '';
   position: absolute;
   bottom: 2px;
-  left: 15%;
-  width: 70%;
+  left: 20%;
+  width: 60%;
   height: 2px;
   background: var(--primary-light);
   border-radius: var(--radius-full);
   transform: scaleX(0);
   transition: transform var(--transition-slow) var(--spring-curve);
+  box-shadow: 0 0 6px var(--primary);
 }
 .tab-btn:hover {
   color: var(--text-main);
-  background: hsla(155, 65%, 48%, 0.04);
+  background: hsla(155, 12%, 18%, 0.35);
+  border-color: hsla(155, 12%, 24%, 0.15);
 }
 .tab-btn:hover svg {
   transform: translateY(-2px) scale(1.1);
@@ -55,8 +62,9 @@
 }
 .tab-btn.active {
   color: var(--primary-light);
-  background: hsla(155, 65%, 48%, 0.08);
-  box-shadow: inset 0 0 10px hsla(155, 65%, 48%, 0.05);
+  background: linear-gradient(135deg, hsla(155, 65%, 48%, 0.12) 0%, hsla(155, 65%, 48%, 0.04) 100%);
+  border-color: hsla(155, 65%, 48%, 0.35);
+  box-shadow: 0 4px 12px hsla(155, 65%, 48%, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .tab-btn.active svg {
   color: var(--primary-light);
