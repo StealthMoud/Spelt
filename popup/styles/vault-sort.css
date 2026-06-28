@@ -1,23 +1,3 @@
-.vault-sort-select {
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  transition: all var(--transition-fast) ease;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233acb81' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 10px;
-}
-.vault-sort-select:hover {
-  border-color: var(--border-hover);
-  color: var(--text-main);
-}
-.vault-sort-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 8px var(--primary-glow);
-  color: var(--text-main);
-}
-
 .vault-sort-dir-btn {
   background: hsla(155, 10%, 15%, 0.35) !important;
   border-color: var(--border) !important;
@@ -44,4 +24,51 @@
 }
 .vault-sort-dir-btn[data-dir="desc"] svg {
   transform: rotate(0deg);
+}
+
+/* Custom Select Dropdowns */
+.custom-select-trigger {
+  background: hsla(155, 20%, 6%, 0.45) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  border-radius: var(--radius-md) !important;
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+.custom-select-trigger:hover {
+  border-color: var(--border-hover) !important;
+  color: var(--text-main) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.02);
+}
+.custom-select-wrapper.open .custom-select-trigger {
+  border-color: var(--primary) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 0 12px var(--primary-glow) !important;
+}
+.custom-select-trigger .chevron {
+  transition: transform var(--transition-slow) var(--spring-curve);
+}
+.custom-select-wrapper.open .chevron {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+.custom-select-wrapper.open .custom-options {
+  display: block !important;
+}
+.custom-option {
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all var(--transition-fast) ease;
+}
+.custom-option:hover {
+  background: hsla(155, 65%, 48%, 0.08) !important;
+  color: var(--primary-light) !important;
+}
+.custom-option.selected {
+  background: hsla(155, 65%, 48%, 0.15) !important;
+  color: var(--primary-light) !important;
+  font-weight: 600;
 }

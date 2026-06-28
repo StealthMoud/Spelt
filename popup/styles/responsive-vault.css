@@ -72,4 +72,18 @@
     width: 12px !important;
     height: 12px !important;
   }
+
+  /* Custom dropdown scaling */
+  .custom-select-trigger {
+    padding: 10px 14px !important;
+    font-size: 0.95rem !important;
+  }
+  .custom-select-trigger .chevron {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .custom-option {
+    padding: 10px 14px !important;
+    font-size: 0.95rem !important;
+  }
 }

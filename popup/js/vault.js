@@ -6,6 +6,7 @@ import { renderList, updateBulkUIState } from './vault/list.js';
 import { getFilteredWords } from './vault/filter.js';
 import { registerAutofillListeners } from './vault/autofill.js';
 import { registerAudioListeners } from './vault/audio_listeners.js';
+import { initCustomSelects } from './vault/dropdowns.js';
 let wordsList = [];
 let onVaultUpdatedCallback = null;
 let selectedWordIds = new Set();
@@ -13,6 +14,7 @@ export { showConfirm, openModal };
 
 export async function initVault(onVaultUpdated) {
   onVaultUpdatedCallback = onVaultUpdated;
+  initCustomSelects();
 
   document.getElementById('add-word-btn').addEventListener('click', () => openModal());
   document.getElementById('form-cancel-btn').addEventListener('click', (e) => {
@@ -91,8 +93,7 @@ export async function reloadVaultList() {
 function deleteWord(wordObj) {
   showConfirm('Delete Word', `Delete "${wordObj.word}" from your vault?`, async () => {
     wordsList = wordsList.filter(w => w.id !== wordObj.id);
-    await saveWords(wordsList);
-    await reloadVaultList();
+    await saveWords(wordsList); await reloadVaultList();
     if (onVaultUpdatedCallback) onVaultUpdatedCallback();
   });
 }
