@@ -1,68 +1,61 @@
 export function initResizer() {
   const handles = document.querySelectorAll('.resizer');
-  let startX, startY, startWidth, startHeight;
-  let activeHandle = null;
+  let startX, startY, startW, startH, startL, startT, active = null;
 
-  chrome.storage?.local.get(['spelt_popup_width', 'spelt_popup_height'], (res) => {
-    const width = res.spelt_popup_width || 360;
-    const height = res.spelt_popup_height || 530;
-    setDimensions(width, height);
+  chrome.windows?.getCurrent((win) => {
+    const isDetached = win && win.type === 'popup';
+    handles.forEach(h => h.style.display = isDetached ? 'block' : 'none');
+
+    if (!isDetached) {
+      chrome.storage?.local.get(['spelt_popup_width', 'spelt_popup_height'], (res) => {
+        const w = res.spelt_popup_width || 360, h = res.spelt_popup_height || 530;
+        setStyles(`${w}px`, `${h}px`, `${w}px`, `${h}px`);
+      });
+    } else {
+      setStyles('100%', '100%', 'none', 'none');
+      handles.forEach(h => h.addEventListener('mousedown', (e) => {
+        e.preventDefault(); active = h; startX = e.screenX; startY = e.screenY;
+        chrome.windows.getCurrent((curr) => {
+          startW = curr.width; startH = curr.height; startL = curr.left; startT = curr.top;
+          document.addEventListener('mousemove', drag);
+          document.addEventListener('mouseup', stop);
+        });
+      }));
+    }
   });
 
-  handles.forEach(handle => {
-    handle.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      activeHandle = handle;
-      startX = e.clientX;
-      startY = e.clientY;
-      startWidth = parseInt(document.defaultView.getComputedStyle(document.body).width, 10);
-      startHeight = parseInt(document.defaultView.getComputedStyle(document.body).height, 10);
-      handle.classList.add('dragging');
-      document.addEventListener('mousemove', drag);
-      document.addEventListener('mouseup', stopDrag);
+  function setStyles(w, h, maxW, maxH) {
+    [document.body, document.documentElement].forEach(el => {
+      el.style.width = w; el.style.height = h; el.style.maxWidth = maxW; el.style.maxHeight = maxH;
     });
-  });
-
-  function setDimensions(w, h) {
-    document.body.style.width = w + 'px';
-    document.body.style.height = h + 'px';
-    document.documentElement.style.width = w + 'px';
-    document.documentElement.style.height = h + 'px';
   }
 
   function drag(e) {
-    if (!activeHandle) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    if (!active) return;
+    const dx = e.screenX - startX, dy = e.screenY - startY;
+    let w = startW, h = startH, left = startL, top = startT;
+    const isL = /l/.test(active.className), isR = /r/.test(active.className);
+    const isB = /b/.test(active.className), isT = /t/.test(active.className);
 
-    let w = startWidth;
-    let h = startHeight;
+    if (isR) w = startW + dx; else if (isL) { w = startW - dx; left = startL + dx; }
+    if (isB) h = startH + dy; else if (isT) { h = startH - dy; top = startT + dy; }
 
-    const isL = activeHandle.classList.contains('resizer-l') || activeHandle.classList.contains('resizer-bl') || activeHandle.classList.contains('resizer-tl');
-    const isR = activeHandle.classList.contains('resizer-r') || activeHandle.classList.contains('resizer-br') || activeHandle.classList.contains('resizer-tr');
-    const isB = activeHandle.classList.contains('resizer-b') || activeHandle.classList.contains('resizer-bl') || activeHandle.classList.contains('resizer-br');
-    const isT = activeHandle.classList.contains('resizer-t') || activeHandle.classList.contains('resizer-tl') || activeHandle.classList.contains('resizer-tr');
-
-    if (isR) w = startWidth + dx;
-    else if (isL) w = startWidth - dx;
-
-    if (isB) h = startHeight + dy;
-    else if (isT) h = startHeight - dy;
-
-    w = Math.max(320, Math.min(800, w));
-    h = Math.max(400, Math.min(600, h));
-    setDimensions(w, h);
+    w = Math.max(320, Math.min(1600, w));
+    h = Math.max(400, Math.min(1200, h));
+    const params = { width: w, height: h };
+    if (isL) params.left = left;
+    if (isT) params.top = top;
+    chrome.windows.getCurrent(c => chrome.windows.update(c.id, params));
   }
 
-  function stopDrag() {
-    if (activeHandle) {
-      activeHandle.classList.remove('dragging');
-      const w = parseInt(document.body.style.width, 10);
-      const h = parseInt(document.body.style.height, 10);
-      if (w && h) chrome.storage?.local.set({ spelt_popup_width: w, spelt_popup_height: h });
-      activeHandle = null;
+  function stop() {
+    if (active) {
+      chrome.windows.getCurrent(c => {
+        if (c.width && c.height) chrome.storage?.local.set({ spelt_popup_width: c.width, spelt_popup_height: c.height });
+      });
+      active = null;
     }
     document.removeEventListener('mousemove', drag);
-    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('mouseup', stop);
   }
 }
