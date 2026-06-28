@@ -22,7 +22,6 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
       else if (q === 5) interval = 12;
       else interval = 6;
     } else {
-      // Scale interval growth based on card rating (prevents flat intervals when user reviews)
       let qualityMultiplier = 1.0;
       if (q === 3) qualityMultiplier = 0.6;      // Hard
       else if (q === 5) qualityMultiplier = 1.3; // Easy
@@ -35,9 +34,12 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
       }
     }
 
-    // Penalty if spelled incorrectly so they re-test sooner
+    // LAPSE: if spelled incorrectly, cap interval to a short lapse value.
+    // This is the key fix: a misspelled word means you don't know it,
+    // so the interval should reset to 1-3 days, not just get a % discount.
     if (!isCorrect) {
-      interval = Math.round(interval * 0.5);
+      const lapseMax = q === 3 ? 1 : q === 4 ? 2 : 3;
+      interval = Math.min(interval, lapseMax);
     }
 
     rep += 1;
@@ -47,14 +49,14 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
   interval = Math.max(1, Math.round(interval * multiplier));
 
   // Apply error-weight: words with more accumulated errors get shorter intervals.
-  // The weight is computed externally from totalErrors and correctStreak.
-  // A weight of 1.0 means no change; 0.5 means intervals are halved.
+  // A weight of 1.0 means no change; lower = shorter intervals.
   if (errorWeight < 1.0) {
     interval = Math.max(1, Math.round(interval * errorWeight));
   }
 
-  // Adjust Ease Factor (EF)
+  // Adjust Ease Factor (EF) — penalize harder on misspellings
   ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+  if (!isCorrect) ef -= 0.15; // extra EF penalty for misspelling
   if (ef < 1.3) ef = 1.3;
 
   // "Again" cards stay due immediately,
@@ -69,8 +71,11 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
 // Compute the error-weight multiplier from a word's difficulty history.
 // totalErrors: lifetime count of all misspellings (never resets)
 // correctStreak: consecutive correct practice reviews
-// Returns a value between ~0.29 (very sticky) and 1.0 (no penalty)
+// Returns a value between ~0.2 (very problematic word) and 1.0 (no penalty)
+// Formula: each error contributes 0.25 penalty, offset by correct streaks
 export function computeErrorWeight(totalErrors = 0, correctStreak = 0) {
   if (totalErrors <= 0) return 1.0;
-  return 1.0 / (1 + (totalErrors * 0.12) / (1 + correctStreak * 0.4));
+  const rawPenalty = totalErrors * 0.25;
+  const recovery = correctStreak * 0.15;
+  return Math.max(0.2, 1.0 / (1 + rawPenalty - Math.min(recovery, rawPenalty * 0.8)));
 }
