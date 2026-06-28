@@ -42,9 +42,11 @@ async function updateWordTranslation(w, targetLang) {
   }
 
   // Always try to fetch a premium dynamic definition first
-  let newDef = await fetchDynamicDefinition(w.word);
+  const defResult = await fetchDynamicDefinition(w.word);
+  let newDef = defResult.definition;
   if (!newDef) newDef = dictDef;
   if (newDef) w.definition = newDef;
+  if (!w.level && defResult.level) w.level = defResult.level;
 
   // Always try to fetch a premium dynamic example from Cambridge/Oxford/Tatoeba first
   let newExample = await fetchDynamicExample(w.word);

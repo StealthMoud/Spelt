@@ -1,5 +1,5 @@
 export function parseCambridgePage(html) {
-  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '' };
+  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '', senses: [], allLevels: [] };
   
   const ukRegex = /<span\s+class="uk dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
   const ukMatch = ukRegex.exec(html);
@@ -30,16 +30,29 @@ export function parseCambridgePage(html) {
       result.usIpa = '/' + ipaMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() + '/';
     }
   }
-  
-  const levelRegex = /<span\s+class="[^"]*(?:epp-xref|level|cefr)[^"]*"[^>]*>([\s\S]*?)<\/span>/gi;
-  let m;
-  while ((m = levelRegex.exec(html)) !== null) {
-    const txt = m[1].replace(/<[^>]*>/g, '').trim().toUpperCase();
-    if (/^[A-C][1-2]$/.test(txt)) {
-      result.level = txt;
-      break;
+
+  // Extract all definition-level pairs from sense blocks (ddef_h)
+  const senseRegex = /<div\s+class="ddef_h">([\s\S]*?)<\/div>\s*<\/div>/g;
+  let sm;
+  const levelsSet = new Set();
+  while ((sm = senseRegex.exec(html)) !== null) {
+    const block = sm[1];
+    let senseLevel = '';
+    const lvlMatch = /<span\s+class="[^"]*(?:epp-xref|cefr)[^"]*"[^>]*>([\s\S]*?)<\/span>/i.exec(block);
+    if (lvlMatch) {
+      const lt = lvlMatch[1].replace(/<[^>]*>/g, '').trim().toUpperCase();
+      if (/^[A-C][1-2]$/.test(lt)) { senseLevel = lt; levelsSet.add(lt); }
+    }
+    const defMatch = /<div\s+class="def ddef_d[^>]*>([\s\S]*?)<\/div>/i.exec(block);
+    if (defMatch) {
+      let defText = defMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      if (defText.endsWith(':')) defText = defText.slice(0, -1).trim();
+      if (defText) result.senses.push({ definition: defText, level: senseLevel });
     }
   }
+
+  result.allLevels = [...levelsSet];
+  result.level = result.senses.find(s => s.level)?.level || result.allLevels[0] || '';
   return result;
 }
 

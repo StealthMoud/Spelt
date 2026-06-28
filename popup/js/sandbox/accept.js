@@ -8,11 +8,12 @@ export async function acceptSuggestion(suggestion, original, reloadVaultCallback
   const words = await getWords();
   const exists = words.some(w => w.word.toLowerCase() === suggestion.toLowerCase());
 
-  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '', level = '';
+  const defResult = await fetchDynamicDefinition(suggestion);
+  let def = defResult.definition, ipa = '', partOfSpeech = '', example = '', level = defResult.level || '';
   try {
     const cambridge = await fetchCambridgePronunciation(suggestion);
     ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`) : (cambridge.ukIpa || cambridge.usIpa || '');
-    level = cambridge.level || '';
+    if (!level) level = cambridge.level || '';
   } catch (_) {}
 
   let isInvalidWord = false;

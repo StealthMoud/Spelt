@@ -42,7 +42,8 @@ export {
 } from './storage/translation.js';
 
 export {
-  fetchDynamicDefinition
+  fetchDynamicDefinition,
+  matchDefinitionLevel
 } from './storage/definitions.js';
 
 export {

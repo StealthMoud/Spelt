@@ -39,7 +39,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
     }
 
     if (!wordObj.definition?.trim() || wordObj.definition === 'No definition found') {
-      const dynamicDef = details.definition?.trim() || await fetchDynamicDefinition(correctWord);
+      const dynamicDef = details.definition?.trim() || (await fetchDynamicDefinition(correctWord)).definition;
       if (dynamicDef) wordObj.definition = dynamicDef;
     }
 

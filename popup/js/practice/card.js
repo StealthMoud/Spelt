@@ -1,10 +1,6 @@
 import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation } from '../../../shared/storage.js';
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt } from './state.js';
-
-export function renderAudioButtons(word) {
-  const b = (accent, label) => `<button type="button" class="audio-play-btn" data-word="${word}" data-accent="${accent}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; vertical-align: middle;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> <span>${label}</span></button>`;
-  return `<div style="display: flex; gap: 6px; margin: 4px 0 4px;">${b('us', 'US')}${b('uk', 'UK')}</div>`;
-}
+import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 
 export async function loadPracticeDeck() {
   const words = await getWords();
@@ -36,14 +32,19 @@ export function showPracticeCard() {
   const levelContainer = document.getElementById('practice-level-container');
   const levelEl = document.getElementById('practice-level');
   if (levelContainer && levelEl) {
-    levelEl.textContent = card.level || '';
-    levelContainer.style.display = card.level ? 'block' : 'none';
-    if (!card.level) {
+    let displayLevel = card.level || '';
+    let otherLevels = card.otherLevels || [];
+    levelEl.innerHTML = displayLevel ? formatLevelDisplay(displayLevel, otherLevels) : '';
+    levelContainer.style.display = displayLevel ? 'block' : 'none';
+    if (!displayLevel) {
       fetchCambridgePronunciation(card.word).then(async cambridge => {
         if (cambridge.level) {
-          card.level = cambridge.level; levelEl.textContent = card.level; levelContainer.style.display = 'block';
+          card.level = cambridge.level;
+          card.otherLevels = (cambridge.allLevels || []).filter(l => l !== cambridge.level);
+          levelEl.innerHTML = formatLevelDisplay(card.level, card.otherLevels);
+          levelContainer.style.display = 'block';
           const all = await getWords(), w = all.find(x => x.id === card.id);
-          if (w) { w.level = card.level; await saveWords(all); }
+          if (w) { w.level = card.level; w.otherLevels = card.otherLevels; await saveWords(all); }
         }
       }).catch(() => {});
     }

@@ -5,11 +5,12 @@ export async function renderMisspellingCard(originalWord, suggestions, activeInd
   const feedbackMsg = document.getElementById('feedback-msg');
   const suggestion = suggestions[activeIndex];
   feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Retrieving suggestions...</p>';
-  let def = await fetchDynamicDefinition(suggestion), ipa = '', partOfSpeech = '', example = '', level = '';
+  const defResult = await fetchDynamicDefinition(suggestion);
+  let def = defResult.definition, ipa = '', partOfSpeech = '', example = '', level = defResult.level || '';
   try {
     const cambridge = await fetchCambridgePronunciation(suggestion);
     ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`) : (cambridge.ukIpa || cambridge.usIpa || '');
-    level = cambridge.level || '';
+    if (!level) level = cambridge.level || '';
   } catch (_) {}
 
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${suggestion}`);

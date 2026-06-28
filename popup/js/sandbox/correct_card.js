@@ -2,12 +2,13 @@ import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynami
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
-  const def = await fetchDynamicDefinition(word) || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
-  let ipa = '', level = '';
+  const defResult = await fetchDynamicDefinition(word);
+  const def = defResult.definition || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
+  let ipa = '', level = defResult.level || '';
   try {
     const cambridge = await fetchCambridgePronunciation(word);
     ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`) : (cambridge.ukIpa || cambridge.usIpa || '');
-    level = cambridge.level || '';
+    if (!level) level = cambridge.level || '';
   } catch (_) {}
   if (!ipa) ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
   

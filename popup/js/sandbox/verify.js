@@ -30,8 +30,8 @@ export async function handleVerify(reloadVaultListCallback) {
       
       if (!isWordValid) {
         try {
-          const dynamicDef = await fetchDynamicDefinition(lowerWord);
-          if (dynamicDef && dynamicDef !== 'No definition found') isWordValid = true;
+          const defResult = await fetchDynamicDefinition(lowerWord);
+          if (defResult.definition && defResult.definition !== 'No definition found') isWordValid = true;
         } catch (_) {}
       }
       

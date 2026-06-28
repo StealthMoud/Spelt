@@ -20,7 +20,9 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(correctWord.toLowerCase())}`);
     if (response.ok) {
       const data = await response.json();
-      const def = await fetchDynamicDefinition(correctWord) || data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+      const defResult = await fetchDynamicDefinition(correctWord);
+      const def = defResult.definition || data[0].meanings[0]?.definitions[0]?.definition || 'No definition found';
+      if (!level) level = defResult.level || '';
       if (!ipa) ipa = data[0].phonetics.find(p => p.text)?.text || '';
       if (!ipa) ipa = '/--/';
       const partOfSpeech = data[0].meanings[0]?.partOfSpeech || '';
@@ -40,7 +42,6 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
         ${closeBtnHtml}
         <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
         <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
-        
         <div class="feedback-details">
           <div class="feedback-meta-row">
             ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
@@ -48,8 +49,7 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
             ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
           </div>
           <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
-          ${example ? `
-            <div class="feedback-example" data-word="${correctWord}">
+          ${example ? `<div class="feedback-example" data-word="${correctWord}">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <span class="clue-label" style="margin: 0;">Example</span>
                 <div style="display: flex; gap: 4px;">
@@ -63,8 +63,7 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
               </div>
               <p class="feedback-example-text">"${example}"</p>
               <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
-            </div>
-          ` : ''}
+            </div>` : ''}
         </div>
         ${renderAudioButtons(correctWord)}
       `;

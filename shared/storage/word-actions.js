@@ -25,15 +25,20 @@ export async function addWord(wordData) {
 
   const partOfSpeechVal = wordData.partOfSpeech?.trim() || '';
   let definitionVal = wordData.definition?.trim() || '';
-  if (!definitionVal || definitionVal === 'No definition found') {
-    definitionVal = await fetchDynamicDefinition(normalizedWord) || definitionVal;
-  }
-  const exampleVal = wordData.example?.trim() || await fetchDynamicExample(normalizedWord) || getFallbackExample(normalizedWord, partOfSpeechVal);
+  let levelVal = wordData.level || '';
+  let otherLevels = [];
 
+  if (!definitionVal || definitionVal === 'No definition found') {
+    const defResult = await fetchDynamicDefinition(normalizedWord);
+    definitionVal = defResult.definition || definitionVal;
+    if (!levelVal && defResult.level) levelVal = defResult.level;
+    otherLevels = (defResult.allLevels || []).filter(l => l !== levelVal);
+  }
+
+  const exampleVal = wordData.example?.trim() || await fetchDynamicExample(normalizedWord) || getFallbackExample(normalizedWord, partOfSpeechVal);
   const exampleTranslationVal = wordData.exampleTranslation?.trim() || '';
 
   let transcriptionVal = wordData.transcription?.trim() || '';
-  let levelVal = wordData.level || '';
   if (!transcriptionVal || transcriptionVal === '/--/' || !levelVal) {
     try {
       const cambridge = await fetchCambridgePronunciation(normalizedWord);
@@ -44,8 +49,9 @@ export async function addWord(wordData) {
           transcriptionVal = cambridge.ukIpa || cambridge.usIpa || '';
         }
       }
-      if (!levelVal) {
-        levelVal = cambridge.level || '';
+      if (!levelVal) levelVal = cambridge.level || '';
+      if (otherLevels.length === 0 && cambridge.allLevels) {
+        otherLevels = cambridge.allLevels.filter(l => l !== levelVal);
       }
     } catch (_) {}
   }
@@ -69,6 +75,7 @@ export async function addWord(wordData) {
     createdAt: Date.now(),
     history: [],
     level: levelVal.toUpperCase().trim(),
+    otherLevels: otherLevels,
     misspellings: Array.isArray(wordData.misspellings) ? wordData.misspellings : [],
     totalErrors: wordData.totalErrors || 0,
     correctStreak: 0
