@@ -68,6 +68,12 @@
   .feedback-example-text {
     font-size: 1.25rem !important;
   }
+  .feedback-example { padding: 10px 16px !important; margin-top: 12px !important; border-left-width: 4px !important; }
+  .feedback-meta-row { gap: 12px !important; margin-top: 6px !important; }
+  #sandbox-play-btn, #sandbox-save-btn { padding: 10px 16px !important; font-size: 0.95rem !important; border-radius: var(--radius-md) !important; }
+  #sandbox-play-btn svg, #sandbox-save-btn svg { width: 14px !important; height: 14px !important; }
+  .offline-banner.visible { max-height: 52px !important; padding: 12px 20px !important; font-size: 0.95rem !important; }
+  .offline-banner svg { width: 16px !important; height: 16px !important; }
 
   /* Vault Tab scaling */
   .vault-list-box {
