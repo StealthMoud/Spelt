@@ -65,7 +65,7 @@ export async function renderStats() {
     const timeframe = document.getElementById('stats-timeframe-select')?.value || currentStatsTimeframe;
     const { chartBuckets, barWidth } = buildTimeframeBuckets(timeframe);
 
-    const summary = calculateSummary(words, sandboxActivity, chartBuckets);
+    const summary = calculateSummary(words, sandboxActivity, chartBuckets, sessions);
     const cardStates = calculateCardStates(words);
     const forecast = calculateForecast(words);
 
@@ -73,7 +73,7 @@ export async function renderStats() {
     renderReviewChart(chartBuckets, barWidth);
     renderButtonDistribution(summary.buttonCounts);
     renderCEFRDistribution(words);
-    renderHeatmap(summary.reviewActivity);
+    renderHeatmap(summary.reviewActivity, summary.studyTimeActivity);
 
     renderVelocity(words, chartBuckets, cardStates.masteredCount);
     renderAccuracyTrend(chartBuckets);
