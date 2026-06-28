@@ -86,4 +86,9 @@
     padding: 10px 14px !important;
     font-size: 0.95rem !important;
   }
+
+  /* Word list item action buttons */
+  .table-icon-btn { width: 34px !important; height: 34px !important; border-radius: 8px !important; }
+  .table-icon-btn svg { width: 16px !important; height: 16px !important; }
+  .vault-list-item > div:last-child { gap: 10px !important; margin-left: 14px !important; }
 }
