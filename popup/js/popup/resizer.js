@@ -7,10 +7,7 @@ export function initResizer() {
     handles.forEach(h => h.style.display = isDetached ? 'block' : 'none');
 
     if (!isDetached) {
-      chrome.storage?.local.get(['spelt_popup_width', 'spelt_popup_height'], (res) => {
-        const w = res.spelt_popup_width || 360, h = res.spelt_popup_height || 530;
-        setStyles(`${w}px`, `${h}px`, `${w}px`, `${h}px`);
-      });
+      setStyles('360px', '530px', '360px', '530px');
     } else {
       setStyles('100%', '100%', 'none', 'none');
       handles.forEach(h => h.addEventListener('mousedown', (e) => {
