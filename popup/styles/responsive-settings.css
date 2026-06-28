@@ -16,7 +16,12 @@
   .forecast-item { padding: 14px !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
   .forecast-day { font-size: 0.85rem !important; }
   .forecast-val { font-size: 1.8rem !important; }
-  .heatmap-wrapper { display: flex !important; justify-content: center !important; overflow-x: auto !important; padding: 12px 0 !important; }
+  .heatmap-wrapper { display: flex !important; justify-content: center !important; padding: 16px 20px !important; background: hsla(155, 20%, 6%, 0.3) !important; border: 1px solid var(--border-hover) !important; border-radius: var(--radius-xl) !important; }
+  .heatmap-weekdays { grid-template-rows: repeat(7, 11px) !important; gap: 4px !important; font-size: 0.72rem !important; padding-top: 19px !important; }
+  .heatmap-months { grid-template-columns: repeat(53, 11px) !important; gap: 4px !important; font-size: 0.72rem !important; height: 16px !important; line-height: 16px !important; }
+  .heatmap-grid { grid-template-rows: repeat(7, 11px) !important; grid-template-columns: repeat(53, 11px) !important; gap: 4px !important; }
+  .heatmap-cell { width: 11px !important; height: 11px !important; }
+  .accuracy-trend-container { height: 130px !important; max-width: 600px !important; margin: 6px auto 0 !important; }
   #stats-leeches-limit { height: 32px !important; font-size: 0.82rem !important; padding: 4px 24px 4px 8px !important; }
   .stats-leeches-list li { padding: 12px 16px !important; font-size: 0.95rem !important; }
 
