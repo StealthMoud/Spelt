@@ -1,12 +1,14 @@
 import { reviewWord, getWords, saveWords } from '../../../shared/storage.js';
-import { getDueCards, getCardShownAt, getOnDeckUpdated } from './state.js';
+import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
 
 export async function submitRating(score) {
+  if (getIsSubmitting()) return;
   const dueCards = getDueCards();
   const card = dueCards[0];
   if (!card) return;
+  setIsSubmitting(true);
   try {
     const typed = document.getElementById('spelling-input').value.trim();
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
@@ -24,11 +26,17 @@ export async function submitRating(score) {
       }
       getOnDeckUpdated()?.();
       showPracticeCard();
+      setIsSubmitting(false);
     }, 200);
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+    setIsSubmitting(false);
+  }
 }
 
 export async function submitMasteredRating(card) {
+  if (getIsSubmitting()) return;
+  setIsSubmitting(true);
   try {
     const typed = document.getElementById('spelling-input').value.trim();
     const isOk = typed.toLowerCase() === card.word.toLowerCase();
@@ -53,6 +61,10 @@ export async function submitMasteredRating(card) {
       getDueCards().shift();
       getOnDeckUpdated()?.();
       showPracticeCard();
+      setIsSubmitting(false);
     }, 200);
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+    setIsSubmitting(false);
+  }
 }

@@ -1,5 +1,5 @@
 import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation } from '../../../shared/storage.js';
-import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt } from './state.js';
+import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 
 export async function loadPracticeDeck() {
@@ -75,11 +75,22 @@ export function showPracticeCard() {
 }
 
 export async function syncPracticeDeck() {
-  const fresh = await getWords(), now = Date.now();
-  let due = getDueCards().map(c => fresh.find(w => w.id === c.id) || c).filter(c => {
-    const f = fresh.find(w => w.id === c.id); return f && !f.mastered && f.nextDate <= now;
+  const fresh = await getWords(), now = Date.now(), currentDue = getDueCards();
+  const activeCard = currentDue[0], oldActiveId = activeCard?.id;
+  let due = [];
+  if (activeCard) {
+    const freshActive = fresh.find(w => w.id === activeCard.id);
+    if (freshActive) due.push(freshActive);
+  }
+  const activeId = activeCard ? activeCard.id : null;
+  const restDue = currentDue.slice(1).map(c => fresh.find(w => w.id === c.id) || c).filter(c => {
+    const f = fresh.find(w => w.id === c.id);
+    return f && !f.mastered && f.nextDate <= now && f.id !== activeId;
   });
+  due.push(...restDue);
   const ids = new Set(due.map(c => c.id));
   due.push(...fresh.filter(w => w.nextDate <= now && !w.mastered && !ids.has(w.id)));
-  setDueCards(due); getOnDeckUpdated()?.(); showPracticeCard();
+  setDueCards(due); getOnDeckUpdated()?.();
+  const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');
+  if (oldActiveId !== newActiveId || (!isFlipped && !getIsSubmitting())) showPracticeCard();
 }
