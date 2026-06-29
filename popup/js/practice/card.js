@@ -5,8 +5,7 @@ import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 export async function loadPracticeDeck() {
   const words = await getWords();
   setDueCards(words.filter(w => w.nextDate <= Date.now() && !w.mastered));
-  getOnDeckUpdated()?.();
-  showPracticeCard();
+  getOnDeckUpdated()?.(); showPracticeCard();
 }
 
 export function showPracticeCard() {
@@ -15,9 +14,7 @@ export function showPracticeCard() {
   const spellInput = document.getElementById('spelling-input');
   const dueCards = getDueCards();
 
-  if (dueCards.length === 0) {
-    cardEl.style.display = 'none'; emptyEl.style.display = 'flex'; return;
-  }
+  if (dueCards.length === 0) { cardEl.style.display = 'none'; emptyEl.style.display = 'flex'; return; }
 
   cardEl.style.display = 'flex'; emptyEl.style.display = 'none';
   cardEl.classList.remove('flipped'); spellInput.value = '';
@@ -26,8 +23,20 @@ export function showPracticeCard() {
   const card = dueCards[0];
   document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
   document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
-  document.getElementById('practice-translation').textContent = card.translation || '--';
   document.getElementById('practice-part-of-speech').textContent = card.partOfSpeech || 'unknown';
+
+  const transEl = document.getElementById('practice-translation');
+  if (transEl) {
+    if (card.translation) {
+      transEl.innerHTML = `<span class="translation-blur-text">${card.translation}</span><span class="translation-reveal-hint">Reveal</span>`;
+      transEl.className = 'translation-clue-box';
+      const newEl = transEl.cloneNode(true);
+      transEl.parentNode.replaceChild(newEl, transEl);
+      newEl.addEventListener('click', () => newEl.classList.add('revealed'));
+    } else {
+      transEl.textContent = '--'; transEl.className = '';
+    }
+  }
 
   const levelContainer = document.getElementById('practice-level-container');
   const levelEl = document.getElementById('practice-level');
@@ -57,9 +66,7 @@ export function showPracticeCard() {
   if (rawExample) {
     document.getElementById('practice-example').textContent = censorWordInExample(card.word, rawExample);
     exampleContainer.style.display = 'block';
-  } else {
-    exampleContainer.style.display = 'none';
-  }
+  } else exampleContainer.style.display = 'none';
   if (exampleTransEl) { exampleTransEl.style.display = 'none'; exampleTransEl.textContent = ''; }
   if (translateBtn) translateBtn.classList.remove('active');
 
@@ -68,26 +75,11 @@ export function showPracticeCard() {
 }
 
 export async function syncPracticeDeck() {
-  const freshWords = await getWords();
-  const now = Date.now();
-  let dueCards = getDueCards();
-  
-  dueCards = dueCards.map(card => {
-    const fresh = freshWords.find(w => w.id === card.id);
-    return fresh ? fresh : card;
-  }).filter(card => {
-    const fresh = freshWords.find(w => w.id === card.id);
-    return fresh && !fresh.mastered && fresh.nextDate <= now;
+  const fresh = await getWords(), now = Date.now();
+  let due = getDueCards().map(c => fresh.find(w => w.id === c.id) || c).filter(c => {
+    const f = fresh.find(w => w.id === c.id); return f && !f.mastered && f.nextDate <= now;
   });
-
-  const existingIds = new Set(dueCards.map(c => c.id));
-  const newDueCards = freshWords.filter(w => 
-    w.nextDate <= now && !w.mastered && !existingIds.has(w.id)
-  );
-
-  dueCards.push(...newDueCards);
-  setDueCards(dueCards);
-  
-  getOnDeckUpdated()?.();
-  showPracticeCard();
+  const ids = new Set(due.map(c => c.id));
+  due.push(...fresh.filter(w => w.nextDate <= now && !w.mastered && !ids.has(w.id)));
+  setDueCards(due); getOnDeckUpdated()?.(); showPracticeCard();
 }

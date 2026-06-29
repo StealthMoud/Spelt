@@ -75,5 +75,11 @@
   overflow-wrap: anywhere;
 }
 
+.translation-clue-box { position: relative; cursor: pointer; display: inline-flex !important; align-items: center; width: 100%; }
+.translation-blur-text { filter: blur(6px); transition: filter 0.2s ease; user-select: none; }
+.translation-clue-box.revealed .translation-blur-text { filter: none; user-select: text; }
+.translation-reveal-hint { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: hsla(155, 65%, 48%, 0.15); border: 1px solid hsla(155, 65%, 48%, 0.3); color: var(--primary-light); padding: 1px 6px; border-radius: var(--radius-sm); font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 2px 6px rgba(0,0,0,0.4); pointer-events: none; transition: opacity 0.2s ease; }
+.translation-clue-box.revealed .translation-reveal-hint { opacity: 0; }
+
 .result-badge {
   display: inline-flex;
