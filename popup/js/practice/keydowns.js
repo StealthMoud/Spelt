@@ -6,13 +6,13 @@ export function registerKeydowns() {
   document.getElementById('practice-play-example-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
     const rawExample = card?.example || getFallbackExample(card?.word || '', card?.partOfSpeech || '');
-    if (rawExample) playSentenceAudio(rawExample, 'us');
+    if (rawExample) playSentenceAudio(rawExample, 'uk');
   });
 
   document.getElementById('back-play-example-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
     const rawExample = card?.example || getFallbackExample(card?.word || '', card?.partOfSpeech || '');
-    if (rawExample) playSentenceAudio(rawExample, 'us');
+    if (rawExample) playSentenceAudio(rawExample, 'uk');
   });
 
   window.addEventListener('keydown', async (e) => {

@@ -4,7 +4,7 @@ export async function handleExampleActions(e) {
   const playExBtn = e.target.closest('.play-example-btn');
   if (playExBtn) {
     const sentence = playExBtn.getAttribute('data-sentence');
-    if (sentence) playSentenceAudio(sentence, 'us');
+    if (sentence) playSentenceAudio(sentence, 'uk');
     return;
   }
 
