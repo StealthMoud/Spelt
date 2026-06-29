@@ -7,10 +7,7 @@
   padding: 2px;
   margin-bottom: 12px;
   gap: 2px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  backdrop-filter: blur(8px);
+  position: relative;
 }
 
 .stats-subtab-btn {
