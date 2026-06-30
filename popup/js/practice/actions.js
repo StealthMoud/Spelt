@@ -124,9 +124,9 @@ export function checkSpelling() {
   flipCard();
 }
 
-// ── Meaning Mode: populate back (no typed answer), flip ─────────────
+// ── Recall Mode: populate back (no typed answer), flip ─────────────
 
-export function revealMeaning() {
+export function revealRecall() {
   const dueCards = getDueCards();
   const card = dueCards[0];
   if (!card) return;
@@ -140,11 +140,11 @@ export function revealMeaning() {
   // Populate shared back face
   populateBackFace(card);
 
-  // Hide past misspellings (not relevant in meaning mode)
+  // Hide past misspellings (not relevant in recall mode)
   const pastContainer = document.getElementById('past-misspellings-container');
   if (pastContainer) pastContainer.style.display = 'none';
 
-  // SRS interval hints (meaning track)
+  // SRS interval hints (recall track)
   const hardInt = calcSM2(3, card.meaningRep || 0, card.meaningInterval || 0, card.meaningEf || 2.5, 1.0, true, 1.0).interval;
   const goodInt = calcSM2(4, card.meaningRep || 0, card.meaningInterval || 0, card.meaningEf || 2.5, 1.0, true, 1.0).interval;
   const easyInt = calcSM2(5, card.meaningRep || 0, card.meaningInterval || 0, card.meaningEf || 2.5, 1.0, true, 1.0).interval;

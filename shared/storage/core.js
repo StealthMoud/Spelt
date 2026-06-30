@@ -53,6 +53,9 @@ export async function getWords() {
   const migrated = await getStored('spelt_migrated_to_spelling_v3');
   const runMigration = !migrated;
 
+  const migratedRecall = await getStored('spelt_migrated_meaning_to_recall');
+  const runMigrationRecall = !migratedRecall;
+
   let modified = false;
   const sanitized = words.map(w => {
     if (!w) return w;
@@ -92,12 +95,21 @@ export async function getWords() {
       w.practiceType = 'spelling'; cardModified = true;
     }
 
+    if (runMigrationRecall && w.practiceType === 'meaning') {
+      w.practiceType = 'recall'; cardModified = true;
+    }
+
     if (cardModified) modified = true;
     return w;
   });
 
   if (runMigration) {
     await setStored('spelt_migrated_to_spelling_v3', true);
+    modified = true;
+  }
+
+  if (runMigrationRecall) {
+    await setStored('spelt_migrated_meaning_to_recall', true);
     modified = true;
   }
 

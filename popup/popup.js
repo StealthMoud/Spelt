@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dueCount = words.filter(w => {
         if (reviewedIds.has(w.id)) return false;
         if (w.mastered) return false;
-        if (mode === 'meaning') {
-          if (w.practiceType !== 'both' && w.practiceType !== 'meaning') return false;
+        if (mode === 'recall') {
+          if (w.practiceType !== 'both' && w.practiceType !== 'recall') return false;
           return w.meaningNextDate <= Date.now();
         } else {
           if (w.practiceType !== 'both' && w.practiceType !== 'spelling') return false;

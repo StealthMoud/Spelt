@@ -83,7 +83,7 @@
         <!-- Practice Mode Selector -->
         <div class="practice-mode-selector" style="display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; background: hsla(155, 10%, 15%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 4px; backdrop-filter: blur(12px);">
           <button id="practice-mode-spelling" class="practice-mode-pill active" style="flex: 1; padding: 6px 12px; border-radius: var(--radius-md); border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.2s ease;">Spelling</button>
-          <button id="practice-mode-meaning" class="practice-mode-pill" style="flex: 1; padding: 6px 12px; border-radius: var(--radius-md); border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.2s ease;">Meaning</button>
+          <button id="practice-mode-recall" class="practice-mode-pill" style="flex: 1; padding: 6px 12px; border-radius: var(--radius-md); border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.2s ease;">Recall</button>
         </div>
 
         <div class="stats-grid">
@@ -156,23 +156,27 @@
               </div>
             </div>
 
-            <!-- Meaning Mode Front Face Content -->
-            <div id="front-meaning-content" class="front-clues" style="display: none; justify-content: center; align-items: center; text-align: center; gap: 16px; padding: 20px 10px;">
+            <!-- Recall Mode Front Face Content -->
+            <div id="front-recall-content" class="front-clues" style="display: none; justify-content: center; align-items: center; text-align: center; gap: 12px; padding: 20px 10px;">
               <div>
-                <h2 id="meaning-front-word" style="font-size: 1.8rem; font-weight: 800; color: var(--primary-light); margin: 0; text-shadow: 0 0 16px var(--primary-glow); letter-spacing: -0.02em; word-break: break-word;"></h2>
+                <h2 id="recall-front-word" style="font-size: 1.8rem; font-weight: 800; color: var(--primary-light); margin: 0; text-shadow: 0 0 16px var(--primary-glow); letter-spacing: -0.02em; word-break: break-word;"></h2>
                 <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px;">
-                  <span id="meaning-front-transcription" style="font-size: 0.82rem; color: var(--text-muted); font-family: monospace;"></span>
-                  <div id="meaning-front-audio-container" style="display: flex; gap: 4px;"></div>
+                  <span id="recall-front-transcription" style="font-size: 0.82rem; color: var(--text-muted); font-family: monospace;"></span>
+                  <div id="recall-front-audio-container" style="display: flex; gap: 4px;"></div>
                 </div>
               </div>
               <div style="display: flex; gap: 8px;">
-                <span id="meaning-front-pos" class="badge" style="background: hsla(155, 65%, 48%, 0.12); border: 1px solid var(--border); color: var(--primary-light); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 0.65rem; font-weight: 600; text-transform: uppercase;"></span>
-                <span id="meaning-front-level-container" style="display: none;">
-                  <span id="meaning-front-level" style="font-weight: 700; color: #f59e0b; font-size: 0.65rem; background: hsla(38, 92%, 50%, 0.12); border: 1px solid hsla(38, 92%, 50%, 0.3); padding: 2px 8px; border-radius: var(--radius-sm);"></span>
+                <span id="recall-front-pos" class="badge" style="background: hsla(155, 65%, 48%, 0.12); border: 1px solid var(--border); color: var(--primary-light); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 0.65rem; font-weight: 600; text-transform: uppercase;"></span>
+                <span id="recall-front-level-container" style="display: none;">
+                  <span id="recall-front-level" style="font-weight: 700; color: #f59e0b; font-size: 0.65rem; background: hsla(38, 92%, 50%, 0.12); border: 1px solid hsla(38, 92%, 50%, 0.3); padding: 2px 8px; border-radius: var(--radius-sm);"></span>
                 </span>
               </div>
-              <div class="clue-item" style="border-left: none; opacity: 0.7; margin-top: 10px;">
-                <p style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.6; text-align: center;">Recall the definition, translation, and example sentence.</p>
+              <div id="recall-front-example-container" class="clue-item" style="display: none; margin-top: 10px; width: 100%; max-width: 280px; text-align: left;">
+                <span class="clue-label" style="display: block; margin-bottom: 2px;">Context Clue</span>
+                <p id="recall-front-example" style="font-style: italic; color: var(--primary-light); margin: 0; line-height: 1.4; font-size: 0.72rem; word-break: break-word;"></p>
+              </div>
+              <div class="clue-item" style="border-left: none; opacity: 0.7; margin-top: 8px;">
+                <p id="recall-front-hint" style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.4; text-align: center;">What does this word mean?</p>
               </div>
             </div>
 
@@ -184,8 +188,8 @@
               </button>
             </div>
 
-            <div id="front-meaning-wrapper" class="spelling-input-wrapper" style="display: none; justify-content: center; width: 100%;">
-              <button id="reveal-meaning-btn" class="submit-btn" style="flex: 1; padding: 8px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <div id="front-recall-wrapper" class="spelling-input-wrapper" style="display: none; justify-content: center; width: 100%;">
+              <button id="reveal-recall-btn" class="submit-btn" style="flex: 1; padding: 8px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span>Show Answer</span>
                 <kbd style="font-size: 0.65rem; background: rgba(255,255,255,0.15); padding: 1px 5px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.25);">Space</kbd>
               </button>
@@ -878,9 +882,9 @@
           <div class="modal-input-item">
             <label>Practice Target</label>
             <select id="form-practice-type" class="premium-input select-input">
-              <option value="both">Both (Spelling & Meaning)</option>
+              <option value="both">Both (Spelling & Recall)</option>
               <option value="spelling">Spelling Only</option>
-              <option value="meaning">Meaning Only</option>
+              <option value="recall">Recall Only</option>
             </select>
           </div>
           <div class="modal-input-item" style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; cursor: pointer; user-select: none;">

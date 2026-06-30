@@ -1,13 +1,13 @@
 import { getWords, saveWords, getStored, setStored, fetchTranslation, getFallbackExample } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
 import { getDueCards, setPracticeMode } from './state.js';
-import { checkSpelling, revealMeaning } from './actions.js';
+import { checkSpelling, revealRecall } from './actions.js';
 import { submitRating, submitMasteredRating } from './rate.js';
 import { loadPracticeDeck } from './card.js';
 
 export function registerPracticeListeners() {
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
-  document.getElementById('reveal-meaning-btn')?.addEventListener('click', revealMeaning);
+  document.getElementById('reveal-recall-btn')?.addEventListener('click', revealRecall);
   
   document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
@@ -18,32 +18,32 @@ export function registerPracticeListeners() {
     setPracticeMode(savedMode);
     
     const spellingPill = document.getElementById('practice-mode-spelling');
-    const meaningPill = document.getElementById('practice-mode-meaning');
+    const recallPill = document.getElementById('practice-mode-recall');
     
-    if (spellingPill && meaningPill) {
-      if (savedMode === 'meaning') {
+    if (spellingPill && recallPill) {
+      if (savedMode === 'recall') {
         spellingPill.classList.remove('active');
-        meaningPill.classList.add('active');
+        recallPill.classList.add('active');
       } else {
         spellingPill.classList.add('active');
-        meaningPill.classList.remove('active');
+        recallPill.classList.remove('active');
       }
       
       const switchMode = async (mode) => {
         setPracticeMode(mode);
         await setStored('spelt_practice_mode', mode);
-        if (mode === 'meaning') {
+        if (mode === 'recall') {
           spellingPill.classList.remove('active');
-          meaningPill.classList.add('active');
+          recallPill.classList.add('active');
         } else {
           spellingPill.classList.add('active');
-          meaningPill.classList.remove('active');
+          recallPill.classList.remove('active');
         }
         await loadPracticeDeck();
       };
       
       spellingPill.addEventListener('click', () => switchMode('spelling'));
-      meaningPill.addEventListener('click', () => switchMode('meaning'));
+      recallPill.addEventListener('click', () => switchMode('recall'));
     }
   };
   

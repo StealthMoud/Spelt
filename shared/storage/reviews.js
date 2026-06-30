@@ -15,7 +15,7 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
   if (card.totalErrors === undefined) card.totalErrors = (card.misspellings || []).length;
   if (card.correctStreak === undefined) card.correctStreak = 0;
 
-  if (mode === 'meaning') {
+  if (mode === 'recall' || mode === 'meaning') {
     const isCorrect = q >= 3;
     const { rep, interval, ef, nextDate } = calcSM2(
       q,

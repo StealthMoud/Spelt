@@ -1,7 +1,7 @@
 import { getFallbackExample, playTextAudio, playWordAudio } from '../../../shared/storage.js';
 import { getDueCards, getPracticeMode } from './state.js';
 import { submitRating } from './rate.js';
-import { revealMeaning } from './actions.js';
+import { revealRecall } from './actions.js';
 
 export function registerKeydowns() {
   document.getElementById('practice-play-example-btn')?.addEventListener('click', () => {
@@ -48,9 +48,9 @@ export function registerKeydowns() {
 
     if (!cardEl.classList.contains('flipped')) {
       if (e.key === ' ' || e.key === 'Enter') {
-        if (mode === 'meaning') {
+        if (mode === 'recall') {
           e.preventDefault(); e.stopPropagation();
-          revealMeaning();
+          revealRecall();
         } else {
           const spellInput = document.getElementById('spelling-input');
           if (e.key === ' ') {
@@ -63,7 +63,7 @@ export function registerKeydowns() {
         }
       } else if ((e.key === 'r' || e.key === 'R' || e.key === 'p' || e.key === 'P') && !isTyping) {
         e.preventDefault(); e.stopPropagation();
-        const query = mode === 'meaning' ? '#meaning-front-audio-container .audio-play-btn' : '#practice-audio-container .audio-play-btn';
+        const query = mode === 'recall' ? '#recall-front-audio-container .audio-play-btn' : '#practice-audio-container .audio-play-btn';
         document.querySelector(query)?.click();
       }
       return;

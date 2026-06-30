@@ -36,8 +36,8 @@ export async function submitRating(score) {
     const responseTime = cardShownAt > 0 ? Date.now() - cardShownAt : null;
     
     let updatedCard;
-    if (mode === 'meaning') {
-      updatedCard = await reviewWordInBackground(card.id, score, null, responseTime, 'meaning');
+    if (mode === 'recall') {
+      updatedCard = await reviewWordInBackground(card.id, score, null, responseTime, 'recall');
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = typed.toLowerCase() === card.word.toLowerCase();
@@ -72,8 +72,8 @@ export async function submitMasteredRating(card) {
     const cardShownAt = getCardShownAt();
     const responseTime = cardShownAt > 0 ? Date.now() - cardShownAt : null;
     
-    if (mode === 'meaning') {
-      await reviewWordInBackground(card.id, 5, null, responseTime, 'meaning');
+    if (mode === 'recall') {
+      await reviewWordInBackground(card.id, 5, null, responseTime, 'recall');
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = typed.toLowerCase() === card.word.toLowerCase();
