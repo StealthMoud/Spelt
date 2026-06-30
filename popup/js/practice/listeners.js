@@ -1,14 +1,53 @@
-import { getWords, saveWords, getStored, fetchTranslation, getFallbackExample } from '../../../shared/storage.js';
+import { getWords, saveWords, getStored, setStored, fetchTranslation, getFallbackExample } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
-import { getDueCards } from './state.js';
-import { checkSpelling } from './actions.js';
+import { getDueCards, setPracticeMode } from './state.js';
+import { checkSpelling, revealMeaning } from './actions.js';
 import { submitRating, submitMasteredRating } from './rate.js';
+import { loadPracticeDeck } from './card.js';
 
 export function registerPracticeListeners() {
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
+  document.getElementById('reveal-meaning-btn')?.addEventListener('click', revealMeaning);
+  
   document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
   });
+
+  const initModeToggle = async () => {
+    const savedMode = await getStored('spelt_practice_mode') || 'spelling';
+    setPracticeMode(savedMode);
+    
+    const spellingPill = document.getElementById('practice-mode-spelling');
+    const meaningPill = document.getElementById('practice-mode-meaning');
+    
+    if (spellingPill && meaningPill) {
+      if (savedMode === 'meaning') {
+        spellingPill.classList.remove('active');
+        meaningPill.classList.add('active');
+      } else {
+        spellingPill.classList.add('active');
+        meaningPill.classList.remove('active');
+      }
+      
+      const switchMode = async (mode) => {
+        setPracticeMode(mode);
+        await setStored('spelt_practice_mode', mode);
+        if (mode === 'meaning') {
+          spellingPill.classList.remove('active');
+          meaningPill.classList.add('active');
+        } else {
+          spellingPill.classList.add('active');
+          meaningPill.classList.remove('active');
+        }
+        await loadPracticeDeck();
+      };
+      
+      spellingPill.addEventListener('click', () => switchMode('spelling'));
+      meaningPill.addEventListener('click', () => switchMode('meaning'));
+    }
+  };
+  
+  initModeToggle().catch(err => console.error(err));
 
   const translateAction = async (btnId, transId, containerId) => {
     const dueCards = getDueCards();

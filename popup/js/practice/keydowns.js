@@ -1,6 +1,7 @@
 import { getFallbackExample, playTextAudio, playWordAudio } from '../../../shared/storage.js';
-import { getDueCards } from './state.js';
+import { getDueCards, getPracticeMode } from './state.js';
 import { submitRating } from './rate.js';
+import { revealMeaning } from './actions.js';
 
 export function registerKeydowns() {
   document.getElementById('practice-play-example-btn')?.addEventListener('click', () => {
@@ -43,13 +44,27 @@ export function registerKeydowns() {
       return;
     }
 
+    const mode = getPracticeMode();
+
     if (!cardEl.classList.contains('flipped')) {
-      const spellInput = document.getElementById('spelling-input');
-      if (e.key === ' ') {
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (mode === 'meaning') {
+          e.preventDefault(); e.stopPropagation();
+          revealMeaning();
+        } else {
+          const spellInput = document.getElementById('spelling-input');
+          if (e.key === ' ') {
+            if (document.activeElement === spellInput) return; // Allow space in text box
+            e.preventDefault(); e.stopPropagation();
+            document.querySelector('#practice-audio-container .audio-play-btn')?.click();
+          } else if (e.key === 'Enter' && document.activeElement !== spellInput) {
+            e.preventDefault(); e.stopPropagation(); spellInput?.focus();
+          }
+        }
+      } else if ((e.key === 'r' || e.key === 'R' || e.key === 'p' || e.key === 'P') && !isTyping) {
         e.preventDefault(); e.stopPropagation();
-        document.querySelector('#practice-audio-container .audio-play-btn')?.click();
-      } else if (e.key === 'Enter' && document.activeElement !== spellInput) {
-        e.preventDefault(); e.stopPropagation(); spellInput?.focus();
+        const query = mode === 'meaning' ? '#meaning-front-audio-container .audio-play-btn' : '#practice-audio-container .audio-play-btn';
+        document.querySelector(query)?.click();
       }
       return;
     }
@@ -59,7 +74,7 @@ export function registerKeydowns() {
     else if (e.key === '3') { e.preventDefault(); e.stopPropagation(); await submitRating(4); }
     else if (e.key === '4') { e.preventDefault(); e.stopPropagation(); await submitRating(5); }
     else if (e.key === '5') { e.preventDefault(); e.stopPropagation(); document.querySelector('#practice-tab .srs-mastered')?.click(); }
-    else if (e.key === ' ') {
+    else if ((e.key === ' ' || e.key === 'r' || e.key === 'R' || e.key === 'p' || e.key === 'P') && !isTyping) {
       e.preventDefault(); e.stopPropagation();
       (document.querySelector('#back-audio-container .audio-play-btn') || document.querySelector('#popup-deck-card .audio-play-btn'))?.click();
     } else {

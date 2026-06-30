@@ -2,24 +2,9 @@ import { getFallbackExample, computeErrorWeight, calcSM2 } from '../../../shared
 import { getDueCards, getOnDeckUpdated } from './state.js';
 import { renderAudioButtons } from './helpers.js';
 
-export function checkSpelling() {
-  const dueCards = getDueCards();
-  const card = dueCards[0];
-  if (!card) return;
+// ── Shared helpers ──────────────────────────────────────────────────
 
-  const typed = document.getElementById('spelling-input').value.trim();
-  const isOk = typed.toLowerCase() === card.word.toLowerCase();
-  const badge = document.getElementById('spelling-result-badge');
-  const typedDisplay = document.getElementById('user-typed-display');
-  
-  if (isOk) {
-    badge.textContent = 'Correct'; badge.className = 'result-badge success'; typedDisplay.style.color = 'var(--success)';
-  } else {
-    badge.textContent = 'Incorrect'; badge.className = 'result-badge danger'; typedDisplay.style.color = 'var(--danger)';
-  }
-  getOnDeckUpdated()?.();
-
-  typedDisplay.textContent = typed || '(Blank)';
+function populateBackFace(card) {
   document.getElementById('back-word-display').textContent = card.word;
   document.getElementById('back-definition-display').textContent = card.definition;
   document.getElementById('back-transcription-display').textContent = card.transcription || '/--/';
@@ -65,7 +50,58 @@ export function checkSpelling() {
 
   const audioContainer = document.getElementById('back-audio-container');
   if (audioContainer) audioContainer.innerHTML = renderAudioButtons(card.word);
+}
 
+function updateSrsHints(hardInt, goodInt, easyInt, recommendSelector) {
+  const hardHint = document.querySelector('#practice-tab .srs-hard .srs-hint');
+  const goodHint = document.querySelector('#practice-tab .srs-good .srs-hint');
+  const easyHint = document.querySelector('#practice-tab .srs-easy .srs-hint');
+
+  if (hardHint) hardHint.textContent = `${hardInt}d`;
+  if (goodHint) goodHint.textContent = `${goodInt}d`;
+  if (easyHint) easyHint.textContent = `${easyInt}d`;
+
+  document.querySelectorAll('#practice-tab .srs-btn').forEach(btn => btn.classList.remove('srs-recommend'));
+  document.querySelector(recommendSelector)?.classList.add('srs-recommend');
+}
+
+function flipCard() {
+  document.getElementById('popup-deck-card').classList.add('flipped');
+  setTimeout(() => { document.querySelector('#practice-tab .srs-recommend')?.focus(); }, 200);
+}
+
+// ── Spelling Mode: check typed answer, populate back, flip ──────────
+
+export function checkSpelling() {
+  const dueCards = getDueCards();
+  const card = dueCards[0];
+  if (!card) return;
+
+  const typed = document.getElementById('spelling-input').value.trim();
+  const isOk = typed.toLowerCase() === card.word.toLowerCase();
+  const badge = document.getElementById('spelling-result-badge');
+  const typedDisplay = document.getElementById('user-typed-display');
+
+  // Show spelling result
+  if (badge) {
+    badge.style.display = 'inline-flex';
+    if (isOk) {
+      badge.textContent = 'Correct'; badge.className = 'result-badge success';
+    } else {
+      badge.textContent = 'Incorrect'; badge.className = 'result-badge danger';
+    }
+  }
+  if (typedDisplay) {
+    typedDisplay.textContent = typed || '(Blank)';
+    typedDisplay.style.color = isOk ? 'var(--success)' : 'var(--danger)';
+    if (typedDisplay.parentElement) typedDisplay.parentElement.style.display = 'block';
+  }
+  getOnDeckUpdated()?.();
+
+  // Populate shared back face
+  populateBackFace(card);
+
+  // Past misspellings
   const pastContainer = document.getElementById('past-misspellings-container');
   let displayErrors = card.misspellings ? card.misspellings.filter(Boolean) : [];
   if (!isOk && typed && !displayErrors.includes(typed) && typed.toLowerCase() !== card.word.toLowerCase()) {
@@ -76,24 +112,43 @@ export function checkSpelling() {
     pastContainer.style.display = 'block';
   } else { pastContainer.style.display = 'none'; }
 
+  // SRS interval hints (spelling track)
   const totalErrors = card.totalErrors !== undefined ? card.totalErrors : (card.misspellings || []).length;
   const correctStreak = card.correctStreak || 0;
   const errorWeight = computeErrorWeight(totalErrors, correctStreak);
-  const hardInterval = calcSM2(3, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
-  const goodInterval = calcSM2(4, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
-  const easyInterval = calcSM2(5, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
+  const hardInt = calcSM2(3, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
+  const goodInt = calcSM2(4, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
+  const easyInt = calcSM2(5, card.rep, card.interval, card.ef, 1.0, isOk, errorWeight).interval;
+  updateSrsHints(hardInt, goodInt, easyInt, isOk ? '#practice-tab .srs-good' : '#practice-tab .srs-again');
 
-  const hardHint = document.querySelector('#practice-tab .srs-hard .srs-hint');
-  const goodHint = document.querySelector('#practice-tab .srs-good .srs-hint');
-  const easyHint = document.querySelector('#practice-tab .srs-easy .srs-hint');
+  flipCard();
+}
 
-  if (hardHint) hardHint.textContent = `${hardInterval}d`;
-  if (goodHint) goodHint.textContent = `${goodInterval}d`;
-  if (easyHint) easyHint.textContent = `${easyInterval}d`;
+// ── Meaning Mode: populate back (no typed answer), flip ─────────────
 
-  document.querySelectorAll('#practice-tab .srs-btn').forEach(btn => btn.classList.remove('srs-recommend'));
-  document.querySelector(isOk ? '#practice-tab .srs-good' : '#practice-tab .srs-again').classList.add('srs-recommend');
+export function revealMeaning() {
+  const dueCards = getDueCards();
+  const card = dueCards[0];
+  if (!card) return;
 
-  document.getElementById('popup-deck-card').classList.add('flipped');
-  setTimeout(() => { document.querySelector('#practice-tab .srs-recommend')?.focus(); }, 200);
+  // Hide spelling-specific UI
+  const badge = document.getElementById('spelling-result-badge');
+  if (badge) badge.style.display = 'none';
+  const typedDisplay = document.getElementById('user-typed-display');
+  if (typedDisplay && typedDisplay.parentElement) typedDisplay.parentElement.style.display = 'none';
+
+  // Populate shared back face
+  populateBackFace(card);
+
+  // Hide past misspellings (not relevant in meaning mode)
+  const pastContainer = document.getElementById('past-misspellings-container');
+  if (pastContainer) pastContainer.style.display = 'none';
+
+  // SRS interval hints (meaning track)
+  const hardInt = calcSM2(3, card.meaningRep || 0, card.meaningInterval || 0, card.meaningEf || 2.5, 1.0, true, 1.0).interval;
+  const goodInt = calcSM2(4, card.meaningRep || 0, card.meaningInterval || 0, card.meaningEf || 2.5, 1.0, true, 1.0).interval;
+  const easyInt = calcSM2(5, card.meaningRep || 0, card.meaningInterval || 0, card.meaningEf || 2.5, 1.0, true, 1.0).interval;
+  updateSrsHints(hardInt, goodInt, easyInt, '#practice-tab .srs-good');
+
+  flipCard();
 }

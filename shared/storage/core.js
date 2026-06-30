@@ -68,6 +68,19 @@ export async function getWords() {
       w.nextDate = Date.now(); cardModified = true;
     }
 
+    if (w.meaningRep === undefined || w.meaningRep === null || isNaN(w.meaningRep)) {
+      w.meaningRep = 0; cardModified = true;
+    }
+    if (w.meaningInterval === undefined || w.meaningInterval === null || isNaN(w.meaningInterval)) {
+      w.meaningInterval = 0; cardModified = true;
+    }
+    if (w.meaningEf === undefined || w.meaningEf === null || isNaN(w.meaningEf) || w.meaningEf < 1.3) {
+      w.meaningEf = 2.5; cardModified = true;
+    }
+    if (w.meaningNextDate === undefined || w.meaningNextDate === null || isNaN(w.meaningNextDate)) {
+      w.meaningNextDate = Date.now(); cardModified = true;
+    }
+
     if (cardModified) modified = true;
     return w;
   });

@@ -1,6 +1,6 @@
 import { getWords } from '../shared/storage.js';
 import { initNavigation } from './js/navigation.js';
-import { initPractice, loadPracticeDeck, syncPracticeDeck, getDueCards, getReviewedWordIds } from './js/practice.js';
+import { initPractice, loadPracticeDeck, syncPracticeDeck, getDueCards, getReviewedWordIds, getPracticeMode } from './js/practice.js';
 import { initVault, reloadVaultList } from './js/vault.js';
 import { initSettings } from './js/settings.js';
 import { initSandbox } from './js/sandbox.js';
@@ -18,7 +18,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const words = await getWords();
       const reviewedIds = getReviewedWordIds();
-      const dueCount = words.filter(w => w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)).length;
+      const mode = getPracticeMode();
+      const dueCount = words.filter(w => {
+        if (reviewedIds.has(w.id)) return false;
+        if (w.mastered) return false;
+        return mode === 'meaning' ? w.meaningNextDate <= Date.now() : w.nextDate <= Date.now();
+      }).length;
 
       dueCountEl.textContent = dueCount;
       totalCountEl.textContent = words.length;

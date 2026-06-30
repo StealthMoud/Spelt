@@ -3,6 +3,10 @@ let cardShownAt = 0;
 let onDeckUpdatedCallback = null;
 let isSubmitting = false;
 const reviewedWordIds = new Set();
+let practiceMode = 'spelling'; // 'spelling' or 'meaning'
+
+export function getPracticeMode() { return practiceMode; }
+export function setPracticeMode(val) { practiceMode = val; }
 
 export function getDueCards() { return dueCards; }
 export function setDueCards(val) {

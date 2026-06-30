@@ -34,3 +34,15 @@
   color: var(--primary-light);
   text-shadow: 0 0 10px var(--primary-glow);
 }
+
+.practice-mode-pill {
+  color: var(--text-muted) !important;
+}
+.practice-mode-pill:hover {
+  color: var(--text-main) !important;
+}
+.practice-mode-pill.active {
+  background: hsla(155, 65%, 48%, 0.15) !important;
+  color: var(--primary-light) !important;
+  box-shadow: inset 0 0 0 1px hsla(155, 65%, 48%, 0.3);
+}
