@@ -29,6 +29,7 @@ export {
 
 export {
   playWordAudio,
+  playTextAudio,
   playSentenceAudio
 } from './storage/audio.js';
 

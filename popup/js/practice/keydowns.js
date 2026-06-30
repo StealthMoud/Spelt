@@ -1,4 +1,4 @@
-import { getFallbackExample, playSentenceAudio, playWordAudio } from '../../../shared/storage.js';
+import { getFallbackExample, playTextAudio, playWordAudio } from '../../../shared/storage.js';
 import { getDueCards } from './state.js';
 import { submitRating } from './rate.js';
 
@@ -6,13 +6,23 @@ export function registerKeydowns() {
   document.getElementById('practice-play-example-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
     const rawExample = card?.example || getFallbackExample(card?.word || '', card?.partOfSpeech || '');
-    if (rawExample) playSentenceAudio(rawExample, 'uk');
+    if (rawExample) playTextAudio(rawExample, 'uk');
   });
 
   document.getElementById('back-play-example-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
     const rawExample = card?.example || getFallbackExample(card?.word || '', card?.partOfSpeech || '');
-    if (rawExample) playSentenceAudio(rawExample, 'uk');
+    if (rawExample) playTextAudio(rawExample, 'uk');
+  });
+
+  document.getElementById('practice-play-definition-btn')?.addEventListener('click', () => {
+    const card = getDueCards()[0];
+    if (card?.definition) playTextAudio(card.definition, 'uk');
+  });
+
+  document.getElementById('back-play-definition-btn')?.addEventListener('click', () => {
+    const card = getDueCards()[0];
+    if (card?.definition) playTextAudio(card.definition, 'uk');
   });
 
   window.addEventListener('keydown', async (e) => {

@@ -65,12 +65,43 @@ export async function playWordAudio(word, accent) {
   window.speechSynthesis.speak(utterance);
 }
 
-// Play full sentence using Web Speech API (speechSynthesis)
+// Play text (sentences, definitions) using Google Translate TTS with SpeechSynthesis fallback
+export async function playTextAudio(text, accent) {
+  if (typeof window === 'undefined') return;
+  const clean = text.trim();
+  if (!clean) return;
+
+  window.speechSynthesis?.cancel();
+
+  // Primary: Google Translate TTS — natural neural voice
+  const lang = accent === 'uk' ? 'en-GB' : 'en-US';
+  const ttsUrl = `https://translate.googleapis.com/translate_tts?client=gtx&tl=${lang}&q=${encodeURIComponent(clean)}&textlen=${clean.length}`;
+
+  try {
+    const response = await fetch(ttsUrl);
+    if (response.ok) {
+      triggerNetworkSuccess();
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const audio = new Audio(blobUrl);
+      await audio.play();
+      return;
+    }
+  } catch (err) {
+    triggerNetworkError();
+    console.info('Google Translate TTS failed, falling back to SpeechSynthesis...');
+  }
+
+  // Fallback: browser SpeechSynthesis
+  if (typeof window.speechSynthesis !== 'undefined') {
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.lang = lang;
+    utterance.rate = 0.95;
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+// Backwards-compatible wrapper for sentence audio
 export function playSentenceAudio(sentence, accent) {
-  if (typeof window === 'undefined' || typeof window.speechSynthesis === 'undefined') return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(sentence.trim());
-  utterance.lang = accent === 'uk' ? 'en-GB' : 'en-US';
-  utterance.rate = 0.95;
-  window.speechSynthesis.speak(utterance);
+  playTextAudio(sentence, accent);
 }

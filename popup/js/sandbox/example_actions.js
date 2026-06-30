@@ -1,10 +1,10 @@
-import { playSentenceAudio, getStored, fetchTranslation, getWords, saveWords } from '../../../shared/storage.js';
+import { playTextAudio, getStored, fetchTranslation, getWords, saveWords } from '../../../shared/storage.js';
 
 export async function handleExampleActions(e) {
   const playExBtn = e.target.closest('.play-example-btn');
   if (playExBtn) {
     const sentence = playExBtn.getAttribute('data-sentence');
-    if (sentence) playSentenceAudio(sentence, 'uk');
+    if (sentence) playTextAudio(sentence, 'uk');
     return;
   }
 
