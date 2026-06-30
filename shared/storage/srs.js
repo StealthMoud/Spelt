@@ -16,7 +16,8 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
       else if (q === 4) interval = 6;
       else if (q === 5) interval = 12;
       else interval = 1;
-    } else if (rep === 1 && prevInt === 1) {
+    } else if (prevInt <= 1) {
+      // Card at baseline interval (new, lapsed, or error-crushed) — use graduation steps
       if (q === 3) interval = 3;
       else if (q === 4) interval = 6;
       else if (q === 5) interval = 12;
