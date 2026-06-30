@@ -13,28 +13,37 @@ export function triggerNetworkSuccess() {
   }
 }
 
-export async function getStored(key) {
-  if (isExt) {
-    const res = await chrome.storage.local.get(key);
-    return res[key];
-  }
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : mockDb[key];
-  } catch (_) {
-    return mockDb[key];
-  }
+export function getStored(key) {
+  return new Promise((resolve) => {
+    if (isExt) {
+      chrome.storage.local.get(key, (res) => {
+        resolve(res ? res[key] : undefined);
+      });
+    } else {
+      try {
+        const stored = localStorage.getItem(key);
+        resolve(stored ? JSON.parse(stored) : mockDb[key]);
+      } catch (_) {
+        resolve(mockDb[key]);
+      }
+    }
+  });
 }
 
-export async function setStored(key, value) {
-  if (isExt) {
-    await chrome.storage.local.set({ [key]: value });
-  } else {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (_) {}
-    mockDb[key] = value;
-  }
+export function setStored(key, value) {
+  return new Promise((resolve) => {
+    if (isExt) {
+      chrome.storage.local.set({ [key]: value }, () => {
+        resolve();
+      });
+    } else {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (_) {}
+      mockDb[key] = value;
+      resolve();
+    }
+  });
 }
 
 export async function getWords() {
