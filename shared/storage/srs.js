@@ -48,9 +48,10 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
   // Apply spacing multiplier from user settings
   interval = Math.max(1, Math.round(interval * multiplier));
 
-  // Apply error-weight: words with more accumulated errors get shorter intervals.
-  // A weight of 1.0 means no change; lower = shorter intervals.
-  if (errorWeight < 1.0) {
+  // Apply error-weight only on incorrect answers: words with accumulated errors
+  // get shorter intervals when misspelled. Correct answers use clean SM-2 progression
+  // (EF already encodes difficulty history, so no double-penalty needed).
+  if (!isCorrect && errorWeight < 1.0) {
     interval = Math.max(1, Math.round(interval * errorWeight));
   }
 
