@@ -25,6 +25,17 @@ export function checkSpelling() {
   document.getElementById('back-transcription-display').textContent = card.transcription || '/--/';
   document.getElementById('back-part-of-speech-display').textContent = card.partOfSpeech || 'unknown';
 
+  const backTranslationRow = document.getElementById('back-translation-row');
+  const backTranslationDisplay = document.getElementById('back-translation-display');
+  if (backTranslationRow && backTranslationDisplay) {
+    if (card.translation) {
+      backTranslationDisplay.textContent = card.translation;
+      backTranslationRow.style.display = 'block';
+    } else {
+      backTranslationRow.style.display = 'none';
+    }
+  }
+
   const backLevelRow = document.getElementById('back-level-row');
   const backLevelDisplay = document.getElementById('back-level-display');
   if (backLevelRow && backLevelDisplay) {
