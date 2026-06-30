@@ -3,9 +3,9 @@
 // multiplier scales the computed interval (0.5 = faster, 1.5 = slower)
 // errorWeight: adaptive multiplier based on accumulated error history (0.0–1.0)
 export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect = true, errorWeight = 1.0) {
-  let rep = prevRep;
-  let interval = prevInt;
-  let ef = prevEF;
+  let rep = typeof prevRep === 'number' && !isNaN(prevRep) ? prevRep : 0;
+  let interval = typeof prevInt === 'number' && !isNaN(prevInt) ? prevInt : 0;
+  let ef = typeof prevEF === 'number' && !isNaN(prevEF) ? prevEF : 2.5;
 
   if (q < 3) {
     // AGAIN: full reset — card goes back to learning

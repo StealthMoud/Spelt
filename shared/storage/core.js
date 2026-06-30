@@ -48,7 +48,35 @@ export function setStored(key, value) {
 
 export async function getWords() {
   const words = await getStored('spelt_words');
-  return words || [];
+  if (!Array.isArray(words)) return [];
+
+  let modified = false;
+  const sanitized = words.map(w => {
+    if (!w) return w;
+    let cardModified = false;
+
+    if (w.rep === undefined || w.rep === null || isNaN(w.rep)) {
+      w.rep = 0; cardModified = true;
+    }
+    if (w.interval === undefined || w.interval === null || isNaN(w.interval)) {
+      w.interval = 0; cardModified = true;
+    }
+    if (w.ef === undefined || w.ef === null || isNaN(w.ef) || w.ef < 1.3) {
+      w.ef = 2.5; cardModified = true;
+    }
+    if (w.nextDate === undefined || w.nextDate === null || isNaN(w.nextDate)) {
+      w.nextDate = Date.now(); cardModified = true;
+    }
+
+    if (cardModified) modified = true;
+    return w;
+  });
+
+  if (modified) {
+    await saveWords(sanitized);
+  }
+
+  return sanitized;
 }
 
 export async function saveWords(words) {
