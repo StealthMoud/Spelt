@@ -6,6 +6,12 @@ export async function playWordAudio(word, accent) {
   if (typeof window === 'undefined' || typeof Audio === 'undefined') return;
   const cleanWord = word.trim().toLowerCase();
 
+  // If the word contains a space (e.g. "opt out"), play using natural phrase TTS
+  if (cleanWord.includes(' ')) {
+    await playTextAudio(word, accent);
+    return;
+  }
+
   // 1. Try Cambridge Dictionary audio first
   try {
     const cambridge = await fetchCambridgePronunciation(cleanWord);

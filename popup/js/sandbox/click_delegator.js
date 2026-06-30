@@ -5,10 +5,36 @@ import { acceptSuggestion } from './accept.js';
 import { saveManualAnyway, handleAddToVault } from './save_actions.js';
 import { renderMisspellingCard } from './misspell_card.js';
 import { handleExampleActions } from './example_actions.js';
+import { openModal } from '../vault.js';
 
 export async function handleFeedbackClick(e, reloadVaultList, loadPracticeDeck) {
   const feedbackMsg = document.getElementById('feedback-msg');
   if (!feedbackMsg) return;
+
+  const editBtn = e.target.closest('.sandbox-edit-btn');
+  if (editBtn) {
+    const wordText = editBtn.getAttribute('data-word');
+    const words = await getWords();
+    const existing = words.find(w => w.word.toLowerCase() === wordText.toLowerCase());
+    if (existing) {
+      openModal(existing);
+    } else {
+      const tempWordObj = {
+        word: wordText,
+        definition: editBtn.getAttribute('data-definition') || '',
+        transcription: editBtn.getAttribute('data-transcription') || '',
+        partOfSpeech: editBtn.getAttribute('data-part-of-speech') || '',
+        example: editBtn.getAttribute('data-example') || '',
+        translation: editBtn.getAttribute('data-translation') || '',
+        level: editBtn.getAttribute('data-level') || '',
+        practiceType: 'spelling',
+        mastered: false,
+        misspellings: []
+      };
+      openModal(tempWordObj);
+    }
+    return;
+  }
 
   const closeBtn = e.target.closest('.feedback-close-btn');
   if (closeBtn) { feedbackMsg.style.display = 'none'; return; }
