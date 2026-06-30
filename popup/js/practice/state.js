@@ -2,6 +2,7 @@ const dueCards = [];
 let cardShownAt = 0;
 let onDeckUpdatedCallback = null;
 let isSubmitting = false;
+const reviewedWordIds = new Set();
 
 export function getDueCards() { return dueCards; }
 export function setDueCards(val) {
@@ -14,3 +15,4 @@ export function getOnDeckUpdated() { return onDeckUpdatedCallback; }
 export function setOnDeckUpdated(val) { onDeckUpdatedCallback = val; }
 export function getIsSubmitting() { return isSubmitting; }
 export function setIsSubmitting(val) { isSubmitting = val; }
+export function getReviewedWordIds() { return reviewedWordIds; }

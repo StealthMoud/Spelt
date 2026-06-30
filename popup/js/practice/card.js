@@ -1,10 +1,11 @@
 import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation } from '../../../shared/storage.js';
-import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting } from './state.js';
+import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, getReviewedWordIds } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 
 export async function loadPracticeDeck() {
   const words = await getWords();
-  setDueCards(words.filter(w => w.nextDate <= Date.now() && !w.mastered));
+  const reviewedIds = getReviewedWordIds();
+  setDueCards(words.filter(w => w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
   getOnDeckUpdated()?.(); showPracticeCard();
 }
 
@@ -89,7 +90,8 @@ export async function syncPracticeDeck() {
   });
   due.push(...restDue);
   const ids = new Set(due.map(c => c.id));
-  due.push(...fresh.filter(w => w.nextDate <= now && !w.mastered && !ids.has(w.id)));
+  const reviewedIds = getReviewedWordIds();
+  due.push(...fresh.filter(w => w.nextDate <= now && !w.mastered && !ids.has(w.id) && !reviewedIds.has(w.id)));
   setDueCards(due); getOnDeckUpdated()?.();
   const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');
   if (oldActiveId !== newActiveId || (!isFlipped && !getIsSubmitting())) showPracticeCard();

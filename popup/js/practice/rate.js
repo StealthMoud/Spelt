@@ -1,5 +1,5 @@
 import { reviewWord, getWords, saveWords } from '../../../shared/storage.js';
-import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting } from './state.js';
+import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, getReviewedWordIds } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
 
@@ -17,6 +17,9 @@ export async function submitRating(score) {
     
     const updatedCard = await reviewWord(card.id, score, isOk ? null : typed, responseTime);
     await trackSession(score);
+    if (score >= 3) {
+      getReviewedWordIds().add(card.id);
+    }
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
@@ -45,6 +48,7 @@ export async function submitMasteredRating(card) {
     
     await reviewWord(card.id, 5, isOk ? null : typed, responseTime);
     await trackSession(5);
+    getReviewedWordIds().add(card.id);
 
     const list = await getWords();
     const wordObj = list.find(w => w.id === card.id);
