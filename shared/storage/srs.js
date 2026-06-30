@@ -42,12 +42,6 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
   // Apply spacing multiplier from user settings
   interval = Math.max(1, Math.round(interval * multiplier));
 
-  // Error-weight only on incorrect answers — correct answers use clean SM-2 progression
-  // (EF already encodes difficulty history, no double-penalty needed)
-  if (!isCorrect && errorWeight < 1.0) {
-    interval = Math.max(1, Math.round(interval * errorWeight));
-  }
-
   // Adjust Ease Factor (EF) — penalize harder on misspellings
   ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
   if (!isCorrect) ef -= 0.15;
