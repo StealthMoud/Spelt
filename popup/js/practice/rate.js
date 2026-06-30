@@ -1,7 +1,27 @@
-import { reviewWord, getWords, saveWords } from '../../../shared/storage.js';
+import { getWords, saveWords } from '../../../shared/storage.js';
 import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, getReviewedWordIds } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
+
+function reviewWordInBackground(wordId, q, typedWrongWord = null, responseTimeMs = null) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({
+      action: 'reviewWord',
+      wordId,
+      q,
+      typedWrongWord,
+      responseTimeMs
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else if (response && response.success) {
+        resolve(response.card);
+      } else {
+        reject(new Error(response?.error || 'Failed to review word'));
+      }
+    });
+  });
+}
 
 export async function submitRating(score) {
   if (getIsSubmitting()) return;
@@ -15,7 +35,7 @@ export async function submitRating(score) {
     const cardShownAt = getCardShownAt();
     const responseTime = cardShownAt > 0 ? Date.now() - cardShownAt : null;
     
-    const updatedCard = await reviewWord(card.id, score, isOk ? null : typed, responseTime);
+    const updatedCard = await reviewWordInBackground(card.id, score, isOk ? null : typed, responseTime);
     await trackSession(score);
     if (score >= 3) {
       getReviewedWordIds().add(card.id);
@@ -46,7 +66,7 @@ export async function submitMasteredRating(card) {
     const cardShownAt = getCardShownAt();
     const responseTime = cardShownAt > 0 ? Date.now() - cardShownAt : null;
     
-    await reviewWord(card.id, 5, isOk ? null : typed, responseTime);
+    await reviewWordInBackground(card.id, 5, isOk ? null : typed, responseTime);
     await trackSession(5);
     getReviewedWordIds().add(card.id);
 

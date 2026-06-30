@@ -1,6 +1,6 @@
 import { getWords } from '../shared/storage.js';
 import { initNavigation } from './js/navigation.js';
-import { initPractice, loadPracticeDeck, syncPracticeDeck, getDueCards } from './js/practice.js';
+import { initPractice, loadPracticeDeck, syncPracticeDeck, getDueCards, getReviewedWordIds } from './js/practice.js';
 import { initVault, reloadVaultList } from './js/vault.js';
 import { initSettings } from './js/settings.js';
 import { initSandbox } from './js/sandbox.js';
@@ -17,10 +17,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function refreshStats() {
     try {
       const words = await getWords();
-      const isPracticeActive = document.getElementById('practice-tab')?.classList.contains('active');
-      const dueCount = isPracticeActive 
-        ? getDueCards().length 
-        : words.filter(w => w.nextDate <= Date.now() && !w.mastered).length;
+      const reviewedIds = getReviewedWordIds();
+      const dueCount = words.filter(w => w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)).length;
 
       dueCountEl.textContent = dueCount;
       totalCountEl.textContent = words.length;
