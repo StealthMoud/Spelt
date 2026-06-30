@@ -74,6 +74,7 @@ export async function addWord(wordData) {
     meaningInterval: 0,
     meaningEf: 2.5,
     meaningNextDate: wordData.nextDate !== undefined ? wordData.nextDate : Date.now(),
+    practiceType: wordData.practiceType || 'both',
     mastered: wordData.mastered || false,
     nextDate: wordData.nextDate !== undefined ? wordData.nextDate : Date.now(),
     createdAt: Date.now(),

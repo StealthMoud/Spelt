@@ -22,7 +22,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dueCount = words.filter(w => {
         if (reviewedIds.has(w.id)) return false;
         if (w.mastered) return false;
-        return mode === 'meaning' ? w.meaningNextDate <= Date.now() : w.nextDate <= Date.now();
+        if (mode === 'meaning') {
+          if (w.practiceType !== 'both' && w.practiceType !== 'meaning') return false;
+          return w.meaningNextDate <= Date.now();
+        } else {
+          if (w.practiceType !== 'both' && w.practiceType !== 'spelling') return false;
+          return w.nextDate <= Date.now();
+        }
       }).length;
 
       dueCountEl.textContent = dueCount;

@@ -8,9 +8,9 @@ export async function loadPracticeDeck() {
   const mode = getPracticeMode();
   
   if (mode === 'meaning') {
-    setDueCards(words.filter(w => w.meaningNextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
+    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'meaning') && w.meaningNextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
   } else {
-    setDueCards(words.filter(w => w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
+    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'spelling') && w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
   }
   
   getOnDeckUpdated()?.(); showPracticeCard();
@@ -153,14 +153,16 @@ export async function syncPracticeDeck() {
     const f = fresh.find(w => w.id === c.id);
     if (!f) return false;
     const isDue = mode === 'meaning' ? f.meaningNextDate <= now : f.nextDate <= now;
-    return !f.mastered && isDue && f.id !== activeId;
+    const matchesMode = mode === 'meaning' ? (f.practiceType === 'both' || f.practiceType === 'meaning') : (f.practiceType === 'both' || f.practiceType === 'spelling');
+    return !f.mastered && isDue && matchesMode && f.id !== activeId;
   });
   due.push(...restDue);
   const ids = new Set(due.map(c => c.id));
   const reviewedIds = getReviewedWordIds();
   due.push(...fresh.filter(w => {
     const isDue = mode === 'meaning' ? w.meaningNextDate <= now : w.nextDate <= now;
-    return isDue && !w.mastered && !ids.has(w.id) && !reviewedIds.has(w.id);
+    const matchesMode = mode === 'meaning' ? (w.practiceType === 'both' || w.practiceType === 'meaning') : (w.practiceType === 'both' || w.practiceType === 'spelling');
+    return isDue && matchesMode && !w.mastered && !ids.has(w.id) && !reviewedIds.has(w.id);
   }));
   setDueCards(due); getOnDeckUpdated()?.();
   const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');

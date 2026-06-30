@@ -18,6 +18,7 @@ export function openModal(wordObj = null) {
   document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
   document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
   document.getElementById('form-level').value = wordObj ? (wordObj.level || '').toUpperCase().trim() : '';
+  document.getElementById('form-practice-type').value = wordObj ? (wordObj.practiceType || 'both') : 'both';
   document.getElementById('form-mastered').checked = wordObj ? (wordObj.mastered || false) : false;
   
   currentFormMisspellings = wordObj && wordObj.misspellings ? [...wordObj.misspellings] : [];

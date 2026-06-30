@@ -81,6 +81,10 @@ export async function getWords() {
       w.meaningNextDate = Date.now(); cardModified = true;
     }
 
+    if (!w.practiceType) {
+      w.practiceType = 'both'; cardModified = true;
+    }
+
     if (cardModified) modified = true;
     return w;
   });

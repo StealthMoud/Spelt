@@ -12,6 +12,7 @@ export async function saveWord(e, currentFormMisspellings, wordsList, reloadCall
   const partOfSpeech = document.getElementById('form-part-of-speech').value.trim();
   const example = document.getElementById('form-example').value.trim();
   const level = document.getElementById('form-level').value.trim();
+  const practiceType = document.getElementById('form-practice-type').value;
   const mastered = document.getElementById('form-mastered').checked;
  
   const executeSave = async () => {
@@ -32,6 +33,7 @@ export async function saveWord(e, currentFormMisspellings, wordsList, reloadCall
             example, 
             exampleTranslation, 
             level,
+            practiceType,
             mastered,
             misspellings: currentFormMisspellings
           };
@@ -48,7 +50,7 @@ export async function saveWord(e, currentFormMisspellings, wordsList, reloadCall
           await saveWords(wordsList);
         }
       } else {
-        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, mastered, misspellings: currentFormMisspellings });
+        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings });
         if (mastered) {
           const list = await getWords();
           const wObj = list.find(w => w.id === addedWord.id);
