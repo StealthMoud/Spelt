@@ -81,9 +81,9 @@ export function showPracticeCard() {
     }, 150);
   } else {
     if (frontSpellingContent) frontSpellingContent.style.display = 'flex';
-    if (frontMeaningContent) frontMeaningContent.style.display = 'none';
+    if (frontRecallContent) frontRecallContent.style.display = 'none';
     if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'flex';
-    if (frontMeaningWrapper) frontMeaningWrapper.style.display = 'none';
+    if (frontRecallWrapper) frontRecallWrapper.style.display = 'none';
 
     document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
     document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
