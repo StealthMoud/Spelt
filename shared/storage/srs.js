@@ -8,36 +8,29 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
   let ef = prevEF;
 
   if (q < 3) {
+    // AGAIN: full reset — card goes back to learning
     rep = 0;
-    interval = 1; // reset
+    interval = 1;
   } else {
-    if (rep === 0) {
-      if (q === 3) interval = 1;
-      else if (q === 4) interval = 6;
-      else if (q === 5) interval = 12;
-      else interval = 1;
-    } else if (prevInt <= 1) {
-      // Card at baseline interval (new, lapsed, or error-crushed) — use graduation steps
-      if (q === 3) interval = 3;
-      else if (q === 4) interval = 6;
-      else if (q === 5) interval = 12;
-      else interval = 6;
+    if (prevInt <= 1) {
+      // GRADUATION: new, lapsed, or reset cards use fixed steps
+      if (q === 3) interval = 2;       // Hard — see again in 2 days
+      else if (q === 4) interval = 4;  // Good — check in 4 days
+      else interval = 7;               // Easy — confident, 1 week
     } else {
-      let qualityMultiplier = 1.0;
-      if (q === 3) qualityMultiplier = 0.6;      // Hard
-      else if (q === 5) qualityMultiplier = 1.3; // Easy
-
-      interval = Math.round(prevInt * ef * qualityMultiplier);
-
-      // Keep progression strictly forward
-      if (interval <= prevInt) {
-        interval = prevInt + 1;
+      // STANDARD: multiplicative intervals
+      // Hard uses a fixed modest multiplier — CAN produce shorter intervals (that's the point)
+      // Good/Easy use EF-based growth and must always progress forward
+      if (q === 3) {
+        interval = Math.max(1, Math.round(prevInt * 1.2));
+      } else if (q === 4) {
+        interval = Math.max(prevInt + 1, Math.round(prevInt * ef));
+      } else {
+        interval = Math.max(prevInt + 1, Math.round(prevInt * ef * 1.3));
       }
     }
 
-    // LAPSE: if spelled incorrectly, cap interval to a short lapse value.
-    // This is the key fix: a misspelled word means you don't know it,
-    // so the interval should reset to 1-3 days, not just get a % discount.
+    // LAPSE: incorrect spelling caps the interval — you don't know it
     if (!isCorrect) {
       const lapseMax = q === 3 ? 1 : q === 4 ? 2 : 3;
       interval = Math.min(interval, lapseMax);
@@ -49,16 +42,15 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
   // Apply spacing multiplier from user settings
   interval = Math.max(1, Math.round(interval * multiplier));
 
-  // Apply error-weight only on incorrect answers: words with accumulated errors
-  // get shorter intervals when misspelled. Correct answers use clean SM-2 progression
-  // (EF already encodes difficulty history, so no double-penalty needed).
+  // Error-weight only on incorrect answers — correct answers use clean SM-2 progression
+  // (EF already encodes difficulty history, no double-penalty needed)
   if (!isCorrect && errorWeight < 1.0) {
     interval = Math.max(1, Math.round(interval * errorWeight));
   }
 
   // Adjust Ease Factor (EF) — penalize harder on misspellings
   ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
-  if (!isCorrect) ef -= 0.15; // extra EF penalty for misspelling
+  if (!isCorrect) ef -= 0.15;
   if (ef < 1.3) ef = 1.3;
 
   // "Again" cards stay due immediately,
