@@ -50,6 +50,9 @@ export async function getWords() {
   const words = await getStored('spelt_words');
   if (!Array.isArray(words)) return [];
 
+  const migrated = await getStored('spelt_migrated_to_spelling_v3');
+  const runMigration = !migrated;
+
   let modified = false;
   const sanitized = words.map(w => {
     if (!w) return w;
@@ -82,12 +85,21 @@ export async function getWords() {
     }
 
     if (!w.practiceType) {
-      w.practiceType = 'both'; cardModified = true;
+      w.practiceType = 'spelling'; cardModified = true;
+    }
+
+    if (runMigration && w.practiceType === 'both') {
+      w.practiceType = 'spelling'; cardModified = true;
     }
 
     if (cardModified) modified = true;
     return w;
   });
+
+  if (runMigration) {
+    await setStored('spelt_migrated_to_spelling_v3', true);
+    modified = true;
+  }
 
   if (modified) {
     await saveWords(sanitized);
