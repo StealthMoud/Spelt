@@ -42,8 +42,8 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
       `;
     } else {
       subtext = `
-        <div style="display: flex; gap: 6px; justify-content: center; margin-top: 8px;">
-          <button type="button" class="submit-btn add-to-vault-btn" 
+        <div style="display: flex; gap: 6px; justify-content: center; margin-top: 8px; flex-wrap: wrap;">
+          <button type="button" class="submit-btn add-to-vault-btn spelling-add-btn" 
             data-word="${word.replace(/"/g, '&quot;')}" 
             data-definition="${def.replace(/"/g, '&quot;')}" 
             data-transcription="${ipa.replace(/"/g, '&quot;')}" 
@@ -51,9 +51,36 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
             data-example="${example.replace(/"/g, '&quot;')}" 
             data-translation="${translation.replace(/"/g, '&quot;')}"
             data-level="${wordLevel.replace(/"/g, '&quot;')}"
-            style="width: auto; padding: 4px 10px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 11px; height: 11px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add to Vault</span>
+            data-practice-type="spelling"
+            style="width: auto; padding: 4px 10px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; background: hsla(160, 60%, 45%, 0.12); border-color: hsla(160, 60%, 45%, 0.4); color: #2ecc71;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Spelling</span>
+          </button>
+          <button type="button" class="submit-btn add-to-vault-btn recall-add-btn" 
+            data-word="${word.replace(/"/g, '&quot;')}" 
+            data-definition="${def.replace(/"/g, '&quot;')}" 
+            data-transcription="${ipa.replace(/"/g, '&quot;')}" 
+            data-part-of-speech="${partOfSpeech.replace(/"/g, '&quot;')}" 
+            data-example="${example.replace(/"/g, '&quot;')}" 
+            data-translation="${translation.replace(/"/g, '&quot;')}"
+            data-level="${wordLevel.replace(/"/g, '&quot;')}"
+            data-practice-type="recall"
+            style="width: auto; padding: 4px 10px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; background: hsla(210, 60%, 45%, 0.12); border-color: hsla(210, 60%, 45%, 0.4); color: #3498db;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Recall</span>
+          </button>
+          <button type="button" class="submit-btn add-to-vault-btn both-add-btn" 
+            data-word="${word.replace(/"/g, '&quot;')}" 
+            data-definition="${def.replace(/"/g, '&quot;')}" 
+            data-transcription="${ipa.replace(/"/g, '&quot;')}" 
+            data-part-of-speech="${partOfSpeech.replace(/"/g, '&quot;')}" 
+            data-example="${example.replace(/"/g, '&quot;')}" 
+            data-translation="${translation.replace(/"/g, '&quot;')}"
+            data-level="${wordLevel.replace(/"/g, '&quot;')}"
+            data-practice-type="both"
+            style="width: auto; padding: 4px 10px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; background: hsla(280, 60%, 45%, 0.12); border-color: hsla(280, 60%, 45%, 0.4); color: #9b59b6;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Both</span>
           </button>
           <button type="button" class="submit-btn sandbox-edit-btn" 
             data-word="${word.replace(/"/g, '&quot;')}" 
@@ -63,9 +90,9 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
             data-example="${example.replace(/"/g, '&quot;')}" 
             data-translation="${translation.replace(/"/g, '&quot;')}"
             data-level="${wordLevel.replace(/"/g, '&quot;')}"
-            style="width: auto; padding: 4px 10px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px; background: hsla(200, 80%, 15%, 0.2); border-color: var(--primary-light); color: var(--primary-light);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
-            <span>Customize Target...</span>
+            style="width: auto; padding: 4px 10px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; background: hsla(200, 80%, 15%, 0.2); border-color: var(--primary-light); color: var(--primary-light);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+            <span>Customize...</span>
           </button>
         </div>
         <p style="font-size: 0.62rem; color: var(--text-muted); text-align: center; margin-top: 4px; margin-bottom: 0;">Correct spelling! (Not saved to vault)</p>

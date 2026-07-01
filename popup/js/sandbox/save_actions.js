@@ -17,15 +17,20 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
     const example = btn.getAttribute('data-example') || '';
     const translation = btn.getAttribute('data-translation') || '';
     const level = btn.getAttribute('data-level') || '';
+    const practiceType = btn.getAttribute('data-practice-type') || 'spelling';
 
-    await addWord({ word, definition, transcription, partOfSpeech, example, translation, level });
+    await addWord({ word, definition, transcription, partOfSpeech, example, translation, level, practiceType });
 
     // Prepend a success notification banner at the top of the card details
     if (!feedbackMsg.querySelector('.sandbox-success-banner')) {
       const banner = document.createElement('div');
       banner.className = 'sandbox-success-banner';
       banner.style.cssText = 'background: hsla(155, 65%, 48%, 0.12); border: 1px solid var(--success); color: var(--primary-light); padding: 8px; border-radius: var(--radius-md); margin-bottom: 12px; font-size: 0.72rem; text-align: center; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1; max-height: 40px; overflow: hidden;';
-      banner.innerHTML = `✅ Word <strong>"${word}"</strong> added to Vault successfully!`;
+      
+      let typeLabel = 'Spelling';
+      if (practiceType === 'recall') typeLabel = 'Recall';
+      if (practiceType === 'both') typeLabel = 'Spelling & Recall';
+      banner.innerHTML = `✅ Word <strong>"${word}"</strong> added for <strong>${typeLabel}</strong> practice!`;
       
       const closeBtn = feedbackMsg.querySelector('.feedback-close-btn');
       if (closeBtn) {
