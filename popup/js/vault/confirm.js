@@ -76,3 +76,50 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
   okBtn.addEventListener('click', handleOk);
   cancelBtn.addEventListener('click', close);
 }
+
+export function showImportOptionsModal(onSelect, onCancel) {
+  const modal = document.getElementById('popup-import-options-modal');
+  const btnBoth = document.getElementById('import-option-both');
+  const btnSpelling = document.getElementById('import-option-spelling');
+  const btnRecall = document.getElementById('import-option-recall');
+  const btnCancel = document.getElementById('import-option-cancel');
+
+  modal.style.display = 'flex';
+
+  const close = () => {
+    modal.style.display = 'none';
+    cleanup();
+  };
+
+  const handleBoth = () => {
+    onSelect('both');
+    close();
+  };
+
+  const handleSpelling = () => {
+    onSelect('spelling');
+    close();
+  };
+
+  const handleRecall = () => {
+    onSelect('recall');
+    close();
+  };
+
+  const handleCancel = () => {
+    if (onCancel) onCancel();
+    close();
+  };
+
+  const cleanup = () => {
+    btnBoth.removeEventListener('click', handleBoth);
+    btnSpelling.removeEventListener('click', handleSpelling);
+    btnRecall.removeEventListener('click', handleRecall);
+    btnCancel.removeEventListener('click', handleCancel);
+  };
+
+  btnBoth.addEventListener('click', handleBoth);
+  btnSpelling.addEventListener('click', handleSpelling);
+  btnRecall.addEventListener('click', handleRecall);
+  btnCancel.addEventListener('click', handleCancel);
+}

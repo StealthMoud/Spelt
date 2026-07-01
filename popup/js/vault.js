@@ -1,5 +1,5 @@
 import { getWords, saveWords } from '../../shared/storage.js';
-import { showConfirm } from './vault/confirm.js';
+import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';
 import { saveWord } from './vault/save.js';
 import { renderList, updateBulkUIState } from './vault/list.js';
@@ -10,7 +10,7 @@ import { initCustomSelects } from './vault/dropdowns.js';
 let wordsList = [];
 let onVaultUpdatedCallback = null;
 let selectedWordIds = new Set();
-export { showConfirm, openModal };
+export { showConfirm, openModal, showImportOptionsModal };
 
 export async function initVault(onVaultUpdated) {
   onVaultUpdatedCallback = onVaultUpdated;
