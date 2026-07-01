@@ -1,4 +1,4 @@
-import { getWords, addWord, saveWords } from '../../../shared/storage.js';
+import { getWords, addWord, saveWords, fetchDynamicDefinition } from '../../../shared/storage.js';
 import { showConfirm } from './confirm.js';
 import { closeModal } from './modal.js';
 
@@ -72,14 +72,20 @@ export async function saveWord(e, currentFormMisspellings, wordsList, reloadCall
   try {
     const isOnline = navigator.onLine;
     if (isOnline) {
-      const checkRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`);
-      if (!checkRes.ok) {
-        showConfirm(
-          'Unrecognized Word',
-          `"${word}" is not recognized in the dictionary. Do you want to save it anyway?`,
-          executeSave
-        );
-        return;
+      // 1. Try our robust definition lookup (queries Cambridge and Oxford, handling multi-word hyphens)
+      const res = await fetchDynamicDefinition(word);
+      
+      // 2. If dynamic definition is empty, fallback to Free Dictionary API validation check
+      if (!res || !res.definition) {
+        const checkRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`);
+        if (!checkRes.ok) {
+          showConfirm(
+            'Unrecognized Word',
+            `"${word}" is not recognized in the dictionary. Do you want to save it anyway?`,
+            executeSave
+          );
+          return;
+        }
       }
     }
   } catch (err) {
