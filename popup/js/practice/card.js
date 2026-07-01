@@ -193,12 +193,6 @@ export function showPracticeCard() {
         ? 'What does this expression mean?' 
         : 'What does this word mean?';
     }
-
-    // Auto-play pronunciation in Recall Mode
-    setTimeout(() => {
-      const activeAudioBtn = document.querySelector('#recall-front-audio-container .audio-play-btn');
-      if (activeAudioBtn) activeAudioBtn.click();
-    }, 150);
   } else {
     if (frontSpellingContent) frontSpellingContent.style.display = 'flex';
     if (frontRecallContent) frontRecallContent.style.display = 'none';
