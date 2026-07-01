@@ -21,6 +21,22 @@ export async function setupRules() {
             condition: {
               urlFilter: "||dictionary.cambridge.org"
             }
+          },
+          {
+            id: 2,
+            priority: 1,
+            action: {
+              type: "modifyHeaders",
+              requestHeaders: [
+                { header: "Origin", operation: "remove" },
+                { header: "Referer", operation: "set", value: "https://www.oxfordlearnersdictionaries.com/" },
+                { header: "Sec-Fetch-Mode", operation: "remove" },
+                { header: "Sec-Fetch-Site", operation: "remove" }
+              ]
+            },
+            condition: {
+              urlFilter: "||oxfordlearnersdictionaries.com"
+            }
           }
         ]
       });

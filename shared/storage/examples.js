@@ -3,6 +3,7 @@ import { triggerNetworkSuccess, triggerNetworkError } from './core.js';
 // Fetch a real English sentence example dynamically from Cambridge, Oxford, or Tatoeba
 export async function fetchDynamicExample(word) {
   const cleanWord = word.trim().toLowerCase();
+  const urlWord = cleanWord.replace(/\s+/g, '-');
   
   const pickBest = (list) => {
     const filtered = list.filter(s => {
@@ -22,7 +23,7 @@ export async function fetchDynamicExample(word) {
 
   // 1. Try Cambridge Dictionary
   try {
-    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
+    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
       triggerNetworkSuccess();
@@ -48,7 +49,7 @@ export async function fetchDynamicExample(word) {
 
   // 2. Try Oxford Learner's Dictionary
   try {
-    const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
+    const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
       triggerNetworkSuccess();

@@ -5,11 +5,12 @@ import { parseCambridgePage } from './cambridge-parser.js';
 // Returns { definition, level, allLevels } with level matched to the definition sense
 export async function fetchDynamicDefinition(word) {
   const cleanWord = word.trim().toLowerCase();
+  const urlWord = cleanWord.replace(/\s+/g, '-');
   const empty = { definition: '', level: '', allLevels: [] };
 
   // 1. Try Cambridge Dictionary
   try {
-    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
+    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
       triggerNetworkSuccess();
@@ -35,7 +36,7 @@ export async function fetchDynamicDefinition(word) {
 
   // 2. Try Oxford Learner's Dictionary
   try {
-    const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
+    const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
       triggerNetworkSuccess();
@@ -45,7 +46,27 @@ export async function fetchDynamicDefinition(word) {
       if (match = regex.exec(html)) {
         let text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
         if (text.endsWith(':')) text = text.slice(0, -1).trim();
-        if (text) return { definition: text, level: '', allLevels: [] };
+        
+        // Parse CEFR level from Oxford page
+        let oxLevel = '';
+        const cefrRegex = /<span\s+class="cefr"[^>]*>([\s\S]*?)<\/span>/gi;
+        let m;
+        while ((m = cefrRegex.exec(html)) !== null) {
+          const txt = m[1].replace(/<[^>]*>/g, '').trim().toUpperCase();
+          if (/^[A-C][1-2]$/.test(txt)) {
+            oxLevel = txt;
+            break;
+          }
+        }
+        if (!oxLevel) {
+          const oxRegex = /data-ox(?:3000|5000)="([a-c][1-2])"/i;
+          const oxMatch = oxRegex.exec(html);
+          if (oxMatch) {
+            oxLevel = oxMatch[1].toUpperCase();
+          }
+        }
+        
+        if (text) return { definition: text, level: oxLevel, allLevels: oxLevel ? [oxLevel] : [] };
       }
     }
   } catch (err) {

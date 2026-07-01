@@ -4,11 +4,12 @@ import { parseCambridgePage, parseOxfordPage } from './cambridge-parser.js';
 // Fetch accurate UK/US IPA transcriptions and MP3 URLs dynamically from Cambridge or Oxford Learner's Dictionary
 export async function fetchCambridgePronunciation(word) {
   const cleanWord = word.trim().toLowerCase();
-  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '' };
+  const urlWord = cleanWord.replace(/\s+/g, '-');
+  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '', senses: [], allLevels: [] };
   
   // 1. Try Cambridge Dictionary first
   try {
-    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(cleanWord)}`;
+    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`;
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (res.ok) {
       triggerNetworkSuccess();
@@ -25,7 +26,7 @@ export async function fetchCambridgePronunciation(word) {
   const hasIpa = result.ukIpa || result.usIpa;
   if (!hasAudio || !hasIpa) {
     try {
-      const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(cleanWord)}`;
+      const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`;
       const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
       if (res.ok) {
         triggerNetworkSuccess();
