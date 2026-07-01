@@ -103,7 +103,7 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
           </div>
         ` : ''}
       </div>
-      ${subtext}
+      <div id="sandbox-action-container" style="width: 100%; text-align: center;">${subtext}</div>
     `;
     document.getElementById('word-input').value = '';
     document.getElementById('word-input')?.blur();
