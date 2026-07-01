@@ -32,7 +32,7 @@ export function registerKeydowns() {
     if (document.getElementById('word-form-modal')?.style.display === 'flex') return;
 
     const cardEl = document.getElementById('popup-deck-card');
-    if (!cardEl) return;
+    if (!cardEl || getDueCards().length === 0) return;
 
     const active = document.activeElement;
     const isTyping = active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && ['text', 'search'].includes(active.type)));
