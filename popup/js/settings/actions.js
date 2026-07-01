@@ -39,6 +39,8 @@ export async function importDb(e, onDbRestoredCallback) {
       let importedWords = [];
       let activity = null;
       let streak = null;
+      let sessions = null;
+      let sandboxActivity = null;
 
       if (Array.isArray(parsed)) {
         importedWords = parsed;
@@ -46,6 +48,8 @@ export async function importDb(e, onDbRestoredCallback) {
         importedWords = parsed.words;
         activity = parsed.activity || null;
         streak = parsed.streak || null;
+        sessions = parsed.sessions || null;
+        sandboxActivity = parsed.sandbox_activity || null;
       } else {
         throw new Error('Invalid backup file');
       }
@@ -59,7 +63,6 @@ export async function importDb(e, onDbRestoredCallback) {
         if (!item.word) return;
         const id = item.id || 'word_' + Math.random().toString(36).substring(2, 11);
         
-        // Build card object with standard fallbacks
         const newCard = {
           id: id,
           word: item.word,
@@ -90,7 +93,6 @@ export async function importDb(e, onDbRestoredCallback) {
           meaningNextDate: item.meaningNextDate !== undefined ? item.meaningNextDate : Date.now()
         };
 
-        // If it's a syntax card, preserve syntax attributes
         if (item.practiceType === 'syntax') {
           newCard.practiceType = 'syntax';
           newCard.blocks = Array.isArray(item.blocks) ? item.blocks : [];
@@ -123,9 +125,20 @@ export async function importDb(e, onDbRestoredCallback) {
           newCard.meaningInterval = existingCard.meaningInterval !== undefined ? existingCard.meaningInterval : newCard.meaningInterval;
           newCard.meaningEf = existingCard.meaningEf !== undefined ? existingCard.meaningEf : newCard.meaningEf;
 
+          // Preserve history list if present in backup but missing/empty in existing
+          if (Array.isArray(item.history) && item.history.length > 0) {
+            newCard.history = item.history;
+          } else if (Array.isArray(existingCard.history) && existingCard.history.length > 0) {
+            newCard.history = existingCard.history;
+          }
+
           freshList[idx] = newCard;
           updatedCount++;
         } else {
+          // Carry history list from backup on fresh insert
+          if (Array.isArray(item.history)) {
+            newCard.history = item.history;
+          }
           freshList.push(newCard);
           addedCount++;
         }
@@ -133,7 +146,7 @@ export async function importDb(e, onDbRestoredCallback) {
 
       await saveWords(freshList);
 
-      // Merge activity and streak if running in Chrome environment
+      // Merge activity, streak, sessions, and sandbox activity in local storage
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         if (activity) {
           const res = await chrome.storage.local.get('spelt_activity');
@@ -149,6 +162,37 @@ export async function importDb(e, onDbRestoredCallback) {
             lastDate: currentStreak.lastDate || streak.lastDate || ''
           };
           await chrome.storage.local.set({ 'spelt_streak': mergedStreak });
+        }
+        if (sessions) {
+          const res = await chrome.storage.local.get('spelt_sessions');
+          const existingSessions = res.spelt_sessions || [];
+          const mergedSessions = [...existingSessions];
+          sessions.forEach(sess => {
+            if (!mergedSessions.some(s => s.startTime === sess.startTime)) {
+              mergedSessions.push(sess);
+            }
+          });
+          mergedSessions.sort((a, b) => a.startTime - b.startTime);
+          if (mergedSessions.length > 200) {
+            mergedSessions.splice(0, mergedSessions.length - 200);
+          }
+          await chrome.storage.local.set({ 'spelt_sessions': mergedSessions });
+        }
+        if (sandboxActivity) {
+          const res = await chrome.storage.local.get('spelt_sandbox_activity');
+          const existingSandbox = res.spelt_sandbox_activity || {};
+          const mergedSandbox = { ...existingSandbox };
+          Object.keys(sandboxActivity).forEach(date => {
+            if (!mergedSandbox[date]) {
+              mergedSandbox[date] = sandboxActivity[date];
+            } else {
+              mergedSandbox[date].checks = Math.max(mergedSandbox[date].checks, sandboxActivity[date].checks);
+              mergedSandbox[date].correct = Math.max(mergedSandbox[date].correct, sandboxActivity[date].correct);
+              mergedSandbox[date].misspelled = Math.max(mergedSandbox[date].misspelled, sandboxActivity[date].misspelled);
+              mergedSandbox[date].notFound = Math.max(mergedSandbox[date].notFound, sandboxActivity[date].notFound);
+            }
+          });
+          await chrome.storage.local.set({ 'spelt_sandbox_activity': mergedSandbox });
         }
       }
 
