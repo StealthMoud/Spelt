@@ -42,11 +42,23 @@ export function initSettings(onDbRestored) {
   document.getElementById('export-db-btn').addEventListener('click', exportDb);
   
   const fileInput = document.getElementById('import-db-file');
-  document.getElementById('import-db-trigger-btn').addEventListener('click', () => fileInput.click());
+  document.getElementById('import-db-trigger-btn').addEventListener('click', () => {
+    showConfirm(
+      'Import & Merge Library',
+      'This will merge the chosen backup file into your existing library. Existing words will be updated with any new translations/examples, but their spacing and history will be preserved. No data will be wiped. Proceed?',
+      () => fileInput.click()
+    );
+  });
   fileInput.addEventListener('change', (e) => importDb(e, onDbRestoredCallback));
 
   const syntaxFileInput = document.getElementById('import-syntax-file');
-  document.getElementById('import-syntax-trigger-btn')?.addEventListener('click', () => syntaxFileInput.click());
+  document.getElementById('import-syntax-trigger-btn')?.addEventListener('click', () => {
+    showConfirm(
+      'Import Syntax Patterns',
+      'This will merge syntax pattern structures into your library. Spacing and history for existing items will be preserved. No data will be wiped. Proceed?',
+      () => syntaxFileInput.click()
+    );
+  });
   syntaxFileInput?.addEventListener('change', (e) => importSyntaxDb(e, onDbRestoredCallback));
 
   document.getElementById('wipe-db-btn').addEventListener('click', () => wipeDb(onDbRestoredCallback));

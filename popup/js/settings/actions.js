@@ -3,8 +3,8 @@ import { showConfirm } from '../vault.js';
 
 export async function exportDb() {
   showConfirm(
-    'Export Database',
-    'Do you want to download a backup of your Spelt library?',
+    'Export Database (Backup)',
+    'This will compile your entire Spelt vocabulary list, practice history, and activity streaks into a single JSON file and download it to your computer. Proceed?',
     async () => {
       try {
         const words = await getWords();
