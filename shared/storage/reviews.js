@@ -14,6 +14,7 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
   // Ensure backward compatibility for words created before error-weight fields existed
   if (card.totalErrors === undefined) card.totalErrors = (card.misspellings || []).length;
   if (card.correctStreak === undefined) card.correctStreak = 0;
+  if (!card.history) card.history = [];
 
   if (mode === 'recall' || mode === 'meaning') {
     const isCorrect = q >= 3;
