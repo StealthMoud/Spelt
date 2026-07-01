@@ -63,7 +63,7 @@ export function registerSandboxListeners(reloadVaultList, loadPracticeDeck) {
         const suggestion = acceptBtn.getAttribute('data-suggestion');
         const original = acceptBtn.getAttribute('data-original');
         if (suggestion && original) await acceptSuggestion(suggestion, original, reloadVaultList, loadPracticeDeck);
-      } else if (e.key === ' ' || e.code === 'Space') {
+      } else if ((e.key === ' ' || e.code === 'Space') && !isTyping) {
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) {
@@ -78,7 +78,7 @@ export function registerSandboxListeners(reloadVaultList, loadPracticeDeck) {
       }
     } else {
       if (e.key === 'Enter' && !isTyping) { e.preventDefault(); document.getElementById('word-input')?.focus(); }
-      else if (e.key === ' ' || e.code === 'Space') {
+      else if ((e.key === ' ' || e.code === 'Space') && !isTyping) {
         e.preventDefault();
         const audioBtn = feedbackMsg.querySelector('.audio-play-btn');
         if (audioBtn) {
