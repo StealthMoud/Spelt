@@ -8,13 +8,27 @@ export async function exportDb() {
     async () => {
       try {
         const words = await getWords();
-        let activity = {}, streak = { current: 0, lastDate: '' };
+        let activity = {}, streak = { current: 0, lastDate: '' }, sessions = [], sandboxActivity = {};
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-          const res = await chrome.storage.local.get(['spelt_activity', 'spelt_streak']);
+          const res = await chrome.storage.local.get([
+            'spelt_activity', 
+            'spelt_streak',
+            'spelt_sessions',
+            'spelt_sandbox_activity'
+          ]);
           activity = res.spelt_activity || {};
           streak = res.spelt_streak || { current: 0, lastDate: '' };
+          sessions = res.spelt_sessions || [];
+          sandboxActivity = res.spelt_sandbox_activity || {};
         }
-        const dataPackage = { words, activity, streak, exportDate: Date.now() };
+        const dataPackage = { 
+          words, 
+          activity, 
+          streak, 
+          sessions, 
+          sandbox_activity: sandboxActivity, 
+          exportDate: Date.now() 
+        };
         const blob = new Blob([JSON.stringify(dataPackage, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
