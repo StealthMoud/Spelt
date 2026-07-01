@@ -24,7 +24,7 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
     if (!feedbackMsg.querySelector('.sandbox-success-banner')) {
       const banner = document.createElement('div');
       banner.className = 'sandbox-success-banner';
-      banner.style.cssText = 'background: hsla(155, 65%, 48%, 0.12); border: 1px solid var(--success); color: var(--primary-light); padding: 8px; border-radius: var(--radius-md); margin-bottom: 12px; font-size: 0.72rem; text-align: center;';
+      banner.style.cssText = 'background: hsla(155, 65%, 48%, 0.12); border: 1px solid var(--success); color: var(--primary-light); padding: 8px; border-radius: var(--radius-md); margin-bottom: 12px; font-size: 0.72rem; text-align: center; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1; max-height: 40px; overflow: hidden;';
       banner.innerHTML = `✅ Word <strong>"${word}"</strong> added to Vault successfully!`;
       
       const closeBtn = feedbackMsg.querySelector('.feedback-close-btn');
@@ -33,6 +33,17 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
       } else {
         feedbackMsg.prepend(banner);
       }
+
+      // Auto-dismiss with a premium slide-up and fade-out animation
+      setTimeout(() => {
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-8px)';
+        banner.style.maxHeight = '0';
+        banner.style.padding = '0';
+        banner.style.marginBottom = '0';
+        banner.style.border = 'none';
+        setTimeout(() => banner.remove(), 500);
+      }, 4000);
     }
 
     // Switch action buttons at the bottom to "Already in vault" status
