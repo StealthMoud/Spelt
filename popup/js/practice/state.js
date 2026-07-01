@@ -3,7 +3,7 @@ let cardShownAt = 0;
 let onDeckUpdatedCallback = null;
 let isSubmitting = false;
 const reviewedWordIds = new Set();
-let practiceMode = 'spelling'; // 'spelling' or 'recall'
+let practiceMode = 'spelling'; // 'spelling', 'recall', or 'syntax'
 
 export function getPracticeMode() { return practiceMode; }
 export function setPracticeMode(val) { practiceMode = val; }

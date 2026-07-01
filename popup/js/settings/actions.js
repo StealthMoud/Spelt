@@ -77,3 +77,74 @@ export async function wipeDb(onDbRestoredCallback) {
     captcha
   );
 }
+
+export async function importSyntaxDb(e, onDbRestoredCallback) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (!Array.isArray(parsed)) {
+        throw new Error('JSON format must be an array of syntax cards');
+      }
+      
+      const existing = await getWords();
+      const freshList = [...existing];
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      parsed.forEach(item => {
+        const id = item.id || 'syntax_' + Math.random().toString(36).substring(2, 11);
+        
+        const newCard = {
+          id: id,
+          word: item.word || 'Unnamed Pattern',
+          practiceType: 'syntax',
+          definition: item.definition || '',
+          translation: item.translation || '',
+          example: item.example || '',
+          blocks: Array.isArray(item.blocks) ? item.blocks : [],
+          joints: Array.isArray(item.joints) ? item.joints : [],
+          writingExample: item.writingExample || item.example || '',
+          nextDate: item.nextDate || Date.now(),
+          rep: item.rep !== undefined ? item.rep : 0,
+          interval: item.interval !== undefined ? item.interval : 0,
+          ef: item.ef !== undefined ? item.ef : 2.0,
+          mastered: item.mastered || false
+        };
+
+        const idx = freshList.findIndex(w => 
+          w.id === newCard.id || 
+          w.example === newCard.example || 
+          (w.word === newCard.word && w.practiceType === 'syntax')
+        );
+
+        if (idx !== -1) {
+          const existingCard = freshList[idx];
+          newCard.nextDate = existingCard.nextDate || newCard.nextDate;
+          newCard.rep = existingCard.rep !== undefined ? existingCard.rep : newCard.rep;
+          newCard.interval = existingCard.interval !== undefined ? existingCard.interval : newCard.interval;
+          newCard.ef = existingCard.ef !== undefined ? existingCard.ef : newCard.ef;
+          newCard.mastered = existingCard.mastered || newCard.mastered;
+          
+          freshList[idx] = newCard;
+          updatedCount++;
+        } else {
+          freshList.push(newCard);
+          addedCount++;
+        }
+      });
+
+      await saveWords(freshList);
+      showConfirm('Success', `Syntax patterns imported successfully! Added: ${addedCount}, Updated: ${updatedCount}`, null, false);
+      if (onDbRestoredCallback) {
+        await onDbRestoredCallback();
+      }
+    } catch (err) {
+      showConfirm('Import Error', 'Import failed: ' + err.message, null, false);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}

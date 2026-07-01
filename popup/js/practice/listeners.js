@@ -1,16 +1,21 @@
 import { getWords, saveWords, getStored, setStored, fetchTranslation, getFallbackExample } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
 import { getDueCards, setPracticeMode } from './state.js';
-import { checkSpelling, revealRecall } from './actions.js';
+import { checkSpelling, revealRecall, checkSyntax } from './actions.js';
 import { submitRating, submitMasteredRating } from './rate.js';
 import { loadPracticeDeck } from './card.js';
 
 export function registerPracticeListeners() {
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
   document.getElementById('reveal-recall-btn')?.addEventListener('click', revealRecall);
+  document.getElementById('check-syntax-btn')?.addEventListener('click', checkSyntax);
   
   document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
+  });
+
+  document.getElementById('syntax-joints-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); checkSyntax(); }
   });
 
   const initModeToggle = async () => {
@@ -19,32 +24,29 @@ export function registerPracticeListeners() {
     
     const spellingPill = document.getElementById('practice-mode-spelling');
     const recallPill = document.getElementById('practice-mode-recall');
+    const syntaxPill = document.getElementById('practice-mode-syntax');
     
-    if (spellingPill && recallPill) {
-      if (savedMode === 'recall') {
-        spellingPill.classList.remove('active');
-        recallPill.classList.add('active');
-      } else {
-        spellingPill.classList.add('active');
-        recallPill.classList.remove('active');
-      }
-      
-      const switchMode = async (mode) => {
-        setPracticeMode(mode);
-        await setStored('spelt_practice_mode', mode);
-        if (mode === 'recall') {
-          spellingPill.classList.remove('active');
-          recallPill.classList.add('active');
-        } else {
-          spellingPill.classList.add('active');
-          recallPill.classList.remove('active');
-        }
-        await loadPracticeDeck();
-      };
-      
-      spellingPill.addEventListener('click', () => switchMode('spelling'));
-      recallPill.addEventListener('click', () => switchMode('recall'));
-    }
+    const setPillsActive = (activeMode) => {
+      [spellingPill, recallPill, syntaxPill].forEach(pill => {
+        if (pill) pill.classList.remove('active');
+      });
+      if (activeMode === 'recall' && recallPill) recallPill.classList.add('active');
+      else if (activeMode === 'syntax' && syntaxPill) syntaxPill.classList.add('active');
+      else if (spellingPill) spellingPill.classList.add('active');
+    };
+    
+    setPillsActive(savedMode);
+    
+    const switchMode = async (mode) => {
+      setPracticeMode(mode);
+      await setStored('spelt_practice_mode', mode);
+      setPillsActive(mode);
+      await loadPracticeDeck();
+    };
+    
+    if (spellingPill) spellingPill.addEventListener('click', () => switchMode('spelling'));
+    if (recallPill) recallPill.addEventListener('click', () => switchMode('recall'));
+    if (syntaxPill) syntaxPill.addEventListener('click', () => switchMode('syntax'));
   };
   
   initModeToggle().catch(err => console.error(err));

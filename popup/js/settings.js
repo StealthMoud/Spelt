@@ -1,5 +1,5 @@
 import { showConfirm } from './vault.js';
-import { exportDb, importDb, wipeDb } from './settings/actions.js';
+import { exportDb, importDb, wipeDb, importSyntaxDb } from './settings/actions.js';
 
 let onDbRestoredCallback = null;
 
@@ -44,6 +44,10 @@ export function initSettings(onDbRestored) {
   const fileInput = document.getElementById('import-db-file');
   document.getElementById('import-db-trigger-btn').addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', (e) => importDb(e, onDbRestoredCallback));
+
+  const syntaxFileInput = document.getElementById('import-syntax-file');
+  document.getElementById('import-syntax-trigger-btn')?.addEventListener('click', () => syntaxFileInput.click());
+  syntaxFileInput?.addEventListener('change', (e) => importSyntaxDb(e, onDbRestoredCallback));
 
   document.getElementById('wipe-db-btn').addEventListener('click', () => wipeDb(onDbRestoredCallback));
 

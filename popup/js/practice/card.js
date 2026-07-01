@@ -2,12 +2,118 @@ import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCamb
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, getReviewedWordIds, getPracticeMode } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 
+let currentSyntaxCard = null;
+let scrambledPool = [];
+let orderedBlocks = [];
+
+function shuffleArray(array) {
+  const copy = [...array];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function renderBlocksUI() {
+  if (!currentSyntaxCard) return;
+  const scrambledContainer = document.getElementById('syntax-blocks-scrambled');
+  const orderedContainer = document.getElementById('syntax-blocks-ordered');
+  
+  if (!scrambledContainer || !orderedContainer) return;
+  scrambledContainer.innerHTML = '';
+  orderedContainer.innerHTML = '';
+
+  scrambledPool.forEach((blockText, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'practice-mode-pill';
+    btn.style.cssText = 'padding: 6px 12px; font-size: 0.7rem; background: hsla(155, 10%, 15%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; text-align: left; transition: all 0.2s ease; font-weight: 500;';
+    btn.textContent = blockText;
+    btn.addEventListener('click', () => {
+      scrambledPool.splice(idx, 1);
+      orderedBlocks.push(blockText);
+      renderBlocksUI();
+    });
+    scrambledContainer.appendChild(btn);
+  });
+
+  orderedBlocks.forEach((blockText, idx) => {
+    const el = document.createElement('div');
+    el.style.cssText = 'padding: 6px 10px; font-size: 0.72rem; background: rgba(24, 144, 255, 0.08); border: 1px solid rgba(24, 144, 255, 0.25); border-radius: var(--radius-sm); color: var(--primary-light); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 500;';
+    el.innerHTML = `<span style="word-break: break-word; flex: 1;">${blockText}</span><span style="font-size: 0.65rem; color: var(--text-muted); margin-left: 6px; flex-shrink: 0;">✕</span>`;
+    el.addEventListener('click', () => {
+      orderedBlocks.splice(idx, 1);
+      scrambledPool.push(blockText);
+      renderBlocksUI();
+    });
+    orderedContainer.appendChild(el);
+  });
+
+  const isFull = orderedBlocks.length === (currentSyntaxCard.blocks || []).length;
+  const orderedBox = document.getElementById('syntax-blocks-ordered');
+  const jointsInput = document.getElementById('syntax-joints-input');
+  const checkBtn = document.getElementById('check-syntax-btn');
+  const layoutContainer = document.getElementById('syntax-sentence-layout-container');
+
+  if (isFull) {
+    const isCorrect = orderedBlocks.every((val, index) => val === currentSyntaxCard.blocks[index]);
+    if (isCorrect) {
+      orderedBox.style.borderColor = 'var(--success)';
+      jointsInput.removeAttribute('disabled');
+      checkBtn.removeAttribute('disabled');
+      layoutContainer.style.display = 'block';
+
+      // Blank out joints
+      let sentenceWithBlanks = currentSyntaxCard.example || '';
+      (currentSyntaxCard.joints || []).forEach(joint => {
+        const regex = new RegExp('\\b' + joint.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b', 'gi');
+        sentenceWithBlanks = sentenceWithBlanks.replace(regex, '[ ______ ]');
+      });
+      document.getElementById('syntax-sentence-layout').textContent = sentenceWithBlanks;
+      setTimeout(() => jointsInput.focus(), 100);
+    } else {
+      orderedBox.style.borderColor = 'var(--danger)';
+      jointsInput.setAttribute('disabled', 'true');
+      checkBtn.setAttribute('disabled', 'true');
+      layoutContainer.style.display = 'none';
+    }
+  } else {
+    orderedBox.style.borderColor = 'var(--border)';
+    jointsInput.setAttribute('disabled', 'true');
+    checkBtn.setAttribute('disabled', 'true');
+    layoutContainer.style.display = 'none';
+  }
+}
+
+function renderSyntaxFrontFace(card) {
+  currentSyntaxCard = card;
+  orderedBlocks = [];
+  scrambledPool = shuffleArray(card.blocks || []);
+  
+  document.getElementById('syntax-front-translation').textContent = card.translation || 'No translation added.';
+  document.getElementById('syntax-front-pattern').textContent = card.definition || 'No template description.';
+  
+  const jointsInput = document.getElementById('syntax-joints-input');
+  if (jointsInput) {
+    jointsInput.value = '';
+    jointsInput.setAttribute('disabled', 'true');
+  }
+  const checkBtn = document.getElementById('check-syntax-btn');
+  if (checkBtn) {
+    checkBtn.setAttribute('disabled', 'true');
+  }
+
+  renderBlocksUI();
+}
+
 export async function loadPracticeDeck() {
   const words = await getWords();
   const reviewedIds = getReviewedWordIds();
   const mode = getPracticeMode();
   
-  if (mode === 'recall') {
+  if (mode === 'syntax') {
+    setDueCards(words.filter(w => w.practiceType === 'syntax' && w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
+  } else if (mode === 'recall') {
     setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'recall') && w.meaningNextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
   } else {
     setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'spelling') && w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
@@ -33,14 +139,28 @@ export function showPracticeCard() {
 
   const frontSpellingContent = document.getElementById('front-spelling-content');
   const frontRecallContent = document.getElementById('front-recall-content');
+  const frontSyntaxContent = document.getElementById('front-syntax-content');
+  
   const frontSpellingWrapper = document.getElementById('front-spelling-wrapper');
   const frontRecallWrapper = document.getElementById('front-recall-wrapper');
+  const frontSyntaxWrapper = document.getElementById('front-syntax-wrapper');
 
-  if (mode === 'recall') {
+  if (mode === 'syntax') {
+    if (frontSpellingContent) frontSpellingContent.style.display = 'none';
+    if (frontRecallContent) frontRecallContent.style.display = 'none';
+    if (frontSyntaxContent) frontSyntaxContent.style.display = 'flex';
+    if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'none';
+    if (frontRecallWrapper) frontRecallWrapper.style.display = 'none';
+    if (frontSyntaxWrapper) frontSyntaxWrapper.style.display = 'flex';
+
+    renderSyntaxFrontFace(card);
+  } else if (mode === 'recall') {
     if (frontSpellingContent) frontSpellingContent.style.display = 'none';
     if (frontRecallContent) frontRecallContent.style.display = 'flex';
+    if (frontSyntaxContent) frontSyntaxContent.style.display = 'none';
     if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'none';
     if (frontRecallWrapper) frontRecallWrapper.style.display = 'flex';
+    if (frontSyntaxWrapper) frontSyntaxWrapper.style.display = 'none';
 
     document.getElementById('recall-front-word').textContent = card.word;
     document.getElementById('recall-front-transcription').textContent = card.transcription || '/--/';
@@ -82,8 +202,10 @@ export function showPracticeCard() {
   } else {
     if (frontSpellingContent) frontSpellingContent.style.display = 'flex';
     if (frontRecallContent) frontRecallContent.style.display = 'none';
+    if (frontSyntaxContent) frontSyntaxContent.style.display = 'none';
     if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'flex';
     if (frontRecallWrapper) frontRecallWrapper.style.display = 'none';
+    if (frontSyntaxWrapper) frontSyntaxWrapper.style.display = 'none';
 
     document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
     document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
@@ -127,7 +249,7 @@ export function showPracticeCard() {
   }
 
   // Handle Cambridge pronunciation auto-fetch if level doesn't exist
-  if (!card.level) {
+  if (card.word && !card.level && card.practiceType !== 'syntax') {
     fetchCambridgePronunciation(card.word).then(async cambridge => {
       if (cambridge.level) {
         card.level = cambridge.level;
@@ -170,8 +292,12 @@ export async function syncPracticeDeck() {
   const restDue = currentDue.slice(1).map(c => fresh.find(w => w.id === c.id) || c).filter(c => {
     const f = fresh.find(w => w.id === c.id);
     if (!f) return false;
-    const isDue = mode === 'recall' ? f.meaningNextDate <= now : f.nextDate <= now;
-    const matchesMode = mode === 'recall' ? (f.practiceType === 'both' || f.practiceType === 'recall') : (f.practiceType === 'both' || f.practiceType === 'spelling');
+    const isDue = f.nextDate <= now;
+    const matchesMode = mode === 'syntax'
+      ? f.practiceType === 'syntax'
+      : mode === 'recall'
+        ? (f.practiceType === 'both' || f.practiceType === 'recall') && f.meaningNextDate <= now
+        : (f.practiceType === 'both' || f.practiceType === 'spelling');
     return !f.mastered && isDue && matchesMode && f.id !== activeId;
   });
   due.push(...restDue);
@@ -179,7 +305,11 @@ export async function syncPracticeDeck() {
   const reviewedIds = getReviewedWordIds();
   due.push(...fresh.filter(w => {
     const isDue = mode === 'recall' ? w.meaningNextDate <= now : w.nextDate <= now;
-    const matchesMode = mode === 'recall' ? (w.practiceType === 'both' || w.practiceType === 'recall') : (w.practiceType === 'both' || w.practiceType === 'spelling');
+    const matchesMode = mode === 'syntax'
+      ? w.practiceType === 'syntax'
+      : mode === 'recall'
+        ? (w.practiceType === 'both' || w.practiceType === 'recall')
+        : (w.practiceType === 'both' || w.practiceType === 'spelling');
     return isDue && matchesMode && !w.mastered && !ids.has(w.id) && !reviewedIds.has(w.id);
   }));
   setDueCards(due); getOnDeckUpdated()?.();

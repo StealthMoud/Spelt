@@ -79,6 +79,28 @@
               </div>
             </div>
 
+            <!-- Syntax Mode Front Face Content -->
+            <div id="front-syntax-content" class="front-clues" style="display: none; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box; text-align: left; padding: 4px 0;">
+              <div class="clue-item" style="margin-bottom: 2px;">
+                <span class="clue-label">Translation (Farsi)</span>
+                <p id="syntax-front-translation" style="font-weight: 600; color: var(--primary-light); direction: rtl; text-align: right; line-height: 1.4; margin: 4px 0 0; font-size: 0.8rem;"></p>
+              </div>
+              <div class="clue-item" style="margin-bottom: 2px;">
+                <span class="clue-label">Pattern Structure</span>
+                <p id="syntax-front-pattern" style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace; word-break: break-word; line-height: 1.3; margin: 4px 0 0;"></p>
+              </div>
+              <div id="syntax-scrambled-block-section" class="clue-item" style="border-left: none; padding-left: 0; margin-bottom: 2px;">
+                <span class="clue-label" style="margin-bottom: 6px; display: block;">Reconstruct the Sentence Structure (Click clauses in order)</span>
+                <div id="syntax-blocks-scrambled" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>
+                <span class="clue-label" style="margin-bottom: 4px; display: block; opacity: 0.8;">Your Reconstruction:</span>
+                <div id="syntax-blocks-ordered" style="display: flex; flex-direction: column; gap: 4px; min-height: 32px; padding: 6px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: rgba(0, 0, 0, 0.2);"></div>
+              </div>
+              <div id="syntax-sentence-layout-container" class="clue-item" style="display: none;">
+                <span class="clue-label">Sentence Joints Target</span>
+                <p id="syntax-sentence-layout" style="font-style: italic; color: var(--primary-light); line-height: 1.3; font-size: 0.74rem; margin: 4px 0 0; word-break: break-word;"></p>
+              </div>
+            </div>
+
             <div id="front-spelling-wrapper" class="spelling-input-wrapper">
               <input type="text" id="spelling-input" class="premium-input" placeholder="Spell the word..." autocomplete="off">
               <button id="check-spelling-btn" class="submit-btn">
@@ -91,6 +113,14 @@
               <button id="reveal-recall-btn" class="submit-btn" style="flex: 1; padding: 8px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span>Show Answer</span>
                 <kbd style="font-size: 0.65rem; background: rgba(255,255,255,0.15); padding: 1px 5px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.25);">Space</kbd>
+              </button>
+            </div>
+
+            <div id="front-syntax-wrapper" class="spelling-input-wrapper" style="display: none; width: 100%;">
+              <input type="text" id="syntax-joints-input" class="premium-input" placeholder="Type joints separated by commas..." autocomplete="off" disabled style="font-size: 0.78rem;">
+              <button id="check-syntax-btn" class="submit-btn" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Check</span>
               </button>
             </div>
           </div>
