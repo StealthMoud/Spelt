@@ -124,6 +124,7 @@ function getShortestWait() {
  */
 async function fetchWithFallback(key, bodyPayload, modelTiers) {
   const triedModels = new Set();
+  let lastError = null;
 
   for (const model of modelTiers) {
     // Skip models currently in cooldown
@@ -136,36 +137,47 @@ async function fetchWithFallback(key, bodyPayload, modelTiers) {
     const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
     const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent?key=${key}`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyPayload)
-    });
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyPayload)
+      });
 
-    if (response.ok) {
-      return { response, modelUsed: model };
-    }
+      if (response.ok) {
+        return { response, modelUsed: model };
+      }
 
-    // Check if it's a rate limit error
-    const errData = await response.json().catch(() => ({}));
-    const errMsg = errData.error?.message || '';
+      // Check the error detail
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData.error?.message || '';
 
-    if (isRateLimitError(response.status, errMsg)) {
-      // Mark this model as rate-limited
-      const delay = parseRetryDelay(errMsg);
-      rateLimitCooldowns.set(model, Date.now() + delay);
-      console.warn(`[Spelt AI] Model ${model} rate-limited. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
+      if (isRateLimitError(response.status, errMsg)) {
+        // Mark this model as rate-limited
+        const delay = parseRetryDelay(errMsg);
+        rateLimitCooldowns.set(model, Date.now() + delay);
+        console.warn(`[Spelt AI] Model ${model} rate-limited. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
+        lastError = new Error(errMsg || `Rate limited (status ${response.status})`);
+      } else {
+        // Other HTTP error (e.g. model not found, invalid parameter, etc.)
+        console.warn(`[Spelt AI] Model ${model} failed with status ${response.status}: ${errMsg}. Trying next tier...`);
+        rateLimitCooldowns.set(model, Date.now() + 60000); // 60s cooldown for bad models
+        lastError = new Error(errMsg || `API returned status ${response.status}`);
+      }
       triedModels.add(model);
-      continue; // Try next model in tier list
+    } catch (fetchErr) {
+      // Catch network-level failures (e.g. TypeError: Failed to fetch due to offline or CORS)
+      console.warn(`[Spelt AI] Model ${model} fetch exception: ${fetchErr.message}. Trying next tier...`);
+      rateLimitCooldowns.set(model, Date.now() + 60000); // 60s cooldown
+      lastError = fetchErr;
+      triedModels.add(model);
     }
-
-    // Not a rate limit error — it's a real error, throw it
-    throw new Error(errMsg || `Gemini API returned status ${response.status}`);
   }
 
   // All models exhausted
   const waitSec = getShortestWait();
-  throw new Error(`All AI models are temporarily rate-limited. Please retry in ~${waitSec}s.`);
+  const errorMsg = lastError ? lastError.message : 'All AI models are temporarily rate-limited.';
+  throw new Error(`${errorMsg} Please retry in ~${waitSec}s.`);
 }
 
 /**
