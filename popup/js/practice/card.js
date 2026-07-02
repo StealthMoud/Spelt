@@ -642,38 +642,64 @@ async function setupAIWritingPractice(card) {
 
 /**
  * Make an absolute positioned element draggable within the card face limits
+ * Uses high-performance cached variables to avoid layout thrashing stutters
  */
 function makeElementDraggable(el) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  let startX = 0, startY = 0;
+  let currentLeft = 0, currentTop = 0;
 
   el.addEventListener('mousedown', dragMouseDown);
+  el.addEventListener('touchstart', dragTouchStart, { passive: false });
 
   function dragMouseDown(e) {
     if (e.target.closest('button') || e.target.closest('a')) {
       return;
     }
     e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
+    
+    startX = e.clientX;
+    startY = e.clientY;
+    currentLeft = el.offsetLeft;
+    currentTop = el.offsetTop;
+    
     document.addEventListener('mouseup', closeDragElement);
     document.addEventListener('mousemove', elementDrag);
   }
 
   function elementDrag(e) {
     e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    updatePosition(currentLeft + deltaX, currentTop + deltaY);
+  }
 
+  function dragTouchStart(e) {
+    if (e.target.closest('button') || e.target.closest('a')) {
+      return;
+    }
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    currentLeft = el.offsetLeft;
+    currentTop = el.offsetTop;
+    
+    document.addEventListener('touchend', closeDragElement);
+    document.addEventListener('touchmove', elementTouchMove, { passive: false });
+  }
+
+  function elementTouchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    updatePosition(currentLeft + deltaX, currentTop + deltaY);
+  }
+
+  function updatePosition(newLeft, newTop) {
     const parentRect = el.parentElement.getBoundingClientRect();
     const rect = el.getBoundingClientRect();
-    
-    let newTop = el.offsetTop - pos2;
-    let newLeft = el.offsetLeft - pos1;
-    
-    // Boundary check so it doesn't leave the card bounds
     const margin = 8;
+    
     if (newLeft < margin) newLeft = margin;
     if (newLeft + rect.width > parentRect.width - margin) {
       newLeft = parentRect.width - rect.width - margin;
@@ -692,6 +718,8 @@ function makeElementDraggable(el) {
   function closeDragElement() {
     document.removeEventListener('mouseup', closeDragElement);
     document.removeEventListener('mousemove', elementDrag);
+    document.removeEventListener('touchend', closeDragElement);
+    document.removeEventListener('touchmove', elementTouchMove);
   }
 }
 
