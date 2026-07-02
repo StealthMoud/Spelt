@@ -1,7 +1,7 @@
 import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured } from '../../../shared/storage.js';
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, getReviewedWordIds, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
-import { generateHint, generateSessionSummary } from './ai_helpers.js';
+import { generateHint, generateSessionSummary, generateSyntaxExplanation, verifyPracticeWriting } from './ai_helpers.js';
 
 let currentSyntaxCard = null;
 let scrambledPool = [];
@@ -28,8 +28,23 @@ function renderBlocksUI() {
   scrambledPool.forEach((blockText, idx) => {
     const btn = document.createElement('button');
     btn.className = 'practice-mode-pill';
-    btn.style.cssText = 'padding: 6px 12px; font-size: 0.7rem; background: hsla(155, 10%, 15%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; text-align: left; transition: all 0.2s ease; font-weight: 500;';
+    btn.style.cssText = 'padding: 6px 12px; font-size: 0.7rem; background: hsla(0, 0%, 100%, 0.03); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; text-align: left; transition: all 0.15s ease; font-weight: 500; outline: none;';
     btn.textContent = blockText;
+    
+    // Premium hover effect
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = 'hsla(260, 60%, 50%, 0.12)';
+      btn.style.borderColor = 'hsla(260, 60%, 50%, 0.3)';
+      btn.style.color = '#c4b5fd';
+      btn.style.transform = 'translateY(-1px)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = 'hsla(0, 0%, 100%, 0.03)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--text-muted)';
+      btn.style.transform = 'none';
+    });
+    
     btn.addEventListener('click', () => {
       scrambledPool.splice(idx, 1);
       orderedBlocks.push(blockText);
@@ -40,8 +55,25 @@ function renderBlocksUI() {
 
   orderedBlocks.forEach((blockText, idx) => {
     const el = document.createElement('div');
-    el.style.cssText = 'padding: 6px 10px; font-size: 0.72rem; background: rgba(24, 144, 255, 0.08); border: 1px solid rgba(24, 144, 255, 0.25); border-radius: var(--radius-sm); color: var(--primary-light); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 500;';
-    el.innerHTML = `<span style="word-break: break-word; flex: 1;">${blockText}</span><span style="font-size: 0.65rem; color: var(--text-muted); margin-left: 6px; flex-shrink: 0;">✕</span>`;
+    el.style.cssText = 'padding: 6px 10px; font-size: 0.72rem; background: rgba(167, 139, 250, 0.06); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: var(--radius-sm); color: #c4b5fd; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 500; transition: all 0.15s ease;';
+    el.innerHTML = `<span style="word-break: break-word; flex: 1;">${blockText}</span><span class="remove-x" style="font-size: 0.65rem; color: rgba(167, 139, 250, 0.6); margin-left: 6px; flex-shrink: 0; transition: color 0.15s ease;">✕</span>`;
+    
+    // Destructive/Remove hover effect
+    el.addEventListener('mouseenter', () => {
+      el.style.background = 'rgba(239, 68, 68, 0.06)';
+      el.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+      el.style.color = '#fca5a5';
+      const xSpan = el.querySelector('.remove-x');
+      if (xSpan) xSpan.style.color = '#ef4444';
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.background = 'rgba(167, 139, 250, 0.06)';
+      el.style.borderColor = 'rgba(167, 139, 250, 0.2)';
+      el.style.color = '#c4b5fd';
+      const xSpan = el.querySelector('.remove-x');
+      if (xSpan) xSpan.style.color = 'rgba(167, 139, 250, 0.6)';
+    });
+
     el.addEventListener('click', () => {
       orderedBlocks.splice(idx, 1);
       scrambledPool.push(blockText);
@@ -148,6 +180,8 @@ export function showPracticeCard() {
 
   // Show AI hint button if configured
   setupAIHintButton(card);
+  setupAISyntaxExplain(card);
+  setupAIWritingPractice(card);
   const mode = getPracticeMode();
 
   const frontSpellingContent = document.getElementById('front-spelling-content');
@@ -406,4 +440,106 @@ async function triggerSessionSummary() {
     textEl.textContent = `Could not load summary: ${err.message}`;
   }
 }
+
+async function setupAISyntaxExplain(card) {
+  const explainBtn = document.getElementById('ai-syntax-explain-btn');
+  const explanationBubble = document.getElementById('ai-syntax-explanation-bubble');
+  if (!explainBtn || !explanationBubble) return;
+
+  explanationBubble.style.display = 'none';
+  explanationBubble.innerHTML = '';
+
+  const isConfigured = await isGeminiConfigured();
+  const mode = getPracticeMode();
+
+  if (!isConfigured || mode !== 'syntax') {
+    explainBtn.style.display = 'none';
+    return;
+  }
+
+  explainBtn.style.display = 'inline-flex';
+
+  const handleExplainRequest = async () => {
+    explanationBubble.innerHTML = '<span style="color: var(--text-muted);">Asking AI Coach...</span>';
+    explanationBubble.style.display = 'block';
+    try {
+      const explanation = await generateSyntaxExplanation(card);
+      explanationBubble.textContent = explanation;
+    } catch (err) {
+      explanationBubble.textContent = `Could not generate explanation: ${err.message}`;
+    }
+  };
+
+  const newExplainBtn = explainBtn.cloneNode(true);
+  explainBtn.parentNode.replaceChild(newExplainBtn, explainBtn);
+  newExplainBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (explanationBubble.style.display === 'block') {
+      explanationBubble.style.display = 'none';
+    } else {
+      handleExplainRequest();
+    }
+  });
+}
+
+async function setupAIWritingPractice(card) {
+  const practicePanel = document.getElementById('ai-writing-practice-panel');
+  const titleText = document.getElementById('ai-writing-practice-title-text');
+  const inputEl = document.getElementById('ai-practice-writing-input');
+  const verifyBtn = document.getElementById('ai-practice-writing-btn');
+  const feedbackEl = document.getElementById('ai-practice-writing-feedback');
+  if (!practicePanel || !inputEl || !verifyBtn || !feedbackEl) return;
+
+  // Clear inputs and state
+  inputEl.value = '';
+  feedbackEl.style.display = 'none';
+  feedbackEl.innerHTML = '';
+
+  const isConfigured = await isGeminiConfigured();
+  if (!isConfigured) {
+    practicePanel.style.display = 'none';
+    return;
+  }
+
+  practicePanel.style.display = 'flex';
+  const mode = getPracticeMode();
+
+  if (mode === 'syntax') {
+    if (titleText) titleText.textContent = 'Structure Writing Practice';
+    inputEl.setAttribute('placeholder', `Write a sentence following the structure pattern...`);
+  } else {
+    if (titleText) titleText.textContent = 'Active Vocabulary Practice';
+    inputEl.setAttribute('placeholder', `Write a sentence using the word "${card.word}"...`);
+  }
+
+  const handleVerifyRequest = async () => {
+    const userText = inputEl.value.trim();
+    if (!userText) {
+      feedbackEl.innerHTML = '<span style="color: var(--danger); font-size: 0.65rem;">Please write a sentence first.</span>';
+      feedbackEl.style.display = 'block';
+      return;
+    }
+
+    feedbackEl.innerHTML = '<span style="color: var(--text-muted); font-size: 0.65rem;">AI Coach is grading your sentence...</span>';
+    feedbackEl.style.display = 'block';
+    verifyBtn.setAttribute('disabled', 'true');
+
+    try {
+      const feedback = await verifyPracticeWriting(card, userText, mode);
+      feedbackEl.innerHTML = feedback;
+    } catch (err) {
+      feedbackEl.innerHTML = `<span style="color: var(--danger); font-size: 0.65rem;">Could not verify sentence: ${err.message}</span>`;
+    } finally {
+      verifyBtn.removeAttribute('disabled');
+    }
+  };
+
+  const newVerifyBtn = verifyBtn.cloneNode(true);
+  verifyBtn.parentNode.replaceChild(newVerifyBtn, verifyBtn);
+  newVerifyBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleVerifyRequest();
+  });
+}
+
 

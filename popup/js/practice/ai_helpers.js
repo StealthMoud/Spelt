@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGeminiText, isGeminiConfigured } from '../../../shared/storage.js';
+import { getWords, saveWords, askGeminiText, isGeminiConfigured, getStored } from '../../../shared/storage.js';
 
 /**
  * Generate a mnemonic hint for a word using AI.
@@ -105,6 +105,82 @@ Write a brief, warm, motivational summary (2-4 sentences). Comment on their perf
 }
 
 /**
+ * Generate a 1-sentence grammatical tip explaining a syntax structure pattern.
+ */
+export async function generateSyntaxExplanation(card) {
+  const targetLang = await getStored('spelt_target_lang') || 'fa';
+  let targetLangName = 'Farsi (Persian)';
+  if (targetLang === 'es') targetLangName = 'Spanish';
+  else if (targetLang === 'fr') targetLangName = 'French';
+  else if (targetLang === 'de') targetLangName = 'German';
+  else if (targetLang === 'it') targetLangName = 'Italian';
+  else if (targetLang === 'pt') targetLangName = 'Portuguese';
+  else if (targetLang === 'ru') targetLangName = 'Russian';
+  else if (targetLang === 'ar') targetLangName = 'Arabic';
+  else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
+  else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
+  else if (targetLang === 'ja') targetLangName = 'Japanese';
+  else if (targetLang === 'ko') targetLangName = 'Korean';
+  else if (targetLang === 'tr') targetLangName = 'Turkish';
+
+  const prompt = `You are a syntax and grammar coach helping a student learn English sentence structure.
+The structure pattern they are studying is: "${card.definition}"
+Example sentence: "${card.example}"
+Translation in ${targetLangName}: "${card.translation || 'N/A'}"
+
+Provide a brief, clear, 1-2 sentence explanation of this grammatical structure and how to construct it. If appropriate, write the explanation in a mix of English and ${targetLangName} so it is easy to understand. Do NOT use markdown. Plain text only.`;
+
+  return await askGeminiText(prompt);
+}
+
+/**
+ * Verify a student's custom practice sentence using AI.
+ */
+export async function verifyPracticeWriting(card, userSentence, mode) {
+  let prompt = '';
+  if (mode === 'syntax') {
+    prompt = `You are a syntax and writing coach. The student is practicing the sentence structure pattern: "${card.definition}".
+Target structure example: "${card.example}"
+They wrote the following sentence to try and replicate this structure:
+"${userSentence}"
+
+Evaluate their sentence:
+1. Did they correctly follow the syntax structure pattern?
+2. Are the spelling, punctuation, and grammar correct?
+3. Does it sound natural in English?
+
+Provide a friendly, encouraging review in 2-3 sentences.
+Format your response in clean HTML:
+- Start with a status indicator: e.g., "<span style='color: #10b981; font-weight: 700;'>✓ Correct Pattern</span>" or "<span style='color: #ef4444; font-weight: 700;'>✗ Pattern Incorrect</span>".
+- If corrections are needed, add: "<div style='margin-top: 4px;'><strong>Correction:</strong> ...</div>"
+- Add: "<div style='margin-top: 4px;'><strong>Coach Feedback:</strong> ...</div>"
+
+Do NOT use markdown code blocks (\`\`\`).`;
+  } else {
+    // Spelling or Recall mode vocabulary practice
+    prompt = `You are a vocabulary and writing coach. The student is practicing using the English word/phrase: "${card.word}" (Part of speech: "${card.partOfSpeech}", Definition: "${card.definition || 'N/A'}").
+They wrote the following sentence to practice using it:
+"${userSentence}"
+
+Evaluate their sentence:
+1. Did they use the word "${card.word}" correctly in context?
+2. Are the spelling, punctuation, and grammar correct?
+3. Does it sound natural in English?
+
+Provide a friendly, encouraging review in 2-3 sentences.
+Format your response in clean HTML:
+- Start with a status indicator: e.g., "<span style='color: #10b981; font-weight: 700;'>✓ Correct Usage</span>" or "<span style='color: #ef4444; font-weight: 700;'>✗ Usage/Grammar Incorrect</span>".
+- If corrections are needed, add: "<div style='margin-top: 4px;'><strong>Correction:</strong> ...</div>"
+- Add: "<div style='margin-top: 4px;'><strong>Coach Feedback:</strong> ...</div>"
+
+Do NOT use markdown code blocks (\`\`\`).`;
+  }
+
+  return await askGeminiText(prompt);
+}
+
+/**
  * Check if AI features are available.
  */
 export { isGeminiConfigured };
+
