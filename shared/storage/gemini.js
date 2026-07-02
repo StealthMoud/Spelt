@@ -10,7 +10,9 @@ export async function askGemini(prompt) {
     throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+  const model = await getStored('spelt_gemini_model') || 'models/gemini-1.5-flash';
+  const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
+  const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent?key=${key}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {

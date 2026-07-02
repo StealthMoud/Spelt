@@ -26,20 +26,41 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_selection_lookup: e.target.checked });
   });
 
-  chrome.storage?.local.get('spelt_gemini_key', (res) => {
+  // Load Gemini key and model on startup
+  chrome.storage?.local.get(['spelt_gemini_key', 'spelt_gemini_model'], (res) => {
     const key = res.spelt_gemini_key || '';
+    const model = res.spelt_gemini_model || '';
     const keyInput = document.getElementById('setting-gemini-key');
     if (keyInput) keyInput.value = key;
+
+    if (key && model) {
+      const modelSelect = document.getElementById('setting-gemini-model');
+      const modelContainer = document.getElementById('gemini-model-container');
+      if (modelSelect && modelContainer) {
+        modelSelect.innerHTML = `<option value="${model}">${model.replace('models/', '')}</option>`;
+        modelSelect.value = model;
+        modelContainer.style.display = 'flex';
+      }
+    }
   });
 
+  // Save Gemini Key on change
   document.getElementById('setting-gemini-key')?.addEventListener('change', (e) => {
     chrome.storage?.local.set({ spelt_gemini_key: e.target.value.trim() });
   });
 
+  // Save Gemini Model on change
+  document.getElementById('setting-gemini-model')?.addEventListener('change', (e) => {
+    chrome.storage?.local.set({ spelt_gemini_model: e.target.value });
+  });
+
+  // Test Gemini Key and List Models
   document.getElementById('test-gemini-btn')?.addEventListener('click', async () => {
     const keyInput = document.getElementById('setting-gemini-key');
     const statusEl = document.getElementById('gemini-test-status');
-    if (!keyInput || !statusEl) return;
+    const modelSelect = document.getElementById('setting-gemini-model');
+    const modelContainer = document.getElementById('gemini-model-container');
+    if (!keyInput || !statusEl || !modelSelect || !modelContainer) return;
 
     const key = keyInput.value.trim();
     if (!key) {
@@ -51,29 +72,73 @@ export function initSettings(onDbRestored) {
 
     statusEl.style.display = 'block';
     statusEl.style.color = 'var(--primary-light)';
-    statusEl.textContent = 'Testing connection...';
+    statusEl.textContent = 'Fetching available models...';
 
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      // 1. Fetch available models for this key
+      const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
+      if (!modelsRes.ok) {
+        const errData = await modelsRes.json().catch(() => ({}));
+        const errMsg = errData.error?.message || 'Invalid API Key or API Error';
+        statusEl.style.color = 'var(--danger)';
+        statusEl.textContent = `❌ Connection failed: ${errMsg}`;
+        return;
+      }
+
+      const modelsData = await modelsRes.json();
+      const availableModels = (modelsData.models || []).filter(m => 
+        m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
+      );
+
+      if (availableModels.length === 0) {
+        statusEl.style.color = 'var(--danger)';
+        statusEl.textContent = '❌ No models supporting text generation found for this API Key.';
+        return;
+      }
+
+      // Populate dropdown
+      modelSelect.innerHTML = '';
+      availableModels.forEach(m => {
+        const option = document.createElement('option');
+        option.value = m.name; // e.g. "models/gemini-1.5-flash"
+        option.textContent = m.name.replace('models/', '') + (m.displayName ? ` (${m.displayName})` : '');
+        modelSelect.appendChild(option);
+      });
+
+      // Select default model
+      const stored = await new Promise(r => chrome.storage?.local.get('spelt_gemini_model', res => r(res.spelt_gemini_model)));
+      let defaultModel = stored;
+      if (!defaultModel || !availableModels.some(m => m.name === defaultModel)) {
+        const preferred = ['models/gemini-2.5-flash', 'models/gemini-2.0-flash', 'models/gemini-1.5-flash', 'models/gemini-1.5-flash-latest'];
+        const matched = preferred.find(p => availableModels.some(m => m.name === p));
+        defaultModel = matched || availableModels[0].name;
+      }
+      modelSelect.value = defaultModel;
+      modelContainer.style.display = 'flex';
+
+      // 2. Perform test content generation with selected model to verify it works
+      statusEl.textContent = `Testing content generation with ${defaultModel.replace('models/', '')}...`;
+      const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/${defaultModel}:generateContent?key=${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: 'Write the word "connected".' }] }]
         })
       });
-      if (res.ok) {
+
+      if (testRes.ok) {
         statusEl.style.color = 'var(--success)';
-        statusEl.textContent = '✅ Connected successfully!';
-        chrome.storage?.local.set({ spelt_gemini_key: key });
+        statusEl.textContent = `✅ Connected successfully! Model ${defaultModel.replace('models/', '')} is verified.`;
+        chrome.storage?.local.set({ spelt_gemini_key: key, spelt_gemini_model: defaultModel });
       } else {
-        const errData = await res.json().catch(() => ({}));
-        const errMsg = errData.error?.message || 'Invalid API Key or API Error';
+        const errData = await testRes.json().catch(() => ({}));
+        const errMsg = errData.error?.message || 'Verification request failed';
         statusEl.style.color = 'var(--danger)';
-        statusEl.textContent = `❌ Connection failed: ${errMsg}`;
+        statusEl.textContent = `❌ Connected, but model verification failed: ${errMsg}`;
       }
     } catch (err) {
       statusEl.style.color = 'var(--danger)';
-      statusEl.textContent = `❌ Network error: ${err.message}`;
+      statusEl.textContent = `❌ Error: ${err.message}`;
     }
   });
 
