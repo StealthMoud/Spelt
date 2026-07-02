@@ -13,19 +13,50 @@ const MODEL_TIERS = [
   'models/gemini-2.0-flash-lite',
 ];
 
-/**
- * In-memory rate limit cooldown map: modelName → timestamp when cooldown expires.
- * Only used for genuine rate-limit (429) responses.
- * Resets naturally on extension reload.
- */
-const rateLimitCooldowns = new Map();
+// Persistent storage-backed rate limit cooldowns and blacklisted models
+const memoryCooldowns = {};
+const memoryBadModels = new Set();
 
-/**
- * In-memory set of models that returned non-recoverable errors (400, 404, etc.).
- * These are permanently skipped for the session — they won't magically start working.
- * Resets on extension reload.
- */
-const badModels = new Set();
+async function getCooldowns() {
+  if (chrome.storage?.local) {
+    const res = await new Promise(r => chrome.storage.local.get('spelt_rate_limit_cooldowns', r)) || {};
+    const data = res.spelt_rate_limit_cooldowns || {};
+    const now = Date.now();
+    const cleaned = {};
+    for (const [model, expiresAt] of Object.entries(data)) {
+      if (expiresAt > now) {
+        cleaned[model] = expiresAt;
+      }
+    }
+    return cleaned;
+  }
+  return { ...memoryCooldowns };
+}
+
+async function saveCooldowns(cooldowns) {
+  if (chrome.storage?.local) {
+    await new Promise(r => chrome.storage.local.set({ spelt_rate_limit_cooldowns: cooldowns }, r));
+  } else {
+    Object.assign(memoryCooldowns, cooldowns);
+  }
+}
+
+async function getBadModels() {
+  if (chrome.storage?.local) {
+    const res = await new Promise(r => chrome.storage.local.get('spelt_bad_models', r)) || {};
+    return new Set(res.spelt_bad_models || []);
+  }
+  return new Set(memoryBadModels);
+}
+
+async function saveBadModels(badModelsSet) {
+  if (chrome.storage?.local) {
+    await new Promise(r => chrome.storage.local.set({ spelt_bad_models: [...badModelsSet] }, r));
+  } else {
+    memoryBadModels.clear();
+    for (const m of badModelsSet) memoryBadModels.add(m);
+  }
+}
 
 /**
  * In-memory set of models that do NOT support responseMimeType.
@@ -116,18 +147,19 @@ function isGlobalRateLimit(status, errorMessage) {
 /**
  * Apply a cooldown timer to a model or to all models if it is a global API key limit.
  */
-function applyCooldown(model, delay, isGlobal = false, modelTiers = []) {
+async function applyCooldown(model, delay, isGlobal = false, modelTiers = []) {
   const expiresAt = Date.now() + delay;
+  const cooldowns = await getCooldowns();
   if (isGlobal) {
     // If it's a global free tier quota limit, cooldown all fallback models
     for (const m of modelTiers) {
-      rateLimitCooldowns.set(m, expiresAt);
+      cooldowns[m] = expiresAt;
     }
-    // Also include in-tier set models
-    rateLimitCooldowns.set(model, expiresAt);
+    cooldowns[model] = expiresAt;
   } else {
-    rateLimitCooldowns.set(model, expiresAt);
+    cooldowns[model] = expiresAt;
   }
+  await saveCooldowns(cooldowns);
 }
 
 /**
@@ -181,11 +213,13 @@ function isProblematicModel(modelName) {
  * Find the best available model — the highest-tier model that is not bad and not in cooldown.
  * Returns the model name string, or null if all exhausted.
  */
-function pickBestAvailableModel(models) {
+async function pickBestAvailableModel(models) {
+  const badModels = await getBadModels();
+  const cooldowns = await getCooldowns();
   const now = Date.now();
   for (const model of models) {
     if (badModels.has(model)) continue;
-    const cooldownUntil = rateLimitCooldowns.get(model) || 0;
+    const cooldownUntil = cooldowns[model] || 0;
     if (now >= cooldownUntil) {
       return model;
     }
@@ -196,10 +230,10 @@ function pickBestAvailableModel(models) {
 /**
  * Get the shortest remaining cooldown across all rate-limited models (in seconds).
  */
-function getShortestWait() {
+function getShortestWait(cooldowns) {
   const now = Date.now();
   let shortest = Infinity;
-  for (const [, expiresAt] of rateLimitCooldowns) {
+  for (const expiresAt of Object.values(cooldowns)) {
     const remaining = expiresAt - now;
     if (remaining > 0 && remaining < shortest) {
       shortest = remaining;
@@ -255,13 +289,15 @@ async function callModel(key, model, bodyPayload) {
  */
 async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false) {
   let lastError = null;
+  const badModels = await getBadModels();
+  const cooldowns = await getCooldowns();
 
   for (const model of modelTiers) {
     // Skip permanently bad models
     if (badModels.has(model)) continue;
 
     // Skip models currently in rate-limit cooldown
-    const cooldownUntil = rateLimitCooldowns.get(model) || 0;
+    const cooldownUntil = cooldowns[model] || 0;
     if (Date.now() < cooldownUntil) continue;
 
     // Determine whether to use responseMimeType for this model
@@ -316,11 +352,12 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
             const isServerErr = retryStatus >= 500;
             const delay = retryStatus === 429 ? parseRetryDelay(retryMsg) : (isServerErr ? 30000 : 15000);
             const isGlobal = isGlobalRateLimit(retryStatus, retryMsg);
-            applyCooldown(model, delay, isGlobal, modelTiers);
+            await applyCooldown(model, delay, isGlobal, modelTiers);
             console.warn(`[Spelt AI] Model ${model} transient failure on retry (status ${retryStatus || 'network'}). Cooldown ${Math.ceil(delay / 1000)}s.`);
           } else {
             // Non-recoverable error on retry — blacklist this model
             badModels.add(model);
+            await saveBadModels(badModels);
             console.warn(`[Spelt AI] Model ${model} failed (status ${retryStatus}). Blacklisted for this session.`);
           }
           lastError = retryErr;
@@ -333,7 +370,7 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
         const isServerErr = status >= 500;
         const delay = status === 429 ? parseRetryDelay(errMsg) : (isServerErr ? 30000 : 15000);
         const isGlobal = isGlobalRateLimit(status, errMsg);
-        applyCooldown(model, delay, isGlobal, modelTiers);
+        await applyCooldown(model, delay, isGlobal, modelTiers);
         console.warn(`[Spelt AI] Model ${model} transient failure (status ${status || 'network'}): ${errMsg}. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
         lastError = err;
         continue;
@@ -342,14 +379,16 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
       // Case 3: Other HTTP errors (400 for bad payload, 404 model not found, etc.)
       // These are permanent for this session — the model won't start working.
       badModels.add(model);
+      await saveBadModels(badModels);
       console.warn(`[Spelt AI] Model ${model} failed (status ${status}): ${errMsg}. Blacklisted for this session.`);
       lastError = err;
     }
   }
 
   // All models exhausted
-  const waitSec = getShortestWait();
-  const hasRateLimited = [...rateLimitCooldowns.values()].some(t => t > Date.now());
+  const cooldownsAfter = await getCooldowns();
+  const waitSec = getShortestWait(cooldownsAfter);
+  const hasRateLimited = Object.values(cooldownsAfter).some(t => t > Date.now());
 
   if (hasRateLimited) {
     throw new Error(`All available AI models are rate-limited. Please retry in ~${waitSec}s.`);
@@ -447,10 +486,13 @@ export async function getAiStatus() {
   const lastUsed = await getStored('spelt_last_used_model') || null;
 
   // Identify which model is currently designated to handle the NEXT request
-  const currentSelection = pickBestAvailableModel(modelTiers);
+  const currentSelection = await pickBestAvailableModel(modelTiers);
+
+  const badModels = await getBadModels();
+  const cooldowns = await getCooldowns();
 
   return modelTiers.map(model => {
-    const cooldownUntil = rateLimitCooldowns.get(model) || 0;
+    const cooldownUntil = cooldowns[model] || 0;
     const cooldownRemaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
     let status = 'ready';
     if (badModels.has(model)) {
