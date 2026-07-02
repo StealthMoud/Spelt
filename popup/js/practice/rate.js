@@ -1,5 +1,5 @@
 import { getWords, saveWords } from '../../../shared/storage.js';
-import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, getReviewedWordIds, getPracticeMode } from './state.js';
+import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, getReviewedWordIds, getPracticeMode, trackReview } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
 
@@ -38,6 +38,7 @@ export async function submitRating(score) {
     let updatedCard;
     if (mode === 'recall') {
       updatedCard = await reviewWordInBackground(card.id, score, null, responseTime, 'recall');
+      trackReview(card.word, score >= 3, responseTime || 0);
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = typed.toLowerCase() === card.word.toLowerCase();
@@ -74,6 +75,7 @@ export async function submitMasteredRating(card) {
     
     if (mode === 'recall') {
       await reviewWordInBackground(card.id, 5, null, responseTime, 'recall');
+      trackReview(card.word, true, responseTime || 0);
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = typed.toLowerCase() === card.word.toLowerCase();

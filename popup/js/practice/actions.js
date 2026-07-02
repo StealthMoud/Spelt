@@ -1,6 +1,7 @@
 import { getFallbackExample, computeErrorWeight, calcSM2 } from '../../../shared/storage.js';
-import { getDueCards, getOnDeckUpdated } from './state.js';
+import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt } from './state.js';
 import { renderAudioButtons } from './helpers.js';
+import { isGeminiConfigured, generateMisspellingFeedback, generateRecallFeedback, generateSyntaxFeedback } from './ai_helpers.js';
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
@@ -101,6 +102,10 @@ export function checkSpelling() {
   const badge = document.getElementById('spelling-result-badge');
   const typedDisplay = document.getElementById('user-typed-display');
 
+  // Track the review for empty state summary
+  const rt = getCardShownAt() > 0 ? Date.now() - getCardShownAt() : 0;
+  trackReview(card.word, isOk, rt);
+
   // Show spelling result
   if (badge) {
     badge.style.display = 'inline-flex';
@@ -119,6 +124,29 @@ export function checkSpelling() {
 
   // Populate shared back face
   populateBackFace(card);
+
+  // Handle AI feedback
+  const fbRow = document.getElementById('ai-feedback-row');
+  const fbText = document.getElementById('ai-feedback-text');
+  if (fbRow && fbText) {
+    if (!isOk) {
+      isGeminiConfigured().then(configured => {
+        if (configured) {
+          fbRow.style.display = 'block';
+          fbText.textContent = 'AI Coach is analyzing spelling mistake...';
+          generateMisspellingFeedback(card, typed).then(feedback => {
+            fbText.textContent = feedback;
+          }).catch(err => {
+            fbText.textContent = `Could not load feedback: ${err.message}`;
+          });
+        } else {
+          fbRow.style.display = 'none';
+        }
+      });
+    } else {
+      fbRow.style.display = 'none';
+    }
+  }
 
   // Past misspellings
   const pastContainer = document.getElementById('past-misspellings-container');
@@ -159,6 +187,25 @@ export function revealRecall() {
   // Populate shared back face
   populateBackFace(card);
 
+  // Handle AI feedback (Recall Mnemonic assistance on show answer)
+  const fbRow = document.getElementById('ai-feedback-row');
+  const fbText = document.getElementById('ai-feedback-text');
+  if (fbRow && fbText) {
+    isGeminiConfigured().then(configured => {
+      if (configured) {
+        fbRow.style.display = 'block';
+        fbText.textContent = 'AI Coach is checking recall hint...';
+        generateRecallFeedback(card).then(feedback => {
+          fbText.textContent = feedback;
+        }).catch(err => {
+          fbText.textContent = `Mnemonic help: ${err.message}`;
+        });
+      } else {
+        fbRow.style.display = 'none';
+      }
+    });
+  }
+
   // Hide past misspellings (not relevant in recall mode)
   const pastContainer = document.getElementById('past-misspellings-container');
   if (pastContainer) pastContainer.style.display = 'none';
@@ -185,6 +232,10 @@ export function checkSyntax() {
   
   const isOk = typedParts.length === correctParts.length && typedParts.every((val, idx) => val === correctParts[idx]);
   
+  // Track review
+  const rt = getCardShownAt() > 0 ? Date.now() - getCardShownAt() : 0;
+  trackReview(card.word, isOk, rt);
+
   const badge = document.getElementById('spelling-result-badge');
   const typedDisplay = document.getElementById('user-typed-display');
 
@@ -207,6 +258,29 @@ export function checkSyntax() {
   // Populate back face
   populateBackFace(card);
 
+  // Handle AI feedback for syntax
+  const fbRow = document.getElementById('ai-feedback-row');
+  const fbText = document.getElementById('ai-feedback-text');
+  if (fbRow && fbText) {
+    if (!isOk) {
+      isGeminiConfigured().then(configured => {
+        if (configured) {
+          fbRow.style.display = 'block';
+          fbText.textContent = 'AI Coach is analyzing syntax joints error...';
+          generateSyntaxFeedback(card, typed).then(feedback => {
+            fbText.textContent = feedback;
+          }).catch(err => {
+            fbText.textContent = `Could not load feedback: ${err.message}`;
+          });
+        } else {
+          fbRow.style.display = 'none';
+        }
+      });
+    } else {
+      fbRow.style.display = 'none';
+    }
+  }
+
   // Hide past misspellings (not relevant in syntax mode)
   const pastContainer = document.getElementById('past-misspellings-container');
   if (pastContainer) pastContainer.style.display = 'none';
@@ -219,3 +293,4 @@ export function checkSyntax() {
 
   flipCard();
 }
+

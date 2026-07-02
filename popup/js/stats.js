@@ -13,6 +13,7 @@ import { renderHeatmap } from './stats/render_heatmap.js';
 import { renderVelocity, renderAccuracyTrend, renderSandboxActivity } from './stats/render_velocity.js';
 import { renderResponseTime, renderStudyTime } from './stats/render_time_metrics.js';
 import { renderLeeches } from './stats/render_leeches.js';
+import { renderAIInsights } from './stats/render_ai_insights.js';
 import { bindCalendarEvents } from './stats/events_calendar.js';
 import { bindUiEvents } from './stats/events_ui.js';
 
@@ -70,6 +71,7 @@ export async function renderStats() {
     const forecast = calculateForecast(words);
 
     renderOverview(summary.totalReviews, summary.correctReviews, streak, cardStates, forecast);
+    renderAIInsights(words, streak, summary, cardStates);
     renderReviewChart(chartBuckets, barWidth);
     renderButtonDistribution(summary.buttonCounts);
     renderCEFRDistribution(words);

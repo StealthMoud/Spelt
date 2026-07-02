@@ -6,6 +6,7 @@ import { saveManualAnyway, handleAddToVault } from './save_actions.js';
 import { renderMisspellingCard } from './misspell_card.js';
 import { handleExampleActions } from './example_actions.js';
 import { openModal } from '../vault.js';
+import { handleAiEnhance } from './correct_card.js';
 
 export async function handleFeedbackClick(e, reloadVaultList, loadPracticeDeck) {
   const feedbackMsg = document.getElementById('feedback-msg');
@@ -95,6 +96,12 @@ export async function handleFeedbackClick(e, reloadVaultList, loadPracticeDeck) 
     const suggestions = JSON.parse(feedbackMsg.getAttribute('data-suggestions-list') || '[]');
     const wrong = feedbackMsg.getAttribute('data-wrong-attempt');
     if (original) await showManualCorrectionForm(original, suggestions, wrong);
+    return;
+  }
+
+  const aiEnhanceBtn = e.target.closest('.sandbox-ai-enhance-btn');
+  if (aiEnhanceBtn) {
+    await handleAiEnhance(aiEnhanceBtn, reloadVaultList);
     return;
   }
 

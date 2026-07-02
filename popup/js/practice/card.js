@@ -1,6 +1,7 @@
-import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation } from '../../../shared/storage.js';
-import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, getReviewedWordIds, getPracticeMode } from './state.js';
+import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured } from '../../../shared/storage.js';
+import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, getReviewedWordIds, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
+import { generateHint, generateSessionSummary } from './ai_helpers.js';
 
 let currentSyntaxCard = null;
 let scrambledPool = [];
@@ -128,13 +129,25 @@ export function showPracticeCard() {
   const spellInput = document.getElementById('spelling-input');
   const dueCards = getDueCards();
 
-  if (dueCards.length === 0) { cardEl.style.display = 'none'; emptyEl.style.display = 'flex'; return; }
+  if (dueCards.length === 0) {
+    cardEl.style.display = 'none'; emptyEl.style.display = 'flex';
+    // Trigger AI session summary
+    triggerSessionSummary();
+    return;
+  }
 
   cardEl.style.display = 'flex'; emptyEl.style.display = 'none';
   cardEl.classList.remove('flipped'); spellInput.value = '';
   setCardShownAt(Date.now());
 
+  // Reset AI hint bubble
+  const hintBubble = document.getElementById('ai-hint-bubble');
+  if (hintBubble) hintBubble.style.display = 'none';
+
   const card = dueCards[0];
+
+  // Show AI hint button if configured
+  setupAIHintButton(card);
   const mode = getPracticeMode();
 
   const frontSpellingContent = document.getElementById('front-spelling-content');
@@ -310,3 +323,87 @@ export async function syncPracticeDeck() {
   const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');
   if (oldActiveId !== newActiveId || (!isFlipped && !getIsSubmitting())) showPracticeCard();
 }
+
+async function setupAIHintButton(card) {
+  const hintBtn = document.getElementById('ai-hint-btn');
+  const hintBubble = document.getElementById('ai-hint-bubble');
+  const hintText = document.getElementById('ai-hint-text');
+  const regenBtn = document.getElementById('ai-hint-regen');
+  if (!hintBtn || !hintBubble || !hintText) return;
+
+  const isConfigured = await isGeminiConfigured();
+  if (!isConfigured || card.practiceType === 'syntax') {
+    hintBtn.style.display = 'none';
+    return;
+  }
+
+  hintBtn.style.display = 'inline-flex';
+  hintBubble.style.display = 'none';
+  hintText.textContent = '';
+
+  const handleHintRequest = async (forceRegen = false) => {
+    hintText.textContent = forceRegen ? 'Regenerating mnemonic...' : 'Asking AI Coach...';
+    hintBubble.style.display = 'block';
+    try {
+      if (forceRegen) {
+        card.aiHint = null;
+      }
+      const hint = await generateHint(card);
+      hintText.textContent = hint;
+    } catch (err) {
+      hintText.textContent = `Could not generate hint: ${err.message}`;
+    }
+  };
+
+  // Wire event listeners by replacing/cloning buttons to strip previous listeners
+  const newHintBtn = hintBtn.cloneNode(true);
+  hintBtn.parentNode.replaceChild(newHintBtn, hintBtn);
+  newHintBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (hintBubble.style.display === 'block') {
+      hintBubble.style.display = 'none';
+    } else {
+      handleHintRequest(false);
+    }
+  });
+
+  if (regenBtn) {
+    const newRegenBtn = regenBtn.cloneNode(true);
+    regenBtn.parentNode.replaceChild(newRegenBtn, regenBtn);
+    newRegenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleHintRequest(true);
+    });
+  }
+}
+
+async function triggerSessionSummary() {
+  const container = document.getElementById('ai-session-summary');
+  const textEl = document.getElementById('ai-session-summary-text');
+  if (!container || !textEl) return;
+
+  container.style.display = 'none';
+  textEl.textContent = '';
+
+  const isConfigured = await isGeminiConfigured();
+  if (!isConfigured) return;
+
+  const stats = getSessionStats();
+  if (stats.totalReviewed === 0) return;
+
+  container.style.display = 'block';
+  textEl.textContent = 'Generating AI coaching summary...';
+
+  try {
+    const mode = getPracticeMode();
+    const summary = await generateSessionSummary({
+      ...stats,
+      mode: mode.toUpperCase()
+    });
+    textEl.textContent = summary;
+    resetSessionStats(); // Reset after summary shown to avoid duplicate summaries if switching tabs
+  } catch (err) {
+    textEl.textContent = `Could not load summary: ${err.message}`;
+  }
+}
+

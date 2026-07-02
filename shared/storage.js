@@ -70,5 +70,7 @@ export {
 } from './storage/sessions.js';
 
 export {
-  askGemini
+  askGemini,
+  askGeminiText,
+  isGeminiConfigured
 } from './storage/gemini.js';

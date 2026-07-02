@@ -6,6 +6,7 @@ export function updateBulkUIState(filtered, selectedWordIds) {
   const selectedCountSpan = document.getElementById('vault-selected-count');
   const deleteBtn = document.getElementById('vault-delete-selected');
   const demasterBtn = document.getElementById('vault-demaster-selected');
+  const enrichBtn = document.getElementById('vault-enrich-selected');
 
   if (!bulkRow) return;
   if (filtered.length === 0) {
@@ -22,7 +23,7 @@ export function updateBulkUIState(filtered, selectedWordIds) {
   
   selectAllCheckbox.checked = isAll;
   selectAllCheckbox.indeterminate = hasSelection && !isAll;
-  [deleteBtn, demasterBtn].forEach(btn => {
+  [deleteBtn, demasterBtn, enrichBtn].forEach(btn => {
     if (!btn) return;
     btn.disabled = !hasSelection;
     btn.style.opacity = hasSelection ? '1' : '0.5';

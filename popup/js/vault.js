@@ -1,5 +1,6 @@
-import { getWords, saveWords } from '../../shared/storage.js';
+import { getWords, saveWords, getStored } from '../../shared/storage.js';
 import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
+import { isGeminiConfigured, askGemini } from './practice/ai_helpers.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';
 import { saveWord } from './vault/save.js';
 import { renderList, updateBulkUIState } from './vault/list.js';
@@ -78,6 +79,113 @@ export async function initVault(onVaultUpdated) {
       selectedWordIds.clear();
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+    });
+  });
+
+  document.getElementById('vault-enrich-selected')?.addEventListener('click', async () => {
+    if (selectedWordIds.size === 0) return;
+    
+    const isConfigured = await isGeminiConfigured();
+    if (!isConfigured) {
+      alert('Please configure your Gemini API Key in the Settings tab.');
+      return;
+    }
+
+    showConfirm('AI Enrich Selected', `This will query Gemini AI to enrich definitions, translations, parts of speech, and IELTS examples for the selected ${selectedWordIds.size} words. This will run sequentially to respect free rate limits. Proceed?`, async () => {
+      const idsToEnrich = Array.from(selectedWordIds);
+      const total = idsToEnrich.length;
+      selectedWordIds.clear();
+      await reloadVaultList();
+      if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+
+      // Show non-cancelable progress indicator
+      showConfirm('AI Enrich Progress', `Enriched 0 of ${total} words...`, null, false);
+
+      const targetLang = await getStored('spelt_target_lang') || 'fa';
+      let targetLangName = 'Farsi (Persian)';
+      if (targetLang === 'es') targetLangName = 'Spanish';
+      else if (targetLang === 'fr') targetLangName = 'French';
+      else if (targetLang === 'de') targetLangName = 'German';
+      else if (targetLang === 'it') targetLangName = 'Italian';
+      else if (targetLang === 'pt') targetLangName = 'Portuguese';
+      else if (targetLang === 'ru') targetLangName = 'Russian';
+      else if (targetLang === 'ar') targetLangName = 'Arabic';
+      else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
+      else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
+      else if (targetLang === 'ja') targetLangName = 'Japanese';
+      else if (targetLang === 'ko') targetLangName = 'Korean';
+      else if (targetLang === 'tr') targetLangName = 'Turkish';
+
+      let done = 0;
+      for (const id of idsToEnrich) {
+        try {
+          const list = await getWords();
+          const w = list.find(x => x.id === id);
+          if (w) {
+            const prompt = `You are a professional lexicographer. Improve, correct, and enrich the vocabulary details for the English word/phrase "${w.word}".
+Here is the current stored draft:
+{
+  "definition": "${(w.definition || '').replace(/"/g, '\\"')}",
+  "transcription": "${(w.transcription || '').replace(/"/g, '\\"')}",
+  "partOfSpeech": "${(w.partOfSpeech || '').replace(/"/g, '\\"')}",
+  "translation": "${(w.translation || '').replace(/"/g, '\\"')}",
+  "level": "${(w.level || '').replace(/"/g, '\\"')}",
+  "example": "${(w.example || '').replace(/"/g, '\\"')}"
+}
+
+Please:
+1. Enrich the definition to be clean, accurate, and easy to understand in English.
+2. Ensure the UK/US IPA pronunciation transcription is correct and clear (e.g. /iˈnɪɡ.mə/).
+3. Ensure part of speech is correct (noun, verb, phrasal verb, adjective, etc.).
+4. Refine the translation in ${targetLangName}.
+5. Select the single best CEFR level (A1, A2, B1, B2, C1, or C2).
+6. Provide a premium, natural academic/IELTS-style context sentence containing the word.
+
+Respond ONLY with a JSON object matching this schema:
+{
+  "definition": "...",
+  "transcription": "...",
+  "partOfSpeech": "...",
+  "translation": "...",
+  "level": "...",
+  "example": "..."
+}`;
+
+            const aiData = await askGemini(prompt);
+            
+            // Reload list to prevent concurrent editing issues
+            const freshList = await getWords();
+            const targetWord = freshList.find(x => x.id === id);
+            if (targetWord) {
+              if (aiData.definition) targetWord.definition = aiData.definition;
+              if (aiData.transcription) targetWord.transcription = aiData.transcription;
+              if (aiData.partOfSpeech) targetWord.partOfSpeech = aiData.partOfSpeech;
+              if (aiData.translation) targetWord.translation = aiData.translation;
+              if (aiData.level) targetWord.level = aiData.level.toUpperCase().trim();
+              if (aiData.example) {
+                targetWord.example = aiData.example;
+                targetWord.exampleTranslation = '';
+              }
+              await saveWords(freshList);
+            }
+          }
+        } catch (err) {
+          console.error(`AI enrichment failed for word ID ${id}:`, err);
+        }
+        done++;
+        const progressMsgEl = document.getElementById('popup-confirm-msg');
+        if (progressMsgEl) {
+          progressMsgEl.textContent = `Enriched ${done} of ${total} words...`;
+        }
+        // Rate limit: 3.5s delay to stay under the 15 RPM free tier limit
+        if (done < total) {
+          await new Promise(resolve => setTimeout(resolve, 3500));
+        }
+      }
+
+      await reloadVaultList();
+      if (onVaultUpdatedCallback) onVaultUpdatedCallback();
+      showConfirm('AI Enrichment Complete', `Successfully enriched all ${total} words!`, null, false);
     });
   });
 
