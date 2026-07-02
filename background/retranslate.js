@@ -99,6 +99,12 @@ Respond ONLY with the JSON object. Do not include markdown code block ticks (\`\
 
 export async function runBackgroundRetranslate(targetLang) {
   try {
+    const allowRes = await new Promise(r => chrome.storage?.local.get('spelt_allow_background_ai', r));
+    if (!allowRes || !allowRes.spelt_allow_background_ai) {
+      console.warn('[Spelt AI] Background AI retranslation aborted: disabled in settings.');
+      return;
+    }
+
     const words = await getWords();
     await logDebug({ type: 'start', count: words.length, targetLang });
     if (words.length === 0) return;
@@ -111,8 +117,8 @@ export async function runBackgroundRetranslate(targetLang) {
         await logDebug({ word: w.word, error: err.message });
         console.error(`Error refreshing "${w.word}" via AI:`, err);
       }
-      // Wait 3.5 seconds between requests to stay well within the 15 RPM free tier limit
-      await new Promise(resolve => setTimeout(resolve, 3500));
+      // Wait 6 seconds between requests to stay well within the 15 RPM free tier limit
+      await new Promise(resolve => setTimeout(resolve, 6000));
     }
 
     await logDebug({ type: 'completed', count: words.length });

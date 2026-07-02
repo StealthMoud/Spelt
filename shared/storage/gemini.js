@@ -35,6 +35,30 @@ const badModels = new Set();
 const noMimeTypeSupport = new Set();
 
 /**
+ * Sequential request queue to prevent concurrent requests from cascading
+ * through all model tiers simultaneously (which burns quota on every tier).
+ * Requests are processed one at a time with minimum spacing.
+ */
+let requestQueue = Promise.resolve();
+const MIN_REQUEST_SPACING_MS = 1000; // 1 second between requests
+let lastRequestTime = 0;
+
+async function enqueue(fn) {
+  const task = requestQueue.then(async () => {
+    const now = Date.now();
+    const elapsed = now - lastRequestTime;
+    if (elapsed < MIN_REQUEST_SPACING_MS) {
+      await new Promise(r => setTimeout(r, MIN_REQUEST_SPACING_MS - elapsed));
+    }
+    lastRequestTime = Date.now();
+    return fn();
+  });
+  // Update the queue head — but don't let a rejection break the chain
+  requestQueue = task.catch(() => {});
+  return task;
+}
+
+/**
  * Returns true if the user has configured a Gemini API key.
  */
 export async function isGeminiConfigured() {
@@ -339,45 +363,47 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
  * Automatically falls back to weaker models on rate limit.
  */
 export async function askGemini(prompt) {
-  const key = await getStored('spelt_gemini_key');
-  if (!key) {
-    throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
-  }
+  return enqueue(async () => {
+    const key = await getStored('spelt_gemini_key');
+    if (!key) {
+      throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
+    }
 
-  const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
-  const modelTiers = await getAvailableModelTiers(preferredModel);
+    const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
+    const modelTiers = await getAvailableModelTiers(preferredModel);
 
-  const result = await fetchWithFallback(key, {
-    contents: [{ parts: [{ text: prompt }] }]
-  }, modelTiers, true /* wantJson */);
+    const result = await fetchWithFallback(key, {
+      contents: [{ parts: [{ text: prompt }] }]
+    }, modelTiers, true /* wantJson */);
 
-  const data = await result.response.json();
-  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error('Invalid empty response from Gemini API.');
-  }
+    const data = await result.response.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error('Invalid empty response from Gemini API.');
+    }
 
-  // Clean text in case model returned markdown code blocks (e.g. ```json ... ```)
-  text = text.trim();
-  if (text.startsWith('```')) {
-    text = text.replace(/^```[a-zA-Z]*\n?/, '');
-    text = text.replace(/\n?```$/, '');
+    // Clean text in case model returned markdown code blocks (e.g. ```json ... ```)
     text = text.trim();
-  }
+    if (text.startsWith('```')) {
+      text = text.replace(/^```[a-zA-Z]*\n?/, '');
+      text = text.replace(/\n?```$/, '');
+      text = text.trim();
+    }
 
-  // Extract first { and last } if there are prefix/suffix texts
-  const startIdx = text.indexOf('{');
-  const endIdx = text.lastIndexOf('}');
-  if (startIdx !== -1 && endIdx !== -1) {
-    text = text.substring(startIdx, endIdx + 1);
-  }
+    // Extract first { and last } if there are prefix/suffix texts
+    const startIdx = text.indexOf('{');
+    const endIdx = text.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx !== -1) {
+      text = text.substring(startIdx, endIdx + 1);
+    }
 
-  try {
-    return JSON.parse(text);
-  } catch (err) {
-    console.error('Failed to parse Gemini response as JSON:', text);
-    throw new Error('Gemini response was not valid JSON. Please try again.');
-  }
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      console.error('Failed to parse Gemini response as JSON:', text);
+      throw new Error('Gemini response was not valid JSON. Please try again.');
+    }
+  });
 }
 
 /**
@@ -386,23 +412,25 @@ export async function askGemini(prompt) {
  * Automatically falls back to weaker models on rate limit.
  */
 export async function askGeminiText(prompt) {
-  const key = await getStored('spelt_gemini_key');
-  if (!key) {
-    throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
-  }
+  return enqueue(async () => {
+    const key = await getStored('spelt_gemini_key');
+    if (!key) {
+      throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
+    }
 
-  const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
-  const modelTiers = await getAvailableModelTiers(preferredModel);
+    const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
+    const modelTiers = await getAvailableModelTiers(preferredModel);
 
-  const result = await fetchWithFallback(key, {
-    contents: [{ parts: [{ text: prompt }] }]
-  }, modelTiers, false /* wantJson */);
+    const result = await fetchWithFallback(key, {
+      contents: [{ parts: [{ text: prompt }] }]
+    }, modelTiers, false /* wantJson */);
 
-  const data = await result.response.json();
-  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error('Invalid empty response from Gemini API.');
-  }
+    const data = await result.response.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error('Invalid empty response from Gemini API.');
+    }
 
-  return text.trim();
+    return text.trim();
+  });
 }

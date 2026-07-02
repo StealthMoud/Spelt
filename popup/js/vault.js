@@ -21,7 +21,7 @@ export async function initVault(onVaultUpdated) {
     e.preventDefault(); e.stopPropagation(); closeModal();
   });
   document.getElementById('word-entry-form').addEventListener('submit', (e) => 
-    saveWord(e, currentFormMisspellings, wordsList, reloadVaultList, onVaultUpdatedCallback)
+    saveWord(e, currentFormMisspellings, reloadVaultList, onVaultUpdatedCallback)
   );
 
   document.getElementById('form-past-errors-list')?.addEventListener('click', (e) => {
@@ -58,8 +58,9 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('vault-delete-selected')?.addEventListener('click', () => {
     if (selectedWordIds.size === 0) return;
     showConfirm('Delete Selected', `Delete all ${selectedWordIds.size} selected words?`, async () => {
-      wordsList = wordsList.filter(w => !selectedWordIds.has(w.id));
-      await saveWords(wordsList);
+      const freshList = await getWords();
+      const filtered = freshList.filter(w => !selectedWordIds.has(w.id));
+      await saveWords(filtered);
       selectedWordIds.clear();
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();
@@ -69,12 +70,13 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('vault-demaster-selected')?.addEventListener('click', () => {
     if (selectedWordIds.size === 0) return;
     showConfirm('Re-study Selected', `Move all ${selectedWordIds.size} selected words back into practice?`, async () => {
-      wordsList.forEach(w => {
+      const freshList = await getWords();
+      freshList.forEach(w => {
         if (selectedWordIds.has(w.id)) {
           w.mastered = false; w.rep = 0; w.interval = 1; w.nextDate = Date.now();
         }
       });
-      await saveWords(wordsList);
+      await saveWords(freshList);
       selectedWordIds.clear();
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();
@@ -193,14 +195,21 @@ Respond ONLY with a JSON object matching this schema:
 
 export async function reloadVaultList() {
   wordsList = await getWords();
-  selectedWordIds.clear();
+  const existingIds = new Set(wordsList.map(w => w.id));
+  for (const id of selectedWordIds) {
+    if (!existingIds.has(id)) {
+      selectedWordIds.delete(id);
+    }
+  }
   renderList(wordsList, selectedWordIds, openModal, deleteWord);
 }
 
 function deleteWord(wordObj) {
   showConfirm('Delete Word', `Delete "${wordObj.word}" from your vault?`, async () => {
-    wordsList = wordsList.filter(w => w.id !== wordObj.id);
-    await saveWords(wordsList); await reloadVaultList();
+    const freshList = await getWords();
+    const filtered = freshList.filter(w => w.id !== wordObj.id);
+    await saveWords(filtered);
+    await reloadVaultList();
     if (onVaultUpdatedCallback) onVaultUpdatedCallback();
   });
 }

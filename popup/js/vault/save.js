@@ -2,7 +2,7 @@ import { getWords, addWord, saveWords, fetchDynamicDefinition } from '../../../s
 import { showConfirm } from './confirm.js';
 import { closeModal } from './modal.js';
 
-export async function saveWord(e, currentFormMisspellings, wordsList, reloadCallback, onVaultUpdatedCallback) {
+export async function saveWord(e, currentFormMisspellings, reloadCallback, onVaultUpdatedCallback) {
   e.preventDefault();
   const id = document.getElementById('edit-word-id').value;
   const word = document.getElementById('form-word').value.trim();
@@ -18,13 +18,14 @@ export async function saveWord(e, currentFormMisspellings, wordsList, reloadCall
   const executeSave = async () => {
     try {
       if (id) {
-        const idx = wordsList.findIndex(w => w.id === id);
+        const freshList = await getWords();
+        const idx = freshList.findIndex(w => w.id === id);
         if (idx !== -1) {
-          const wasMastered = wordsList[idx].mastered;
-          const oldEx = wordsList[idx].example;
-          const exampleTranslation = oldEx === example ? (wordsList[idx].exampleTranslation || '') : '';
-          wordsList[idx] = { 
-            ...wordsList[idx], 
+          const wasMastered = freshList[idx].mastered;
+          const oldEx = freshList[idx].example;
+          const exampleTranslation = oldEx === example ? (freshList[idx].exampleTranslation || '') : '';
+          freshList[idx] = { 
+            ...freshList[idx], 
             word, 
             definition, 
             transcription, 
@@ -38,16 +39,16 @@ export async function saveWord(e, currentFormMisspellings, wordsList, reloadCall
             misspellings: currentFormMisspellings
           };
           if (mastered && !wasMastered) {
-            wordsList[idx].rep = 0;
-            wordsList[idx].interval = 30;
-            wordsList[idx].nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+            freshList[idx].rep = 0;
+            freshList[idx].interval = 30;
+            freshList[idx].nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
           } else if (!mastered && wasMastered) {
-            wordsList[idx].mastered = false;
-            wordsList[idx].rep = 0;
-            wordsList[idx].interval = 1;
-            wordsList[idx].nextDate = Date.now();
+            freshList[idx].mastered = false;
+            freshList[idx].rep = 0;
+            freshList[idx].interval = 1;
+            freshList[idx].nextDate = Date.now();
           }
-          await saveWords(wordsList);
+          await saveWords(freshList);
         }
       } else {
         const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings });

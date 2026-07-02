@@ -125,7 +125,7 @@ export function checkSpelling() {
   // Populate shared back face
   populateBackFace(card);
 
-  // Handle AI feedback
+  // Handle AI feedback — button-gated to prevent rate limits
   const fbRow = document.getElementById('ai-feedback-row');
   const fbText = document.getElementById('ai-feedback-text');
   if (fbRow && fbText) {
@@ -133,11 +133,18 @@ export function checkSpelling() {
       isGeminiConfigured().then(configured => {
         if (configured) {
           fbRow.style.display = 'block';
-          fbText.textContent = 'AI Coach is analyzing spelling mistake...';
-          generateMisspellingFeedback(card, typed).then(feedback => {
-            fbText.textContent = feedback;
-          }).catch(err => {
-            fbText.textContent = `Could not load feedback: ${err.message}`;
+          fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">✨ <span>AI Coach</span></button>`;
+          fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', async (ev) => {
+            const btn = ev.currentTarget;
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Analyzing...';
+            btn.style.opacity = '0.6';
+            try {
+              const feedback = await generateMisspellingFeedback(card, typed);
+              fbText.textContent = feedback;
+            } catch (err) {
+              fbText.textContent = `Could not load feedback: ${err.message}`;
+            }
           });
         } else {
           fbRow.style.display = 'none';
@@ -187,18 +194,25 @@ export function revealRecall() {
   // Populate shared back face
   populateBackFace(card);
 
-  // Handle AI feedback (Recall Mnemonic assistance on show answer)
+  // Handle AI feedback — button-gated to prevent rate limits
   const fbRow = document.getElementById('ai-feedback-row');
   const fbText = document.getElementById('ai-feedback-text');
   if (fbRow && fbText) {
     isGeminiConfigured().then(configured => {
       if (configured) {
         fbRow.style.display = 'block';
-        fbText.textContent = 'AI Coach is checking recall hint...';
-        generateRecallFeedback(card).then(feedback => {
-          fbText.textContent = feedback;
-        }).catch(err => {
-          fbText.textContent = `Mnemonic help: ${err.message}`;
+        fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">✨ <span>AI Coach</span></button>`;
+        fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', async (ev) => {
+          const btn = ev.currentTarget;
+          btn.disabled = true;
+          btn.querySelector('span').textContent = 'Checking...';
+          btn.style.opacity = '0.6';
+          try {
+            const feedback = await generateRecallFeedback(card);
+            fbText.textContent = feedback;
+          } catch (err) {
+            fbText.textContent = `Mnemonic help: ${err.message}`;
+          }
         });
       } else {
         fbRow.style.display = 'none';
@@ -258,7 +272,7 @@ export function checkSyntax() {
   // Populate back face
   populateBackFace(card);
 
-  // Handle AI feedback for syntax
+  // Handle AI feedback for syntax — button-gated to prevent rate limits
   const fbRow = document.getElementById('ai-feedback-row');
   const fbText = document.getElementById('ai-feedback-text');
   if (fbRow && fbText) {
@@ -266,11 +280,18 @@ export function checkSyntax() {
       isGeminiConfigured().then(configured => {
         if (configured) {
           fbRow.style.display = 'block';
-          fbText.textContent = 'AI Coach is analyzing syntax joints error...';
-          generateSyntaxFeedback(card, typed).then(feedback => {
-            fbText.textContent = feedback;
-          }).catch(err => {
-            fbText.textContent = `Could not load feedback: ${err.message}`;
+          fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">✨ <span>AI Coach</span></button>`;
+          fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', async (ev) => {
+            const btn = ev.currentTarget;
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Analyzing...';
+            btn.style.opacity = '0.6';
+            try {
+              const feedback = await generateSyntaxFeedback(card, typed);
+              fbText.textContent = feedback;
+            } catch (err) {
+              fbText.textContent = `Could not load feedback: ${err.message}`;
+            }
           });
         } else {
           fbRow.style.display = 'none';

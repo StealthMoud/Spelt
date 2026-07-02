@@ -551,20 +551,26 @@ async function triggerSessionSummary() {
   const stats = getSessionStats();
   if (stats.totalReviewed === 0) return;
 
+  // Show button-gated AI summary — no auto-fire to prevent rate limits
   container.style.display = 'block';
-  textEl.textContent = 'Generating AI coaching summary...';
-
-  try {
-    const mode = getPracticeMode();
-    const summary = await generateSessionSummary({
-      ...stats,
-      mode: mode.toUpperCase()
-    });
-    textEl.textContent = summary;
-    resetSessionStats(); // Reset after summary shown to avoid duplicate summaries if switching tabs
-  } catch (err) {
-    textEl.textContent = `Could not load summary: ${err.message}`;
-  }
+  textEl.innerHTML = `<button type="button" id="ai-session-summary-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 5px 12px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease; margin: 4px auto;">✨ <span>Generate AI Summary</span></button>`;
+  textEl.querySelector('#ai-session-summary-btn')?.addEventListener('click', async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Generating...';
+    btn.style.opacity = '0.6';
+    try {
+      const mode = getPracticeMode();
+      const summary = await generateSessionSummary({
+        ...stats,
+        mode: mode.toUpperCase()
+      });
+      textEl.textContent = summary;
+      resetSessionStats();
+    } catch (err) {
+      textEl.textContent = `Could not load summary: ${err.message}`;
+    }
+  });
 }
 
 async function setupAISyntaxExplain(card) {

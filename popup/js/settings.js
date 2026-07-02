@@ -26,6 +26,16 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_selection_lookup: e.target.checked });
   });
 
+  chrome.storage?.local.get('spelt_allow_background_ai', (res) => {
+    const enabled = !!res.spelt_allow_background_ai;
+    const checkboxEl = document.getElementById('setting-allow-background-ai');
+    if (checkboxEl) checkboxEl.checked = enabled;
+  });
+
+  document.getElementById('setting-allow-background-ai')?.addEventListener('change', (e) => {
+    chrome.storage?.local.set({ spelt_allow_background_ai: e.target.checked });
+  });
+
   // Load Gemini key, model and model list on startup
   chrome.storage?.local.get(['spelt_gemini_key', 'spelt_gemini_model', 'spelt_gemini_models_list'], (res) => {
     const key = res.spelt_gemini_key || '';
@@ -179,6 +189,10 @@ export function initSettings(onDbRestored) {
         const el = document.getElementById('setting-selection-lookup');
         if (el) el.checked = changes.spelt_selection_lookup.newValue !== false;
       }
+      if (changes.spelt_allow_background_ai) {
+        const el = document.getElementById('setting-allow-background-ai');
+        if (el) el.checked = !!changes.spelt_allow_background_ai.newValue;
+      }
     }
   });
 
@@ -209,6 +223,17 @@ export function initSettings(onDbRestored) {
 }
 
 async function triggerRetranslate() {
+  const allowRes = await new Promise(r => chrome.storage?.local.get('spelt_allow_background_ai', r));
+  if (!allowRes || !allowRes.spelt_allow_background_ai) {
+    showConfirm(
+      'Background AI Disabled',
+      'Background AI processing is currently disabled in Settings to prevent rate limits. Please enable "Allow background AI tasks" in Settings first.',
+      null,
+      false
+    );
+    return;
+  }
+
   const selectEl = document.getElementById('setting-target-lang');
   const targetLang = selectEl ? selectEl.value : 'none';
 

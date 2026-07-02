@@ -117,8 +117,9 @@ export async function getWords() {
         const intervalNum = Number(lastSpelling.interval);
         const dateNum = typeof lastSpelling.date === 'string' ? Date.parse(lastSpelling.date) : Number(lastSpelling.date);
         if (!isNaN(intervalNum) && !isNaN(dateNum)) {
-          const expectedNext = dateNum + intervalNum * 24 * 60 * 60 * 1000;
-          if (expectedNext > Date.now() && (w.nextDate <= Date.now() || isNaN(w.nextDate))) {
+          const isFailed = lastSpelling.q !== undefined && Number(lastSpelling.q) < 3;
+          const expectedNext = isFailed ? dateNum : dateNum + intervalNum * 24 * 60 * 60 * 1000;
+          if (expectedNext > Date.now() && (w.nextDate === undefined || w.nextDate === null || isNaN(w.nextDate))) {
             w.nextDate = expectedNext;
             cardModified = true;
           }
@@ -130,8 +131,9 @@ export async function getWords() {
         const intervalNum = Number(lastMeaning.interval);
         const dateNum = typeof lastMeaning.date === 'string' ? Date.parse(lastMeaning.date) : Number(lastMeaning.date);
         if (!isNaN(intervalNum) && !isNaN(dateNum)) {
-          const expectedNext = dateNum + intervalNum * 24 * 60 * 60 * 1000;
-          if (expectedNext > Date.now() && (w.meaningNextDate <= Date.now() || isNaN(w.meaningNextDate))) {
+          const isFailed = lastMeaning.q !== undefined && Number(lastMeaning.q) < 3;
+          const expectedNext = isFailed ? dateNum : dateNum + intervalNum * 24 * 60 * 60 * 1000;
+          if (expectedNext > Date.now() && (w.meaningNextDate === undefined || w.meaningNextDate === null || isNaN(w.meaningNextDate))) {
             w.meaningNextDate = expectedNext;
             cardModified = true;
           }

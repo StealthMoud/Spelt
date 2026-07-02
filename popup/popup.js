@@ -91,9 +91,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSelectionLookup();
   initMoveable();
 
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === 'wordAddedFromContextMenu') {
-      refreshStats(); syncPracticeDeck(); reloadVaultList();
+  chrome.storage?.onChanged.addListener(async (changes, areaName) => {
+    if (areaName === 'local' && changes.spelt_words) {
+      const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab');
+      await refreshStats();
+      if (activeTab === 'practice-tab') {
+        await syncPracticeDeck();
+      } else if (activeTab === 'vault-tab') {
+        await reloadVaultList();
+      } else if (activeTab === 'stats-tab') {
+        await renderStats();
+      }
     }
   });
 
