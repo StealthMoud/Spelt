@@ -446,6 +446,9 @@ export async function getAiStatus() {
   const now = Date.now();
   const lastUsed = await getStored('spelt_last_used_model') || null;
 
+  // Identify which model is currently designated to handle the NEXT request
+  const currentSelection = pickBestAvailableModel(modelTiers);
+
   return modelTiers.map(model => {
     const cooldownUntil = rateLimitCooldowns.get(model) || 0;
     const cooldownRemaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
@@ -461,7 +464,8 @@ export async function getAiStatus() {
       status,
       cooldownRemaining,
       isPreferred: model === preferredModel || model === ('models/' + preferredModel),
-      isLastUsed: model === lastUsed
+      isLastUsed: model === lastUsed,
+      isCurrentSelection: model === currentSelection
     };
   });
 }

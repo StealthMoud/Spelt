@@ -264,9 +264,16 @@ async function renderAiStatusMonitor() {
       row.style.display = 'flex';
       row.style.alignItems = 'center';
       row.style.justifyContent = 'space-between';
-      row.style.padding = '4px 6px';
-      row.style.background = 'rgba(255, 255, 255, 0.03)';
-      row.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+      row.style.padding = '5px 8px';
+      
+      // Highlight the active selection row
+      if (item.isCurrentSelection) {
+        row.style.background = 'hsla(160, 60%, 45%, 0.06)';
+        row.style.border = '1px solid hsla(160, 60%, 45%, 0.25)';
+      } else {
+        row.style.background = 'rgba(255, 255, 255, 0.03)';
+        row.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+      }
       row.style.borderRadius = 'var(--radius-sm)';
       row.style.fontSize = '0.66rem';
 
@@ -292,8 +299,11 @@ async function renderAiStatusMonitor() {
       if (item.isPreferred) {
         badgesHtml += `<span style="background: hsla(260, 60%, 50%, 0.25); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Preferred</span>`;
       }
+      if (item.isCurrentSelection) {
+        badgesHtml += `<span style="background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px; font-weight: 700; box-shadow: 0 0 4px rgba(16, 185, 129, 0.15);">Selected</span>`;
+      }
       if (item.isLastUsed) {
-        badgesHtml += `<span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Last Used</span>`;
+        badgesHtml += `<span style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: var(--text-muted); font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Last Used</span>`;
         lastUsedName = item.name.replace('models/', '');
       }
 
