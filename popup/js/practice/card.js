@@ -611,7 +611,7 @@ async function setupAIWritingPractice(card) {
   const handleVerifyRequest = async () => {
     const userText = inputEl.value.trim();
     if (!userText) {
-      showFeedback('<span style="color: var(--danger); font-size: 0.65rem;">Please write a sentence first.</span>', 5000);
+      showFeedback('<span style="color: var(--danger); font-size: 0.65rem;">Please write a sentence first.</span>', 0);
       return;
     }
 
@@ -620,9 +620,9 @@ async function setupAIWritingPractice(card) {
 
     try {
       const feedback = await verifyPracticeWriting(card, userText, mode);
-      showFeedback(feedback, 20000); // Auto-hide AI coach grading after 20 seconds
+      showFeedback(feedback, 0); // No timer: user closes it manually
     } catch (err) {
-      showFeedback(`<span style="color: var(--danger); font-size: 0.65rem;">Could not verify sentence: ${err.message}</span>`, 6000);
+      showFeedback(`<span style="color: var(--danger); font-size: 0.65rem;">Could not verify sentence: ${err.message}</span>`, 0);
     } finally {
       verifyBtn.removeAttribute('disabled');
     }
