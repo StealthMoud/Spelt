@@ -174,16 +174,25 @@ export function showPracticeCard() {
   cardEl.classList.remove('flipped'); spellInput.value = '';
   setCardShownAt(Date.now());
 
-  // Reset AI hint bubble
+  // Reset AI hint and feedback bubbles
   const hintBubble = document.getElementById('ai-hint-bubble');
   if (hintBubble) hintBubble.style.display = 'none';
+  const fbBubble = document.getElementById('ai-feedback-row');
+  if (fbBubble) {
+    fbBubble.style.display = 'none';
+    fbBubble.style.top = 'auto';
+    fbBubble.style.right = '14px';
+    fbBubble.style.bottom = '74px';
+    fbBubble.style.left = '14px';
+  }
 
   const card = dueCards[0];
 
-  // Show AI hint button if configured
+  // Show AI components if configured
   setupAIHintButton(card);
   setupAISyntaxExplain(card);
   setupAIWritingPractice(card);
+  setupAISpellingFeedback();
   const mode = getPracticeMode();
 
   const frontSpellingContent = document.getElementById('front-spelling-content');
@@ -636,6 +645,25 @@ async function setupAIWritingPractice(card) {
         clearTimeout(writingFeedbackTimeoutId);
         writingFeedbackTimeoutId = null;
       }
+    });
+  }
+}
+
+function setupAISpellingFeedback() {
+  const fbRow = document.getElementById('ai-feedback-row');
+  const closeBtn = document.getElementById('ai-feedback-close');
+  if (!fbRow) return;
+
+  // Make spelling check result feedback draggable
+  makeElementDraggable(fbRow);
+
+  // Wire up close button manually
+  if (closeBtn) {
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    newCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fbRow.style.display = 'none';
     });
   }
 }
