@@ -52,3 +52,23 @@
   z-index: 2;
   pointer-events: auto;
 }
+
+/* AI bubble controls */
+.ai-bubble-btn {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 4px !important;
+  padding: 0 !important;
+  color: #a78bfa !important;
+  border: none !important;
+  background: hsla(260, 50%, 45%, 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.ai-bubble-btn:hover {
+  background: hsla(260, 50%, 60%, 0.3) !important;
+  color: #c4b5fd !important;
+}

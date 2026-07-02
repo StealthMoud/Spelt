@@ -163,13 +163,13 @@
                 </div>
               </div>
             </div>
-            <div id="ai-hint-bubble" style="display: none; position: absolute; left: 14px; right: 14px; bottom: 62px; max-height: calc(100% - 75px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 48px 10px 10px; font-size: 0.68rem; line-height: 1.45; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: all 0.2s ease;">
+            <div id="ai-hint-bubble" style="display: none; position: absolute; left: 14px; right: 14px; bottom: 62px; max-height: calc(100% - 75px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 54px 10px 10px; font-size: 0.68rem; line-height: 1.45; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: all 0.2s ease;">
               <span id="ai-hint-text" style="word-break: break-word; display: block;"></span>
               <div style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; align-items: center;">
-                <button id="ai-hint-regen" class="table-icon-btn" title="Regenerate hint" style="width: 18px; height: 18px; border-radius: 4px; padding: 0; color: #a78bfa; border: none; background: hsla(260, 50%, 45%, 0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;">
+                <button id="ai-hint-regen" class="ai-bubble-btn" title="Regenerate hint">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                 </button>
-                <button id="ai-hint-close" class="table-icon-btn" title="Close hint" style="width: 18px; height: 18px; border-radius: 4px; padding: 0; color: #a78bfa; border: none; background: hsla(260, 50%, 45%, 0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;">
+                <button id="ai-hint-close" class="ai-bubble-btn" title="Close hint">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 10px; height: 10px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
@@ -322,9 +322,9 @@
                 </button>
               </div>
               <textarea id="ai-practice-writing-input" class="premium-input" placeholder="Write your own sentence here to practice..." style="font-size: 0.72rem; height: 38px; width: 100%; box-sizing: border-box; resize: none; margin-top: 4px; padding: 6px 8px; line-height: 1.35; background: hsla(0,0%,0%,0.15);" autocomplete="off"></textarea>
-              <div id="ai-practice-writing-feedback" style="display: none; position: absolute; left: 14px; right: 14px; bottom: 74px; max-height: calc(100% - 90px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 28px 10px 10px; font-size: 0.68rem; line-height: 1.45; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: all 0.2s ease;">
+              <div id="ai-practice-writing-feedback" style="display: none; position: absolute; left: 14px; right: 14px; bottom: 74px; max-height: calc(100% - 90px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 36px 10px 10px; font-size: 0.68rem; line-height: 1.45; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: all 0.2s ease;">
                 <div id="ai-practice-writing-feedback-content"></div>
-                <button type="button" id="ai-practice-writing-feedback-close" title="Close message" style="position: absolute; top: 6px; right: 6px; width: 16px; height: 16px; border: none; background: hsla(260, 50%, 45%, 0.15); color: #a78bfa; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; padding: 0; transition: all 0.15s ease;">
+                <button type="button" id="ai-practice-writing-feedback-close" class="ai-bubble-btn" title="Close message" style="position: absolute; top: 6px; right: 6px;">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 8px; height: 8px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
