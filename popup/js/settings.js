@@ -123,7 +123,14 @@ export function initSettings(onDbRestored) {
       const stored = await new Promise(r => chrome.storage?.local.get('spelt_gemini_model', res => r(res.spelt_gemini_model)));
       let defaultModel = stored;
       if (!defaultModel || !availableModels.some(m => m.name === defaultModel)) {
-        const preferred = ['models/gemini-2.5-flash', 'models/gemini-2.0-flash', 'models/gemini-1.5-flash', 'models/gemini-1.5-flash-latest'];
+        const preferred = [
+          'models/gemini-3.5-flash',
+          'models/gemini-3.1-flash-lite',
+          'models/gemini-2.5-pro',
+          'models/gemini-2.5-flash',
+          'models/gemini-2.0-flash',
+          'models/gemini-1.5-flash'
+        ];
         const matched = preferred.find(p => availableModels.some(m => m.name === p));
         defaultModel = matched || availableModels[0].name;
       }

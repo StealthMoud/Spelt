@@ -884,9 +884,14 @@
               <input type="password" id="setting-gemini-key" class="premium-input" placeholder="Paste Gemini API Key..." style="flex: 1; font-size: 0.72rem; min-width: 180px;">
               <button id="test-gemini-btn" class="submit-btn" style="width: auto; font-size: 0.72rem; padding: 4px 10px;">Connect & List Models</button>
             </div>
-            <div id="gemini-model-container" style="display: none; margin-top: 8px; align-items: center; gap: 8px; width: 100%;">
-              <label for="setting-gemini-model" style="font-size: 0.7rem; color: var(--text-muted); margin: 0; white-space: nowrap;">Selected Model:</label>
-              <select id="setting-gemini-model" class="premium-input select-input" style="flex: 1; margin: 0;"></select>
+            <div id="gemini-model-container" style="display: none; margin-top: 8px; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                <label for="setting-gemini-model" style="font-size: 0.7rem; color: var(--text-muted); margin: 0; white-space: nowrap;">Preferred Model:</label>
+                <select id="setting-gemini-model" class="premium-input select-input" style="flex: 1; margin: 0;"></select>
+              </div>
+              <p style="font-size: 0.65rem; color: var(--text-muted); margin: 2px 0 0 0; line-height: 1.35;">
+                * Spelt will automatically fallback to other available models if your preferred selection hits free-tier rate limits.
+              </p>
             </div>
             <p id="gemini-test-status" style="font-size: 0.65rem; margin-top: 5px; display: none; font-weight: 500;"></p>
           </div>
