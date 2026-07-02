@@ -6,6 +6,7 @@ import { generateHint, generateSessionSummary, generateSyntaxExplanation, verify
 let currentSyntaxCard = null;
 let scrambledPool = [];
 let orderedBlocks = [];
+let writingFeedbackTimeoutId = null;
 
 function shuffleArray(array) {
   const copy = [...array];
@@ -498,12 +499,19 @@ async function setupAIWritingPractice(card) {
   const inputEl = document.getElementById('ai-practice-writing-input');
   const verifyBtn = document.getElementById('ai-practice-writing-btn');
   const feedbackEl = document.getElementById('ai-practice-writing-feedback');
+  const feedbackContentEl = document.getElementById('ai-practice-writing-feedback-content');
+  const feedbackCloseBtn = document.getElementById('ai-practice-writing-feedback-close');
+
   if (!practicePanel || !inputEl || !verifyBtn || !feedbackEl) return;
 
   // Clear inputs and state
   inputEl.value = '';
   feedbackEl.style.display = 'none';
-  feedbackEl.innerHTML = '';
+  if (feedbackContentEl) feedbackContentEl.innerHTML = '';
+  if (writingFeedbackTimeoutId) {
+    clearTimeout(writingFeedbackTimeoutId);
+    writingFeedbackTimeoutId = null;
+  }
 
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured) {
@@ -522,23 +530,41 @@ async function setupAIWritingPractice(card) {
     inputEl.setAttribute('placeholder', `Write a sentence using the word "${card.word}"...`);
   }
 
+  const showFeedback = (html, autoHideDuration) => {
+    if (writingFeedbackTimeoutId) {
+      clearTimeout(writingFeedbackTimeoutId);
+      writingFeedbackTimeoutId = null;
+    }
+    if (feedbackContentEl) {
+      feedbackContentEl.innerHTML = html;
+    } else {
+      feedbackEl.innerHTML = html;
+    }
+    feedbackEl.style.display = 'block';
+
+    if (autoHideDuration) {
+      writingFeedbackTimeoutId = setTimeout(() => {
+        feedbackEl.style.display = 'none';
+        writingFeedbackTimeoutId = null;
+      }, autoHideDuration);
+    }
+  };
+
   const handleVerifyRequest = async () => {
     const userText = inputEl.value.trim();
     if (!userText) {
-      feedbackEl.innerHTML = '<span style="color: var(--danger); font-size: 0.65rem;">Please write a sentence first.</span>';
-      feedbackEl.style.display = 'block';
+      showFeedback('<span style="color: var(--danger); font-size: 0.65rem;">Please write a sentence first.</span>', 5000);
       return;
     }
 
-    feedbackEl.innerHTML = '<span style="color: var(--text-muted); font-size: 0.65rem;">AI Coach is grading your sentence...</span>';
-    feedbackEl.style.display = 'block';
+    showFeedback('<span style="color: var(--text-muted); font-size: 0.65rem;">AI Coach is grading your sentence...</span>', 0);
     verifyBtn.setAttribute('disabled', 'true');
 
     try {
       const feedback = await verifyPracticeWriting(card, userText, mode);
-      feedbackEl.innerHTML = feedback;
+      showFeedback(feedback, 20000); // Auto-hide AI coach grading after 20 seconds
     } catch (err) {
-      feedbackEl.innerHTML = `<span style="color: var(--danger); font-size: 0.65rem;">Could not verify sentence: ${err.message}</span>`;
+      showFeedback(`<span style="color: var(--danger); font-size: 0.65rem;">Could not verify sentence: ${err.message}</span>`, 6000);
     } finally {
       verifyBtn.removeAttribute('disabled');
     }
@@ -550,6 +576,19 @@ async function setupAIWritingPractice(card) {
     e.stopPropagation();
     handleVerifyRequest();
   });
+
+  if (feedbackCloseBtn) {
+    const newCloseBtn = feedbackCloseBtn.cloneNode(true);
+    feedbackCloseBtn.parentNode.replaceChild(newCloseBtn, feedbackCloseBtn);
+    newCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      feedbackEl.style.display = 'none';
+      if (writingFeedbackTimeoutId) {
+        clearTimeout(writingFeedbackTimeoutId);
+        writingFeedbackTimeoutId = null;
+      }
+    });
+  }
 }
 
 
