@@ -1,6 +1,5 @@
-import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation, getStored } from '../../../shared/storage.js';
+import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation, getStored, isGeminiConfigured, askGemini } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
-import { isGeminiConfigured, askGemini } from '../practice/ai_helpers.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
   const defResult = await fetchDynamicDefinition(word);

@@ -1,4 +1,4 @@
-import { isGeminiConfigured, askGeminiText } from '../practice/ai_helpers.js';
+import { isGeminiConfigured, askGeminiText } from '../../../shared/storage.js';
 
 export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVal) {
   const leechesList = document.getElementById('stats-leeches-list');

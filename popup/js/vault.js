@@ -1,6 +1,5 @@
-import { getWords, saveWords, getStored } from '../../shared/storage.js';
+import { getWords, saveWords, getStored, isGeminiConfigured, askGemini } from '../../shared/storage.js';
 import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
-import { isGeminiConfigured, askGemini } from './practice/ai_helpers.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';
 import { saveWord } from './vault/save.js';
 import { renderList, updateBulkUIState } from './vault/list.js';

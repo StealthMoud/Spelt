@@ -1,4 +1,4 @@
-import { isGeminiConfigured, askGeminiText } from '../practice/ai_helpers.js';
+import { isGeminiConfigured, askGeminiText } from '../../../shared/storage.js';
 
 const CACHE_KEY = 'spelt_stats_ai_insights';
 const CACHE_TIME_KEY = 'spelt_stats_ai_insights_timestamp';
