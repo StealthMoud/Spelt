@@ -756,6 +756,10 @@ function setupAISpellingFeedback() {
 function makeElementDraggable(el) {
   let startX = 0, startY = 0;
   let currentLeft = 0, currentTop = 0;
+  
+  // Cached dimensions to avoid layout thrashing in mousemove loop
+  let parentWidth = 0, parentHeight = 0;
+  let rectWidth = 0, rectHeight = 0;
 
   el.addEventListener('mousedown', dragMouseDown);
   el.addEventListener('touchstart', dragTouchStart, { passive: false });
@@ -777,6 +781,14 @@ function makeElementDraggable(el) {
     startY = e.clientY;
     currentLeft = el.offsetLeft;
     currentTop = el.offsetTop;
+    
+    // Cache dimensions once on start of drag
+    const parentRect = el.parentElement.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    parentWidth = parentRect.width;
+    parentHeight = parentRect.height;
+    rectWidth = rect.width;
+    rectHeight = rect.height;
     
     document.addEventListener('mouseup', closeDragElement);
     document.addEventListener('mousemove', elementDrag);
@@ -806,6 +818,14 @@ function makeElementDraggable(el) {
     currentLeft = el.offsetLeft;
     currentTop = el.offsetTop;
     
+    // Cache dimensions once on start of touch drag
+    const parentRect = el.parentElement.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    parentWidth = parentRect.width;
+    parentHeight = parentRect.height;
+    rectWidth = rect.width;
+    rectHeight = rect.height;
+    
     document.addEventListener('touchend', closeDragElement);
     document.addEventListener('touchmove', elementTouchMove, { passive: false });
   }
@@ -819,17 +839,15 @@ function makeElementDraggable(el) {
   }
 
   function updatePosition(newLeft, newTop) {
-    const parentRect = el.parentElement.getBoundingClientRect();
-    const rect = el.getBoundingClientRect();
     const margin = 8;
     
     if (newLeft < margin) newLeft = margin;
-    if (newLeft + rect.width > parentRect.width - margin) {
-      newLeft = parentRect.width - rect.width - margin;
+    if (newLeft + rectWidth > parentWidth - margin) {
+      newLeft = parentWidth - rectWidth - margin;
     }
     if (newTop < margin) newTop = margin;
-    if (newTop + rect.height > parentRect.height - margin) {
-      newTop = parentRect.height - rect.height - margin;
+    if (newTop + rectHeight > parentHeight - margin) {
+      newTop = parentHeight - rectHeight - margin;
     }
 
     el.style.bottom = 'auto';
