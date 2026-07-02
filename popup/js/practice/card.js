@@ -177,6 +177,14 @@ export function showPracticeCard() {
   // Reset AI hint and feedback bubbles
   const hintBubble = document.getElementById('ai-hint-bubble');
   if (hintBubble) hintBubble.style.display = 'none';
+  const backHintBubble = document.getElementById('back-ai-hint-bubble');
+  if (backHintBubble) {
+    backHintBubble.style.display = 'none';
+    backHintBubble.style.top = 'auto';
+    backHintBubble.style.right = '14px';
+    backHintBubble.style.bottom = '74px';
+    backHintBubble.style.left = '14px';
+  }
   const fbBubble = document.getElementById('ai-feedback-row');
   if (fbBubble) {
     fbBubble.style.display = 'none';
@@ -190,6 +198,7 @@ export function showPracticeCard() {
 
   // Show AI components if configured
   setupAIHintButton(card);
+  setupBackAIHintButton(card);
   setupAISyntaxExplain(card);
   setupAIWritingPractice(card);
   setupAISpellingFeedback();
@@ -381,6 +390,78 @@ async function setupAIHintButton(card) {
   hintBubble.style.top = 'auto';
   hintBubble.style.right = '14px';
   hintBubble.style.bottom = '62px';
+  hintBubble.style.left = '14px';
+
+  // Make the hint bubble draggable
+  makeElementDraggable(hintBubble);
+
+  const isConfigured = await isGeminiConfigured();
+  if (!isConfigured || card.practiceType === 'syntax') {
+    hintBtn.style.display = 'none';
+    return;
+  }
+
+  hintBtn.style.display = 'inline-flex';
+  hintBubble.style.display = 'none';
+  hintText.textContent = '';
+
+  const handleHintRequest = async (forceRegen = false) => {
+    hintText.textContent = forceRegen ? 'Regenerating mnemonic...' : 'Asking AI Coach...';
+    hintBubble.style.display = 'block';
+    try {
+      if (forceRegen) {
+        card.aiHint = null;
+      }
+      const hint = await generateHint(card);
+      hintText.textContent = hint;
+    } catch (err) {
+      hintText.textContent = `Could not generate hint: ${err.message}`;
+    }
+  };
+
+  // Wire event listeners by replacing/cloning buttons to strip previous listeners
+  const newHintBtn = hintBtn.cloneNode(true);
+  hintBtn.parentNode.replaceChild(newHintBtn, hintBtn);
+  newHintBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (hintBubble.style.display === 'block') {
+      hintBubble.style.display = 'none';
+    } else {
+      handleHintRequest(false);
+    }
+  });
+
+  if (regenBtn) {
+    const newRegenBtn = regenBtn.cloneNode(true);
+    regenBtn.parentNode.replaceChild(newRegenBtn, regenBtn);
+    newRegenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleHintRequest(true);
+    });
+  }
+
+  if (closeBtn) {
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    newCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hintBubble.style.display = 'none';
+    });
+  }
+}
+
+async function setupBackAIHintButton(card) {
+  const hintBtn = document.getElementById('back-ai-hint-btn');
+  const hintBubble = document.getElementById('back-ai-hint-bubble');
+  const hintText = document.getElementById('back-ai-hint-text');
+  const regenBtn = document.getElementById('back-ai-hint-regen');
+  const closeBtn = document.getElementById('back-ai-hint-close');
+  if (!hintBtn || !hintBubble || !hintText) return;
+
+  // Reset dragged positions back to default stylesheet styles on setup
+  hintBubble.style.top = 'auto';
+  hintBubble.style.right = '14px';
+  hintBubble.style.bottom = '74px';
   hintBubble.style.left = '14px';
 
   // Make the hint bubble draggable
@@ -686,6 +767,7 @@ function makeElementDraggable(el) {
     // Prevent dragging when targeting selectable AI text
     if (e.target.closest('#ai-feedback-text') || 
         e.target.closest('#ai-hint-text') || 
+        e.target.closest('#back-ai-hint-text') || 
         e.target.closest('#ai-practice-writing-feedback-content')) {
       return;
     }
@@ -714,6 +796,7 @@ function makeElementDraggable(el) {
     // Prevent dragging when targeting selectable AI text
     if (e.target.closest('#ai-feedback-text') || 
         e.target.closest('#ai-hint-text') || 
+        e.target.closest('#back-ai-hint-text') || 
         e.target.closest('#ai-practice-writing-feedback-content')) {
       return;
     }
