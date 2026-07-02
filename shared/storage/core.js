@@ -70,6 +70,67 @@ export async function getWords() {
     if (w.ef === undefined || w.ef === null || isNaN(w.ef) || w.ef < 1.3) {
       w.ef = 2.5; cardModified = true;
     }
+    // Parse nextDate if it is a string or Date object
+    if (w.nextDate !== undefined && w.nextDate !== null) {
+      if (typeof w.nextDate === 'string') {
+        const num = Number(w.nextDate);
+        if (!isNaN(num)) {
+          w.nextDate = num;
+          cardModified = true;
+        } else {
+          const parsed = Date.parse(w.nextDate);
+          if (!isNaN(parsed)) { w.nextDate = parsed; cardModified = true; }
+        }
+      } else if (w.nextDate instanceof Date) {
+        w.nextDate = w.nextDate.getTime();
+        cardModified = true;
+      } else if (typeof w.nextDate === 'object' && w.nextDate.getTime) {
+        w.nextDate = w.nextDate.getTime();
+        cardModified = true;
+      }
+    }
+
+    // Parse meaningNextDate if it is a string or Date object
+    if (w.meaningNextDate !== undefined && w.meaningNextDate !== null) {
+      if (typeof w.meaningNextDate === 'string') {
+        const num = Number(w.meaningNextDate);
+        if (!isNaN(num)) {
+          w.meaningNextDate = num;
+          cardModified = true;
+        } else {
+          const parsed = Date.parse(w.meaningNextDate);
+          if (!isNaN(parsed)) { w.meaningNextDate = parsed; cardModified = true; }
+        }
+      } else if (w.meaningNextDate instanceof Date) {
+        w.meaningNextDate = w.meaningNextDate.getTime();
+        cardModified = true;
+      } else if (typeof w.meaningNextDate === 'object' && w.meaningNextDate.getTime) {
+        w.meaningNextDate = w.meaningNextDate.getTime();
+        cardModified = true;
+      }
+    }
+
+    // Recover nextDate/meaningNextDate from review history if they should be in the future
+    if (Array.isArray(w.history) && w.history.length > 0) {
+      const lastSpelling = [...w.history].reverse().find(h => h.mode === 'spelling');
+      if (lastSpelling && lastSpelling.date && lastSpelling.interval !== undefined) {
+        const expectedNext = lastSpelling.date + lastSpelling.interval * 24 * 60 * 60 * 1000;
+        if (expectedNext > Date.now() && (w.nextDate <= Date.now() || isNaN(w.nextDate))) {
+          w.nextDate = expectedNext;
+          cardModified = true;
+        }
+      }
+
+      const lastMeaning = [...w.history].reverse().find(h => h.mode === 'meaning');
+      if (lastMeaning && lastMeaning.date && lastMeaning.interval !== undefined) {
+        const expectedNext = lastMeaning.date + lastMeaning.interval * 24 * 60 * 60 * 1000;
+        if (expectedNext > Date.now() && (w.meaningNextDate <= Date.now() || isNaN(w.meaningNextDate))) {
+          w.meaningNextDate = expectedNext;
+          cardModified = true;
+        }
+      }
+    }
+
     if (w.nextDate === undefined || w.nextDate === null || isNaN(w.nextDate)) {
       w.nextDate = Date.now(); cardModified = true;
     }
