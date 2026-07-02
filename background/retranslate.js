@@ -1,39 +1,4 @@
-import { getWords, saveWords, fetchTranslation, fetchDynamicExample, isFallbackExample, getFallbackExample, logDebug, fetchDynamicDefinition, fetchCambridgePronunciation } from '../shared/storage.js';
-
-function getBaseLemmas(word) {
-  const lemmas = [];
-  const clean = word.toLowerCase().trim();
-  
-  if (clean.endsWith('ed') && clean.length > 3) {
-    lemmas.push(clean.slice(0, -2));
-    lemmas.push(clean.slice(0, -1));
-  }
-  if (clean.endsWith('ing') && clean.length > 4) {
-    lemmas.push(clean.slice(0, -3));
-    lemmas.push(clean.slice(0, -3) + 'e');
-  }
-  if (clean.endsWith('s') && clean.length > 2) {
-    if (clean.endsWith('es')) {
-      lemmas.push(clean.slice(0, -2));
-    }
-    lemmas.push(clean.slice(0, -1));
-  }
-  
-  // Handle double consonant base stripping (e.g. running -> run, dropped -> drop)
-  const doubleConsonants = ['bb', 'dd', 'ff', 'gg', 'll', 'mm', 'nn', 'pp', 'rr', 'ss', 'tt', 'zz'];
-  const extra = [];
-  lemmas.forEach(lemma => {
-    if (lemma.length > 2) {
-      const end = lemma.slice(-2);
-      if (doubleConsonants.includes(end)) {
-        extra.push(lemma.slice(0, -1));
-      }
-    }
-  });
-  lemmas.push(...extra);
-  
-  return [...new Set(lemmas)].filter(l => l.length > 1 && l !== clean);
-}
+import { getWords, saveWords, askGemini, logDebug } from '../shared/storage.js';
 
 async function updateWordTranslation(wordId, targetLang) {
   const initialList = await getWords();
@@ -41,113 +6,85 @@ async function updateWordTranslation(wordId, targetLang) {
   if (!card) return;
 
   const wordStr = card.word;
-  const originalEx = card.example;
-  const isFallback = isFallbackExample(wordStr, card.example);
-  
-  // 1. Fetch translation using Google Translate
-  let translation = '';
-  if (targetLang && targetLang !== 'none') {
-    translation = await fetchTranslation(wordStr, targetLang) || '';
-  }
+  let targetLangName = 'Farsi (Persian)';
+  if (targetLang === 'es') targetLangName = 'Spanish';
+  else if (targetLang === 'fr') targetLangName = 'French';
+  else if (targetLang === 'de') targetLangName = 'German';
+  else if (targetLang === 'it') targetLangName = 'Italian';
+  else if (targetLang === 'pt') targetLangName = 'Portuguese';
+  else if (targetLang === 'ru') targetLangName = 'Russian';
+  else if (targetLang === 'ar') targetLangName = 'Arabic';
+  else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
+  else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
+  else if (targetLang === 'ja') targetLangName = 'Japanese';
+  else if (targetLang === 'ko') targetLangName = 'Korean';
+  else if (targetLang === 'tr') targetLangName = 'Turkish';
 
-  // 2. Fetch dictionary definitions, partOfSpeech, etc. from dictionary API as a base fallback
-  let dictDef = '';
-  let dictEx = '';
-  let dictIpa = '';
-  let dictPos = '';
-  try {
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(wordStr.toLowerCase())}`);
-    if (response.ok) {
-      const data = await response.json();
-      const first = data[0];
-      if (first) {
-        dictDef = first.meanings[0]?.definitions[0]?.definition || '';
-        dictIpa = first.phonetics.find(p => p.text)?.text || '';
-        dictPos = first.meanings[0]?.partOfSpeech || '';
-        if (first.meanings) {
-          outerLoop: for (const m of first.meanings) {
-            if (m.definitions) {
-              for (const d of m.definitions) {
-                if (d.example) {
-                  dictEx = d.example.trim();
-                  break outerLoop;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  } catch (_) {}
-
-  // 3. Fetch premium dynamic definition, level, and otherLevels from Cambridge/Oxford
-  const defResult = await fetchDynamicDefinition(wordStr);
-  const newDef = defResult.definition || dictDef;
+  const hasExistingData = card.definition || card.translation || card.example;
   
-  // 4. Fetch premium transcription from Cambridge/Oxford (to override low-quality Dictionary API transcription)
-  const cambridge = await fetchCambridgePronunciation(wordStr);
-  let transcriptionVal = '';
-  if (cambridge.ukIpa || cambridge.usIpa) {
-    if (cambridge.ukIpa && cambridge.usIpa) {
-      transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
-    } else {
-      transcriptionVal = cambridge.ukIpa || cambridge.usIpa || '';
-    }
+  let prompt = '';
+  if (hasExistingData) {
+    prompt = `You are a lexicographer helping a language student. Review and improve/clean the existing dictionary data for the word or phrase "${wordStr}".
+Here is the current stored data:
+{
+  "definition": "${(card.definition || '').replace(/"/g, '\\"')}",
+  "transcription": "${(card.transcription || '').replace(/"/g, '\\"')}",
+  "partOfSpeech": "${(card.partOfSpeech || '').replace(/"/g, '\\"')}",
+  "translation": "${(card.translation || '').replace(/"/g, '\\"')}",
+  "level": "${(card.level || '').replace(/"/g, '\\"')}",
+  "example": "${(card.example || '').replace(/"/g, '\\"')}"
+}
+
+Your task:
+1. Make the definition clean, concise, and easy to understand in English.
+2. Standardize transcription to clear UK/US IPA format (e.g. /iˈnɪɡ.mə/).
+3. Clean up the translation in ${targetLangName} (ensure it is contextual and accurate).
+4. Verify part of speech (noun, verb, phrasal verb, adjective, etc.).
+5. Assign or verify the correct CEFR level (A1, A2, B1, B2, C1, or C2).
+6. Improve the example sentence so it is a premium, natural academic/IELTS-style context sentence using the word.
+
+Respond ONLY with a JSON object matching this schema:
+{
+  "definition": "...",
+  "transcription": "...",
+  "partOfSpeech": "...",
+  "translation": "...",
+  "level": "...",
+  "example": "..."
+}`;
   } else {
-    transcriptionVal = dictIpa;
+    prompt = `You are a lexicographer helping a language student study the word/phrase: "${wordStr}".
+Provide the following details in a clean JSON format matching the schema:
+{
+  "definition": "definition of the word or phrase in English",
+  "transcription": "UK / US IPA transcription, e.g. /iˈnɪɡ.mə/",
+  "partOfSpeech": "e.g. noun, verb, adjective, adverb, phrasal verb, idiom",
+  "translation": "accurate context-aware translation in ${targetLangName}",
+  "level": "CEFR level: choose carefully from: A1, A2, B1, B2, C1, C2. Leave blank if none exists",
+  "example": "A high-quality IELTS study example sentence containing the word/phrase in context"
+}
+Respond ONLY with the JSON object. Do not include markdown code block ticks (\`\`\`json).`;
   }
 
-  // Calculate final level and levels with morphological lemma fallback for inflected words
-  let finalLevel = defResult.level || cambridge.level || '';
-  let allLevels = defResult.allLevels || cambridge.allLevels || [];
-  if (!finalLevel) {
-    const lemmas = getBaseLemmas(wordStr);
-    for (const lemma of lemmas) {
-      const lemmaDef = await fetchDynamicDefinition(lemma);
-      if (lemmaDef.level) {
-        finalLevel = lemmaDef.level;
-        allLevels = lemmaDef.allLevels;
-        break;
-      }
-      const lemmaPr = await fetchCambridgePronunciation(lemma);
-      if (lemmaPr.level) {
-        finalLevel = lemmaPr.level;
-        allLevels = lemmaPr.allLevels;
-        break;
-      }
-    }
-  }
-
-  // Sanitize Part of Speech to fall back if currently placeholder "Unknown"
-  const activePos = (card.partOfSpeech && card.partOfSpeech.toLowerCase() !== 'unknown') ? card.partOfSpeech : '';
-  const finalPos = activePos || dictPos || 'unknown';
-
-  // 5. Fetch premium dynamic example
-  let newExample = await fetchDynamicExample(wordStr);
-  if (!newExample) newExample = dictEx;
-  if (!newExample && (!card.example || isFallbackExample(wordStr, card.example))) {
-    newExample = getFallbackExample(wordStr, finalPos);
-  }
+  const aiData = await askGemini(prompt);
 
   // Load the fresh list from database again to ensure we do not overwrite concurrent UI operations
   const list = await getWords();
   const w = list.find(x => x.id === wordId);
   if (w) {
-    if (translation) w.translation = translation;
-    if (newDef) w.definition = newDef;
-    if (finalLevel) {
-      w.level = finalLevel;
-      w.otherLevels = allLevels.filter(l => l !== w.level);
+    if (aiData.definition) w.definition = aiData.definition;
+    if (aiData.transcription) w.transcription = aiData.transcription;
+    if (aiData.partOfSpeech) w.partOfSpeech = aiData.partOfSpeech;
+    if (aiData.translation) w.translation = aiData.translation;
+    if (aiData.level) {
+      w.level = aiData.level.toUpperCase().trim();
+      w.otherLevels = []; // Reset other levels as Gemini selects the single best level
     }
-    if (transcriptionVal) w.transcription = transcriptionVal;
-    if (newExample) {
-      if (w.example !== newExample) {
-        w.example = newExample;
+    if (aiData.example) {
+      if (w.example !== aiData.example) {
+        w.example = aiData.example;
         w.exampleTranslation = '';
       }
-    }
-    if (finalPos && finalPos !== 'unknown') {
-      w.partOfSpeech = finalPos;
     }
 
     await saveWords(list);
@@ -155,11 +92,8 @@ async function updateWordTranslation(wordId, targetLang) {
 
   await logDebug({
     word: wordStr,
-    isFallback,
-    originalEx,
-    newEx: newExample,
-    level: finalLevel,
-    transcription: transcriptionVal
+    hasExistingData,
+    aiData
   });
 }
 
@@ -169,24 +103,22 @@ export async function runBackgroundRetranslate(targetLang) {
     await logDebug({ type: 'start', count: words.length, targetLang });
     if (words.length === 0) return;
 
-    const batchSize = 5;
-    for (let i = 0; i < words.length; i += batchSize) {
-      const batch = words.slice(i, i + batchSize);
-      await Promise.all(batch.map(async (w) => {
-        try {
-          await updateWordTranslation(w.id, targetLang);
-        } catch (err) {
-          await logDebug({ word: w.word, error: err.message });
-          console.error(`Error refreshing "${w.word}" in background:`, err);
-        }
-      }));
-      await new Promise(resolve => setTimeout(resolve, 150));
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+      try {
+        await updateWordTranslation(w.id, targetLang);
+      } catch (err) {
+        await logDebug({ word: w.word, error: err.message });
+        console.error(`Error refreshing "${w.word}" via AI:`, err);
+      }
+      // Wait 3.5 seconds between requests to stay well within the 15 RPM free tier limit
+      await new Promise(resolve => setTimeout(resolve, 3500));
     }
 
     await logDebug({ type: 'completed', count: words.length });
     chrome.runtime.sendMessage({ action: 'retranslateCompleted', count: words.length }).catch(() => {});
   } catch (err) {
-    console.error('Background retranslate failed:', err);
+    console.error('Background AI refresh failed:', err);
     chrome.runtime.sendMessage({ action: 'retranslateFailed', error: err.message }).catch(() => {});
   }
 }

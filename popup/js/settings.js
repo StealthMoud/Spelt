@@ -185,8 +185,8 @@ export function initSettings(onDbRestored) {
 
   document.getElementById('retranslate-all-btn')?.addEventListener('click', () => {
     showConfirm(
-      'Refresh All Words',
-      'This will query Google Translate and the dictionary in the background to refresh all translations and details. Proceed?',
+      'Refresh All Words via AI',
+      'This will query Gemini AI in the background to clean up, enrich, and optimize translations and details for all library words (processed sequentially to fit free rate limits). Proceed?',
       triggerRetranslate
     );
   });
