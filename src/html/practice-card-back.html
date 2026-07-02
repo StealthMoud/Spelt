@@ -58,17 +58,27 @@
             </div>
 
             <!-- AI Active Writing Panel -->
-            <div id="ai-writing-practice-panel" style="display: none; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 6px; width: 100%;">
-              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                <span class="clue-label" id="ai-writing-practice-label" style="margin: 0; font-size: 0.68rem; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 4px;">
+            <div id="ai-writing-practice-panel" style="display: none; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 6px; width: 100%;">
+              <div id="ai-writing-practice-header" style="display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer;">
+                <span class="clue-label" style="margin: 0; font-size: 0.68rem; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 4px;">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 10px; height: 10px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                   <span id="ai-writing-practice-title-text">Active Writing Application</span>
                 </span>
-                <button type="button" id="ai-practice-writing-btn" class="submit-btn" style="width: auto; padding: 2px 8px; font-size: 0.65rem; height: 20px; line-height: 20px; margin-top: 0; display: inline-flex; align-items: center; gap: 3px; background: hsla(260, 60%, 45%, 0.12); border-color: hsla(260, 60%, 45%, 0.4); color: #c4b5fd;">
-                  <span>Verify with AI</span>
+                <button type="button" id="ai-writing-practice-toggle" class="ai-sparkle-btn" style="padding: 1px 6px; font-size: 0.62rem; height: 18px; line-height: 18px; background: hsla(260, 60%, 45%, 0.12); border: 1px solid hsla(260, 60%, 45%, 0.35); border-radius: var(--radius-sm); color: #c4b5fd; display: flex; align-items: center; gap: 3px; cursor: pointer; margin-top: -2px;">
+                  <span id="ai-writing-practice-toggle-text">Start Practice</span>
+                  <svg id="ai-writing-practice-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 8px; height: 8px; transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
               </div>
-              <textarea id="ai-practice-writing-input" class="premium-input" placeholder="Write your own sentence here to practice..." style="font-size: 0.72rem; height: 38px; width: 100%; box-sizing: border-box; resize: none; margin-top: 4px; padding: 6px 8px; line-height: 1.35; background: hsla(0,0%,0%,0.15);" autocomplete="off"></textarea>
+              
+              <div id="ai-writing-practice-body" style="display: none; flex-direction: column; gap: 4px; width: 100%;">
+                <textarea id="ai-practice-writing-input" class="premium-input" placeholder="Write your own sentence here to practice..." style="font-size: 0.72rem; height: 38px; width: 100%; box-sizing: border-box; resize: none; margin-top: 4px; padding: 6px 8px; line-height: 1.35; background: hsla(0,0%,0%,0.15);" autocomplete="off"></textarea>
+                <div style="display: flex; justify-content: flex-end; width: 100%; margin-top: 2px;">
+                  <button type="button" id="ai-practice-writing-btn" class="submit-btn" style="width: auto; padding: 2px 8px; font-size: 0.65rem; height: 20px; line-height: 20px; margin-top: 0; display: inline-flex; align-items: center; gap: 3px; background: hsla(260, 60%, 45%, 0.12); border-color: hsla(260, 60%, 45%, 0.4); color: #c4b5fd;">
+                    <span>Verify with AI</span>
+                  </button>
+                </div>
+              </div>
+              
               <div id="ai-practice-writing-feedback" style="display: none; position: absolute; left: 14px; right: 14px; bottom: 74px; max-height: calc(100% - 90px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 36px 10px 10px; font-size: 0.68rem; line-height: 1.45; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: all 0.2s ease;">
                 <div id="ai-practice-writing-feedback-content"></div>
                 <button type="button" id="ai-practice-writing-feedback-close" class="ai-bubble-btn" title="Close message" style="position: absolute; top: 6px; right: 6px;">

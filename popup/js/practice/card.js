@@ -529,12 +529,15 @@ async function setupAIWritingPractice(card) {
   const feedbackEl = document.getElementById('ai-practice-writing-feedback');
   const feedbackContentEl = document.getElementById('ai-practice-writing-feedback-content');
   const feedbackCloseBtn = document.getElementById('ai-practice-writing-feedback-close');
+  const headerEl = document.getElementById('ai-writing-practice-header');
+  const bodyEl = document.getElementById('ai-writing-practice-body');
 
-  if (!practicePanel || !inputEl || !verifyBtn || !feedbackEl) return;
+  if (!practicePanel || !inputEl || !verifyBtn || !feedbackEl || !headerEl || !bodyEl) return;
 
   // Clear inputs and state
   inputEl.value = '';
   feedbackEl.style.display = 'none';
+  bodyEl.style.display = 'none'; // Collapsed by default!
   if (feedbackContentEl) feedbackContentEl.innerHTML = '';
   if (writingFeedbackTimeoutId) {
     clearTimeout(writingFeedbackTimeoutId);
@@ -557,6 +560,33 @@ async function setupAIWritingPractice(card) {
     if (titleText) titleText.textContent = 'Active Vocabulary Practice';
     inputEl.setAttribute('placeholder', `Write a sentence using the word "${card.word}"...`);
   }
+
+  // Set up collapsible toggle
+  const newHeaderEl = headerEl.cloneNode(true);
+  headerEl.parentNode.replaceChild(newHeaderEl, headerEl);
+  
+  const toggleText = document.getElementById('ai-writing-practice-toggle-text');
+  const toggleIcon = document.getElementById('ai-writing-practice-toggle-icon');
+  
+  if (toggleText) toggleText.textContent = 'Start Practice';
+  if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+
+  newHeaderEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const freshToggleText = document.getElementById('ai-writing-practice-toggle-text');
+    const freshToggleIcon = document.getElementById('ai-writing-practice-toggle-icon');
+    
+    if (bodyEl.style.display === 'none') {
+      bodyEl.style.display = 'flex';
+      if (freshToggleText) freshToggleText.textContent = 'Collapse';
+      if (freshToggleIcon) freshToggleIcon.style.transform = 'rotate(180deg)';
+      inputEl.focus();
+    } else {
+      bodyEl.style.display = 'none';
+      if (freshToggleText) freshToggleText.textContent = 'Start Practice';
+      if (freshToggleIcon) freshToggleIcon.style.transform = 'rotate(0deg)';
+    }
+  });
 
   const showFeedback = (html, autoHideDuration) => {
     if (writingFeedbackTimeoutId) {
