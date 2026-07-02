@@ -26,6 +26,57 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_selection_lookup: e.target.checked });
   });
 
+  chrome.storage?.local.get('spelt_gemini_key', (res) => {
+    const key = res.spelt_gemini_key || '';
+    const keyInput = document.getElementById('setting-gemini-key');
+    if (keyInput) keyInput.value = key;
+  });
+
+  document.getElementById('setting-gemini-key')?.addEventListener('change', (e) => {
+    chrome.storage?.local.set({ spelt_gemini_key: e.target.value.trim() });
+  });
+
+  document.getElementById('test-gemini-btn')?.addEventListener('click', async () => {
+    const keyInput = document.getElementById('setting-gemini-key');
+    const statusEl = document.getElementById('gemini-test-status');
+    if (!keyInput || !statusEl) return;
+
+    const key = keyInput.value.trim();
+    if (!key) {
+      statusEl.style.display = 'block';
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = 'Please enter an API Key first.';
+      return;
+    }
+
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--primary-light)';
+    statusEl.textContent = 'Testing connection...';
+
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: 'Write the word "connected".' }] }]
+        })
+      });
+      if (res.ok) {
+        statusEl.style.color = 'var(--success)';
+        statusEl.textContent = '✅ Connected successfully!';
+        chrome.storage?.local.set({ spelt_gemini_key: key });
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData.error?.message || 'Invalid API Key or API Error';
+        statusEl.style.color = 'var(--danger)';
+        statusEl.textContent = `❌ Connection failed: ${errMsg}`;
+      }
+    } catch (err) {
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = `❌ Network error: ${err.message}`;
+    }
+  });
+
   chrome.storage?.onChanged.addListener((changes, area) => {
     if (area === 'local') {
       if (changes.spelt_target_lang) {

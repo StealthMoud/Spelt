@@ -68,3 +68,7 @@ export {
   getSessions,
   logSession
 } from './storage/sessions.js';
+
+export {
+  askGemini
+} from './storage/gemini.js';
