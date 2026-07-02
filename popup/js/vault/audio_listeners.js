@@ -26,7 +26,7 @@ export function registerAudioListeners() {
       e.preventDefault(); e.stopPropagation();
       if (e.key === ' ') {
         const word = document.getElementById('form-word')?.value.trim();
-        if (word) playWordAudio(word, 'uk').catch(err => console.error(err));
+        if (word) playWordAudio(word, 'us').catch(err => console.error(err));
       } else if (e.key === 'Escape') {
         closeModal();
       }

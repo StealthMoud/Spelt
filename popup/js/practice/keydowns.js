@@ -7,23 +7,23 @@ export function registerKeydowns() {
   document.getElementById('practice-play-example-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
     const rawExample = card?.example || getFallbackExample(card?.word || '', card?.partOfSpeech || '');
-    if (rawExample) playTextAudio(rawExample, 'uk');
+    if (rawExample) playTextAudio(rawExample, 'us');
   });
 
   document.getElementById('back-play-example-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
     const rawExample = card?.example || getFallbackExample(card?.word || '', card?.partOfSpeech || '');
-    if (rawExample) playTextAudio(rawExample, 'uk');
+    if (rawExample) playTextAudio(rawExample, 'us');
   });
 
   document.getElementById('practice-play-definition-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
-    if (card?.definition) playTextAudio(card.definition, 'uk');
+    if (card?.definition) playTextAudio(card.definition, 'us');
   });
 
   document.getElementById('back-play-definition-btn')?.addEventListener('click', () => {
     const card = getDueCards()[0];
-    if (card?.definition) playTextAudio(card.definition, 'uk');
+    if (card?.definition) playTextAudio(card.definition, 'us');
   });
 
   window.addEventListener('keydown', async (e) => {
