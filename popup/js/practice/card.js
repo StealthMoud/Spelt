@@ -2,6 +2,7 @@ import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCamb
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, getReviewedWordIds, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 import { generateHint, generateSessionSummary, generateSyntaxExplanation, verifyPracticeWriting } from './ai_helpers.js';
+import { populateBackFace } from './actions.js';
 
 let currentSyntaxCard = null;
 let scrambledPool = [];
@@ -202,6 +203,11 @@ export function showPracticeCard() {
   setupAISyntaxExplain(card);
   setupAIWritingPractice(card);
   setupAISpellingFeedback();
+  
+  populateFrontFace(card);
+}
+
+export function populateFrontFace(card) {
   const mode = getPracticeMode();
 
   const frontSpellingContent = document.getElementById('front-spelling-content');
@@ -375,7 +381,16 @@ export async function syncPracticeDeck() {
   }));
   setDueCards(due); getOnDeckUpdated()?.();
   const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');
-  if (oldActiveId !== newActiveId || (!isFlipped && !getIsSubmitting())) showPracticeCard();
+  if (oldActiveId !== newActiveId || (!isFlipped && !getIsSubmitting())) {
+    showPracticeCard();
+  } else if (newActiveId && isFlipped) {
+    // Refresh front and back faces in-place without resetting flipped state/inputs
+    const freshCard = fresh.find(w => w.id === newActiveId);
+    if (freshCard) {
+      populateFrontFace(freshCard);
+      populateBackFace(freshCard);
+    }
+  }
 }
 
 async function setupAIHintButton(card) {

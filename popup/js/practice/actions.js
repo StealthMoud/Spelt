@@ -5,7 +5,7 @@ import { isGeminiConfigured, generateMisspellingFeedback, generateRecallFeedback
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
-function populateBackFace(card) {
+export function populateBackFace(card) {
   const isSyntax = card.practiceType === 'syntax';
   
   document.getElementById('back-word-display').textContent = card.word;
