@@ -26,6 +26,7 @@ align-items: center;
   gap: 4px;
   margin-top: auto;
   padding-top: 8px;
+  margin-bottom: 2px;
   border-top: 1px solid hsla(155, 10%, 25%, 0.15);
 }
 

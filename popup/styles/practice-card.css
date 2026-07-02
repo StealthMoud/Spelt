@@ -1,7 +1,7 @@
 /* Practice Card depth elements and dividers */
 .flashcard {
   position: relative;
-  height: 295px;
+  height: 335px;
   width: 100%;
   perspective: 1200px;
   margin-top: 4px;
