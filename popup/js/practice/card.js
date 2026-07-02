@@ -368,10 +368,14 @@ async function setupAIHintButton(card) {
   const closeBtn = document.getElementById('ai-hint-close');
   if (!hintBtn || !hintBubble || !hintText) return;
 
-  if (aiHintTimeoutId) {
-    clearTimeout(aiHintTimeoutId);
-    aiHintTimeoutId = null;
-  }
+  // Reset dragged positions back to default stylesheet styles on setup
+  hintBubble.style.top = 'auto';
+  hintBubble.style.right = '14px';
+  hintBubble.style.bottom = '62px';
+  hintBubble.style.left = '14px';
+
+  // Make the hint bubble draggable
+  makeElementDraggable(hintBubble);
 
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured || card.practiceType === 'syntax') {
@@ -384,10 +388,6 @@ async function setupAIHintButton(card) {
   hintText.textContent = '';
 
   const handleHintRequest = async (forceRegen = false) => {
-    if (aiHintTimeoutId) {
-      clearTimeout(aiHintTimeoutId);
-      aiHintTimeoutId = null;
-    }
     hintText.textContent = forceRegen ? 'Regenerating mnemonic...' : 'Asking AI Coach...';
     hintBubble.style.display = 'block';
     try {
@@ -396,18 +396,8 @@ async function setupAIHintButton(card) {
       }
       const hint = await generateHint(card);
       hintText.textContent = hint;
-      // Start 25-second auto-hide timer once loaded
-      aiHintTimeoutId = setTimeout(() => {
-        hintBubble.style.display = 'none';
-        aiHintTimeoutId = null;
-      }, 25000);
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
-      // Auto-hide error messages after 6 seconds
-      aiHintTimeoutId = setTimeout(() => {
-        hintBubble.style.display = 'none';
-        aiHintTimeoutId = null;
-      }, 6000);
     }
   };
 
@@ -418,10 +408,6 @@ async function setupAIHintButton(card) {
     e.stopPropagation();
     if (hintBubble.style.display === 'block') {
       hintBubble.style.display = 'none';
-      if (aiHintTimeoutId) {
-        clearTimeout(aiHintTimeoutId);
-        aiHintTimeoutId = null;
-      }
     } else {
       handleHintRequest(false);
     }
@@ -442,10 +428,6 @@ async function setupAIHintButton(card) {
     newCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       hintBubble.style.display = 'none';
-      if (aiHintTimeoutId) {
-        clearTimeout(aiHintTimeoutId);
-        aiHintTimeoutId = null;
-      }
     });
   }
 }
@@ -533,6 +515,15 @@ async function setupAIWritingPractice(card) {
   const bodyEl = document.getElementById('ai-writing-practice-body');
 
   if (!practicePanel || !inputEl || !verifyBtn || !feedbackEl || !headerEl || !bodyEl) return;
+
+  // Reset dragged position back to defaults on load
+  feedbackEl.style.top = 'auto';
+  feedbackEl.style.right = '14px';
+  feedbackEl.style.bottom = '74px';
+  feedbackEl.style.left = '14px';
+
+  // Make writing practice feedback overlay draggable
+  makeElementDraggable(feedbackEl);
 
   // Clear inputs and state
   inputEl.value = '';
@@ -646,6 +637,61 @@ async function setupAIWritingPractice(card) {
         writingFeedbackTimeoutId = null;
       }
     });
+  }
+}
+
+/**
+ * Make an absolute positioned element draggable within the card face limits
+ */
+function makeElementDraggable(el) {
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+  el.addEventListener('mousedown', dragMouseDown);
+
+  function dragMouseDown(e) {
+    if (e.target.closest('button') || e.target.closest('a')) {
+      return;
+    }
+    e.preventDefault();
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.addEventListener('mouseup', closeDragElement);
+    document.addEventListener('mousemove', elementDrag);
+  }
+
+  function elementDrag(e) {
+    e.preventDefault();
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+
+    const parentRect = el.parentElement.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    
+    let newTop = el.offsetTop - pos2;
+    let newLeft = el.offsetLeft - pos1;
+    
+    // Boundary check so it doesn't leave the card bounds
+    const margin = 8;
+    if (newLeft < margin) newLeft = margin;
+    if (newLeft + rect.width > parentRect.width - margin) {
+      newLeft = parentRect.width - rect.width - margin;
+    }
+    if (newTop < margin) newTop = margin;
+    if (newTop + rect.height > parentRect.height - margin) {
+      newTop = parentRect.height - rect.height - margin;
+    }
+
+    el.style.bottom = 'auto';
+    el.style.right = 'auto';
+    el.style.left = `${newLeft}px`;
+    el.style.top = `${newTop}px`;
+  }
+
+  function closeDragElement() {
+    document.removeEventListener('mouseup', closeDragElement);
+    document.removeEventListener('mousemove', elementDrag);
   }
 }
 
