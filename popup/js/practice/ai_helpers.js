@@ -14,11 +14,11 @@ ${card.transcription ? `Pronunciation: ${card.transcription}` : ''}
 ${card.partOfSpeech ? `Part of speech: ${card.partOfSpeech}` : ''}
 ${card.misspellings?.length ? `Common misspellings: ${[...new Set(card.misspellings)].slice(0, 5).join(', ')}` : ''}
 
-Create a short, creative, memorable mnemonic or memory trick to help the learner:
-1. Remember the SPELLING of the word
-2. Remember its MEANING
+Create a short, intuitive, and highly logical mnemonic or memory trick to help the learner remember:
+1. The SPELLING of the word (ensure any spelling trick or breakdown is 100% accurate and makes sense).
+2. The MEANING of the word.
 
-Keep it to 1-3 sentences maximum. Be creative — use wordplay, visual associations, rhymes, acronyms, or etymology. Do NOT use markdown formatting. Just plain text.`;
+Focus on breaking down the word into real, recognizable parts (e.g., roots, prefixes, suffixes, simpler constituent words) or logical visual associations. Avoid convoluted logic, nonsensical links, or inaccurate spelling claims. Keep it to 1-2 sentences maximum. Do NOT use markdown formatting. Just plain text.`;
 
   const hint = await askGeminiText(prompt);
   
