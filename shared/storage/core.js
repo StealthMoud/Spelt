@@ -114,19 +114,27 @@ export async function getWords() {
     if (Array.isArray(w.history) && w.history.length > 0) {
       const lastSpelling = [...w.history].reverse().find(h => h.mode === 'spelling');
       if (lastSpelling && lastSpelling.date && lastSpelling.interval !== undefined) {
-        const expectedNext = lastSpelling.date + lastSpelling.interval * 24 * 60 * 60 * 1000;
-        if (expectedNext > Date.now() && (w.nextDate <= Date.now() || isNaN(w.nextDate))) {
-          w.nextDate = expectedNext;
-          cardModified = true;
+        const intervalNum = Number(lastSpelling.interval);
+        const dateNum = typeof lastSpelling.date === 'string' ? Date.parse(lastSpelling.date) : Number(lastSpelling.date);
+        if (!isNaN(intervalNum) && !isNaN(dateNum)) {
+          const expectedNext = dateNum + intervalNum * 24 * 60 * 60 * 1000;
+          if (expectedNext > Date.now() && (w.nextDate <= Date.now() || isNaN(w.nextDate))) {
+            w.nextDate = expectedNext;
+            cardModified = true;
+          }
         }
       }
 
       const lastMeaning = [...w.history].reverse().find(h => h.mode === 'meaning');
       if (lastMeaning && lastMeaning.date && lastMeaning.interval !== undefined) {
-        const expectedNext = lastMeaning.date + lastMeaning.interval * 24 * 60 * 60 * 1000;
-        if (expectedNext > Date.now() && (w.meaningNextDate <= Date.now() || isNaN(w.meaningNextDate))) {
-          w.meaningNextDate = expectedNext;
-          cardModified = true;
+        const intervalNum = Number(lastMeaning.interval);
+        const dateNum = typeof lastMeaning.date === 'string' ? Date.parse(lastMeaning.date) : Number(lastMeaning.date);
+        if (!isNaN(intervalNum) && !isNaN(dateNum)) {
+          const expectedNext = dateNum + intervalNum * 24 * 60 * 60 * 1000;
+          if (expectedNext > Date.now() && (w.meaningNextDate <= Date.now() || isNaN(w.meaningNextDate))) {
+            w.meaningNextDate = expectedNext;
+            cardModified = true;
+          }
         }
       }
     }
