@@ -26,10 +26,11 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_selection_lookup: e.target.checked });
   });
 
-  // Load Gemini key and model on startup
-  chrome.storage?.local.get(['spelt_gemini_key', 'spelt_gemini_model'], (res) => {
+  // Load Gemini key, model and model list on startup
+  chrome.storage?.local.get(['spelt_gemini_key', 'spelt_gemini_model', 'spelt_gemini_models_list'], (res) => {
     const key = res.spelt_gemini_key || '';
     const model = res.spelt_gemini_model || '';
+    const modelsList = res.spelt_gemini_models_list || [];
     const keyInput = document.getElementById('setting-gemini-key');
     if (keyInput) keyInput.value = key;
 
@@ -37,7 +38,20 @@ export function initSettings(onDbRestored) {
       const modelSelect = document.getElementById('setting-gemini-model');
       const modelContainer = document.getElementById('gemini-model-container');
       if (modelSelect && modelContainer) {
-        modelSelect.innerHTML = `<option value="${model}">${model.replace('models/', '')}</option>`;
+        modelSelect.innerHTML = '';
+        if (modelsList.length > 0) {
+          modelsList.forEach(mName => {
+            const option = document.createElement('option');
+            option.value = mName;
+            option.textContent = mName.replace('models/', '');
+            modelSelect.appendChild(option);
+          });
+        } else {
+          const option = document.createElement('option');
+          option.value = model;
+          option.textContent = model.replace('models/', '');
+          modelSelect.appendChild(option);
+        }
         modelSelect.value = model;
         modelContainer.style.display = 'flex';
       }
@@ -129,7 +143,13 @@ export function initSettings(onDbRestored) {
       if (testRes.ok) {
         statusEl.style.color = 'var(--success)';
         statusEl.textContent = `✅ Connected successfully! Model ${defaultModel.replace('models/', '')} is verified.`;
-        chrome.storage?.local.set({ spelt_gemini_key: key, spelt_gemini_model: defaultModel });
+        
+        const modelNames = availableModels.map(m => m.name);
+        chrome.storage?.local.set({ 
+          spelt_gemini_key: key, 
+          spelt_gemini_model: defaultModel,
+          spelt_gemini_models_list: modelNames
+        });
       } else {
         const errData = await testRes.json().catch(() => ({}));
         const errMsg = errData.error?.message || 'Verification request failed';
