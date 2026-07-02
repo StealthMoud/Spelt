@@ -237,12 +237,15 @@ Return ONLY the raw JSON object. Do not wrap it in markdown formatting or code b
     } catch (_) {}
   } catch (err) {
     console.error('[Spelt AI] Failed to load insights:', err);
-    contentEl.innerHTML = `<span style="color: var(--danger);">Could not load AI Insights: ${err.message}</span>`;
-    
-    // If generation failed, fallback to show Generate button again after brief delay
-    setTimeout(() => {
-      showGeneratePlaceholder();
-    }, 4000);
+    contentEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0;">
+        <span style="color: var(--danger); font-size: 0.68rem;">${err.message}</span>
+        <button type="button" id="stats-ai-generate-btn" class="submit-btn" style="width: auto; font-size: 0.68rem; padding: 5px 12px; border-radius: var(--radius-md); background: hsla(260, 60%, 50%, 0.2); border: 1px solid hsla(260, 60%, 65%, 0.4); color: #c4b5fd; cursor: pointer;">
+          🔄 Try Again
+        </button>
+      </div>
+    `;
+    hideSubtabPanels();
   } finally {
     if (refreshBtn) {
       refreshBtn.disabled = false;
