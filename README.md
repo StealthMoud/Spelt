@@ -40,6 +40,7 @@ Type any word and press **Enter** to check it against the dictionary API.
 ### 🗂️ SRS Practice Deck
 Spelling errors show up as spaced repetition flashcards using the SuperMemo-2 (SM-2) algorithm.
 * **Contextual Clues**: Front of card displays definitions, inflected part of speech, and the word censored inside a contextual example sentence.
+* **AI Spelling Hints (Front & Back)**: Access memorable, structured spelling mnemonics on both the front face (before checking spelling) or on the back face of the card (after checking spelling) to assist spelling retention.
 * **Dynamic SRS Interval Hints**: Rating buttons dynamically calculate and display future intervals based on card metrics.
 * **Shortcut Helper Badges**: Keyboard overlay indicators (Again `1` to Mastered `5`) guide fast reviews.
 * **Interactive Mastered State**: Dedicated "Mastered" rating button (with confirmation modal) archives cards directly.
@@ -86,6 +87,13 @@ Keep your spelling practice consistent. Track your daily learning sessions with 
 
 ### 💾 Export / Import
 Back up your database as a clean JSON file and restore it on any device.
+
+### 🤖 Quota-Efficient Smart AI Integration
+Spelt includes advanced Gemini AI coaching integration designed with efficiency and resource limits in mind.
+* **Purely On-Demand Execution**: No automatic background API calls occur. AI insights, mnemonics, list enrichment, and grading run strictly when you initiate them.
+* **Intelligent Feature Detection**: Fallback logic dynamically discovers whether models support specific features (like structured JSON `responseMimeType`), caching compatibility per-model to prevent failure storms.
+* **Permanent Blacklisting**: Models returning non-recoverable errors (e.g. invalid arguments or deprecated endpoints) are blacklisted for the session, preserving your API quota by preventing loops.
+* **Authentic Cooldown Mapping**: Only genuine rate-limit errors (429 status codes) apply temporary cooldowns.
 
 ---
 
