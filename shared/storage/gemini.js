@@ -65,6 +65,22 @@ function isRateLimitError(status, errorMessage) {
 }
 
 /**
+ * Check if an error indicates a transient condition (rate limits, 5xx server issues, or temporary overload).
+ */
+function isTransientError(status, errorMessage) {
+  if (!status) return true; // Network errors are transient
+  if (status === 429) return true;
+  if (status >= 500 && status <= 599) return true; // 5xx server issues are transient
+  const msg = (errorMessage || '').toLowerCase();
+  return msg.includes('quota') || 
+         msg.includes('rate limit') || 
+         msg.includes('resource_exhausted') || 
+         msg.includes('high demand') || 
+         msg.includes('overloaded') ||
+         msg.includes('temporary');
+}
+
+/**
  * Check if an error is specifically about responseMimeType not being supported.
  */
 function isResponseMimeTypeError(errorMessage) {
@@ -244,10 +260,11 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
           const retryStatus = retryErr.status;
           const retryMsg = retryErr.apiMessage || retryErr.message;
 
-          if (isRateLimitError(retryStatus, retryMsg)) {
-            const delay = parseRetryDelay(retryMsg);
+          if (isTransientError(retryStatus, retryMsg)) {
+            const isServerErr = retryStatus >= 500;
+            const delay = retryStatus === 429 ? parseRetryDelay(retryMsg) : (isServerErr ? 30000 : 15000);
             rateLimitCooldowns.set(model, Date.now() + delay);
-            console.warn(`[Spelt AI] Model ${model} rate-limited. Cooldown ${Math.ceil(delay / 1000)}s.`);
+            console.warn(`[Spelt AI] Model ${model} transient failure on retry (status ${retryStatus || 'network'}). Cooldown ${Math.ceil(delay / 1000)}s.`);
           } else {
             // Non-recoverable error on retry — blacklist this model
             badModels.add(model);
@@ -258,25 +275,17 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
         }
       }
 
-      // Case 2: Genuine rate limit (429 or quota error)
-      if (isRateLimitError(status, errMsg)) {
-        const delay = parseRetryDelay(errMsg);
+      // Case 2: Transient failure (rate limit, 5xx server overload, network drop)
+      if (isTransientError(status, errMsg)) {
+        const isServerErr = status >= 500;
+        const delay = status === 429 ? parseRetryDelay(errMsg) : (isServerErr ? 30000 : 15000);
         rateLimitCooldowns.set(model, Date.now() + delay);
-        console.warn(`[Spelt AI] Model ${model} rate-limited. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
+        console.warn(`[Spelt AI] Model ${model} transient failure (status ${status || 'network'}): ${errMsg}. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
         lastError = err;
         continue;
       }
 
-      // Case 3: Network error (Failed to fetch — offline, CORS, etc.)
-      if (!status) {
-        console.warn(`[Spelt AI] Model ${model} fetch exception: ${err.message}. Trying next tier...`);
-        // Don't blacklist — could be transient network issue. Apply short cooldown.
-        rateLimitCooldowns.set(model, Date.now() + 15000); // 15s for network errors
-        lastError = err;
-        continue;
-      }
-
-      // Case 4: Other HTTP errors (400 for bad payload, 404 model not found, etc.)
+      // Case 3: Other HTTP errors (400 for bad payload, 404 model not found, etc.)
       // These are permanent for this session — the model won't start working.
       badModels.add(model);
       console.warn(`[Spelt AI] Model ${model} failed (status ${status}): ${errMsg}. Blacklisted for this session.`);
