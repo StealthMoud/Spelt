@@ -23,6 +23,22 @@ The idea is simple: type a word, check the spelling, and if it's wrong, Spelt sa
   <img src="docs/screenshot-popup.png" alt="Spelt Popup Interface" width="360" />
 </p>
 
+## 🤖 Premium AI Coaching (Gemini-Powered)
+
+Spelt features a state-of-the-art **Gemini AI Coaching Integration** that acts as your personal vocabulary assistant. All AI interactions are designed to be **highly visual, interactive, and fully on-demand** to respect your API quotas.
+
+### Key AI Features:
+* 💡 **Interactive Spelling Mnemonics (Front & Back Face)**: Stuck on a card or want to lock down the spelling after a correct review? Click the **AI Hint** button on the front or back of the card to reveal a draggable, custom spelling trick or association.
+* 📝 **Active Sentence Verification**: Practice using newly acquired words in context by writing custom sentences, then get graded instantly by the AI Coach with structured HTML corrections and suggestions.
+* 📊 **Smart Learning Insights**: Generate a full analytics review from the statistics dashboard, delivering actionable tips on CEFR level distribution, study routines, and response accuracy.
+* ⚡ **Quota-Efficient Fallback Engine**: Per-model feature checks (e.g. for `responseMimeType`), session-scoped error blacklisting, and zero automatic background requests protect your API quota.
+
+<p align="center">
+  <img src="docs/screenshot-practice-result.png" alt="AI Hint Mnemonic Popup" width="340" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshot-stats.png" alt="AI Stats Insights Panel" width="340" />
+</p>
+
 ## Features
 
 ### 🔍 Spellcheck Sandbox
