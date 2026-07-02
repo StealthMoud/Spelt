@@ -7,6 +7,7 @@ let currentSyntaxCard = null;
 let scrambledPool = [];
 let orderedBlocks = [];
 let writingFeedbackTimeoutId = null;
+let aiHintTimeoutId = null;
 
 function shuffleArray(array) {
   const copy = [...array];
@@ -367,6 +368,11 @@ async function setupAIHintButton(card) {
   const closeBtn = document.getElementById('ai-hint-close');
   if (!hintBtn || !hintBubble || !hintText) return;
 
+  if (aiHintTimeoutId) {
+    clearTimeout(aiHintTimeoutId);
+    aiHintTimeoutId = null;
+  }
+
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured || card.practiceType === 'syntax') {
     hintBtn.style.display = 'none';
@@ -378,6 +384,10 @@ async function setupAIHintButton(card) {
   hintText.textContent = '';
 
   const handleHintRequest = async (forceRegen = false) => {
+    if (aiHintTimeoutId) {
+      clearTimeout(aiHintTimeoutId);
+      aiHintTimeoutId = null;
+    }
     hintText.textContent = forceRegen ? 'Regenerating mnemonic...' : 'Asking AI Coach...';
     hintBubble.style.display = 'block';
     try {
@@ -386,8 +396,18 @@ async function setupAIHintButton(card) {
       }
       const hint = await generateHint(card);
       hintText.textContent = hint;
+      // Start 25-second auto-hide timer once loaded
+      aiHintTimeoutId = setTimeout(() => {
+        hintBubble.style.display = 'none';
+        aiHintTimeoutId = null;
+      }, 25000);
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
+      // Auto-hide error messages after 6 seconds
+      aiHintTimeoutId = setTimeout(() => {
+        hintBubble.style.display = 'none';
+        aiHintTimeoutId = null;
+      }, 6000);
     }
   };
 
@@ -398,6 +418,10 @@ async function setupAIHintButton(card) {
     e.stopPropagation();
     if (hintBubble.style.display === 'block') {
       hintBubble.style.display = 'none';
+      if (aiHintTimeoutId) {
+        clearTimeout(aiHintTimeoutId);
+        aiHintTimeoutId = null;
+      }
     } else {
       handleHintRequest(false);
     }
@@ -418,6 +442,10 @@ async function setupAIHintButton(card) {
     newCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       hintBubble.style.display = 'none';
+      if (aiHintTimeoutId) {
+        clearTimeout(aiHintTimeoutId);
+        aiHintTimeoutId = null;
+      }
     });
   }
 }
