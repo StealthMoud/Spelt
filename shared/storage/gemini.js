@@ -274,6 +274,7 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
 
     try {
       const response = await callModel(key, model, payload);
+      chrome.storage?.local.set({ spelt_last_used_model: model });
       return { response, modelUsed: model };
     } catch (err) {
       const status = err.status;
@@ -304,6 +305,7 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
           }
 
           const response = await callModel(key, model, fallbackPayload);
+          chrome.storage?.local.set({ spelt_last_used_model: model });
           return { response, modelUsed: model };
         } catch (retryErr) {
           // If the retry also fails, handle based on error type
@@ -434,3 +436,33 @@ export async function askGeminiText(prompt) {
     return text.trim();
   });
 }
+
+/**
+ * Returns the realtime status of all available models.
+ */
+export async function getAiStatus() {
+  const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
+  const modelTiers = await getAvailableModelTiers(preferredModel);
+  const now = Date.now();
+  const lastUsed = await getStored('spelt_last_used_model') || null;
+
+  return modelTiers.map(model => {
+    const cooldownUntil = rateLimitCooldowns.get(model) || 0;
+    const cooldownRemaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
+    let status = 'ready';
+    if (badModels.has(model)) {
+      status = 'bad';
+    } else if (cooldownRemaining > 0) {
+      status = 'cooldown';
+    }
+
+    return {
+      name: model,
+      status,
+      cooldownRemaining,
+      isPreferred: model === preferredModel || model === ('models/' + preferredModel),
+      isLastUsed: model === lastUsed
+    };
+  });
+}
+

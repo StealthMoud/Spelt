@@ -1,5 +1,6 @@
 import { showConfirm } from './vault.js';
 import { exportDb, importDb, wipeDb } from './settings/actions.js';
+import { getAiStatus } from '../../shared/storage.js';
 
 let onDbRestoredCallback = null;
 
@@ -70,12 +71,16 @@ export function initSettings(onDbRestored) {
 
   // Save Gemini Key on change
   document.getElementById('setting-gemini-key')?.addEventListener('change', (e) => {
-    chrome.storage?.local.set({ spelt_gemini_key: e.target.value.trim() });
+    chrome.storage?.local.set({ spelt_gemini_key: e.target.value.trim() }, () => {
+      renderAiStatusMonitor();
+    });
   });
 
   // Save Gemini Model on change
   document.getElementById('setting-gemini-model')?.addEventListener('change', (e) => {
-    chrome.storage?.local.set({ spelt_gemini_model: e.target.value });
+    chrome.storage?.local.set({ spelt_gemini_model: e.target.value }, () => {
+      renderAiStatusMonitor();
+    });
   });
 
   // Test Gemini Key and List Models
@@ -166,6 +171,8 @@ export function initSettings(onDbRestored) {
           spelt_gemini_key: key, 
           spelt_gemini_model: defaultModel,
           spelt_gemini_models_list: modelNames
+        }, () => {
+          renderAiStatusMonitor();
         });
       } else {
         const errData = await testRes.json().catch(() => ({}));
@@ -220,7 +227,101 @@ export function initSettings(onDbRestored) {
       showConfirm('Update Failed', `Error: ${message.error}`, null, false);
     }
   });
+
+  // Initial render of AI model status monitor
+  renderAiStatusMonitor();
+
+  // Periodically refresh the status monitor to reflect remaining cooldown times
+  setInterval(renderAiStatusMonitor, 2000);
 }
+
+async function renderAiStatusMonitor() {
+  const keyInput = document.getElementById('setting-gemini-key');
+  const monitorBlock = document.getElementById('ai-status-monitor-block');
+  const container = document.getElementById('ai-status-list-container');
+  if (!keyInput || !monitorBlock || !container) return;
+
+  const key = keyInput.value.trim();
+  if (!key) {
+    monitorBlock.style.display = 'none';
+    return;
+  }
+
+  try {
+    const statuses = await getAiStatus();
+    if (statuses.length === 0) {
+      monitorBlock.style.display = 'none';
+      return;
+    }
+
+    monitorBlock.style.display = 'flex';
+    container.innerHTML = '';
+
+    let lastUsedName = 'none';
+
+    statuses.forEach(item => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.justifyContent = 'space-between';
+      row.style.padding = '4px 6px';
+      row.style.background = 'rgba(255, 255, 255, 0.03)';
+      row.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+      row.style.borderRadius = 'var(--radius-sm)';
+      row.style.fontSize = '0.66rem';
+
+      // Status indicator circle/dot and text
+      let indicatorHtml = '';
+      let statusText = 'Ready';
+      let indicatorColor = 'var(--success)';
+
+      if (item.status === 'bad') {
+        indicatorColor = 'var(--danger)';
+        statusText = 'Failed/Blocked';
+        indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px;"></span>`;
+      } else if (item.status === 'cooldown') {
+        indicatorColor = '#f59e0b'; // orange
+        statusText = `Cooldown (${item.cooldownRemaining}s)`;
+        indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px; animation: pulse 1s infinite alternate;"></span>`;
+      } else {
+        indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px;"></span>`;
+      }
+
+      // Badges
+      let badgesHtml = '';
+      if (item.isPreferred) {
+        badgesHtml += `<span style="background: hsla(260, 60%, 50%, 0.25); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Preferred</span>`;
+      }
+      if (item.isLastUsed) {
+        badgesHtml += `<span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Last Used</span>`;
+        lastUsedName = item.name.replace('models/', '');
+      }
+
+      const shortName = item.name.replace('models/', '');
+
+      row.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 4px; font-weight: 500; color: var(--text);">
+          <span>${shortName}</span>
+          ${badgesHtml}
+        </div>
+        <div style="display: flex; align-items: center; color: var(--text-muted); font-size: 0.62rem;">
+          ${indicatorHtml}
+          <span>${statusText}</span>
+        </div>
+      `;
+
+      container.appendChild(row);
+    });
+
+    const lastUsedEl = document.getElementById('ai-monitor-last-used-label');
+    if (lastUsedEl) {
+      lastUsedEl.textContent = lastUsedName !== 'none' ? `Active: ${lastUsedName}` : 'No model used yet';
+    }
+  } catch (err) {
+    console.error('Error rendering status monitor:', err);
+  }
+}
+
 
 async function triggerRetranslate() {
   const allowRes = await new Promise(r => chrome.storage?.local.get('spelt_allow_background_ai', r));

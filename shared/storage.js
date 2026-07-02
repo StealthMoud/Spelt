@@ -72,5 +72,6 @@ export {
 export {
   askGemini,
   askGeminiText,
-  isGeminiConfigured
+  isGeminiConfigured,
+  getAiStatus
 } from './storage/gemini.js';

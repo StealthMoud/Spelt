@@ -968,6 +968,20 @@
               </p>
             </div>
             <p id="gemini-test-status" style="font-size: 0.65rem; margin-top: 5px; display: none; font-weight: 500;"></p>
+            
+            <!-- AI Model Status & Fallback Monitor Panel -->
+            <div id="ai-status-monitor-block" style="display: none; margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px; flex-direction: column; gap: 6px; width: 100%;">
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <strong style="font-size: 0.7rem; color: #a78bfa; display: flex; align-items: center; gap: 4px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 10px; height: 10px; flex-shrink: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  AI Model Status Monitor
+                </strong>
+                <span id="ai-monitor-last-used-label" style="font-size: 0.6rem; color: var(--text-muted);"></span>
+              </div>
+              <div id="ai-status-list-container" style="display: flex; flex-direction: column; gap: 5px; width: 100%; margin-top: 2px;">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
           </div>
           <div class="settings-block">
             <strong>Text Selection Lookup</strong>
