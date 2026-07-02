@@ -683,6 +683,12 @@ function makeElementDraggable(el) {
     if (e.target.closest('button') || e.target.closest('a')) {
       return;
     }
+    // Prevent dragging when targeting selectable AI text
+    if (e.target.closest('#ai-feedback-text') || 
+        e.target.closest('#ai-hint-text') || 
+        e.target.closest('#ai-practice-writing-feedback-content')) {
+      return;
+    }
     e.preventDefault();
     
     startX = e.clientX;
@@ -703,6 +709,12 @@ function makeElementDraggable(el) {
 
   function dragTouchStart(e) {
     if (e.target.closest('button') || e.target.closest('a')) {
+      return;
+    }
+    // Prevent dragging when targeting selectable AI text
+    if (e.target.closest('#ai-feedback-text') || 
+        e.target.closest('#ai-hint-text') || 
+        e.target.closest('#ai-practice-writing-feedback-content')) {
       return;
     }
     const touch = e.touches[0];

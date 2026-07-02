@@ -1,6 +1,30 @@
 import { getStored } from './core.js';
 
 /**
+ * Model Tier List — ordered strongest → weakest.
+ * At runtime, filtered against the user's actual available models.
+ */
+const MODEL_TIERS = [
+  'models/gemini-3.5-flash',
+  'models/gemini-3.1-flash-lite',
+  'models/gemini-2.5-pro',
+  'models/gemini-2.5-flash',
+  'models/gemini-2.5-flash-lite',
+  'models/gemini-2.0-flash',
+  'models/gemini-2.0-flash-001',
+  'models/gemini-2.0-flash-lite',
+  'models/gemini-2.0-flash-lite-001',
+  'models/gemma-4-31b-it',
+  'models/gemma-4-26b-a4b-it',
+];
+
+/**
+ * In-memory rate limit cooldown map: modelName → timestamp when cooldown expires.
+ * Resets naturally on extension reload. No persistent storage needed.
+ */
+const rateLimitCooldowns = new Map();
+
+/**
  * Returns true if the user has configured a Gemini API key.
  */
 export async function isGeminiConfigured() {
@@ -9,8 +33,145 @@ export async function isGeminiConfigured() {
 }
 
 /**
+ * Parse the retry delay from a Gemini rate limit error message.
+ * Looks for patterns like "Please retry in 38.658460616s" or "retry after 60s".
+ * Returns delay in milliseconds, or a 60s default.
+ */
+function parseRetryDelay(errorMessage) {
+  const match = errorMessage.match(/retry\s+(?:in|after)\s+([\d.]+)s/i);
+  if (match) {
+    return Math.ceil(parseFloat(match[1]) * 1000);
+  }
+  return 60000; // 60s default
+}
+
+/**
+ * Check if an error indicates a rate limit / quota exhaustion.
+ */
+function isRateLimitError(status, errorMessage) {
+  if (status === 429) return true;
+  const msg = (errorMessage || '').toLowerCase();
+  return msg.includes('quota') || msg.includes('rate limit') || msg.includes('resource_exhausted');
+}
+
+/**
+ * Get the ordered list of available models for fallback, filtered against the user's actual models.
+ * The user's preferred model (from settings) is always tried first.
+ */
+async function getAvailableModelTiers(preferredModel) {
+  const storedList = await getStored('spelt_gemini_models_list') || [];
+  const availableSet = new Set(storedList);
+
+  // Normalize the preferred model
+  const cleanPreferred = preferredModel.startsWith('models/') ? preferredModel : 'models/' + preferredModel;
+
+  // Build ordered list: preferred first, then tiers in order (excluding preferred to avoid dupes)
+  const ordered = [cleanPreferred];
+  for (const tier of MODEL_TIERS) {
+    if (tier !== cleanPreferred && availableSet.has(tier)) {
+      ordered.push(tier);
+    }
+  }
+
+  // Also add any available models not in our tier list (at the end, as unknown-tier fallbacks)
+  for (const m of storedList) {
+    if (!ordered.includes(m)) {
+      ordered.push(m);
+    }
+  }
+
+  return ordered;
+}
+
+/**
+ * Find the best available model — the highest-tier model whose cooldown has expired.
+ * Returns the model name string.
+ */
+function pickBestAvailableModel(models) {
+  const now = Date.now();
+  for (const model of models) {
+    const cooldownUntil = rateLimitCooldowns.get(model) || 0;
+    if (now >= cooldownUntil) {
+      return model;
+    }
+  }
+  return null; // All rate-limited
+}
+
+/**
+ * Get the shortest remaining cooldown across all rate-limited models (in seconds).
+ */
+function getShortestWait() {
+  const now = Date.now();
+  let shortest = Infinity;
+  for (const [, expiresAt] of rateLimitCooldowns) {
+    const remaining = expiresAt - now;
+    if (remaining > 0 && remaining < shortest) {
+      shortest = remaining;
+    }
+  }
+  return shortest === Infinity ? 60 : Math.ceil(shortest / 1000);
+}
+
+/**
+ * Core fetch wrapper with automatic model fallback on rate limit.
+ * Tries the preferred model first, then falls back through tiers.
+ *
+ * @param {string} key - API key
+ * @param {object} bodyPayload - The request body (contents, generationConfig, etc.)
+ * @param {string[]} modelTiers - Ordered list of model names to try
+ * @returns {{ response: Response, modelUsed: string }}
+ */
+async function fetchWithFallback(key, bodyPayload, modelTiers) {
+  const triedModels = new Set();
+
+  for (const model of modelTiers) {
+    // Skip models currently in cooldown
+    const cooldownUntil = rateLimitCooldowns.get(model) || 0;
+    if (Date.now() < cooldownUntil) {
+      triedModels.add(model);
+      continue;
+    }
+
+    const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
+    const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent?key=${key}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyPayload)
+    });
+
+    if (response.ok) {
+      return { response, modelUsed: model };
+    }
+
+    // Check if it's a rate limit error
+    const errData = await response.json().catch(() => ({}));
+    const errMsg = errData.error?.message || '';
+
+    if (isRateLimitError(response.status, errMsg)) {
+      // Mark this model as rate-limited
+      const delay = parseRetryDelay(errMsg);
+      rateLimitCooldowns.set(model, Date.now() + delay);
+      console.warn(`[Spelt AI] Model ${model} rate-limited. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
+      triedModels.add(model);
+      continue; // Try next model in tier list
+    }
+
+    // Not a rate limit error — it's a real error, throw it
+    throw new Error(errMsg || `Gemini API returned status ${response.status}`);
+  }
+
+  // All models exhausted
+  const waitSec = getShortestWait();
+  throw new Error(`All AI models are temporarily rate-limited. Please retry in ~${waitSec}s.`);
+}
+
+/**
  * Sends a prompt to Google Gemini API and returns the parsed JSON response.
  * Requires spelt_gemini_key to be set in chrome.storage.local.
+ * Automatically falls back to weaker models on rate limit.
  */
 export async function askGemini(prompt) {
   const key = await getStored('spelt_gemini_key');
@@ -18,38 +179,21 @@ export async function askGemini(prompt) {
     throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
   }
 
-  const model = await getStored('spelt_gemini_model') || 'models/gemini-1.5-flash';
-  const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
-  const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent?key=${key}`;
+  const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-1.5-flash';
+  const modelTiers = await getAvailableModelTiers(preferredModel);
 
-  let response;
   let useMimeType = true;
+  let result;
 
   try {
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      const errMsg = errData.error?.message || '';
-      if (errMsg.includes('responseMimeType') || errMsg.includes('response_mime_type') || errMsg.includes('responseMime')) {
-        useMimeType = false;
-      } else {
-        throw new Error(errMsg || `Gemini API returned status ${response.status}`);
+    result = await fetchWithFallback(key, {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: "application/json"
       }
-    }
+    }, modelTiers);
   } catch (err) {
-    if (err.message.includes('responseMimeType') || err.message.includes('response_mime_type')) {
+    if (err.message.includes('responseMimeType') || err.message.includes('response_mime_type') || err.message.includes('responseMime')) {
       useMimeType = false;
     } else {
       throw err;
@@ -58,23 +202,12 @@ export async function askGemini(prompt) {
 
   if (!useMimeType) {
     // Retry without generationConfig responseMimeType
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt + "\n\nRespond ONLY with a valid JSON block starting with { and ending with }." }] }]
-      })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `Gemini API retry returned status ${response.status}`);
-    }
+    result = await fetchWithFallback(key, {
+      contents: [{ parts: [{ text: prompt + "\n\nRespond ONLY with a valid JSON block starting with { and ending with }." }] }]
+    }, modelTiers);
   }
 
-  const data = await response.json();
+  const data = await result.response.json();
   let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) {
     throw new Error('Invalid empty response from Gemini API.');
@@ -106,6 +239,7 @@ export async function askGemini(prompt) {
 /**
  * Sends a prompt to Gemini and returns raw text (not JSON).
  * Used for free-form responses like hints, mnemonics, and feedback.
+ * Automatically falls back to weaker models on rate limit.
  */
 export async function askGeminiText(prompt) {
   const key = await getStored('spelt_gemini_key');
@@ -113,24 +247,14 @@ export async function askGeminiText(prompt) {
     throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
   }
 
-  const model = await getStored('spelt_gemini_model') || 'models/gemini-1.5-flash';
-  const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
-  const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent?key=${key}`;
+  const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-1.5-flash';
+  const modelTiers = await getAvailableModelTiers(preferredModel);
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }]
-    })
-  });
+  const result = await fetchWithFallback(key, {
+    contents: [{ parts: [{ text: prompt }] }]
+  }, modelTiers);
 
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.error?.message || `Gemini API returned status ${response.status}`);
-  }
-
-  const data = await response.json();
+  const data = await result.response.json();
   let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) {
     throw new Error('Invalid empty response from Gemini API.');

@@ -163,9 +163,9 @@
                 </div>
               </div>
             </div>
-            <div id="ai-hint-bubble" style="display: none; position: absolute; left: 14px; right: 14px; width: calc(100% - 28px); bottom: 62px; max-height: calc(100% - 75px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 54px 10px 10px; font-size: 0.88rem; line-height: 1.5; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: box-shadow 0.2s ease, opacity 0.2s ease; cursor: move;">
-              <span id="ai-hint-text" style="word-break: break-word; display: block; user-select: text;"></span>
-              <div style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; align-items: center;">
+            <div id="ai-hint-bubble" style="display: none; position: absolute; left: 14px; right: 14px; width: calc(100% - 28px); bottom: 62px; max-height: calc(100% - 75px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 54px 10px 10px; font-size: 0.88rem; line-height: 1.5; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: box-shadow 0.2s ease, opacity 0.2s ease; cursor: move; user-select: text; -webkit-user-select: text;">
+              <span id="ai-hint-text" style="word-break: break-word; display: block; user-select: text; -webkit-user-select: text; cursor: text;"></span>
+              <div class="ai-hint-btn-group" style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; align-items: center;">
                 <button id="ai-hint-regen" class="ai-bubble-btn" title="Regenerate hint">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                 </button>
@@ -303,11 +303,11 @@
 
             <!-- AI Feedback Popup (Moveable, selectable text, close button) -->
             <div id="ai-feedback-row" style="display: none; position: absolute; left: 14px; right: 14px; width: calc(100% - 28px); bottom: 74px; max-height: calc(100% - 90px); overflow-y: auto; z-index: 101; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 36px 10px 10px; font-size: 0.88rem; line-height: 1.5; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: box-shadow 0.2s ease, opacity 0.2s ease; cursor: move; user-select: text; -webkit-user-select: text;">
-              <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 4px; user-select: none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" style="width: 11px; height: 11px; flex-shrink: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <strong style="color: #a78bfa; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em;">AI Coach</strong>
+              <div class="ai-feedback-header" style="display: flex; align-items: center; gap: 5px; margin-bottom: 4px; user-select: none;">
+                <svg class="ai-feedback-header-icon" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" style="width: 11px; height: 11px; flex-shrink: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <strong class="ai-feedback-header-title" style="color: #a78bfa; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em;">AI Coach</strong>
               </div>
-              <span id="ai-feedback-text" style="display: block; word-break: break-word; user-select: text; -webkit-user-select: text;"></span>
+              <span id="ai-feedback-text" style="display: block; word-break: break-word; user-select: text; -webkit-user-select: text; cursor: text;"></span>
               <button type="button" id="ai-feedback-close" class="ai-bubble-btn" title="Close feedback" style="position: absolute; top: 6px; right: 6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 8px; height: 8px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
@@ -336,8 +336,8 @@
                 </div>
               </div>
               
-              <div id="ai-practice-writing-feedback" style="display: none; position: absolute; left: 14px; right: 14px; width: calc(100% - 28px); bottom: 74px; max-height: calc(100% - 90px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 36px 10px 10px; font-size: 0.88rem; line-height: 1.5; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: box-shadow 0.2s ease, opacity 0.2s ease; cursor: move;">
-                <div id="ai-practice-writing-feedback-content" style="user-select: text;"></div>
+              <div id="ai-practice-writing-feedback" style="display: none; position: absolute; left: 14px; right: 14px; width: calc(100% - 28px); bottom: 74px; max-height: calc(100% - 90px); overflow-y: auto; z-index: 100; background: hsla(260, 50%, 8%, 0.96); backdrop-filter: blur(12px); border: 1px solid hsla(260, 50%, 60%, 0.35); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 15px hsla(260, 50%, 50%, 0.15); border-radius: var(--radius-md); padding: 10px 36px 10px 10px; font-size: 0.88rem; line-height: 1.5; text-align: left; color: #c4b5fd; word-break: break-word; box-sizing: border-box; transition: box-shadow 0.2s ease, opacity 0.2s ease; cursor: move; user-select: text; -webkit-user-select: text;">
+                <div id="ai-practice-writing-feedback-content" style="user-select: text; -webkit-user-select: text; cursor: text;"></div>
                 <button type="button" id="ai-practice-writing-feedback-close" class="ai-bubble-btn" title="Close message" style="position: absolute; top: 6px; right: 6px;">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 8px; height: 8px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
