@@ -363,6 +363,7 @@ async function setupAIHintButton(card) {
   const hintBubble = document.getElementById('ai-hint-bubble');
   const hintText = document.getElementById('ai-hint-text');
   const regenBtn = document.getElementById('ai-hint-regen');
+  const closeBtn = document.getElementById('ai-hint-close');
   if (!hintBtn || !hintBubble || !hintText) return;
 
   const isConfigured = await isGeminiConfigured();
@@ -407,6 +408,15 @@ async function setupAIHintButton(card) {
     newRegenBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       handleHintRequest(true);
+    });
+  }
+
+  if (closeBtn) {
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    newCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hintBubble.style.display = 'none';
     });
   }
 }

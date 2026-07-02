@@ -163,11 +163,16 @@
                 </div>
               </div>
             </div>
-            <div id="ai-hint-bubble" style="display: none; background: hsla(260, 50%, 30%, 0.15); border: 1px solid hsla(260, 50%, 60%, 0.3); border-radius: var(--radius-md); padding: 8px 10px; margin-top: 6px; font-size: 0.7rem; color: #c4b5fd; line-height: 1.45; position: relative;">
-              <span id="ai-hint-text" style="word-break: break-word;"></span>
-              <button id="ai-hint-regen" class="table-icon-btn" title="Regenerate hint" style="position: absolute; top: 4px; right: 4px; color: #a78bfa; opacity: 0.6; font-size: 0.6rem;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              </button>
+            <div id="ai-hint-bubble" style="display: none; background: hsla(260, 50%, 30%, 0.15); border: 1px solid hsla(260, 50%, 60%, 0.3); border-radius: var(--radius-md); padding: 8px 48px 8px 10px; margin-top: 6px; font-size: 0.7rem; color: #c4b5fd; line-height: 1.45; position: relative;">
+              <span id="ai-hint-text" style="word-break: break-word; display: block;"></span>
+              <div style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; align-items: center;">
+                <button id="ai-hint-regen" class="table-icon-btn" title="Regenerate hint" style="width: 18px; height: 18px; border-radius: 4px; padding: 0; color: #a78bfa; border: none; background: hsla(260, 50%, 45%, 0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+                <button id="ai-hint-close" class="table-icon-btn" title="Close hint" style="width: 18px; height: 18px; border-radius: 4px; padding: 0; color: #a78bfa; border: none; background: hsla(260, 50%, 45%, 0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 10px; height: 10px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
             </div>
 
             <!-- Recall Mode Front Face Content -->
