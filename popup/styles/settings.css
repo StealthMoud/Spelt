@@ -66,3 +66,9 @@
 .translate-example-btn.active, .play-example-btn.active {
   border-color: var(--primary);
   color: var(--primary-light);
+}
+
+.premium-input option {
+  background-color: #0b0e0d !important;
+  color: #e2e8f0 !important;
+}
