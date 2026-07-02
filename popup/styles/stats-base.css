@@ -51,3 +51,72 @@
   margin-top: 1px;
   font-weight: 500;
 }
+
+/* AI Learning Insights Styling */
+.ai-insights-panel {
+  background: linear-gradient(135deg, hsla(260, 50%, 8%, 0.7) 0%, hsla(260, 40%, 4%, 0.85) 100%) !important;
+  border: 1px solid hsla(260, 50%, 65%, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 hsla(260, 50%, 80%, 0.05) !important;
+  border-radius: var(--radius-xl) !important;
+  padding: 14px 16px !important;
+}
+
+#stats-ai-insights-content {
+  font-size: 0.74rem !important;
+  color: #e2e8f0 !important; /* Soft white for high contrast */
+  line-height: 1.6 !important;
+  text-align: left;
+}
+
+#stats-ai-insights-content ul {
+  margin: 0 !important;
+  padding-left: 16px !important;
+  list-style-type: disc !important;
+}
+
+#stats-ai-insights-content li {
+  margin-bottom: 8px !important;
+  color: #e2e8f0 !important;
+}
+
+#stats-ai-insights-content li:last-child {
+  margin-bottom: 0 !important;
+}
+
+#stats-ai-insights-content strong {
+  color: #c4b5fd !important; /* Glowing lavender for key titles */
+  font-weight: 600 !important;
+}
+
+#stats-ai-insights-content em,
+#stats-ai-insights-content i {
+  font-style: normal !important;
+  color: #a78bfa !important; /* Vibrant purple for actionable tips */
+  display: block;
+  margin-top: 2px;
+  font-size: 0.7rem;
+  opacity: 0.95;
+}
+
+/* Subtab AI Coach layout overrides */
+#stats-ai-vocab-content,
+#stats-ai-activity-content,
+#stats-ai-perf-content {
+  font-size: 0.68rem !important;
+  color: #e2e8f0 !important;
+  line-height: 1.5 !important;
+  text-align: left;
+}
+
+#stats-ai-vocab-content strong,
+#stats-ai-activity-content strong,
+#stats-ai-perf-content strong {
+  color: #c4b5fd !important;
+}
+
+#stats-ai-vocab-content em,
+#stats-ai-activity-content em,
+#stats-ai-perf-content em {
+  font-style: normal !important;
+  color: #a78bfa !important;
+}

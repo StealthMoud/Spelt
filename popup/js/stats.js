@@ -71,7 +71,7 @@ export async function renderStats() {
     const forecast = calculateForecast(words);
 
     renderOverview(summary.totalReviews, summary.correctReviews, streak, cardStates, forecast);
-    renderAIInsights(words, streak, summary, cardStates);
+    renderAIInsights(words, streak, summary, cardStates, sessions);
     renderReviewChart(chartBuckets, barWidth);
     renderButtonDistribution(summary.buttonCounts);
     renderCEFRDistribution(words);
