@@ -1,4 +1,4 @@
-import { getWords, saveWords, getStored, setStored, fetchTranslation, getFallbackExample } from '../../../shared/storage.js';
+import { getWords, saveWords, getStored, setStored, fetchTranslation, getFallbackExample, atomicUpdate } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
 import { getDueCards, setPracticeMode } from './state.js';
 import { checkSpelling, revealRecall, checkSyntax } from './actions.js';
@@ -79,9 +79,10 @@ export function registerPracticeListeners() {
       trans = await fetchTranslation(rawExample, targetLang);
       if (trans) {
         card.exampleTranslation = trans;
-        const allWords = await getWords();
-        const wObj = allWords.find(w => w.id === card.id);
-        if (wObj) { wObj.exampleTranslation = trans; await saveWords(allWords); }
+        await atomicUpdate(async (allWords) => {
+          const wObj = allWords.find(w => w.id === card.id);
+          if (wObj) { wObj.exampleTranslation = trans; }
+        });
       } else {
         transEl.textContent = 'Translation failed'; return;
       }
