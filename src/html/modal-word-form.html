@@ -5,6 +5,27 @@
         <form id="word-entry-form">
           <input type="hidden" id="edit-word-id">
           <div class="modal-input-item">
+            <label>Practice Target</label>
+            <div class="custom-select-wrapper" id="practice-type-custom-select" style="position: relative;">
+              <button type="button" class="premium-input custom-select-trigger" style="width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left;">
+                <span>Both (Spelling & Recall)</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron" style="width: 10px; height: 10px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="custom-options" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: hsl(155, 12%, 8%); border: 1px solid var(--border-hover); border-radius: var(--radius-md); z-index: 100; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); padding: 4px; box-sizing: border-box;">
+                <div class="custom-option selected" data-value="both" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Both (Spelling & Recall)</div>
+                <div class="custom-option" data-value="spelling" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Spelling Only</div>
+                <div class="custom-option" data-value="recall" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Recall Only</div>
+                <div class="custom-option" data-value="syntax" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Syntax Structure</div>
+              </div>
+              <select id="form-practice-type" style="display: none;">
+                <option value="both">Both (Spelling & Recall)</option>
+                <option value="spelling">Spelling Only</option>
+                <option value="recall">Recall Only</option>
+                <option value="syntax">Syntax Structure</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-input-item">
             <label>Word *</label>
             <div style="position: relative; display: flex; align-items: center; width: 100%;">
               <input type="text" id="form-word" class="premium-input" required autocomplete="off" style="padding-right: 86px;">
@@ -65,15 +86,7 @@
             <label>Example Sentence</label>
             <textarea id="form-example" class="premium-input textarea-item" placeholder="Use the word in a sentence..." autocomplete="off" style="height: 36px;"></textarea>
           </div>
-          <div class="modal-input-item">
-            <label>Practice Target</label>
-            <select id="form-practice-type" class="premium-input select-input">
-              <option value="both">Both (Spelling & Recall)</option>
-              <option value="spelling">Spelling Only</option>
-              <option value="recall">Recall Only</option>
-              <option value="syntax">Syntax Structure</option>
-            </select>
-          </div>
+
           <div class="modal-input-item" style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; cursor: pointer; user-select: none;">
             <input type="checkbox" id="form-mastered" style="accent-color: var(--primary); cursor: pointer; width: 13px; height: 13px; margin: 0; vertical-align: middle;">
             <label for="form-mastered" style="cursor: pointer; font-size: 0.7rem; color: var(--text-muted); margin: 0; user-select: none;">Mark as Mastered</label>

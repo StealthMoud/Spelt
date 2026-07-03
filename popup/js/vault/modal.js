@@ -27,7 +27,20 @@ export function openModal(wordObj = null) {
   document.getElementById('form-modal-title').textContent = wordObj ? 'Edit Word Details' : 'Add New Word';
   
   const practiceTypeSelect = document.getElementById('form-practice-type');
-  updateFormLabels(practiceTypeSelect.value);
+  const ptVal = practiceTypeSelect.value;
+  updateFormLabels(ptVal);
+
+  // Update custom select UI for Practice Target
+  const wrapper = practiceTypeSelect.closest('.custom-select-wrapper');
+  if (wrapper) {
+    const options = wrapper.querySelectorAll('.custom-option');
+    options.forEach(o => o.classList.remove('selected'));
+    const selectedOpt = wrapper.querySelector(`.custom-option[data-value="${ptVal}"]`);
+    if (selectedOpt) {
+      selectedOpt.classList.add('selected');
+      wrapper.querySelector('.custom-select-trigger span').textContent = selectedOpt.textContent;
+    }
+  }
   
   modal.style.display = 'flex';
   document.getElementById('form-word').focus();
