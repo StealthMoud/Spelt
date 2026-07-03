@@ -1,3 +1,5 @@
+import { hasReviewedWord } from '../practice/state.js';
+
 export function calculateCardStates(words) {
   let newCount = 0, learningCount = 0, matureCount = 0, masteredCount = 0;
   
@@ -22,13 +24,30 @@ export function calculateForecast(words) {
   let dueToday = 0, dueTomorrow = 0, dueWeek = 0, dueMonth = 0;
   const now = Date.now(), oneDay = 24 * 60 * 60 * 1000;
 
+  const countDiff = (diff) => {
+    if (diff <= 0) dueToday++;
+    else if (diff <= oneDay) dueTomorrow++;
+    else if (diff <= 7 * oneDay) dueWeek++;
+    else if (diff <= 30 * oneDay) dueMonth++;
+  };
+
   words.forEach(w => {
-    if (!w.mastered) {
-      const diff = w.nextDate - now;
-      if (diff <= 0) dueToday++;
-      else if (diff <= oneDay) dueTomorrow++;
-      else if (diff <= 7 * oneDay) dueWeek++;
-      else if (diff <= 30 * oneDay) dueMonth++;
+    if (w.mastered) return;
+
+    if (w.practiceType === 'both' || w.practiceType === 'spelling') {
+      if (!hasReviewedWord(w.id, 'spelling')) {
+        countDiff((w.nextDate || 0) - now);
+      }
+    }
+    if (w.practiceType === 'both' || w.practiceType === 'recall') {
+      if (!hasReviewedWord(w.id, 'recall')) {
+        countDiff((w.meaningNextDate || w.nextDate || 0) - now);
+      }
+    }
+    if (w.practiceType === 'syntax') {
+      if (!hasReviewedWord(w.id, 'syntax')) {
+        countDiff((w.nextDate || 0) - now);
+      }
     }
   });
 
