@@ -25,6 +25,10 @@ export function openModal(wordObj = null) {
   renderPastErrorsList();
 
   document.getElementById('form-modal-title').textContent = wordObj ? 'Edit Word Details' : 'Add New Word';
+  
+  const practiceTypeSelect = document.getElementById('form-practice-type');
+  updateFormLabels(practiceTypeSelect.value);
+  
   modal.style.display = 'flex';
   document.getElementById('form-word').focus();
 }
@@ -51,4 +55,32 @@ export function renderPastErrorsList() {
       pastContainer.style.display = 'none';
     }
   }
+}
+
+function updateFormLabels(practiceType) {
+  const wordLabel = document.querySelector('label[for="form-word"]') || document.querySelector('#form-word').parentElement.previousElementSibling;
+  const defLabel = document.querySelector('label[for="form-definition"]') || document.querySelector('#form-definition').previousElementSibling;
+  const exLabel = document.querySelector('label[for="form-example"]') || document.querySelector('#form-example').previousElementSibling;
+  
+  const wordInput = document.getElementById('form-word');
+  const posInput = document.getElementById('form-part-of-speech');
+
+  if (practiceType === 'syntax') {
+    if (wordLabel) wordLabel.textContent = 'Pattern Name *';
+    if (defLabel) defLabel.textContent = 'Pattern Rule / Explanation *';
+    if (exLabel) exLabel.textContent = 'Target Sentence (will be scrambled)';
+    if (!posInput.value) posInput.value = 'Grammatical Pattern';
+  } else {
+    if (wordLabel) wordLabel.textContent = 'Word *';
+    if (defLabel) defLabel.textContent = 'Definition *';
+    if (exLabel) exLabel.textContent = 'Example Sentence';
+  }
+}
+
+// Add event listener to update labels dynamically when user changes dropdown
+const ptSelect = document.getElementById('form-practice-type');
+if (ptSelect) {
+  ptSelect.addEventListener('change', (e) => {
+    updateFormLabels(e.target.value);
+  });
 }
