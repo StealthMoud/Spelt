@@ -362,7 +362,7 @@ async function renderAiStatusMonitor() {
         indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px;"></span>`;
       } else if (item.status === 'cooldown') {
         indicatorColor = '#f59e0b'; // orange
-        statusText = `Cooldown (${item.cooldownRemaining}s)`;
+        statusText = `Rate Limited (${item.cooldownRemaining}s)`;
         indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px; animation: pulse 1s infinite alternate;"></span>`;
       } else {
         indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px;"></span>`;
