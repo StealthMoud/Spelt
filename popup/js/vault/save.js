@@ -22,9 +22,27 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
   if (practiceType === 'syntax' && blocksStr.trim() !== '') {
     blocks = blocksStr.split('\n').map(s => s.trim()).filter(Boolean);
     if (jointsStr.trim() !== '') {
-      joints = jointsStr.split('\n').map(s => s.trim());
+      joints = jointsStr.split('\n'); // do not trim joints because spaces matter!
     } else {
+      // Auto-generate joints from the target sentence
       joints = [];
+      let currentText = example;
+      for (let i = 0; i < blocks.length - 1; i++) {
+        let block = blocks[i];
+        let nextBlock = blocks[i + 1];
+        let idx = currentText.indexOf(block);
+        if (idx !== -1) {
+          let nextIdx = currentText.indexOf(nextBlock, idx + block.length);
+          if (nextIdx !== -1) {
+            joints.push(currentText.substring(idx + block.length, nextIdx));
+            currentText = currentText.substring(nextIdx);
+          } else {
+            joints.push(" ");
+          }
+        } else {
+          joints.push(" ");
+        }
+      }
     }
   }
  
@@ -87,7 +105,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
 
   try {
     const isOnline = navigator.onLine;
-    if (isOnline) {
+    if (isOnline && practiceType !== 'syntax') {
       // 1. Try our robust definition lookup (queries Cambridge and Oxford, handling multi-word hyphens)
       const res = await fetchDynamicDefinition(word);
       

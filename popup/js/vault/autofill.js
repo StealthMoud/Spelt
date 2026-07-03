@@ -182,10 +182,9 @@ Provide the following details in a clean JSON format matching the schema:
   "translation": "An accurate translation or explanation of this pattern in ${targetLangName}",
   "level": "CEFR level: choose carefully from B1, B2, C1, C2. Leave blank if none exists.",
   "example": "A high-quality, complex IELTS-level example sentence demonstrating this pattern.",
-  "blocks": ["first logical chunk", "second logical chunk", "third logical chunk"],
-  "joints": [", ", " "]
+  "blocks": ["first logical chunk", "second logical chunk", "third logical chunk"]
 }
-CRITICAL INSTRUCTION: Break the "example" sentence into 2-4 logical chunks (clauses or phrases) in the "blocks" array. Place the punctuation or spaces that connect them in the "joints" array. The number of joints MUST be exactly 1 less than the number of blocks.
+CRITICAL INSTRUCTION: Break the "example" sentence into 2-4 logical chunks (clauses or phrases) in the "blocks" array. DO NOT INCLUDE ANY CONNECTING PUNCTUATION OR SPACES inside the blocks. The chunks must combine perfectly to form the sentence.
 Respond ONLY with the JSON object. Do not include markdown block ticks (\`\`\`json).`;
       } else {
         prompt = `You are a lexicographer helping a language student study the word/phrase: "${word}".
@@ -210,7 +209,7 @@ Respond ONLY with the JSON object. Do not include markdown block ticks (\`\`\`js
       if (aiData.level) document.getElementById('form-level').value = aiData.level.toUpperCase().trim();
       if (aiData.example) document.getElementById('form-example').value = aiData.example;
       if (aiData.blocks && practiceType === 'syntax') document.getElementById('form-blocks').value = aiData.blocks.join('\n');
-      if (aiData.joints && practiceType === 'syntax') document.getElementById('form-joints').value = aiData.joints.join('\n');
+      if (practiceType === 'syntax') document.getElementById('form-joints').value = ''; // Ensure joints are empty so save.js computes them
 
     } catch (err) {
       alert(err.message || 'AI Autofill failed. Please check your Gemini API key in Settings.');
