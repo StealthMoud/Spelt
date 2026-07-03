@@ -1,6 +1,6 @@
 import { getWords } from '../shared/storage.js';
 import { initNavigation } from './js/navigation.js';
-import { initPractice, loadPracticeDeck, syncPracticeDeck, getDueCards, getReviewedWordIds, getPracticeMode } from './js/practice.js';
+import { initPractice, loadPracticeDeck, syncPracticeDeck, hasReviewedWord, getPracticeMode, refreshReviewedWordDay, clearReviewedWords } from './js/practice.js';
 import { initVault, reloadVaultList } from './js/vault.js';
 import { initSettings } from './js/settings.js';
 import { initSandbox } from './js/sandbox.js';
@@ -13,14 +13,15 @@ import { initMoveable } from './js/popup/moveable.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const dueCountEl = document.getElementById('due-count'), totalCountEl = document.getElementById('total-count');
+  let midnightTimerId = null;
 
   async function refreshStats() {
     try {
+      refreshReviewedWordDay();
       const words = await getWords();
-      const reviewedIds = getReviewedWordIds();
       const mode = getPracticeMode();
       const dueCount = words.filter(w => {
-        if (reviewedIds.has(w.id)) return false;
+        if (hasReviewedWord(w.id, mode)) return false;
         if (w.mastered) return false;
         if (mode === 'syntax') {
           if (w.practiceType !== 'syntax') return false;
@@ -46,6 +47,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       await renderStats();
     } catch (e) { console.error(e); }
+  }
+
+  async function refreshAfterDailyRollover() {
+    await refreshStats();
+    const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab');
+    if (activeTab === 'practice-tab') await loadPracticeDeck();
+    else if (activeTab === 'vault-tab') await reloadVaultList();
+    else if (activeTab === 'stats-tab') await renderStats();
+  }
+
+  function msUntilNextLocalMidnight() {
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 1, 0);
+    return Math.max(1000, nextMidnight.getTime() - now.getTime());
+  }
+
+  function scheduleMidnightRollover() {
+    if (midnightTimerId) clearTimeout(midnightTimerId);
+    midnightTimerId = setTimeout(async () => {
+      clearReviewedWords();
+      await refreshAfterDailyRollover();
+      scheduleMidnightRollover();
+    }, msUntilNextLocalMidnight());
+  }
+
+  async function catchMissedDailyRollover() {
+    if (refreshReviewedWordDay()) {
+      await refreshAfterDailyRollover();
+      scheduleMidnightRollover();
+    }
   }
 
   initNavigation(async (targetTab) => {
@@ -74,6 +106,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
 
   await initStats();
+  scheduleMidnightRollover();
+  window.addEventListener('focus', () => { catchMissedDailyRollover().catch(console.error); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      catchMissedDailyRollover().catch(console.error);
+    }
+  });
 
   const refreshBtn = document.getElementById('popup-refresh-btn');
   if (refreshBtn) {
