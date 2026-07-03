@@ -31,6 +31,12 @@ export function getFilteredWords(wordsList) {
     filtered = filtered.filter(w => w.mastered);
   } else if (statusFilter === 'due') {
     filtered = filtered.filter(w => w.nextDate <= Date.now() && !w.mastered);
+  } else if (statusFilter === 'spelling') {
+    filtered = filtered.filter(w => w.practiceType === 'both' || w.practiceType === 'spelling');
+  } else if (statusFilter === 'recall') {
+    filtered = filtered.filter(w => w.practiceType === 'both' || w.practiceType === 'recall');
+  } else if (statusFilter === 'syntax') {
+    filtered = filtered.filter(w => w.practiceType === 'syntax');
   }
 
   return filtered;
