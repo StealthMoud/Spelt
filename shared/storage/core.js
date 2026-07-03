@@ -58,6 +58,9 @@ export async function getWords() {
   const migratedRecall = await getStored('spelt_migrated_meaning_to_recall');
   const runMigrationRecall = !migratedRecall;
 
+  const migratedTabsV5 = await getStored('spelt_migrated_practice_types_v5');
+  const runMigrationTabsV5 = !migratedTabsV5;
+
   let modified = false;
   const sanitized = words.map(w => {
     if (!w) return w;
@@ -184,6 +187,32 @@ export async function getWords() {
       w.practiceType = 'recall'; cardModified = true;
     }
 
+    if (runMigrationTabsV5 && !w.mastered) {
+      const partOfSpeechLower = (w.partOfSpeech || '').toLowerCase();
+      const isGrammaticalPattern = partOfSpeechLower.includes('grammatical pattern');
+      const hasBlocks = Array.isArray(w.blocks) && w.blocks.length > 0;
+      
+      const tokens = (w.word || '').trim().split(/\s+/).filter(Boolean);
+      const wordCount = tokens.length;
+
+      if (isGrammaticalPattern || hasBlocks || wordCount > 3) {
+        if (w.practiceType !== 'syntax') {
+          w.practiceType = 'syntax';
+          cardModified = true;
+        }
+      } else if (wordCount > 1 && wordCount <= 3) {
+        if (w.practiceType !== 'recall') {
+          w.practiceType = 'recall';
+          cardModified = true;
+        }
+      } else if (wordCount === 1) {
+        if (w.practiceType !== 'spelling') {
+          w.practiceType = 'spelling';
+          cardModified = true;
+        }
+      }
+    }
+
     if (cardModified) modified = true;
     return w;
   });
@@ -195,6 +224,11 @@ export async function getWords() {
 
   if (runMigrationRecall) {
     await setStored('spelt_migrated_meaning_to_recall', true);
+    modified = true;
+  }
+
+  if (runMigrationTabsV5) {
+    await setStored('spelt_migrated_practice_types_v5', true);
     modified = true;
   }
 

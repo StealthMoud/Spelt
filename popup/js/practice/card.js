@@ -123,6 +123,24 @@ function renderBlocksUI() {
 
 function renderSyntaxFrontFace(card) {
   currentSyntaxCard = card;
+  
+  if (!card.blocks || card.blocks.length === 0) {
+    const fallbackText = card.example || card.word || '';
+    if (fallbackText) {
+      // Split by commas, or every 3-4 words if no commas.
+      if (fallbackText.includes(',')) {
+        card.blocks = fallbackText.split(',').map(s => s.trim() + (fallbackText.indexOf(s) < fallbackText.lastIndexOf(',') ? ',' : '')).filter(Boolean);
+      } else {
+        const words = fallbackText.split(' ');
+        card.blocks = [];
+        for (let i = 0; i < words.length; i += 3) {
+          card.blocks.push(words.slice(i, i + 3).join(' '));
+        }
+      }
+      card.joints = card.joints || [];
+    }
+  }
+
   orderedBlocks = [];
   scrambledPool = shuffleArray(card.blocks || []);
   
