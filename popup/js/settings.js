@@ -1,6 +1,15 @@
 import { showConfirm } from './vault.js';
 import { exportDb, importDb, wipeDb } from './settings/actions.js';
-import { getAiStatus } from '../../shared/storage.js';
+import {
+  getAiStatus,
+  GEMINI_AUTO_MODEL,
+  getGeminiKeyFingerprint,
+  getGeminiKeyLabel,
+  getGeminiModelMeta,
+  getGeminiModelOptions,
+  isSupportedGeminiTextModel,
+  sortGeminiModels
+} from '../../shared/storage.js';
 
 let onDbRestoredCallback = null;
 
@@ -37,42 +46,7 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_allow_background_ai: e.target.checked });
   });
 
-  // Load Gemini keys, model and model list on startup
-  chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key', 'spelt_gemini_model', 'spelt_gemini_models_list'], (res) => {
-    let keys = res.spelt_gemini_keys || [];
-    if (keys.length === 0 && res.spelt_gemini_key) {
-      keys = [res.spelt_gemini_key];
-      chrome.storage?.local.set({ spelt_gemini_keys: keys }); // migrate to array
-    }
-
-    renderKeysList(keys);
-
-    const model = res.spelt_gemini_model || '';
-    const modelsList = res.spelt_gemini_models_list || [];
-    const modelSelect = document.getElementById('setting-gemini-model');
-    const modelContainer = document.getElementById('gemini-model-container');
-
-    if (keys.length > 0 && modelSelect && modelContainer) {
-      modelSelect.innerHTML = '';
-      if (modelsList.length > 0) {
-        modelsList.forEach(mName => {
-          const option = document.createElement('option');
-          option.value = mName;
-          option.textContent = mName.replace('models/', '');
-          modelSelect.appendChild(option);
-        });
-      } else {
-        const option = document.createElement('option');
-        option.value = model || 'models/gemini-2.5-flash';
-        option.textContent = (model || 'models/gemini-2.5-flash').replace('models/', '');
-        modelSelect.appendChild(option);
-      }
-      modelSelect.value = model || 'models/gemini-2.5-flash';
-      modelContainer.style.display = 'flex';
-    } else if (modelContainer) {
-      modelContainer.style.display = 'none';
-    }
-  });
+  loadGeminiSettings().catch(err => console.error('Gemini settings load failed:', err));
 
   // Save Gemini Model on change
   document.getElementById('setting-gemini-model')?.addEventListener('change', (e) => {
@@ -102,39 +76,25 @@ export function initSettings(onDbRestored) {
     statusEl.textContent = 'Verifying API key...';
 
     try {
-      // Validate key by fetching models list
-      const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
-      if (!modelsRes.ok) {
-        const errData = await modelsRes.json().catch(() => ({}));
-        const errMsg = errData.error?.message || 'Invalid API Key or API Error';
-        statusEl.style.color = 'var(--danger)';
-        statusEl.textContent = `❌ Verification failed: ${errMsg}`;
+      const existingData = await getGeminiStorage();
+      const existingKeys = normalizeStoredKeys(existingData);
+      if (existingKeys.includes(key)) {
+        statusEl.style.color = 'var(--warning, #f59e0b)';
+        statusEl.textContent = 'This API key is already connected.';
         return;
       }
 
-      const modelsData = await modelsRes.json();
-      const availableModels = (modelsData.models || []).filter(m => 
-        m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
-      );
+      const availableModels = await fetchModelsForKey(key);
 
       if (availableModels.length === 0) {
         statusEl.style.color = 'var(--danger)';
-        statusEl.textContent = '❌ No models supporting text generation found for this API Key.';
+        statusEl.textContent = 'No text-generation models were found for this API key.';
         return;
       }
 
-      // Find matched preferred model to test content generation
-      const preferredList = [
-        'models/gemini-3.5-flash',
-        'models/gemini-3.1-flash-lite',
-        'models/gemini-2.5-pro',
-        'models/gemini-2.5-flash',
-        'models/gemini-2.0-flash',
-        'models/gemini-1.5-flash'
-      ];
-      const testModel = preferredList.find(p => availableModels.some(m => m.name === p)) || availableModels[0].name;
+      const testModel = availableModels[0];
 
-      statusEl.textContent = `Testing content generation with ${testModel.replace('models/', '')}...`;
+      statusEl.textContent = `Testing content generation with ${getGeminiModelMeta(testModel).label}...`;
       const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/${testModel}:generateContent?key=${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,63 +105,89 @@ export function initSettings(onDbRestored) {
 
       if (testRes.ok) {
         statusEl.style.color = 'var(--success)';
-        statusEl.textContent = `✅ API Key verified and added successfully!`;
+        statusEl.textContent = 'API key verified and added.';
         keyInput.value = ''; // clear input
 
-        chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key', 'spelt_gemini_model', 'spelt_gemini_models_list'], (res) => {
-          let keys = res.spelt_gemini_keys || [];
-          if (keys.length === 0 && res.spelt_gemini_key) {
-            keys = [res.spelt_gemini_key];
-          }
-          if (!keys.includes(key)) {
-            keys.push(key);
-          }
+        const latest = await getGeminiStorage();
+        const keys = normalizeStoredKeys(latest);
+        if (!keys.includes(key)) keys.push(key);
 
-          const currentModel = res.spelt_gemini_model || testModel;
-          const currentModelsList = res.spelt_gemini_models_list || [];
-          
-          // Merge models list
-          const updatedModelsList = [...currentModelsList];
-          availableModels.forEach(m => {
-            if (!updatedModelsList.includes(m.name)) {
-              updatedModelsList.push(m.name);
-            }
-          });
+        const keyModelsMap = latest.spelt_gemini_key_models || {};
+        keyModelsMap[getGeminiKeyFingerprint(key)] = availableModels;
+        pruneKeyModelsMap(keyModelsMap, keys);
 
-          chrome.storage?.local.set({
-            spelt_gemini_keys: keys,
-            spelt_gemini_key: keys[0] || '', // legacy fallback
-            spelt_gemini_model: currentModel,
-            spelt_gemini_models_list: updatedModelsList
-          }, () => {
-            // Refresh dropdown
-            modelSelect.innerHTML = '';
-            updatedModelsList.forEach(mName => {
-              const option = document.createElement('option');
-              option.value = mName;
-              option.textContent = mName.replace('models/', '');
-              modelSelect.appendChild(option);
-            });
-            modelSelect.value = currentModel;
-            modelContainer.style.display = 'flex';
+        const updatedModelsList = collectModelsFromKeyMap(keyModelsMap, keys);
+        const currentModel = normalizeModelSelection(latest.spelt_gemini_model);
+        const nextModel = currentModel === GEMINI_AUTO_MODEL || updatedModelsList.includes(currentModel)
+          ? currentModel
+          : GEMINI_AUTO_MODEL;
 
-            renderKeysList(keys);
-            renderAiStatusMonitor();
-          });
+        await setGeminiStorage({
+          spelt_gemini_keys: keys,
+          spelt_gemini_key: keys[0] || '', // legacy fallback
+          spelt_gemini_model: nextModel,
+          spelt_gemini_models_list: updatedModelsList,
+          spelt_gemini_key_models: keyModelsMap
         });
+
+        await renderModelSelect(nextModel, keys.length > 0);
+        renderKeysList(keys, keyModelsMap, updatedModelsList);
+        renderAiStatusMonitor();
       } else {
         const errData = await testRes.json().catch(() => ({}));
         const errMsg = errData.error?.message || 'Verification request failed';
         statusEl.style.color = 'var(--danger)';
-        statusEl.textContent = `❌ Connected, but model verification failed: ${errMsg}`;
+        statusEl.textContent = `Connected, but model verification failed: ${errMsg}`;
       }
     } catch (err) {
       statusEl.style.color = 'var(--danger)';
-      statusEl.textContent = `❌ Error: ${err.message}`;
+      statusEl.textContent = `Error: ${err.message}`;
     }
   });
 
-  function renderKeysList(keys) {
+  async function loadGeminiSettings() {
+    const res = await getGeminiStorage();
+    const keys = normalizeStoredKeys(res);
+    const keyModelsMap = res.spelt_gemini_key_models || {};
+    let keyModelsChanged = false;
+
+    if (keys.length > 0 && (!Array.isArray(res.spelt_gemini_keys) || res.spelt_gemini_keys.length === 0)) {
+      await setGeminiStorage({ spelt_gemini_keys: keys, spelt_gemini_key: keys[0] || '' });
+    }
+
+    for (const key of keys) {
+      const fingerprint = getGeminiKeyFingerprint(key);
+      if (!Array.isArray(keyModelsMap[fingerprint]) || keyModelsMap[fingerprint].length === 0) {
+        const discovered = await fetchModelsForKey(key).catch(err => {
+          console.warn('Could not refresh Gemini model list for a saved key:', err);
+          return [];
+        });
+        if (discovered.length > 0) {
+          keyModelsMap[fingerprint] = discovered;
+          keyModelsChanged = true;
+        }
+      }
+    }
+
+    pruneKeyModelsMap(keyModelsMap, keys);
+    const modelList = collectModelsFromKeyMap(keyModelsMap, keys, res.spelt_gemini_models_list || []);
+    const currentModel = normalizeModelSelection(res.spelt_gemini_model);
+    const nextModel = currentModel === GEMINI_AUTO_MODEL || modelList.includes(currentModel)
+      ? currentModel
+      : GEMINI_AUTO_MODEL;
+
+    await setGeminiStorage({
+      spelt_gemini_models_list: modelList,
+      spelt_gemini_key_models: keyModelsMap,
+      spelt_gemini_model: nextModel
+    });
+
+    renderKeysList(keys, keyModelsMap, modelList);
+    await renderModelSelect(nextModel, keys.length > 0);
+    if (keyModelsChanged) renderAiStatusMonitor();
+  }
+
+  function renderKeysList(keys, keyModelsMap = {}, fallbackModels = []) {
     const listContainer = document.getElementById('gemini-keys-list-container');
     if (!listContainer) return;
     listContainer.innerHTML = '';
@@ -211,49 +197,72 @@ export function initSettings(onDbRestored) {
       return;
     }
 
-    keys.forEach(key => {
+    keys.forEach((key, index) => {
       const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.justifyContent = 'space-between';
-      row.style.background = 'rgba(255, 255, 255, 0.03)';
-      row.style.border = '1px solid rgba(255, 255, 255, 0.05)';
-      row.style.padding = '5px 8px';
-      row.style.borderRadius = 'var(--radius-sm)';
-      row.style.fontSize = '0.68rem';
+      row.className = 'gemini-key-row';
 
-      const maskedKey = key.length > 12 ? `${key.slice(0, 6)}...${key.slice(-6)}` : key;
-      row.innerHTML = `
-        <span style="font-family: monospace; color: var(--text-muted);">${maskedKey}</span>
-        <button class="remove-key-btn" style="background: none; border: none; color: var(--danger); font-size: 0.85rem; cursor: pointer; padding: 2px 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; transition: opacity 0.2s;" title="Remove Key">×</button>
-      `;
+      const keyInfo = document.createElement('div');
+      keyInfo.className = 'gemini-key-info';
 
-      row.querySelector('.remove-key-btn').addEventListener('click', () => {
+      const title = document.createElement('span');
+      title.className = 'gemini-key-title';
+      title.textContent = `Key ${index + 1}`;
+
+      const keyText = document.createElement('span');
+      keyText.className = 'gemini-key-mask';
+      keyText.textContent = getGeminiKeyLabel(key);
+
+      const models = keyModelsMap[getGeminiKeyFingerprint(key)] || fallbackModels;
+      const strongest = models.length > 0 ? getGeminiModelMeta(sortGeminiModels(models)[0]).label : 'Models pending';
+      const meta = document.createElement('span');
+      meta.className = 'gemini-key-meta';
+      meta.textContent = `${models.length || 0} text models - Best: ${strongest}`;
+
+      keyInfo.append(title, keyText, meta);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-key-btn';
+      removeBtn.type = 'button';
+      removeBtn.title = 'Remove key';
+      removeBtn.textContent = 'x';
+      removeBtn.addEventListener('click', () => {
         removeKey(key);
       });
+
+      row.append(keyInfo, removeBtn);
       listContainer.appendChild(row);
     });
   }
 
   function removeKey(keyToRemove) {
-    chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key'], (res) => {
-      let keys = res.spelt_gemini_keys || [];
-      if (keys.length === 0 && res.spelt_gemini_key) {
-        keys = [res.spelt_gemini_key];
-      }
+    chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key', 'spelt_gemini_key_models', 'spelt_gemini_model'], async (res) => {
+      const keys = normalizeStoredKeys(res);
       const updatedKeys = keys.filter(k => k !== keyToRemove);
+      const keyModelsMap = res.spelt_gemini_key_models || {};
+      delete keyModelsMap[getGeminiKeyFingerprint(keyToRemove)];
+      pruneKeyModelsMap(keyModelsMap, updatedKeys);
+      const updatedModelsList = collectModelsFromKeyMap(keyModelsMap, updatedKeys);
       
-      const updates = { spelt_gemini_keys: updatedKeys };
+      const updates = {
+        spelt_gemini_keys: updatedKeys,
+        spelt_gemini_models_list: updatedModelsList,
+        spelt_gemini_key_models: keyModelsMap
+      };
       if (res.spelt_gemini_key === keyToRemove) {
         updates.spelt_gemini_key = updatedKeys[0] || '';
       }
+      const currentModel = normalizeModelSelection(res.spelt_gemini_model);
+      if (currentModel !== GEMINI_AUTO_MODEL && !updatedModelsList.includes(currentModel)) {
+        updates.spelt_gemini_model = GEMINI_AUTO_MODEL;
+      }
 
-      chrome.storage?.local.set(updates, () => {
-        renderKeysList(updatedKeys);
-        const modelSelect = document.getElementById('setting-gemini-model');
-        const modelContainer = document.getElementById('gemini-model-container');
+      chrome.storage?.local.set(updates, async () => {
+        renderKeysList(updatedKeys, keyModelsMap, updatedModelsList);
         if (updatedKeys.length === 0) {
+          const modelContainer = document.getElementById('gemini-model-container');
           if (modelContainer) modelContainer.style.display = 'none';
+        } else {
+          await renderModelSelect(updates.spelt_gemini_model || currentModel, true);
         }
         renderAiStatusMonitor();
       });
@@ -309,6 +318,118 @@ export function initSettings(onDbRestored) {
   setInterval(renderAiStatusMonitor, 2000);
 }
 
+function getGeminiStorage() {
+  return new Promise(resolve => {
+    chrome.storage?.local.get([
+      'spelt_gemini_keys',
+      'spelt_gemini_key',
+      'spelt_gemini_model',
+      'spelt_gemini_models_list',
+      'spelt_gemini_key_models'
+    ], res => resolve(res || {}));
+  });
+}
+
+function setGeminiStorage(updates) {
+  return new Promise(resolve => {
+    chrome.storage?.local.set(updates, resolve);
+  });
+}
+
+async function fetchModelsForKey(key) {
+  const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
+  if (!modelsRes.ok) {
+    const errData = await modelsRes.json().catch(() => ({}));
+    throw new Error(errData.error?.message || 'Invalid API key or model-list request failed.');
+  }
+
+  const modelsData = await modelsRes.json();
+  return sortGeminiModels((modelsData.models || [])
+    .filter(isSupportedGeminiTextModel)
+    .map(m => m.name));
+}
+
+function normalizeStoredKeys(res = {}) {
+  const keys = Array.isArray(res.spelt_gemini_keys) ? [...res.spelt_gemini_keys] : [];
+  if (keys.length === 0 && res.spelt_gemini_key) keys.push(res.spelt_gemini_key);
+  return [...new Set(keys.filter(Boolean))];
+}
+
+function normalizeModelSelection(modelName) {
+  if (!modelName || modelName === GEMINI_AUTO_MODEL) return GEMINI_AUTO_MODEL;
+  return modelName.startsWith('models/') ? modelName : `models/${modelName}`;
+}
+
+function pruneKeyModelsMap(keyModelsMap, keys) {
+  const activeFingerprints = new Set(keys.map(getGeminiKeyFingerprint));
+  for (const fingerprint of Object.keys(keyModelsMap)) {
+    if (!activeFingerprints.has(fingerprint)) delete keyModelsMap[fingerprint];
+  }
+}
+
+function collectModelsFromKeyMap(keyModelsMap, keys, fallbackModels = []) {
+  const models = [];
+  keys.forEach(key => {
+    const keyModels = keyModelsMap[getGeminiKeyFingerprint(key)] || [];
+    models.push(...keyModels);
+  });
+  if (models.length === 0) models.push(...fallbackModels);
+  return sortGeminiModels(models);
+}
+
+async function renderModelSelect(selectedModel = GEMINI_AUTO_MODEL, hasKeys = true) {
+  const modelSelect = document.getElementById('setting-gemini-model');
+  const modelContainer = document.getElementById('gemini-model-container');
+  if (!modelSelect || !modelContainer) return;
+
+  if (!hasKeys) {
+    modelContainer.style.display = 'none';
+    return;
+  }
+
+  const models = await getGeminiModelOptions();
+  modelSelect.innerHTML = '';
+
+  const strategyGroup = document.createElement('optgroup');
+  strategyGroup.label = 'Strategy';
+  const autoOption = document.createElement('option');
+  autoOption.value = GEMINI_AUTO_MODEL;
+  autoOption.textContent = 'Auto: strongest available';
+  strategyGroup.appendChild(autoOption);
+  modelSelect.appendChild(strategyGroup);
+
+  const groups = new Map();
+  models.forEach(modelName => {
+    const meta = getGeminiModelMeta(modelName);
+    if (!groups.has(meta.family)) groups.set(meta.family, []);
+    groups.get(meta.family).push({ modelName, meta });
+  });
+
+  groups.forEach((items, family) => {
+    const group = document.createElement('optgroup');
+    group.label = family;
+    items.forEach(({ modelName, meta }) => {
+      const option = document.createElement('option');
+      option.value = modelName;
+      option.textContent = `${meta.label} (${meta.tier})`;
+      group.appendChild(option);
+    });
+    modelSelect.appendChild(group);
+  });
+
+  const selectedValue = normalizeModelSelection(selectedModel);
+  const availableValues = new Set([GEMINI_AUTO_MODEL, ...models]);
+  modelSelect.value = availableValues.has(selectedValue) ? selectedValue : GEMINI_AUTO_MODEL;
+  modelContainer.style.display = 'flex';
+}
+
+function createAiBadge(text, tone = 'neutral') {
+  const badge = document.createElement('span');
+  badge.className = `ai-status-badge ${tone}`;
+  badge.textContent = text;
+  return badge;
+}
+
 async function renderAiStatusMonitor() {
   const monitorBlock = document.getElementById('ai-status-monitor-block');
   const container = document.getElementById('ai-status-list-container');
@@ -333,68 +454,84 @@ async function renderAiStatusMonitor() {
     monitorBlock.style.display = 'flex';
     container.innerHTML = '';
 
+    const groups = new Map();
     let lastUsedName = 'none';
 
     statuses.forEach(item => {
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.justifyContent = 'space-between';
-      row.style.padding = '5px 8px';
-      
-      if (item.isCurrentSelection) {
-        row.style.background = 'hsla(160, 60%, 45%, 0.06)';
-        row.style.border = '1px solid hsla(160, 60%, 45%, 0.25)';
-      } else {
-        row.style.background = 'rgba(255, 255, 255, 0.03)';
-        row.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+      if (!groups.has(item.name)) {
+        groups.set(item.name, {
+          name: item.name,
+          model: item.model,
+          rank: item.rank,
+          items: []
+        });
       }
-      row.style.borderRadius = 'var(--radius-sm)';
-      row.style.fontSize = '0.66rem';
-
-      let indicatorHtml = '';
-      let statusText = 'Ready';
-      let indicatorColor = 'var(--success)';
-
-      if (item.status === 'bad') {
-        indicatorColor = 'var(--danger)';
-        statusText = 'Failed/Blocked';
-        indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px;"></span>`;
-      } else if (item.status === 'cooldown') {
-        indicatorColor = '#f59e0b'; // orange
-        statusText = `Rate Limited (${item.cooldownRemaining}s)`;
-        indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px; animation: pulse 1s infinite alternate;"></span>`;
-      } else {
-        indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px;"></span>`;
-      }
-
-      let badgesHtml = '';
-      if (item.isPreferred) {
-        badgesHtml += `<span style="background: hsla(260, 60%, 50%, 0.25); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Preferred</span>`;
-      }
-      if (item.isCurrentSelection) {
-        badgesHtml += `<span style="background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px; font-weight: 700; box-shadow: 0 0 4px rgba(16, 185, 129, 0.15);">Selected</span>`;
-      }
+      groups.get(item.name).items.push(item);
       if (item.isLastUsed) {
-        badgesHtml += `<span style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: var(--text-muted); font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Last Used</span>`;
-        lastUsedName = item.name.replace('models/', '');
+        lastUsedName = `${item.model.label} / ${item.keyLabel}`;
       }
+    });
 
-      const modelShort = item.name.replace('models/', '');
-      const labelName = `${modelShort} <span style="opacity: 0.5; font-size: 0.6rem;">(Key: ...${item.keyId})</span>`;
+    [...groups.values()]
+      .sort((a, b) => a.rank - b.rank)
+      .forEach((group, index) => {
+        const row = document.createElement('div');
+        const currentItem = group.items.find(item => item.isCurrentSelection);
+        row.className = `ai-model-group${currentItem ? ' current' : ''}`;
 
-      row.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 4px; font-weight: 500; color: var(--text);">
-          <span>${labelName}</span>
-          ${badgesHtml}
-        </div>
-        <div style="display: flex; align-items: center; color: var(--text-muted); font-size: 0.62rem;">
-          ${indicatorHtml}
-          <span>${statusText}</span>
-        </div>
-      `;
+        const head = document.createElement('div');
+        head.className = 'ai-model-group-head';
 
-      container.appendChild(row);
+        const titleWrap = document.createElement('div');
+        titleWrap.className = 'ai-model-title-wrap';
+
+        const titleLine = document.createElement('div');
+        titleLine.className = 'ai-model-title-line';
+
+        const modelName = document.createElement('span');
+        modelName.className = 'ai-model-name';
+        modelName.textContent = group.model.label;
+        titleLine.appendChild(modelName);
+
+        if (currentItem) titleLine.appendChild(createAiBadge('Selected', 'success'));
+        if (group.items.some(item => item.isPreferred)) titleLine.appendChild(createAiBadge('Manual', 'purple'));
+        if (group.items.some(item => item.isAutoMode) && index === 0) titleLine.appendChild(createAiBadge('Auto first', 'neutral'));
+        if (group.items.some(item => item.isLastUsed)) titleLine.appendChild(createAiBadge('Last used', 'neutral'));
+
+        const subtitle = document.createElement('div');
+        subtitle.className = 'ai-model-subtitle';
+        subtitle.textContent = `${group.model.tier} - ${group.model.stability} - ${group.items.length} key${group.items.length === 1 ? '' : 's'}`;
+
+        titleWrap.append(titleLine, subtitle);
+
+        const summary = document.createElement('div');
+        summary.className = 'ai-model-summary';
+        const readyCount = group.items.filter(item => item.status === 'ready').length;
+        const cooldownCount = group.items.filter(item => item.status === 'cooldown').length;
+        const blockedCount = group.items.filter(item => item.status === 'bad').length;
+        summary.textContent = currentItem
+          ? `Next: ${currentItem.keyLabel}`
+          : `${readyCount} ready${cooldownCount ? ` - ${cooldownCount} cooling` : ''}${blockedCount ? ` - ${blockedCount} blocked` : ''}`;
+
+        head.append(titleWrap, summary);
+
+        const keyLane = document.createElement('div');
+        keyLane.className = 'ai-key-chip-lane';
+        group.items.forEach(item => {
+          const chip = document.createElement('span');
+          chip.className = `ai-key-chip ${item.status}${item.isCurrentSelection ? ' current' : ''}`;
+          const statusText = item.status === 'cooldown'
+            ? `${item.cooldownRemaining}s`
+            : item.status === 'bad'
+              ? 'Blocked'
+              : 'Ready';
+          chip.textContent = `${item.keyLabel} - ${statusText}`;
+          chip.title = `${group.model.label} on ${item.keyLabel}: ${statusText}`;
+          keyLane.appendChild(chip);
+        });
+
+        row.append(head, keyLane);
+        container.appendChild(row);
     });
 
     const lastUsedEl = document.getElementById('ai-monitor-last-used-label');
