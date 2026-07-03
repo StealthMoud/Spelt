@@ -1,17 +1,231 @@
 import { getStored } from './core.js';
 
 /**
- * Model Tier List — ordered strongest → weakest.
- * Only includes models known to work well for text/JSON generation.
- * Image-specific and Gemma models removed (they don't support responseMimeType
- * and are weaker for structured JSON output).
+ * Model strategy and catalog — ordered strongest → weakest for text/JSON tasks.
+ * Keep this list focused on generateContent text-output models; media, live,
+ * embedding, robotics, and Gemma endpoints are intentionally excluded.
  */
-const MODEL_TIERS = [
-  'models/gemini-2.5-flash',
-  'models/gemini-2.5-flash-lite',
-  'models/gemini-2.0-flash',
-  'models/gemini-2.0-flash-lite',
+export const GEMINI_AUTO_MODEL = 'auto';
+
+const MODEL_CATALOG = [
+  {
+    name: 'models/gemini-3.1-pro-preview',
+    label: 'Gemini 3.1 Pro Preview',
+    family: 'Gemini 3',
+    tier: 'Strongest reasoning',
+    stability: 'Preview',
+    note: 'Best available reasoning model when your key exposes it.'
+  },
+  {
+    name: 'models/gemini-3-flash-preview',
+    label: 'Gemini 3 Flash Preview',
+    family: 'Gemini 3',
+    tier: 'Frontier preview',
+    stability: 'Preview',
+    note: 'Newest high-capability Flash preview for text-output tasks.'
+  },
+  {
+    name: 'models/gemini-3.5-flash',
+    label: 'Gemini 3.5 Flash',
+    family: 'Gemini 3',
+    tier: 'Strong balanced',
+    stability: 'Stable',
+    note: 'Strong default for fast vocabulary and JSON tasks.'
+  },
+  {
+    name: 'models/gemini-2.5-pro',
+    label: 'Gemini 2.5 Pro',
+    family: 'Gemini 2.5',
+    tier: 'Deep reasoning',
+    stability: 'Stable',
+    note: 'Older but still very capable for complex JSON generation.'
+  },
+  {
+    name: 'models/gemini-3.1-flash-lite',
+    label: 'Gemini 3.1 Flash-Lite',
+    family: 'Gemini 3',
+    tier: 'Efficient',
+    stability: 'Stable',
+    note: 'Fast fallback for lightweight requests.'
+  },
+  {
+    name: 'models/gemini-2.5-flash',
+    label: 'Gemini 2.5 Flash',
+    family: 'Gemini 2.5',
+    tier: 'Balanced',
+    stability: 'Stable',
+    note: 'Reliable price-performance fallback.'
+  },
+  {
+    name: 'models/gemini-2.5-flash-lite',
+    label: 'Gemini 2.5 Flash-Lite',
+    family: 'Gemini 2.5',
+    tier: 'Lightweight',
+    stability: 'Stable',
+    note: 'Lowest-cost fallback for simple prompts.'
+  },
+  {
+    name: 'models/gemini-flash-latest',
+    label: 'Gemini Flash Latest',
+    family: 'Alias',
+    tier: 'Latest alias',
+    stability: 'Latest',
+    note: 'Alias that may move to a newer Flash release.'
+  },
+  {
+    name: 'models/gemini-pro-latest',
+    label: 'Gemini Pro Latest',
+    family: 'Alias',
+    tier: 'Latest alias',
+    stability: 'Latest',
+    note: 'Alias that may move to a newer Pro release.'
+  }
 ];
+
+const MODEL_TIERS = MODEL_CATALOG.map(model => model.name);
+
+const MODEL_META_BY_NAME = new Map(MODEL_CATALOG.map(model => [model.name, model]));
+
+const BLOCKED_MODEL_NAME_PARTS = [
+  'gemini-1.5',
+  'gemini-2.0',
+  'embedding',
+  'imagen',
+  'image',
+  'banana',
+  'veo',
+  'tts',
+  'live',
+  'audio',
+  'music',
+  'lyria',
+  'robotics',
+  'computer-use',
+  'customtools',
+  'deep-research',
+  'antigravity',
+  'aqa',
+  'gemma',
+  'omni'
+];
+
+function normalizeModelName(modelName) {
+  if (!modelName) return '';
+  return modelName.startsWith('models/') ? modelName : `models/${modelName}`;
+}
+
+export function getGeminiKeyFingerprint(key) {
+  if (!key) return 'unknown';
+  return `k${key.length}_${key.slice(0, 4)}_${key.slice(-8)}`;
+}
+
+export function getGeminiKeyLabel(key) {
+  if (!key) return 'unknown';
+  return key.length > 12 ? `${key.slice(0, 4)}...${key.slice(-6)}` : key;
+}
+
+export function getGeminiModelMeta(modelName) {
+  const normalized = normalizeModelName(modelName);
+  const known = MODEL_META_BY_NAME.get(normalized);
+  if (known) return known;
+
+  const label = normalized.replace('models/', '').replace(/-/g, ' ');
+  const displayLabel = label.replace(/\b\w/g, ch => ch.toUpperCase());
+  return {
+    name: normalized,
+    label: displayLabel,
+    family: inferModelFamily(normalized),
+    tier: inferModelTier(normalized),
+    stability: inferModelStability(normalized),
+    note: 'Discovered from this key.'
+  };
+}
+
+export function isSupportedGeminiTextModel(modelRecordOrName) {
+  const name = normalizeModelName(typeof modelRecordOrName === 'string' ? modelRecordOrName : modelRecordOrName?.name);
+  if (!name) return false;
+
+  if (modelRecordOrName && typeof modelRecordOrName !== 'string') {
+    const methods = modelRecordOrName.supportedGenerationMethods || [];
+    if (!methods.includes('generateContent')) return false;
+  }
+
+  const lower = name.toLowerCase();
+  return !BLOCKED_MODEL_NAME_PARTS.some(part => lower.includes(part));
+}
+
+export function sortGeminiModels(models) {
+  return [...new Set((models || []).map(normalizeModelName).filter(isSupportedGeminiTextModel))]
+    .sort((a, b) => {
+      const diff = getModelSortRank(a) - getModelSortRank(b);
+      if (diff !== 0) return diff;
+      return a.localeCompare(b);
+    });
+}
+
+export async function getGeminiModelOptions() {
+  const storedList = await getStored('spelt_gemini_models_list') || [];
+  return sortGeminiModels(storedList.length > 0 ? storedList : MODEL_TIERS);
+}
+
+function getModelSortRank(modelName) {
+  const normalized = normalizeModelName(modelName);
+  const knownIndex = MODEL_TIERS.indexOf(normalized);
+  if (knownIndex !== -1) return knownIndex;
+
+  const lower = normalized.toLowerCase();
+  const versionMatch = lower.match(/gemini-(\d+(?:\.\d+)?)/);
+  const version = versionMatch ? Number(versionMatch[1]) : 0;
+  let rank = 1000 - version * 100;
+
+  if (lower.includes('pro')) rank -= 30;
+  if (lower.includes('flash')) rank -= 12;
+  if (lower.includes('lite')) rank += 18;
+  if (lower.includes('latest')) rank -= 8;
+  if (lower.includes('preview')) rank += 6;
+  if (lower.includes('experimental') || lower.includes('exp')) rank += 35;
+
+  return rank;
+}
+
+function inferModelFamily(modelName) {
+  const lower = modelName.toLowerCase();
+  const versionMatch = lower.match(/gemini-(\d+(?:\.\d+)?)/);
+  if (versionMatch) return `Gemini ${versionMatch[1]}`;
+  if (lower.includes('latest')) return 'Alias';
+  return 'Other';
+}
+
+function inferModelTier(modelName) {
+  const lower = modelName.toLowerCase();
+  if (lower.includes('pro')) return 'Reasoning';
+  if (lower.includes('flash') && lower.includes('lite')) return 'Efficient';
+  if (lower.includes('flash')) return 'Balanced';
+  return 'Text';
+}
+
+function inferModelStability(modelName) {
+  const lower = modelName.toLowerCase();
+  if (lower.includes('experimental') || lower.includes('exp')) return 'Experimental';
+  if (lower.includes('preview')) return 'Preview';
+  if (lower.includes('latest')) return 'Latest';
+  return 'Stable';
+}
+
+function getKeyIdentifier(key) {
+  return getGeminiKeyFingerprint(key);
+}
+
+async function getStoredKeyModelsMap() {
+  return await getStored('spelt_gemini_key_models') || {};
+}
+
+function getModelsForKey(key, globalModelTiers, keyModelsMap) {
+  const keyModels = keyModelsMap[getGeminiKeyFingerprint(key)];
+  if (!Array.isArray(keyModels) || keyModels.length === 0) return globalModelTiers;
+  const keyModelSet = new Set(sortGeminiModels(keyModels));
+  return globalModelTiers.filter(model => keyModelSet.has(model));
+}
 
 // Persistent storage-backed rate limit cooldowns and blacklisted models
 const memoryCooldowns = {};
@@ -102,21 +316,24 @@ export async function getStoredKeys() {
 }
 
 /**
- * Get a safe short identifier for an API key.
- */
-function getKeyIdentifier(key) {
-  if (!key) return 'unknown';
-  return key.slice(-6) || 'key';
-}
-
-/**
  * Generate trial sequence: try the strongest model across all keys first.
  */
 async function getTrialSequence(modelTiers, keys) {
   const sequence = [];
+  const keyModelsMap = await getStoredKeyModelsMap();
   for (const model of modelTiers) {
     for (const key of keys) {
-      sequence.push({ model, key });
+      const keyModels = getModelsForKey(key, modelTiers, keyModelsMap);
+      if (keyModels.includes(model)) {
+        sequence.push({ model, key });
+      }
+    }
+  }
+  if (sequence.length === 0 && keys.length > 0) {
+    for (const model of modelTiers) {
+      for (const key of keys) {
+        sequence.push({ model, key });
+      }
     }
   }
   return sequence;
@@ -169,10 +386,7 @@ function isTransientError(status, errorMessage) {
 }
 
 /**
- * Check if a rate limit error is global to the entire API key (such as free tier requests quota).
- */
-/**
- * Apply a cooldown timer to a model.
+ * Apply a cooldown timer to a model/key trial.
  */
 async function applyCooldown(model, delay) {
   const expiresAt = Date.now() + delay;
@@ -191,62 +405,26 @@ function isResponseMimeTypeError(errorMessage) {
 
 /**
  * Get the ordered list of available models for fallback, filtered against the user's actual models.
- * The user's preferred model (from settings) is always tried first.
+ * Auto mode always scans strongest to weakest. A manual model acts as a first-choice override.
  */
 async function getAvailableModelTiers(preferredModel) {
   const storedList = await getStored('spelt_gemini_models_list') || [];
-  const availableSet = new Set(storedList);
+  const availableModels = sortGeminiModels(storedList.length > 0 ? storedList : MODEL_TIERS);
+  const fallbackModels = availableModels.length > 0 ? availableModels : sortGeminiModels(MODEL_TIERS);
 
-  // Normalize the preferred model
-  const cleanPreferred = preferredModel.startsWith('models/') ? preferredModel : 'models/' + preferredModel;
-
-  // Build ordered list: preferred first, then tiers in order (excluding preferred to avoid dupes)
-  const ordered = [cleanPreferred];
-  for (const tier of MODEL_TIERS) {
-    if (tier !== cleanPreferred && availableSet.has(tier)) {
-      ordered.push(tier);
-    }
+  if (!preferredModel || preferredModel === GEMINI_AUTO_MODEL) {
+    return fallbackModels;
   }
 
-  // Also add any available models not in our tier list (at the end, as unknown-tier fallbacks)
-  // but skip image-only and gemma models that are known to be problematic
-  for (const m of storedList) {
-    if (!ordered.includes(m) && !isProblematicModel(m)) {
-      ordered.push(m);
-    }
+  const cleanPreferred = normalizeModelName(preferredModel);
+  const ordered = [];
+  if (isSupportedGeminiTextModel(cleanPreferred)) ordered.push(cleanPreferred);
+
+  for (const model of fallbackModels) {
+    if (!ordered.includes(model)) ordered.push(model);
   }
 
   return ordered;
-}
-
-/**
- * Check if a model name indicates it's problematic for text/JSON generation.
- * Image-specific models and Gemma models are filtered out.
- */
-function isProblematicModel(modelName) {
-  const name = modelName.toLowerCase();
-  return name.includes('-image') || name.includes('gemma');
-}
-
-/**
- * Find the best available model — the highest-tier model that is not bad and not in cooldown.
- * Returns the model name string, or null if all exhausted.
- */
-async function pickBestAvailableModel(models, keys) {
-  const badModels = await getBadModels();
-  const cooldowns = await getCooldowns();
-  const now = Date.now();
-  for (const model of models) {
-    for (const key of keys) {
-      const trialId = `${model}::${getKeyIdentifier(key)}`;
-      if (badModels.has(trialId)) continue;
-      const cooldownUntil = cooldowns[trialId] || 0;
-      if (now >= cooldownUntil) {
-        return model;
-      }
-    }
-  }
-  return null; // All rate-limited or bad
 }
 
 /**
@@ -294,7 +472,7 @@ async function callModel(key, model, bodyPayload) {
 
 /**
  * Core fetch wrapper with automatic model fallback on rate limit.
- * Tries the preferred model first, then falls back through tiers.
+ * Uses the selected strategy's ordered model/key trials, strongest model first.
  *
  * Key improvements:
  * - If a model fails with a responseMimeType error, retries the SAME model without it
@@ -338,7 +516,7 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
 
     try {
       const response = await callModel(key, model, payload);
-      chrome.storage?.local.set({ spelt_last_used_model: model });
+      chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
       
       // Success! Clear the cooldown for this model-key in storage so it is immediately marked as Ready
       const currentCooldowns = await getCooldowns();
@@ -377,7 +555,7 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
           }
 
           const response = await callModel(key, model, fallbackPayload);
-          chrome.storage?.local.set({ spelt_last_used_model: model });
+          chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
           
           // Success! Clear the cooldown for this model-key in storage
           const currentCooldowns = await getCooldowns();
@@ -429,8 +607,10 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
 
   // All models exhausted
   const cooldownsAfter = await getCooldowns();
-  const waitSec = getShortestWait(cooldownsAfter);
-  const hasRateLimited = Object.values(cooldownsAfter).some(t => t > Date.now());
+  const trialIds = new Set(trials.map(trial => `${trial.model}::${getKeyIdentifier(trial.key)}`));
+  const relevantCooldowns = Object.fromEntries(Object.entries(cooldownsAfter).filter(([trialId]) => trialIds.has(trialId)));
+  const waitSec = getShortestWait(relevantCooldowns);
+  const hasRateLimited = Object.values(relevantCooldowns).some(t => t > Date.now());
 
   if (hasRateLimited) {
     throw new Error(`All available AI models and API keys are rate-limited. Please retry in ~${waitSec}s.`);
@@ -442,8 +622,8 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
 
 /**
  * Sends a prompt to Google Gemini API and returns the parsed JSON response.
- * Requires spelt_gemini_key to be set in chrome.storage.local.
- * Automatically falls back to weaker models on rate limit.
+ * Requires Gemini API keys to be set in chrome.storage.local.
+ * Automatically falls back through model/key trials on rate limit.
  */
 export async function askGemini(prompt) {
   return enqueue(async () => {
@@ -452,7 +632,7 @@ export async function askGemini(prompt) {
       throw new Error('No Gemini API keys are configured. Please add an API key in the Settings tab.');
     }
 
-    const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
+    const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
     const modelTiers = await getAvailableModelTiers(preferredModel);
 
     const result = await fetchWithFallback(keys, {
@@ -492,7 +672,7 @@ export async function askGemini(prompt) {
 /**
  * Sends a prompt to Gemini and returns raw text (not JSON).
  * Used for free-form responses like hints, mnemonics, and feedback.
- * Automatically falls back to weaker models on rate limit.
+ * Automatically falls back through model/key trials on rate limit.
  */
 export async function askGeminiText(prompt) {
   return enqueue(async () => {
@@ -501,7 +681,7 @@ export async function askGeminiText(prompt) {
       throw new Error('No Gemini API keys are configured. Please add an API key in the Settings tab.');
     }
 
-    const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
+    const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
     const modelTiers = await getAvailableModelTiers(preferredModel);
 
     const result = await fetchWithFallback(keys, {
@@ -522,14 +702,16 @@ export async function askGeminiText(prompt) {
  * Returns the realtime status of all available models.
  */
 export async function getAiStatus() {
-  const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
+  const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
   const modelTiers = await getAvailableModelTiers(preferredModel);
   const keys = await getStoredKeys();
   const now = Date.now();
   const lastUsed = await getStored('spelt_last_used_model') || null;
+  const lastUsedTrial = await getStored('spelt_last_used_trial') || null;
 
   const badModels = await getBadModels();
   const cooldowns = await getCooldowns();
+  const keyModelsMap = await getStoredKeyModelsMap();
 
   // Find which trial is currently designated to handle the NEXT request
   const trials = await getTrialSequence(modelTiers, keys);
@@ -548,6 +730,9 @@ export async function getAiStatus() {
   const results = [];
   for (const model of modelTiers) {
     for (const key of keys) {
+      const keyModels = getModelsForKey(key, modelTiers, keyModelsMap);
+      if (!keyModels.includes(model)) continue;
+
       const keyId = getKeyIdentifier(key);
       const trialId = `${model}::${keyId}`;
 
@@ -562,11 +747,16 @@ export async function getAiStatus() {
 
       results.push({
         name: model,
+        model: getGeminiModelMeta(model),
+        rank: getModelSortRank(model),
         keyId,
+        keyLabel: getGeminiKeyLabel(key),
+        trialId,
         status,
         cooldownRemaining,
-        isPreferred: model === preferredModel || model === ('models/' + preferredModel),
-        isLastUsed: model === lastUsed,
+        isPreferred: preferredModel !== GEMINI_AUTO_MODEL && (model === preferredModel || model === normalizeModelName(preferredModel)),
+        isAutoMode: preferredModel === GEMINI_AUTO_MODEL,
+        isLastUsed: trialId === lastUsedTrial || (!lastUsedTrial && model === lastUsed),
         isCurrentSelection: trialId === currentSelectionTrialId
       });
     }
@@ -574,4 +764,3 @@ export async function getAiStatus() {
 
   return results;
 }
-
