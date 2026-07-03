@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGemini, logDebug } from '../shared/storage.js';
+import { getWords, saveWords, askGemini, logDebug, atomicUpdate } from '../shared/storage.js';
 
 async function updateWordTranslation(wordId, targetLang) {
   const initialList = await getWords();
@@ -68,27 +68,25 @@ Respond ONLY with the JSON object. Do not include markdown code block ticks (\`\
 
   const aiData = await askGemini(prompt);
 
-  // Load the fresh list from database again to ensure we do not overwrite concurrent UI operations
-  const list = await getWords();
-  const w = list.find(x => x.id === wordId);
-  if (w) {
-    if (aiData.definition) w.definition = aiData.definition;
-    if (aiData.transcription) w.transcription = aiData.transcription;
-    if (aiData.partOfSpeech) w.partOfSpeech = aiData.partOfSpeech;
-    if (aiData.translation) w.translation = aiData.translation;
-    if (aiData.level) {
-      w.level = aiData.level.toUpperCase().trim();
-      w.otherLevels = []; // Reset other levels as Gemini selects the single best level
-    }
-    if (aiData.example) {
-      if (w.example !== aiData.example) {
-        w.example = aiData.example;
-        w.exampleTranslation = '';
+  await atomicUpdate(async (list) => {
+    const w = list.find(x => x.id === wordId);
+    if (w) {
+      if (aiData.definition) w.definition = aiData.definition;
+      if (aiData.transcription) w.transcription = aiData.transcription;
+      if (aiData.partOfSpeech) w.partOfSpeech = aiData.partOfSpeech;
+      if (aiData.translation) w.translation = aiData.translation;
+      if (aiData.level) {
+        w.level = aiData.level.toUpperCase().trim();
+        w.otherLevels = []; // Reset other levels as Gemini selects the single best level
+      }
+      if (aiData.example) {
+        if (w.example !== aiData.example) {
+          w.example = aiData.example;
+          w.exampleTranslation = '';
+        }
       }
     }
-
-    await saveWords(list);
-  }
+  });
 
   await logDebug({
     word: wordStr,
