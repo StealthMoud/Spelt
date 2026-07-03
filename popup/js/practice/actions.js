@@ -241,7 +241,7 @@ export function checkSyntax() {
   if (!card) return;
 
   const typed = document.getElementById('syntax-joints-input').value.trim();
-  const typedParts = typed.split(',').map(s => s.trim().toLowerCase());
+  const typedParts = typed.split('|').map(s => s.trim().toLowerCase());
   const correctParts = (card.joints || []).map(s => s.trim().toLowerCase());
   
   const isOk = typedParts.length === correctParts.length && typedParts.every((val, idx) => val === correctParts[idx]);
