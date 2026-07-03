@@ -1,5 +1,5 @@
-import { getWords, saveWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured } from '../../../shared/storage.js';
-import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, getReviewedWordIds, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
+import { getWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured, atomicUpdate } from '../../../shared/storage.js';
+import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 import { generateHint, generateSessionSummary, generateSyntaxExplanation, verifyPracticeWriting } from './ai_helpers.js';
 import { populateBackFace } from './actions.js';
@@ -143,16 +143,16 @@ function renderSyntaxFrontFace(card) {
 }
 
 export async function loadPracticeDeck() {
+  refreshReviewedWordDay();
   const words = await getWords();
-  const reviewedIds = getReviewedWordIds();
   const mode = getPracticeMode();
   
   if (mode === 'syntax') {
-    setDueCards(words.filter(w => w.practiceType === 'syntax' && w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
+    setDueCards(words.filter(w => w.practiceType === 'syntax' && w.nextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
   } else if (mode === 'recall') {
-    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'recall') && w.meaningNextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
+    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'recall') && w.meaningNextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
   } else {
-    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'spelling') && w.nextDate <= Date.now() && !w.mastered && !reviewedIds.has(w.id)));
+    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'spelling') && w.nextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
   }
   
   getOnDeckUpdated()?.(); showPracticeCard();
@@ -339,14 +339,17 @@ export function populateFrontFace(card) {
           }
         }
         
-        const all = await getWords(), w = all.find(x => x.id === card.id);
-        if (w) { w.level = card.level; w.otherLevels = card.otherLevels; await saveWords(all); }
+        await atomicUpdate(async (list) => {
+          const w = list.find(x => x.id === card.id);
+          if (w) { w.level = card.level; w.otherLevels = card.otherLevels; }
+        });
       }
     }).catch(() => {});
   }
 }
 
 export async function syncPracticeDeck() {
+  refreshReviewedWordDay();
   const fresh = await getWords(), now = Date.now(), currentDue = getDueCards();
   const activeCard = currentDue[0], oldActiveId = activeCard?.id;
   const mode = getPracticeMode();
@@ -359,7 +362,7 @@ export async function syncPracticeDeck() {
   const restDue = currentDue.slice(1).map(c => fresh.find(w => w.id === c.id) || c).filter(c => {
     const f = fresh.find(w => w.id === c.id);
     if (!f) return false;
-    const isDue = f.nextDate <= now;
+    const isDue = mode === 'recall' ? f.meaningNextDate <= now : f.nextDate <= now;
     const matchesMode = mode === 'syntax'
       ? f.practiceType === 'syntax'
       : mode === 'recall'
@@ -369,7 +372,6 @@ export async function syncPracticeDeck() {
   });
   due.push(...restDue);
   const ids = new Set(due.map(c => c.id));
-  const reviewedIds = getReviewedWordIds();
   due.push(...fresh.filter(w => {
     const isDue = mode === 'recall' ? w.meaningNextDate <= now : w.nextDate <= now;
     const matchesMode = mode === 'syntax'
@@ -377,7 +379,7 @@ export async function syncPracticeDeck() {
       : mode === 'recall'
         ? (w.practiceType === 'both' || w.practiceType === 'recall')
         : (w.practiceType === 'both' || w.practiceType === 'spelling');
-    return isDue && matchesMode && !w.mastered && !ids.has(w.id) && !reviewedIds.has(w.id);
+    return isDue && matchesMode && !w.mastered && !ids.has(w.id) && !hasReviewedWord(w.id, mode);
   }));
   setDueCards(due); getOnDeckUpdated()?.();
   const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');
@@ -884,5 +886,3 @@ function makeElementDraggable(el) {
     document.removeEventListener('touchmove', elementTouchMove);
   }
 }
-
-
