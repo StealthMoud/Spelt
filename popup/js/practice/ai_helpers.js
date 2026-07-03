@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGeminiText, isGeminiConfigured, getStored } from '../../../shared/storage.js';
+import { getWords, saveWords, askGeminiText, isGeminiConfigured, getStored, atomicUpdate } from '../../../shared/storage.js';
 
 /**
  * Generate a mnemonic hint for a word using AI.
@@ -24,12 +24,10 @@ Focus on breaking down the word into real, recognizable parts (e.g., roots, pref
   
   // Cache the hint on the word object
   try {
-    const words = await getWords();
-    const w = words.find(x => x.id === card.id);
-    if (w) {
-      w.aiHint = hint;
-      await saveWords(words);
-    }
+    await atomicUpdate(async (words) => {
+      const w = words.find(x => x.id === card.id);
+      if (w) w.aiHint = hint;
+    });
     card.aiHint = hint;
   } catch (_) {}
 
