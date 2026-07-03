@@ -953,40 +953,40 @@
           </div>
           <div class="settings-block">
             <strong>Gemini AI Keys Manager (Free Tier)</strong>
-            <p>Connect multiple API keys. Spelt will cycle through them and fallback from strongest to weakest model/key combination. Get keys for free from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--primary); text-decoration: underline;">Google AI Studio</a>.</p>
+            <p>Connect multiple API keys. Spelt scans the strongest available text model first, then falls back by model and key when a pair is cooling down. Keys from the same Google project can still share quota. Get keys from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--primary); text-decoration: underline;">Google AI Studio</a>.</p>
             
             <!-- List of keys -->
-            <div id="gemini-keys-list-container" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px; width: 100%;">
+            <div id="gemini-keys-list-container" class="gemini-keys-list">
               <!-- Dynamically populated keys -->
             </div>
 
             <!-- Add new key -->
-            <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; width: 100%;">
+            <div class="gemini-key-add-row">
               <input type="password" id="setting-gemini-key-input" class="premium-input" placeholder="Add Gemini API Key..." style="flex: 1; font-size: 0.72rem; min-width: 180px; margin: 0;">
               <button id="add-gemini-key-btn" class="submit-btn" style="width: auto; font-size: 0.72rem; padding: 4px 10px; margin: 0;">Add Key</button>
             </div>
             
             <div id="gemini-model-container" style="display: none; margin-top: 8px; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
               <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                <label for="setting-gemini-model" style="font-size: 0.7rem; color: var(--text-muted); margin: 0; white-space: nowrap;">Preferred Model:</label>
+                <label for="setting-gemini-model" style="font-size: 0.7rem; color: var(--text-muted); margin: 0; white-space: nowrap;">Model Strategy:</label>
                 <select id="setting-gemini-model" class="premium-input select-input" style="flex: 1; margin: 0;"></select>
               </div>
               <p style="font-size: 0.65rem; color: var(--text-muted); margin: 2px 0 0 0; line-height: 1.35;">
-                * Spelt will automatically fallback to other available models if your preferred selection hits free-tier rate limits.
+                Auto uses the strongest verified text model first. Manual choices still fall back through weaker verified models when needed.
               </p>
             </div>
             <p id="gemini-test-status" style="font-size: 0.65rem; margin-top: 5px; display: none; font-weight: 500;"></p>
             
             <!-- AI Model Status & Fallback Monitor Panel -->
-            <div id="ai-status-monitor-block" style="display: none; margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px; flex-direction: column; gap: 6px; width: 100%;">
-              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                <strong style="font-size: 0.7rem; color: #a78bfa; display: flex; align-items: center; gap: 4px;">
+            <div id="ai-status-monitor-block" class="ai-status-monitor-block">
+              <div class="ai-status-monitor-head">
+                <strong class="ai-status-monitor-title">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 10px; height: 10px; flex-shrink: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                   AI Model Status Monitor
                 </strong>
                 <span id="ai-monitor-last-used-label" style="font-size: 0.6rem; color: var(--text-muted);"></span>
               </div>
-              <div id="ai-status-list-container" style="display: flex; flex-direction: column; gap: 5px; width: 100%; margin-top: 2px;">
+              <div id="ai-status-list-container" class="ai-status-list-container">
                 <!-- Dynamically populated -->
               </div>
             </div>
