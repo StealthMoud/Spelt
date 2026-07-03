@@ -138,27 +138,13 @@ function isTransientError(status, errorMessage) {
 /**
  * Check if a rate limit error is global to the entire API key (such as free tier requests quota).
  */
-function isGlobalRateLimit(status, errorMessage) {
-  if (status !== 429) return false;
-  const msg = (errorMessage || '').toLowerCase();
-  return msg.includes('free_tier') || msg.includes('project') || msg.includes('quota');
-}
-
 /**
- * Apply a cooldown timer to a model or to all models if it is a global API key limit.
+ * Apply a cooldown timer to a model.
  */
-async function applyCooldown(model, delay, isGlobal = false, modelTiers = []) {
+async function applyCooldown(model, delay) {
   const expiresAt = Date.now() + delay;
   const cooldowns = await getCooldowns();
-  if (isGlobal) {
-    // If it's a global free tier quota limit, cooldown all fallback models
-    for (const m of modelTiers) {
-      cooldowns[m] = expiresAt;
-    }
-    cooldowns[model] = expiresAt;
-  } else {
-    cooldowns[model] = expiresAt;
-  }
+  cooldowns[model] = expiresAt;
   await saveCooldowns(cooldowns);
 }
 
@@ -351,8 +337,7 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
           if (isTransientError(retryStatus, retryMsg)) {
             const isServerErr = retryStatus >= 500;
             const delay = retryStatus === 429 ? parseRetryDelay(retryMsg) : (isServerErr ? 30000 : 15000);
-            const isGlobal = isGlobalRateLimit(retryStatus, retryMsg);
-            await applyCooldown(model, delay, isGlobal, modelTiers);
+            await applyCooldown(model, delay);
             console.warn(`[Spelt AI] Model ${model} transient failure on retry (status ${retryStatus || 'network'}). Cooldown ${Math.ceil(delay / 1000)}s.`);
           } else {
             // Non-recoverable error on retry — blacklist this model
@@ -369,8 +354,7 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
       if (isTransientError(status, errMsg)) {
         const isServerErr = status >= 500;
         const delay = status === 429 ? parseRetryDelay(errMsg) : (isServerErr ? 30000 : 15000);
-        const isGlobal = isGlobalRateLimit(status, errMsg);
-        await applyCooldown(model, delay, isGlobal, modelTiers);
+        await applyCooldown(model, delay);
         console.warn(`[Spelt AI] Model ${model} transient failure (status ${status || 'network'}): ${errMsg}. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
         lastError = err;
         continue;
