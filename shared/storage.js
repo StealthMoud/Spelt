@@ -3,6 +3,7 @@ export {
   setStored,
   getWords,
   saveWords,
+  atomicUpdate,
   resetDb,
   logDebug,
   triggerNetworkError,
@@ -11,7 +12,9 @@ export {
 
 export {
   calcSM2,
-  computeErrorWeight
+  computeErrorWeight,
+  getLocalMidnight,
+  getNextReviewDate
 } from './storage/srs.js';
 
 export {
