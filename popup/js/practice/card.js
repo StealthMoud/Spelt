@@ -421,9 +421,9 @@ export async function syncPracticeDeck() {
   }));
   setDueCards(due); getOnDeckUpdated()?.();
   const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');
-  if (oldActiveId !== newActiveId || (!isFlipped && !getIsSubmitting())) {
+  if (oldActiveId !== newActiveId) {
     showPracticeCard();
-  } else if (newActiveId && isFlipped) {
+  } else if (newActiveId) {
     // Refresh front and back faces in-place without resetting flipped state/inputs
     const freshCard = fresh.find(w => w.id === newActiveId);
     if (freshCard) {
@@ -451,7 +451,7 @@ async function setupAIHintButton(card) {
   makeElementDraggable(hintBubble);
 
   const isConfigured = await isGeminiConfigured();
-  if (!isConfigured || card.practiceType === 'syntax') {
+  if (!isConfigured) {
     hintBtn.style.display = 'none';
     return;
   }
@@ -461,14 +461,19 @@ async function setupAIHintButton(card) {
   hintText.textContent = '';
 
   const handleHintRequest = async (forceRegen = false) => {
-    hintText.textContent = forceRegen ? 'Regenerating mnemonic...' : 'Asking AI Coach...';
+    hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
     hintBubble.style.display = 'block';
     try {
-      if (forceRegen) {
-        card.aiHint = null;
+      if (card.practiceType === 'syntax') {
+        const hint = await generateSyntaxExplanation(card);
+        hintText.textContent = hint;
+      } else {
+        if (forceRegen) {
+          card.aiHint = null;
+        }
+        const hint = await generateHint(card);
+        hintText.textContent = hint;
       }
-      const hint = await generateHint(card);
-      hintText.textContent = hint;
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
     }
@@ -523,7 +528,7 @@ async function setupBackAIHintButton(card) {
   makeElementDraggable(hintBubble);
 
   const isConfigured = await isGeminiConfigured();
-  if (!isConfigured || card.practiceType === 'syntax') {
+  if (!isConfigured) {
     hintBtn.style.display = 'none';
     return;
   }
@@ -533,14 +538,19 @@ async function setupBackAIHintButton(card) {
   hintText.textContent = '';
 
   const handleHintRequest = async (forceRegen = false) => {
-    hintText.textContent = forceRegen ? 'Regenerating mnemonic...' : 'Asking AI Coach...';
+    hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
     hintBubble.style.display = 'block';
     try {
-      if (forceRegen) {
-        card.aiHint = null;
+      if (card.practiceType === 'syntax') {
+        const hint = await generateSyntaxExplanation(card);
+        hintText.textContent = hint;
+      } else {
+        if (forceRegen) {
+          card.aiHint = null;
+        }
+        const hint = await generateHint(card);
+        hintText.textContent = hint;
       }
-      const hint = await generateHint(card);
-      hintText.textContent = hint;
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
     }
