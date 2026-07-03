@@ -628,6 +628,8 @@ async function setupAISyntaxExplain(card) {
   const explanationBubble = document.getElementById('ai-syntax-explanation-bubble');
   if (!explainBtn || !explanationBubble) return;
 
+  makeElementDraggable(explanationBubble);
+
   explanationBubble.style.display = 'none';
   const textEl = document.getElementById('ai-syntax-explanation-text');
   if (textEl) textEl.innerHTML = '';
@@ -642,10 +644,10 @@ async function setupAISyntaxExplain(card) {
 
   explainBtn.style.display = 'inline-flex';
 
-  const handleExplainRequest = async () => {
+  const handleExplainRequest = async (forceRegen = false) => {
     const textEl = document.getElementById('ai-syntax-explanation-text');
     if (!textEl) return;
-    textEl.innerHTML = '<span style="color: var(--text-muted);">Asking AI Coach...</span>';
+    textEl.innerHTML = forceRegen ? '<span style="color: var(--text-muted);">Regenerating...</span>' : '<span style="color: var(--text-muted);">Asking AI Coach...</span>';
     explanationBubble.style.display = 'block';
     try {
       const explanation = await generateSyntaxExplanation(card);
@@ -673,6 +675,16 @@ async function setupAISyntaxExplain(card) {
     newCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       explanationBubble.style.display = 'none';
+    });
+  }
+
+  const regenBtn = document.getElementById('ai-syntax-explain-regen');
+  if (regenBtn) {
+    const newRegenBtn = regenBtn.cloneNode(true);
+    regenBtn.parentNode.replaceChild(newRegenBtn, regenBtn);
+    newRegenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleExplainRequest(true);
     });
   }
 }

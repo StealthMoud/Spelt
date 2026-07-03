@@ -214,12 +214,17 @@
                   </button>
                 </div>
                 <p id="syntax-front-pattern" style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace; word-break: break-word; line-height: 1.3; margin: 4px 0 0;"></p>
-                <div id="ai-syntax-explanation-bubble" style="display: none; background: hsla(260, 50%, 30%, 0.12); border: 1px solid hsla(260, 50%, 60%, 0.25); border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 6px; font-size: 0.85rem; color: #c4b5fd; line-height: 1.45; text-align: left; word-break: break-word;">
+                <div id="ai-syntax-explanation-bubble" style="display: none; position: absolute; right: 14px; top: 110px; left: 14px; background: hsla(260, 50%, 15%, 0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid hsla(260, 50%, 60%, 0.25); border-radius: var(--radius-md); padding: 10px 14px; font-size: 0.95rem; color: #e9d5ff; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 100; cursor: move; line-height: 1.5; word-break: break-word;">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                     <div id="ai-syntax-explanation-text" style="flex: 1;"></div>
-                    <button id="ai-syntax-explain-close" style="background: none; border: none; padding: 2px; color: var(--text-muted); cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
-                      <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <button id="ai-syntax-explain-regen" style="background: hsla(260, 50%, 60%, 0.15); border: 1px solid hsla(260, 50%, 60%, 0.3); padding: 4px; border-radius: 4px; color: #c4b5fd; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                      </button>
+                      <button id="ai-syntax-explain-close" style="background: hsla(260, 50%, 60%, 0.15); border: 1px solid hsla(260, 50%, 60%, 0.3); padding: 4px; border-radius: 4px; color: #c4b5fd; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
