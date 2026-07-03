@@ -129,6 +129,26 @@ function renderSyntaxFrontFace(card) {
   document.getElementById('syntax-front-translation').textContent = card.translation || 'No translation added.';
   document.getElementById('syntax-front-pattern').textContent = card.definition || 'No template description.';
   
+  chrome.storage?.local.get('spelt_target_lang', (res) => {
+    const lang = res.spelt_target_lang || 'fa';
+    let targetLangName = 'Translation';
+    if (lang === 'es') targetLangName = 'Translation (Spanish)';
+    else if (lang === 'fr') targetLangName = 'Translation (French)';
+    else if (lang === 'de') targetLangName = 'Translation (German)';
+    else if (lang === 'it') targetLangName = 'Translation (Italian)';
+    else if (lang === 'pt') targetLangName = 'Translation (Portuguese)';
+    else if (lang === 'ru') targetLangName = 'Translation (Russian)';
+    else if (lang === 'ar') targetLangName = 'Translation (Arabic)';
+    else if (lang === 'fa') targetLangName = 'Translation (Farsi)';
+    else if (lang === 'zh') targetLangName = 'Translation (Chinese)';
+    else if (lang === 'ja') targetLangName = 'Translation (Japanese)';
+    else if (lang === 'ko') targetLangName = 'Translation (Korean)';
+    else if (lang === 'tr') targetLangName = 'Translation (Turkish)';
+    
+    const labelEl = document.getElementById('syntax-translation-label');
+    if (labelEl) labelEl.textContent = targetLangName;
+  });
+  
   const jointsInput = document.getElementById('syntax-joints-input');
   if (jointsInput) {
     jointsInput.value = '';
