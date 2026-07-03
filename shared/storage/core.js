@@ -1,3 +1,5 @@
+import { getLocalMidnight, getNextReviewDate } from './srs.js';
+
 const isExt = typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
 let mockDb = {}; // memory fallback for Node environment
 
@@ -89,6 +91,12 @@ export async function getWords() {
         cardModified = true;
       }
     }
+    if (typeof w.nextDate === 'number' && !isNaN(w.nextDate)) {
+      const normalizedNextDate = getLocalMidnight(w.nextDate);
+      if (w.nextDate !== normalizedNextDate) {
+        w.nextDate = normalizedNextDate;
+      }
+    }
 
     // Parse meaningNextDate if it is a string or Date object
     if (w.meaningNextDate !== undefined && w.meaningNextDate !== null) {
@@ -109,16 +117,22 @@ export async function getWords() {
         cardModified = true;
       }
     }
+    if (typeof w.meaningNextDate === 'number' && !isNaN(w.meaningNextDate)) {
+      const normalizedMeaningNextDate = getLocalMidnight(w.meaningNextDate);
+      if (w.meaningNextDate !== normalizedMeaningNextDate) {
+        w.meaningNextDate = normalizedMeaningNextDate;
+      }
+    }
 
     // Recover nextDate/meaningNextDate from review history if they should be in the future
     if (Array.isArray(w.history) && w.history.length > 0) {
-      const lastSpelling = [...w.history].reverse().find(h => h.mode === 'spelling');
+      const lastSpelling = [...w.history].reverse().find(h => h.mode === 'spelling' || h.mode === 'syntax');
       if (lastSpelling && lastSpelling.date && lastSpelling.interval !== undefined) {
         const intervalNum = Number(lastSpelling.interval);
         const dateNum = typeof lastSpelling.date === 'string' ? Date.parse(lastSpelling.date) : Number(lastSpelling.date);
         if (!isNaN(intervalNum) && !isNaN(dateNum)) {
           const isFailed = lastSpelling.q !== undefined && Number(lastSpelling.q) < 3;
-          const expectedNext = isFailed ? dateNum : dateNum + intervalNum * 24 * 60 * 60 * 1000;
+          const expectedNext = isFailed ? dateNum : getNextReviewDate(intervalNum, dateNum);
           if (expectedNext > Date.now() && (w.nextDate === undefined || w.nextDate === null || isNaN(w.nextDate))) {
             w.nextDate = expectedNext;
             cardModified = true;
@@ -132,7 +146,7 @@ export async function getWords() {
         const dateNum = typeof lastMeaning.date === 'string' ? Date.parse(lastMeaning.date) : Number(lastMeaning.date);
         if (!isNaN(intervalNum) && !isNaN(dateNum)) {
           const isFailed = lastMeaning.q !== undefined && Number(lastMeaning.q) < 3;
-          const expectedNext = isFailed ? dateNum : dateNum + intervalNum * 24 * 60 * 60 * 1000;
+          const expectedNext = isFailed ? dateNum : getNextReviewDate(intervalNum, dateNum);
           if (expectedNext > Date.now() && (w.meaningNextDate === undefined || w.meaningNextDate === null || isNaN(w.meaningNextDate))) {
             w.meaningNextDate = expectedNext;
             cardModified = true;
@@ -193,6 +207,43 @@ export async function getWords() {
 
 export async function saveWords(words) {
   await setStored('spelt_words', words);
+}
+
+let isWriting = false;
+const writeQueue = [];
+
+async function withWordWriteLock(task) {
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    return navigator.locks.request('spelt_words_write', task);
+  }
+  return task();
+}
+
+async function processWriteQueue() {
+  if (isWriting) return;
+  isWriting = true;
+  while (writeQueue.length > 0) {
+    const { updater, resolve, reject } = writeQueue.shift();
+    try {
+      const words = await withWordWriteLock(async () => {
+        const currentWords = await getWords();
+        await updater(currentWords);
+        await saveWords(currentWords);
+        return currentWords;
+      });
+      resolve(words);
+    } catch (err) {
+      reject(err);
+    }
+  }
+  isWriting = false;
+}
+
+export function atomicUpdate(updater) {
+  return new Promise((resolve, reject) => {
+    writeQueue.push({ updater, resolve, reject });
+    processWriteQueue();
+  });
 }
 
 export async function resetDb() {
