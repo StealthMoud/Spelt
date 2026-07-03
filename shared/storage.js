@@ -76,5 +76,12 @@ export {
   askGemini,
   askGeminiText,
   isGeminiConfigured,
-  getAiStatus
+  getAiStatus,
+  GEMINI_AUTO_MODEL,
+  getGeminiKeyFingerprint,
+  getGeminiKeyLabel,
+  getGeminiModelMeta,
+  getGeminiModelOptions,
+  isSupportedGeminiTextModel,
+  sortGeminiModels
 } from './storage/gemini.js';
