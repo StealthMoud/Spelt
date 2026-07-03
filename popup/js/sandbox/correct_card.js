@@ -1,4 +1,4 @@
-import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation, getStored, isGeminiConfigured, askGemini } from '../../../shared/storage.js';
+import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
@@ -22,7 +22,10 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
     const words = await getWords();
     const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
     if (existing && level && !existing.level) {
-      existing.level = level; await saveWords(words);
+      await atomicUpdate(async (list) => {
+        const w = list.find(x => x.word.toLowerCase() === word.toLowerCase());
+        if (w && !w.level) w.level = level;
+      });
     }
     const exampleTranslation = existing ? (existing.exampleTranslation || '') : '';
     const wordLevel = (existing && existing.level) ? existing.level : level;
@@ -279,18 +282,18 @@ Respond ONLY with a JSON object matching this schema:
     }
 
     // If word is already in vault, update it immediately in database
-    const list = await getWords();
-    const existingWord = list.find(w => w.word.toLowerCase() === word.toLowerCase());
-    if (existingWord) {
-      existingWord.definition = aiData.definition;
-      existingWord.transcription = aiData.transcription;
-      existingWord.partOfSpeech = aiData.partOfSpeech;
-      existingWord.translation = aiData.translation;
-      existingWord.level = aiData.level.toUpperCase().trim();
-      existingWord.example = aiData.example;
-      await saveWords(list);
-      if (reloadVaultListCallback) await reloadVaultListCallback();
-    }
+    await atomicUpdate(async (list) => {
+      const existingWord = list.find(w => w.word.toLowerCase() === word.toLowerCase());
+      if (existingWord) {
+        existingWord.definition = aiData.definition;
+        existingWord.transcription = aiData.transcription;
+        existingWord.partOfSpeech = aiData.partOfSpeech;
+        existingWord.translation = aiData.translation;
+        existingWord.level = aiData.level.toUpperCase().trim();
+        existingWord.example = aiData.example;
+      }
+    });
+    if (reloadVaultListCallback) await reloadVaultListCallback();
 
     btn.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"/></svg>
