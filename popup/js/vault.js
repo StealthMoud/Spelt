@@ -1,4 +1,4 @@
-import { getWords, saveWords, getStored, isGeminiConfigured, askGemini } from '../../shared/storage.js';
+import { getWords, saveWords, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../shared/storage.js';
 import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';
 import { saveWord } from './vault/save.js';
@@ -58,9 +58,12 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('vault-delete-selected')?.addEventListener('click', () => {
     if (selectedWordIds.size === 0) return;
     showConfirm('Delete Selected', `Delete all ${selectedWordIds.size} selected words?`, async () => {
-      const freshList = await getWords();
-      const filtered = freshList.filter(w => !selectedWordIds.has(w.id));
-      await saveWords(filtered);
+      await atomicUpdate(async (freshList) => {
+        // Remove selected words in-place by splicing from end to start
+        for (let i = freshList.length - 1; i >= 0; i--) {
+          if (selectedWordIds.has(freshList[i].id)) freshList.splice(i, 1);
+        }
+      });
       selectedWordIds.clear();
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();
@@ -70,13 +73,13 @@ export async function initVault(onVaultUpdated) {
   document.getElementById('vault-demaster-selected')?.addEventListener('click', () => {
     if (selectedWordIds.size === 0) return;
     showConfirm('Re-study Selected', `Move all ${selectedWordIds.size} selected words back into practice?`, async () => {
-      const freshList = await getWords();
-      freshList.forEach(w => {
-        if (selectedWordIds.has(w.id)) {
-          w.mastered = false; w.rep = 0; w.interval = 1; w.nextDate = Date.now();
-        }
+      await atomicUpdate(async (freshList) => {
+        freshList.forEach(w => {
+          if (selectedWordIds.has(w.id)) {
+            w.mastered = false; w.rep = 0; w.interval = 1; w.nextDate = Date.now();
+          }
+        });
       });
-      await saveWords(freshList);
       selectedWordIds.clear();
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();
@@ -154,21 +157,21 @@ Respond ONLY with a JSON object matching this schema:
 
             const aiData = await askGemini(prompt);
             
-            // Reload list to prevent concurrent editing issues
-            const freshList = await getWords();
-            const targetWord = freshList.find(x => x.id === id);
-            if (targetWord) {
-              if (aiData.definition) targetWord.definition = aiData.definition;
-              if (aiData.transcription) targetWord.transcription = aiData.transcription;
-              if (aiData.partOfSpeech) targetWord.partOfSpeech = aiData.partOfSpeech;
-              if (aiData.translation) targetWord.translation = aiData.translation;
-              if (aiData.level) targetWord.level = aiData.level.toUpperCase().trim();
-              if (aiData.example) {
-                targetWord.example = aiData.example;
-                targetWord.exampleTranslation = '';
+            // Use atomicUpdate to prevent concurrent editing issues
+            await atomicUpdate(async (freshList) => {
+              const targetWord = freshList.find(x => x.id === id);
+              if (targetWord) {
+                if (aiData.definition) targetWord.definition = aiData.definition;
+                if (aiData.transcription) targetWord.transcription = aiData.transcription;
+                if (aiData.partOfSpeech) targetWord.partOfSpeech = aiData.partOfSpeech;
+                if (aiData.translation) targetWord.translation = aiData.translation;
+                if (aiData.level) targetWord.level = aiData.level.toUpperCase().trim();
+                if (aiData.example) {
+                  targetWord.example = aiData.example;
+                  targetWord.exampleTranslation = '';
+                }
               }
-              await saveWords(freshList);
-            }
+            });
           }
         } catch (err) {
           console.error(`AI enrichment failed for word ID ${id}:`, err);
@@ -206,9 +209,10 @@ export async function reloadVaultList() {
 
 function deleteWord(wordObj) {
   showConfirm('Delete Word', `Delete "${wordObj.word}" from your vault?`, async () => {
-    const freshList = await getWords();
-    const filtered = freshList.filter(w => w.id !== wordObj.id);
-    await saveWords(filtered);
+    await atomicUpdate(async (freshList) => {
+      const idx = freshList.findIndex(w => w.id === wordObj.id);
+      if (idx !== -1) freshList.splice(idx, 1);
+    });
     await reloadVaultList();
     if (onVaultUpdatedCallback) onVaultUpdatedCallback();
   });
