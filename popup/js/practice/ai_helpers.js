@@ -126,7 +126,9 @@ The structure pattern they are studying is: "${card.definition}"
 Example sentence: "${card.example}"
 Translation in ${targetLangName}: "${card.translation || 'N/A'}"
 
-Provide a brief, clear, 1-2 sentence explanation of this grammatical structure and how to construct it. If appropriate, write the explanation in a mix of English and ${targetLangName} so it is easy to understand. Do NOT use markdown. Plain text only.`;
+Provide a brief, clear, 1-2 sentence explanation of this grammatical structure and how to construct it.
+CRITICAL INSTRUCTION: To prevent text direction issues, you MUST provide the English explanation on one line, and the ${targetLangName} translation on a completely separate new line. Do NOT mix English and ${targetLangName} on the same line.
+Do NOT use markdown. Plain text only.`;
 
   return await askGeminiText(prompt);
 }

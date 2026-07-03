@@ -464,16 +464,16 @@ async function setupAIHintButton(card) {
     hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
     hintBubble.style.display = 'block';
     try {
+      let hint = '';
       if (card.practiceType === 'syntax') {
-        const hint = await generateSyntaxExplanation(card);
-        hintText.textContent = hint;
+        hint = await generateSyntaxExplanation(card);
       } else {
         if (forceRegen) {
           card.aiHint = null;
         }
-        const hint = await generateHint(card);
-        hintText.textContent = hint;
+        hint = await generateHint(card);
       }
+      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
     }
@@ -541,16 +541,16 @@ async function setupBackAIHintButton(card) {
     hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
     hintBubble.style.display = 'block';
     try {
+      let hint = '';
       if (card.practiceType === 'syntax') {
-        const hint = await generateSyntaxExplanation(card);
-        hintText.textContent = hint;
+        hint = await generateSyntaxExplanation(card);
       } else {
         if (forceRegen) {
           card.aiHint = null;
         }
-        const hint = await generateHint(card);
-        hintText.textContent = hint;
+        hint = await generateHint(card);
       }
+      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
     }
@@ -646,7 +646,7 @@ async function setupAISyntaxExplain(card) {
     explanationBubble.style.display = 'block';
     try {
       const explanation = await generateSyntaxExplanation(card);
-      explanationBubble.textContent = explanation;
+      explanationBubble.innerHTML = explanation.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
     } catch (err) {
       explanationBubble.textContent = `Could not generate explanation: ${err.message}`;
     }
