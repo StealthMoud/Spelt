@@ -1,5 +1,5 @@
-import { getWords, saveWords } from '../../../shared/storage.js';
-import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, getReviewedWordIds, getPracticeMode, trackReview } from './state.js';
+import { atomicUpdate, getNextReviewDate } from '../../../shared/storage.js';
+import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, markReviewedWord, getPracticeMode, trackReview } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
 
@@ -39,6 +39,8 @@ export async function submitRating(score) {
     if (mode === 'recall') {
       updatedCard = await reviewWordInBackground(card.id, score, null, responseTime, 'recall');
       trackReview(card.word, score >= 3, responseTime || 0);
+    } else if (mode === 'syntax') {
+      updatedCard = await reviewWordInBackground(card.id, score, null, responseTime, 'syntax');
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = typed.toLowerCase() === card.word.toLowerCase();
@@ -46,7 +48,7 @@ export async function submitRating(score) {
     }
     await trackSession(score);
     if (score >= 3) {
-      getReviewedWordIds().add(card.id);
+      markReviewedWord(card.id, mode);
     }
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
@@ -76,27 +78,29 @@ export async function submitMasteredRating(card) {
     if (mode === 'recall') {
       await reviewWordInBackground(card.id, 5, null, responseTime, 'recall');
       trackReview(card.word, true, responseTime || 0);
+    } else if (mode === 'syntax') {
+      await reviewWordInBackground(card.id, 5, null, responseTime, 'syntax');
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = typed.toLowerCase() === card.word.toLowerCase();
       await reviewWordInBackground(card.id, 5, isOk ? null : typed, responseTime, 'spelling');
     }
     await trackSession(5);
-    getReviewedWordIds().add(card.id);
+    markReviewedWord(card.id, mode);
 
-    const list = await getWords();
-    const wordObj = list.find(w => w.id === card.id);
-    if (wordObj) {
-      wordObj.mastered = true;
-      wordObj.masteredAt = Date.now();
-      wordObj.rep = 0;
-      wordObj.interval = 30;
-      wordObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      wordObj.meaningRep = 0;
-      wordObj.meaningInterval = 30;
-      wordObj.meaningNextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      await saveWords(list);
-    }
+    await atomicUpdate(async (list) => {
+      const wordObj = list.find(w => w.id === card.id);
+      if (wordObj) {
+        wordObj.mastered = true;
+        wordObj.masteredAt = Date.now();
+        wordObj.rep = 0;
+        wordObj.interval = 30;
+        wordObj.nextDate = getNextReviewDate(30);
+        wordObj.meaningRep = 0;
+        wordObj.meaningInterval = 30;
+        wordObj.meaningNextDate = getNextReviewDate(30);
+      }
+    });
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
       getDueCards().shift();
