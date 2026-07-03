@@ -90,11 +90,44 @@ async function enqueue(fn) {
 }
 
 /**
+ * Load all configured API keys from storage, with automatic migration fallback.
+ */
+export async function getStoredKeys() {
+  const res = await new Promise(r => chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key'], r)) || {};
+  let keys = res.spelt_gemini_keys || [];
+  if (keys.length === 0 && res.spelt_gemini_key) {
+    keys = [res.spelt_gemini_key];
+  }
+  return keys.filter(Boolean);
+}
+
+/**
+ * Get a safe short identifier for an API key.
+ */
+function getKeyIdentifier(key) {
+  if (!key) return 'unknown';
+  return key.slice(-6) || 'key';
+}
+
+/**
+ * Generate trial sequence: try the strongest model across all keys first.
+ */
+async function getTrialSequence(modelTiers, keys) {
+  const sequence = [];
+  for (const model of modelTiers) {
+    for (const key of keys) {
+      sequence.push({ model, key });
+    }
+  }
+  return sequence;
+}
+
+/**
  * Returns true if the user has configured a Gemini API key.
  */
 export async function isGeminiConfigured() {
-  const key = await getStored('spelt_gemini_key');
-  return !!key;
+  const keys = await getStoredKeys();
+  return keys.length > 0;
 }
 
 /**
@@ -199,15 +232,18 @@ function isProblematicModel(modelName) {
  * Find the best available model — the highest-tier model that is not bad and not in cooldown.
  * Returns the model name string, or null if all exhausted.
  */
-async function pickBestAvailableModel(models) {
+async function pickBestAvailableModel(models, keys) {
   const badModels = await getBadModels();
   const cooldowns = await getCooldowns();
   const now = Date.now();
   for (const model of models) {
-    if (badModels.has(model)) continue;
-    const cooldownUntil = cooldowns[model] || 0;
-    if (now >= cooldownUntil) {
-      return model;
+    for (const key of keys) {
+      const trialId = `${model}::${getKeyIdentifier(key)}`;
+      if (badModels.has(trialId)) continue;
+      const cooldownUntil = cooldowns[trialId] || 0;
+      if (now >= cooldownUntil) {
+        return model;
+      }
     }
   }
   return null; // All rate-limited or bad
@@ -267,23 +303,29 @@ async function callModel(key, model, bodyPayload) {
  *   for the session, not given a temporary cooldown.
  * - Only genuine rate-limit (429) errors trigger cooldown timers.
  *
- * @param {string} key - API key
+ * @param {string[]} keys - API keys
  * @param {object} bodyPayload - The request body (contents, generationConfig, etc.)
  * @param {string[]} modelTiers - Ordered list of model names to try
  * @param {boolean} wantJson - Whether to request JSON output via responseMimeType
  * @returns {{ response: Response, modelUsed: string }}
  */
-async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false) {
+async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false) {
   let lastError = null;
   const badModels = await getBadModels();
   const cooldowns = await getCooldowns();
 
-  for (const model of modelTiers) {
-    // Skip permanently bad models
-    if (badModels.has(model)) continue;
+  const trials = await getTrialSequence(modelTiers, keys);
 
-    // Skip models currently in rate-limit cooldown
-    const cooldownUntil = cooldowns[model] || 0;
+  for (const trial of trials) {
+    const { model, key } = trial;
+    const keyId = getKeyIdentifier(key);
+    const trialId = `${model}::${keyId}`;
+
+    // Skip permanently bad model-key pairings
+    if (badModels.has(trialId)) continue;
+
+    // Skip trial currently in rate-limit cooldown
+    const cooldownUntil = cooldowns[trialId] || 0;
     if (Date.now() < cooldownUntil) continue;
 
     // Determine whether to use responseMimeType for this model
@@ -297,6 +339,14 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
     try {
       const response = await callModel(key, model, payload);
       chrome.storage?.local.set({ spelt_last_used_model: model });
+      
+      // Success! Clear the cooldown for this model-key in storage so it is immediately marked as Ready
+      const currentCooldowns = await getCooldowns();
+      if (currentCooldowns[trialId]) {
+        delete currentCooldowns[trialId];
+        await saveCooldowns(currentCooldowns);
+      }
+      
       return { response, modelUsed: model };
     } catch (err) {
       const status = err.status;
@@ -328,6 +378,14 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
 
           const response = await callModel(key, model, fallbackPayload);
           chrome.storage?.local.set({ spelt_last_used_model: model });
+          
+          // Success! Clear the cooldown for this model-key in storage
+          const currentCooldowns = await getCooldowns();
+          if (currentCooldowns[trialId]) {
+            delete currentCooldowns[trialId];
+            await saveCooldowns(currentCooldowns);
+          }
+          
           return { response, modelUsed: model };
         } catch (retryErr) {
           // If the retry also fails, handle based on error type
@@ -337,13 +395,13 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
           if (isTransientError(retryStatus, retryMsg)) {
             const isServerErr = retryStatus >= 500;
             const delay = retryStatus === 429 ? parseRetryDelay(retryMsg) : (isServerErr ? 30000 : 15000);
-            await applyCooldown(model, delay);
-            console.warn(`[Spelt AI] Model ${model} transient failure on retry (status ${retryStatus || 'network'}). Cooldown ${Math.ceil(delay / 1000)}s.`);
+            await applyCooldown(trialId, delay);
+            console.warn(`[Spelt AI] Trial ${trialId} transient failure on retry (status ${retryStatus || 'network'}). Cooldown ${Math.ceil(delay / 1000)}s.`);
           } else {
             // Non-recoverable error on retry — blacklist this model
-            badModels.add(model);
+            badModels.add(trialId);
             await saveBadModels(badModels);
-            console.warn(`[Spelt AI] Model ${model} failed (status ${retryStatus}). Blacklisted for this session.`);
+            console.warn(`[Spelt AI] Trial ${trialId} failed (status ${retryStatus}). Blacklisted.`);
           }
           lastError = retryErr;
           continue;
@@ -354,17 +412,17 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
       if (isTransientError(status, errMsg)) {
         const isServerErr = status >= 500;
         const delay = status === 429 ? parseRetryDelay(errMsg) : (isServerErr ? 30000 : 15000);
-        await applyCooldown(model, delay);
-        console.warn(`[Spelt AI] Model ${model} transient failure (status ${status || 'network'}): ${errMsg}. Cooldown ${Math.ceil(delay / 1000)}s. Trying next tier...`);
+        await applyCooldown(trialId, delay);
+        console.warn(`[Spelt AI] Trial ${trialId} transient failure (status ${status || 'network'}): ${errMsg}. Cooldown ${Math.ceil(delay / 1000)}s. Trying next...`);
         lastError = err;
         continue;
       }
 
       // Case 3: Other HTTP errors (400 for bad payload, 404 model not found, etc.)
-      // These are permanent for this session — the model won't start working.
-      badModels.add(model);
+      // These are permanent — the model won't start working.
+      badModels.add(trialId);
       await saveBadModels(badModels);
-      console.warn(`[Spelt AI] Model ${model} failed (status ${status}): ${errMsg}. Blacklisted for this session.`);
+      console.warn(`[Spelt AI] Trial ${trialId} failed (status ${status}): ${errMsg}. Blacklisted.`);
       lastError = err;
     }
   }
@@ -375,9 +433,9 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
   const hasRateLimited = Object.values(cooldownsAfter).some(t => t > Date.now());
 
   if (hasRateLimited) {
-    throw new Error(`All available AI models are rate-limited. Please retry in ~${waitSec}s.`);
+    throw new Error(`All available AI models and API keys are rate-limited. Please retry in ~${waitSec}s.`);
   } else {
-    const errorMsg = lastError ? lastError.message : 'No available AI models.';
+    const errorMsg = lastError ? lastError.message : 'No available AI models or keys.';
     throw new Error(`AI request failed: ${errorMsg}`);
   }
 }
@@ -389,15 +447,15 @@ async function fetchWithFallback(key, bodyPayload, modelTiers, wantJson = false)
  */
 export async function askGemini(prompt) {
   return enqueue(async () => {
-    const key = await getStored('spelt_gemini_key');
-    if (!key) {
-      throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
+    const keys = await getStoredKeys();
+    if (keys.length === 0) {
+      throw new Error('No Gemini API keys are configured. Please add an API key in the Settings tab.');
     }
 
     const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
     const modelTiers = await getAvailableModelTiers(preferredModel);
 
-    const result = await fetchWithFallback(key, {
+    const result = await fetchWithFallback(keys, {
       contents: [{ parts: [{ text: prompt }] }]
     }, modelTiers, true /* wantJson */);
 
@@ -438,15 +496,15 @@ export async function askGemini(prompt) {
  */
 export async function askGeminiText(prompt) {
   return enqueue(async () => {
-    const key = await getStored('spelt_gemini_key');
-    if (!key) {
-      throw new Error('Gemini API key is not configured. Please add your key in the Settings tab.');
+    const keys = await getStoredKeys();
+    if (keys.length === 0) {
+      throw new Error('No Gemini API keys are configured. Please add an API key in the Settings tab.');
     }
 
     const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
     const modelTiers = await getAvailableModelTiers(preferredModel);
 
-    const result = await fetchWithFallback(key, {
+    const result = await fetchWithFallback(keys, {
       contents: [{ parts: [{ text: prompt }] }]
     }, modelTiers, false /* wantJson */);
 
@@ -466,33 +524,54 @@ export async function askGeminiText(prompt) {
 export async function getAiStatus() {
   const preferredModel = await getStored('spelt_gemini_model') || 'models/gemini-2.5-flash';
   const modelTiers = await getAvailableModelTiers(preferredModel);
+  const keys = await getStoredKeys();
   const now = Date.now();
   const lastUsed = await getStored('spelt_last_used_model') || null;
-
-  // Identify which model is currently designated to handle the NEXT request
-  const currentSelection = await pickBestAvailableModel(modelTiers);
 
   const badModels = await getBadModels();
   const cooldowns = await getCooldowns();
 
-  return modelTiers.map(model => {
-    const cooldownUntil = cooldowns[model] || 0;
-    const cooldownRemaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
-    let status = 'ready';
-    if (badModels.has(model)) {
-      status = 'bad';
-    } else if (cooldownRemaining > 0) {
-      status = 'cooldown';
+  // Find which trial is currently designated to handle the NEXT request
+  const trials = await getTrialSequence(modelTiers, keys);
+  let currentSelectionTrialId = null;
+  for (const trial of trials) {
+    const trialId = `${trial.model}::${getKeyIdentifier(trial.key)}`;
+    if (!badModels.has(trialId)) {
+      const cooldownUntil = cooldowns[trialId] || 0;
+      if (now >= cooldownUntil) {
+        currentSelectionTrialId = trialId;
+        break;
+      }
     }
+  }
 
-    return {
-      name: model,
-      status,
-      cooldownRemaining,
-      isPreferred: model === preferredModel || model === ('models/' + preferredModel),
-      isLastUsed: model === lastUsed,
-      isCurrentSelection: model === currentSelection
-    };
-  });
+  const results = [];
+  for (const model of modelTiers) {
+    for (const key of keys) {
+      const keyId = getKeyIdentifier(key);
+      const trialId = `${model}::${keyId}`;
+
+      const cooldownUntil = cooldowns[trialId] || 0;
+      const cooldownRemaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
+      let status = 'ready';
+      if (badModels.has(trialId)) {
+        status = 'bad';
+      } else if (cooldownRemaining > 0) {
+        status = 'cooldown';
+      }
+
+      results.push({
+        name: model,
+        keyId,
+        status,
+        cooldownRemaining,
+        isPreferred: model === preferredModel || model === ('models/' + preferredModel),
+        isLastUsed: model === lastUsed,
+        isCurrentSelection: trialId === currentSelectionTrialId
+      });
+    }
+  }
+
+  return results;
 }
 

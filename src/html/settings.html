@@ -21,12 +21,20 @@
             </select>
           </div>
           <div class="settings-block">
-            <strong>Gemini AI Key (Free Tier)</strong>
-            <p>Connect Gemini to unlock AI-assisted vocabulary lookup, explanations, and custom practice examples. Get a key for free from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--primary); text-decoration: underline;">Google AI Studio</a>.</p>
-            <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
-              <input type="password" id="setting-gemini-key" class="premium-input" placeholder="Paste Gemini API Key..." style="flex: 1; font-size: 0.72rem; min-width: 180px;">
-              <button id="test-gemini-btn" class="submit-btn" style="width: auto; font-size: 0.72rem; padding: 4px 10px;">Connect & List Models</button>
+            <strong>Gemini AI Keys Manager (Free Tier)</strong>
+            <p>Connect multiple API keys. Spelt will cycle through them and fallback from strongest to weakest model/key combination. Get keys for free from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--primary); text-decoration: underline;">Google AI Studio</a>.</p>
+            
+            <!-- List of keys -->
+            <div id="gemini-keys-list-container" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px; width: 100%;">
+              <!-- Dynamically populated keys -->
             </div>
+
+            <!-- Add new key -->
+            <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; width: 100%;">
+              <input type="password" id="setting-gemini-key-input" class="premium-input" placeholder="Add Gemini API Key..." style="flex: 1; font-size: 0.72rem; min-width: 180px; margin: 0;">
+              <button id="add-gemini-key-btn" class="submit-btn" style="width: auto; font-size: 0.72rem; padding: 4px 10px; margin: 0;">Add Key</button>
+            </div>
+            
             <div id="gemini-model-container" style="display: none; margin-top: 8px; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
               <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
                 <label for="setting-gemini-model" style="font-size: 0.7rem; color: var(--text-muted); margin: 0; white-space: nowrap;">Preferred Model:</label>

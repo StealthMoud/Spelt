@@ -37,43 +37,41 @@ export function initSettings(onDbRestored) {
     chrome.storage?.local.set({ spelt_allow_background_ai: e.target.checked });
   });
 
-  // Load Gemini key, model and model list on startup
-  chrome.storage?.local.get(['spelt_gemini_key', 'spelt_gemini_model', 'spelt_gemini_models_list'], (res) => {
-    const key = res.spelt_gemini_key || '';
+  // Load Gemini keys, model and model list on startup
+  chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key', 'spelt_gemini_model', 'spelt_gemini_models_list'], (res) => {
+    let keys = res.spelt_gemini_keys || [];
+    if (keys.length === 0 && res.spelt_gemini_key) {
+      keys = [res.spelt_gemini_key];
+      chrome.storage?.local.set({ spelt_gemini_keys: keys }); // migrate to array
+    }
+
+    renderKeysList(keys);
+
     const model = res.spelt_gemini_model || '';
     const modelsList = res.spelt_gemini_models_list || [];
-    const keyInput = document.getElementById('setting-gemini-key');
-    if (keyInput) keyInput.value = key;
+    const modelSelect = document.getElementById('setting-gemini-model');
+    const modelContainer = document.getElementById('gemini-model-container');
 
-    if (key && model) {
-      const modelSelect = document.getElementById('setting-gemini-model');
-      const modelContainer = document.getElementById('gemini-model-container');
-      if (modelSelect && modelContainer) {
-        modelSelect.innerHTML = '';
-        if (modelsList.length > 0) {
-          modelsList.forEach(mName => {
-            const option = document.createElement('option');
-            option.value = mName;
-            option.textContent = mName.replace('models/', '');
-            modelSelect.appendChild(option);
-          });
-        } else {
+    if (keys.length > 0 && modelSelect && modelContainer) {
+      modelSelect.innerHTML = '';
+      if (modelsList.length > 0) {
+        modelsList.forEach(mName => {
           const option = document.createElement('option');
-          option.value = model;
-          option.textContent = model.replace('models/', '');
+          option.value = mName;
+          option.textContent = mName.replace('models/', '');
           modelSelect.appendChild(option);
-        }
-        modelSelect.value = model;
-        modelContainer.style.display = 'flex';
+        });
+      } else {
+        const option = document.createElement('option');
+        option.value = model || 'models/gemini-2.5-flash';
+        option.textContent = (model || 'models/gemini-2.5-flash').replace('models/', '');
+        modelSelect.appendChild(option);
       }
+      modelSelect.value = model || 'models/gemini-2.5-flash';
+      modelContainer.style.display = 'flex';
+    } else if (modelContainer) {
+      modelContainer.style.display = 'none';
     }
-  });
-
-  // Save Gemini Key on change
-  document.getElementById('setting-gemini-key')?.addEventListener('change', (e) => {
-    chrome.storage?.local.set({ spelt_gemini_key: e.target.value.trim() }, () => {
-      renderAiStatusMonitor();
-    });
   });
 
   // Save Gemini Model on change
@@ -83,9 +81,9 @@ export function initSettings(onDbRestored) {
     });
   });
 
-  // Test Gemini Key and List Models
-  document.getElementById('test-gemini-btn')?.addEventListener('click', async () => {
-    const keyInput = document.getElementById('setting-gemini-key');
+  // Add Gemini Key
+  document.getElementById('add-gemini-key-btn')?.addEventListener('click', async () => {
+    const keyInput = document.getElementById('setting-gemini-key-input');
     const statusEl = document.getElementById('gemini-test-status');
     const modelSelect = document.getElementById('setting-gemini-model');
     const modelContainer = document.getElementById('gemini-model-container');
@@ -101,16 +99,16 @@ export function initSettings(onDbRestored) {
 
     statusEl.style.display = 'block';
     statusEl.style.color = 'var(--primary-light)';
-    statusEl.textContent = 'Fetching available models...';
+    statusEl.textContent = 'Verifying API key...';
 
     try {
-      // 1. Fetch available models for this key
+      // Validate key by fetching models list
       const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
       if (!modelsRes.ok) {
         const errData = await modelsRes.json().catch(() => ({}));
         const errMsg = errData.error?.message || 'Invalid API Key or API Error';
         statusEl.style.color = 'var(--danger)';
-        statusEl.textContent = `❌ Connection failed: ${errMsg}`;
+        statusEl.textContent = `❌ Verification failed: ${errMsg}`;
         return;
       }
 
@@ -125,36 +123,19 @@ export function initSettings(onDbRestored) {
         return;
       }
 
-      // Populate dropdown
-      modelSelect.innerHTML = '';
-      availableModels.forEach(m => {
-        const option = document.createElement('option');
-        option.value = m.name; // e.g. "models/gemini-1.5-flash"
-        option.textContent = m.name.replace('models/', '') + (m.displayName ? ` (${m.displayName})` : '');
-        modelSelect.appendChild(option);
-      });
+      // Find matched preferred model to test content generation
+      const preferredList = [
+        'models/gemini-3.5-flash',
+        'models/gemini-3.1-flash-lite',
+        'models/gemini-2.5-pro',
+        'models/gemini-2.5-flash',
+        'models/gemini-2.0-flash',
+        'models/gemini-1.5-flash'
+      ];
+      const testModel = preferredList.find(p => availableModels.some(m => m.name === p)) || availableModels[0].name;
 
-      // Select default model
-      const stored = await new Promise(r => chrome.storage?.local.get('spelt_gemini_model', res => r(res.spelt_gemini_model)));
-      let defaultModel = stored;
-      if (!defaultModel || !availableModels.some(m => m.name === defaultModel)) {
-        const preferred = [
-          'models/gemini-3.5-flash',
-          'models/gemini-3.1-flash-lite',
-          'models/gemini-2.5-pro',
-          'models/gemini-2.5-flash',
-          'models/gemini-2.0-flash',
-          'models/gemini-1.5-flash'
-        ];
-        const matched = preferred.find(p => availableModels.some(m => m.name === p));
-        defaultModel = matched || availableModels[0].name;
-      }
-      modelSelect.value = defaultModel;
-      modelContainer.style.display = 'flex';
-
-      // 2. Perform test content generation with selected model to verify it works
-      statusEl.textContent = `Testing content generation with ${defaultModel.replace('models/', '')}...`;
-      const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/${defaultModel}:generateContent?key=${key}`, {
+      statusEl.textContent = `Testing content generation with ${testModel.replace('models/', '')}...`;
+      const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/${testModel}:generateContent?key=${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -164,15 +145,49 @@ export function initSettings(onDbRestored) {
 
       if (testRes.ok) {
         statusEl.style.color = 'var(--success)';
-        statusEl.textContent = `✅ Connected successfully! Model ${defaultModel.replace('models/', '')} is verified.`;
-        
-        const modelNames = availableModels.map(m => m.name);
-        chrome.storage?.local.set({ 
-          spelt_gemini_key: key, 
-          spelt_gemini_model: defaultModel,
-          spelt_gemini_models_list: modelNames
-        }, () => {
-          renderAiStatusMonitor();
+        statusEl.textContent = `✅ API Key verified and added successfully!`;
+        keyInput.value = ''; // clear input
+
+        chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key', 'spelt_gemini_model', 'spelt_gemini_models_list'], (res) => {
+          let keys = res.spelt_gemini_keys || [];
+          if (keys.length === 0 && res.spelt_gemini_key) {
+            keys = [res.spelt_gemini_key];
+          }
+          if (!keys.includes(key)) {
+            keys.push(key);
+          }
+
+          const currentModel = res.spelt_gemini_model || testModel;
+          const currentModelsList = res.spelt_gemini_models_list || [];
+          
+          // Merge models list
+          const updatedModelsList = [...currentModelsList];
+          availableModels.forEach(m => {
+            if (!updatedModelsList.includes(m.name)) {
+              updatedModelsList.push(m.name);
+            }
+          });
+
+          chrome.storage?.local.set({
+            spelt_gemini_keys: keys,
+            spelt_gemini_key: keys[0] || '', // legacy fallback
+            spelt_gemini_model: currentModel,
+            spelt_gemini_models_list: updatedModelsList
+          }, () => {
+            // Refresh dropdown
+            modelSelect.innerHTML = '';
+            updatedModelsList.forEach(mName => {
+              const option = document.createElement('option');
+              option.value = mName;
+              option.textContent = mName.replace('models/', '');
+              modelSelect.appendChild(option);
+            });
+            modelSelect.value = currentModel;
+            modelContainer.style.display = 'flex';
+
+            renderKeysList(keys);
+            renderAiStatusMonitor();
+          });
         });
       } else {
         const errData = await testRes.json().catch(() => ({}));
@@ -185,6 +200,65 @@ export function initSettings(onDbRestored) {
       statusEl.textContent = `❌ Error: ${err.message}`;
     }
   });
+
+  function renderKeysList(keys) {
+    const listContainer = document.getElementById('gemini-keys-list-container');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+    
+    if (keys.length === 0) {
+      listContainer.innerHTML = '<p style="font-size: 0.65rem; color: var(--text-muted); margin: 4px 0;">No API keys added yet.</p>';
+      return;
+    }
+
+    keys.forEach(key => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.justifyContent = 'space-between';
+      row.style.background = 'rgba(255, 255, 255, 0.03)';
+      row.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+      row.style.padding = '5px 8px';
+      row.style.borderRadius = 'var(--radius-sm)';
+      row.style.fontSize = '0.68rem';
+
+      const maskedKey = key.length > 12 ? `${key.slice(0, 6)}...${key.slice(-6)}` : key;
+      row.innerHTML = `
+        <span style="font-family: monospace; color: var(--text-muted);">${maskedKey}</span>
+        <button class="remove-key-btn" style="background: none; border: none; color: var(--danger); font-size: 0.85rem; cursor: pointer; padding: 2px 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; transition: opacity 0.2s;" title="Remove Key">×</button>
+      `;
+
+      row.querySelector('.remove-key-btn').addEventListener('click', () => {
+        removeKey(key);
+      });
+      listContainer.appendChild(row);
+    });
+  }
+
+  function removeKey(keyToRemove) {
+    chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key'], (res) => {
+      let keys = res.spelt_gemini_keys || [];
+      if (keys.length === 0 && res.spelt_gemini_key) {
+        keys = [res.spelt_gemini_key];
+      }
+      const updatedKeys = keys.filter(k => k !== keyToRemove);
+      
+      const updates = { spelt_gemini_keys: updatedKeys };
+      if (res.spelt_gemini_key === keyToRemove) {
+        updates.spelt_gemini_key = updatedKeys[0] || '';
+      }
+
+      chrome.storage?.local.set(updates, () => {
+        renderKeysList(updatedKeys);
+        const modelSelect = document.getElementById('setting-gemini-model');
+        const modelContainer = document.getElementById('gemini-model-container');
+        if (updatedKeys.length === 0) {
+          if (modelContainer) modelContainer.style.display = 'none';
+        }
+        renderAiStatusMonitor();
+      });
+    });
+  }
 
   chrome.storage?.onChanged.addListener((changes, area) => {
     if (area === 'local') {
@@ -236,13 +310,15 @@ export function initSettings(onDbRestored) {
 }
 
 async function renderAiStatusMonitor() {
-  const keyInput = document.getElementById('setting-gemini-key');
   const monitorBlock = document.getElementById('ai-status-monitor-block');
   const container = document.getElementById('ai-status-list-container');
-  if (!keyInput || !monitorBlock || !container) return;
+  if (!monitorBlock || !container) return;
 
-  const key = keyInput.value.trim();
-  if (!key) {
+  const res = await new Promise(r => chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key'], r)) || {};
+  const keys = res.spelt_gemini_keys || [];
+  const hasKeys = keys.length > 0 || !!res.spelt_gemini_key;
+
+  if (!hasKeys) {
     monitorBlock.style.display = 'none';
     return;
   }
@@ -266,7 +342,6 @@ async function renderAiStatusMonitor() {
       row.style.justifyContent = 'space-between';
       row.style.padding = '5px 8px';
       
-      // Highlight the active selection row
       if (item.isCurrentSelection) {
         row.style.background = 'hsla(160, 60%, 45%, 0.06)';
         row.style.border = '1px solid hsla(160, 60%, 45%, 0.25)';
@@ -277,7 +352,6 @@ async function renderAiStatusMonitor() {
       row.style.borderRadius = 'var(--radius-sm)';
       row.style.fontSize = '0.66rem';
 
-      // Status indicator circle/dot and text
       let indicatorHtml = '';
       let statusText = 'Ready';
       let indicatorColor = 'var(--success)';
@@ -294,7 +368,6 @@ async function renderAiStatusMonitor() {
         indicatorHtml = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${indicatorColor}; margin-right: 4px;"></span>`;
       }
 
-      // Badges
       let badgesHtml = '';
       if (item.isPreferred) {
         badgesHtml += `<span style="background: hsla(260, 60%, 50%, 0.25); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">Preferred</span>`;
@@ -307,11 +380,12 @@ async function renderAiStatusMonitor() {
         lastUsedName = item.name.replace('models/', '');
       }
 
-      const shortName = item.name.replace('models/', '');
+      const modelShort = item.name.replace('models/', '');
+      const labelName = `${modelShort} <span style="opacity: 0.5; font-size: 0.6rem;">(Key: ...${item.keyId})</span>`;
 
       row.innerHTML = `
         <div style="display: flex; align-items: center; gap: 4px; font-weight: 500; color: var(--text);">
-          <span>${shortName}</span>
+          <span>${labelName}</span>
           ${badgesHtml}
         </div>
         <div style="display: flex; align-items: center; color: var(--text-muted); font-size: 0.62rem;">
