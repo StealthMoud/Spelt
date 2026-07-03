@@ -1,4 +1,4 @@
-import { getWords, saveWords, resetDb } from '../../../shared/storage.js';
+import { getWords, saveWords, resetDb, atomicUpdate } from '../../../shared/storage.js';
 import { showConfirm, showImportOptionsModal } from '../vault.js';
 
 export async function exportDb() {
@@ -77,105 +77,103 @@ export async function importDb(e, onDbRestoredCallback) {
       );
 
       const processImport = async (targetPracticeType) => {
-        const existingWords = await getWords();
-        const freshList = [...existingWords];
         let addedCount = 0;
         let updatedCount = 0;
 
-        importedWords.forEach(item => {
-          if (!item.word) return;
-          const id = item.id || 'word_' + Math.random().toString(36).substring(2, 11);
-          
-          let practiceType = item.practiceType || 'both';
-          if (!isFullBackup) {
-            if (hasSyntax) {
-              practiceType = 'syntax';
-            } else if (targetPracticeType) {
-              practiceType = targetPracticeType;
-            }
-          }
-
-          const newCard = {
-            id: id,
-            word: item.word,
-            definition: item.definition || '',
-            translation: item.translation || '',
-            transcription: item.transcription || '',
-            partOfSpeech: item.partOfSpeech || '',
-            example: item.example || '',
-            exampleTranslation: item.exampleTranslation || '',
-            level: item.level || '',
-            otherLevels: Array.isArray(item.otherLevels) ? item.otherLevels : [],
-            practiceType: practiceType,
-            mastered: item.mastered || false,
+        await atomicUpdate(async (freshList) => {
+          importedWords.forEach(item => {
+            if (!item.word) return;
+            const id = item.id || 'word_' + Math.random().toString(36).substring(2, 11);
             
-            // Spelling SRS values
-            rep: item.rep !== undefined ? item.rep : 0,
-            interval: item.interval !== undefined ? item.interval : 0,
-            ef: item.ef !== undefined ? item.ef : 2.5,
-            nextDate: item.nextDate !== undefined ? item.nextDate : Date.now(),
-            misspellings: Array.isArray(item.misspellings) ? item.misspellings : [],
-            totalErrors: item.totalErrors !== undefined ? item.totalErrors : 0,
-            correctStreak: item.correctStreak !== undefined ? item.correctStreak : 0,
-
-            // Recall SRS values
-            meaningRep: item.meaningRep !== undefined ? item.meaningRep : 0,
-            meaningInterval: item.meaningInterval !== undefined ? item.meaningInterval : 0,
-            meaningEf: item.meaningEf !== undefined ? item.meaningEf : 2.5,
-            meaningNextDate: item.meaningNextDate !== undefined ? item.meaningNextDate : Date.now()
-          };
-
-          if (practiceType === 'syntax') {
-            newCard.blocks = Array.isArray(item.blocks) ? item.blocks : [];
-            newCard.joints = Array.isArray(item.joints) ? item.joints : [];
-            newCard.writingExample = item.writingExample || item.example || '';
-            newCard.ef = item.ef !== undefined ? item.ef : 2.0;
-          }
-
-          // Match existing card by ID or by matching word + type
-          const idx = freshList.findIndex(w => 
-            w.id === newCard.id || 
-            (w.word.toLowerCase() === newCard.word.toLowerCase() && w.practiceType === newCard.practiceType)
-          );
-
-          if (idx !== -1) {
-            const existingCard = freshList[idx];
-            
-            // Retain scheduling
-            newCard.nextDate = existingCard.nextDate !== undefined ? existingCard.nextDate : newCard.nextDate;
-            newCard.rep = existingCard.rep !== undefined ? existingCard.rep : newCard.rep;
-            newCard.interval = existingCard.interval !== undefined ? existingCard.interval : newCard.interval;
-            newCard.ef = existingCard.ef !== undefined ? existingCard.ef : newCard.ef;
-            newCard.mastered = existingCard.mastered || newCard.mastered;
-            newCard.misspellings = existingCard.misspellings || newCard.misspellings;
-            newCard.totalErrors = existingCard.totalErrors !== undefined ? existingCard.totalErrors : newCard.totalErrors;
-            newCard.correctStreak = existingCard.correctStreak !== undefined ? existingCard.correctStreak : newCard.correctStreak;
-            
-            newCard.meaningNextDate = existingCard.meaningNextDate !== undefined ? existingCard.meaningNextDate : newCard.meaningNextDate;
-            newCard.meaningRep = existingCard.meaningRep !== undefined ? existingCard.meaningRep : newCard.meaningRep;
-            newCard.meaningInterval = existingCard.meaningInterval !== undefined ? existingCard.meaningInterval : newCard.meaningInterval;
-            newCard.meaningEf = existingCard.meaningEf !== undefined ? existingCard.meaningEf : newCard.meaningEf;
-
-            // Preserve history list if present in backup but missing/empty in existing
-            if (Array.isArray(item.history) && item.history.length > 0) {
-              newCard.history = item.history;
-            } else if (Array.isArray(existingCard.history) && existingCard.history.length > 0) {
-              newCard.history = existingCard.history;
+            let practiceType = item.practiceType || 'both';
+            if (!isFullBackup) {
+              if (hasSyntax) {
+                practiceType = 'syntax';
+              } else if (targetPracticeType) {
+                practiceType = targetPracticeType;
+              }
             }
 
-            freshList[idx] = newCard;
-            updatedCount++;
-          } else {
-            // Carry history list from backup on fresh insert
-            if (Array.isArray(item.history)) {
-              newCard.history = item.history;
+            const newCard = {
+              id: id,
+              word: item.word,
+              definition: item.definition || '',
+              translation: item.translation || '',
+              transcription: item.transcription || '',
+              partOfSpeech: item.partOfSpeech || '',
+              example: item.example || '',
+              exampleTranslation: item.exampleTranslation || '',
+              level: item.level || '',
+              otherLevels: Array.isArray(item.otherLevels) ? item.otherLevels : [],
+              practiceType: practiceType,
+              mastered: item.mastered || false,
+              
+              // Spelling SRS values
+              rep: item.rep !== undefined ? item.rep : 0,
+              interval: item.interval !== undefined ? item.interval : 0,
+              ef: item.ef !== undefined ? item.ef : 2.5,
+              nextDate: item.nextDate !== undefined ? item.nextDate : Date.now(),
+              misspellings: Array.isArray(item.misspellings) ? item.misspellings : [],
+              totalErrors: item.totalErrors !== undefined ? item.totalErrors : 0,
+              correctStreak: item.correctStreak !== undefined ? item.correctStreak : 0,
+
+              // Recall SRS values
+              meaningRep: item.meaningRep !== undefined ? item.meaningRep : 0,
+              meaningInterval: item.meaningInterval !== undefined ? item.meaningInterval : 0,
+              meaningEf: item.meaningEf !== undefined ? item.meaningEf : 2.5,
+              meaningNextDate: item.meaningNextDate !== undefined ? item.meaningNextDate : Date.now()
+            };
+
+            if (practiceType === 'syntax') {
+              newCard.blocks = Array.isArray(item.blocks) ? item.blocks : [];
+              newCard.joints = Array.isArray(item.joints) ? item.joints : [];
+              newCard.writingExample = item.writingExample || item.example || '';
+              newCard.ef = item.ef !== undefined ? item.ef : 2.0;
             }
-            freshList.push(newCard);
-            addedCount++;
-          }
+
+            // Match existing card by ID or by matching word + type
+            const idx = freshList.findIndex(w => 
+              w.id === newCard.id || 
+              (w.word.toLowerCase() === newCard.word.toLowerCase() && w.practiceType === newCard.practiceType)
+            );
+
+            if (idx !== -1) {
+              const existingCard = freshList[idx];
+              
+              // Retain scheduling
+              newCard.nextDate = existingCard.nextDate !== undefined ? existingCard.nextDate : newCard.nextDate;
+              newCard.rep = existingCard.rep !== undefined ? existingCard.rep : newCard.rep;
+              newCard.interval = existingCard.interval !== undefined ? existingCard.interval : newCard.interval;
+              newCard.ef = existingCard.ef !== undefined ? existingCard.ef : newCard.ef;
+              newCard.mastered = existingCard.mastered || newCard.mastered;
+              newCard.misspellings = existingCard.misspellings || newCard.misspellings;
+              newCard.totalErrors = existingCard.totalErrors !== undefined ? existingCard.totalErrors : newCard.totalErrors;
+              newCard.correctStreak = existingCard.correctStreak !== undefined ? existingCard.correctStreak : newCard.correctStreak;
+              
+              newCard.meaningNextDate = existingCard.meaningNextDate !== undefined ? existingCard.meaningNextDate : newCard.meaningNextDate;
+              newCard.meaningRep = existingCard.meaningRep !== undefined ? existingCard.meaningRep : newCard.meaningRep;
+              newCard.meaningInterval = existingCard.meaningInterval !== undefined ? existingCard.meaningInterval : newCard.meaningInterval;
+              newCard.meaningEf = existingCard.meaningEf !== undefined ? existingCard.meaningEf : newCard.meaningEf;
+
+              // Preserve history list if present in backup but missing/empty in existing
+              if (Array.isArray(item.history) && item.history.length > 0) {
+                newCard.history = item.history;
+              } else if (Array.isArray(existingCard.history) && existingCard.history.length > 0) {
+                newCard.history = existingCard.history;
+              }
+
+              freshList[idx] = newCard;
+              updatedCount++;
+            } else {
+              // Carry history list from backup on fresh insert
+              if (Array.isArray(item.history)) {
+                newCard.history = item.history;
+              }
+              freshList.push(newCard);
+              addedCount++;
+            }
+          });
         });
-
-        await saveWords(freshList);
 
         // Merge activity, streak, sessions, and sandbox activity in local storage
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
