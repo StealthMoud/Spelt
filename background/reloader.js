@@ -11,8 +11,37 @@ const FILES_TO_WATCH = [
   'http://localhost:8080/shared/storage.js'
 ];
 
+const DEV_RELOADER_SETTING_KEY = 'spelt_enable_dev_reloader';
+const BASE_ONLINE_INTERVAL_MS = 1500;
+const BASE_OFFLINE_INTERVAL_MS = 2500;
+const MAX_OFFLINE_INTERVAL_MS = 30000;
+
 let lastModifiedTimes = {};
 let isServerOnline = false;
+let consecutiveOfflineFailures = 0;
+let reloaderTimerId = null;
+let isStarted = false;
+
+function withJitter(ms) {
+  const factor = 0.85 + Math.random() * 0.30;
+  return Math.max(1200, Math.round(ms * factor));
+}
+
+function getNextIntervalMs() {
+  if (isServerOnline) {
+    consecutiveOfflineFailures = 0;
+    return withJitter(BASE_ONLINE_INTERVAL_MS);
+  }
+
+  const exp = Math.min(consecutiveOfflineFailures, 5);
+  const backoff = Math.min(MAX_OFFLINE_INTERVAL_MS, BASE_OFFLINE_INTERVAL_MS * (2 ** exp));
+  return withJitter(backoff);
+}
+
+function scheduleNextCheck(delayMs) {
+  if (reloaderTimerId) clearTimeout(reloaderTimerId);
+  reloaderTimerId = setTimeout(checkFilesForChanges, delayMs);
+}
 
 async function checkFilesForChanges() {
   let changed = false;
@@ -31,6 +60,7 @@ async function checkFilesForChanges() {
       }
     } catch (err) {
       isServerOnline = false;
+      consecutiveOfflineFailures += 1;
       break;
     }
   }
@@ -41,13 +71,24 @@ async function checkFilesForChanges() {
     return;
   }
 
-  const nextInterval = isServerOnline ? 1500 : 10000;
-  setTimeout(checkFilesForChanges, nextInterval);
+  scheduleNextCheck(getNextIntervalMs());
 }
 
 export function startReloader() {
+  if (isStarted) return;
+  isStarted = true;
+
   const isDevMode = !('update_url' in chrome.runtime.getManifest());
-  if (isDevMode) {
-    setTimeout(checkFilesForChanges, 2000);
+  if (!chrome.storage?.local) {
+    if (isDevMode) scheduleNextCheck(2000);
+    return;
   }
+
+  chrome.storage.local.get(DEV_RELOADER_SETTING_KEY, (res) => {
+    const override = res?.[DEV_RELOADER_SETTING_KEY];
+    const shouldRun = override === true || (override !== false && isDevMode);
+    if (shouldRun) {
+      scheduleNextCheck(2000);
+    }
+  });
 }

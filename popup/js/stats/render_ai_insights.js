@@ -69,6 +69,8 @@ export async function renderAIInsights(words, streak, summary, cardStates, sessi
     const cachedData = await chrome.storage.local.get([CACHE_KEY, CACHE_TIME_KEY, 'spelt_stats_ai_insights_hash']);
     const cachedTime = cachedData[CACHE_TIME_KEY] || 0;
     const cachedHash = cachedData['spelt_stats_ai_insights_hash'] || '';
+    const cacheAge = Date.now() - cachedTime;
+    const cacheExpired = cacheAge > CACHE_TTL_MS;
     
     // We only use the cache if it exists.
     // If the cache exists and the hash matches, display it immediately and show refresh button.
@@ -81,10 +83,12 @@ export async function renderAIInsights(words, streak, summary, cardStates, sessi
       const refreshBtn = document.getElementById('stats-ai-refresh-btn');
       if (refreshBtn) {
         refreshBtn.style.display = 'inline-flex';
-        if (cachedHash !== statsHash) {
-          // Visual indicator of stale data (glow or title tip)
+        if (cachedHash !== statsHash || cacheExpired) {
+          // Visual indicator of stale data (hash mismatch or TTL expiry)
           refreshBtn.style.boxShadow = '0 0 10px var(--primary-glow)';
-          refreshBtn.title = 'Stats changed since last analysis. Click to update AI Insights!';
+          refreshBtn.title = cacheExpired
+            ? 'AI Insights are older than 6 hours. Click to refresh.'
+            : 'Stats changed since last analysis. Click to update AI Insights!';
         } else {
           refreshBtn.style.boxShadow = 'none';
           refreshBtn.title = 'Refresh AI Coach Insights';

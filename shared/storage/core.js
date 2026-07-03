@@ -98,6 +98,7 @@ export async function getWords() {
       const normalizedNextDate = getLocalMidnight(w.nextDate);
       if (w.nextDate !== normalizedNextDate) {
         w.nextDate = normalizedNextDate;
+        cardModified = true;
       }
     }
 
@@ -124,6 +125,7 @@ export async function getWords() {
       const normalizedMeaningNextDate = getLocalMidnight(w.meaningNextDate);
       if (w.meaningNextDate !== normalizedMeaningNextDate) {
         w.meaningNextDate = normalizedMeaningNextDate;
+        cardModified = true;
       }
     }
 
