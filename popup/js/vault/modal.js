@@ -82,6 +82,7 @@ function updateFormLabels(practiceType) {
   const pronContainer = document.getElementById('form-pronunciation-container');
   const posContainer = document.getElementById('form-pos-container');
   const syntaxDetails = document.getElementById('form-syntax-details-container');
+  const autoBtn = document.getElementById('form-auto-fill-btn');
 
   if (practiceType === 'syntax') {
     if (wordLabel) wordLabel.textContent = 'Pattern Name *';
@@ -91,6 +92,7 @@ function updateFormLabels(practiceType) {
     if (pronContainer) pronContainer.style.display = 'none';
     if (posContainer) posContainer.style.display = 'none';
     if (syntaxDetails) syntaxDetails.style.display = 'block';
+    if (autoBtn) autoBtn.style.display = 'none';
   } else {
     if (wordLabel) wordLabel.textContent = 'Word *';
     if (defLabel) defLabel.textContent = 'Definition *';
@@ -98,6 +100,7 @@ function updateFormLabels(practiceType) {
     if (pronContainer) pronContainer.style.display = 'block';
     if (posContainer) posContainer.style.display = 'block';
     if (syntaxDetails) syntaxDetails.style.display = 'none';
+    if (autoBtn) autoBtn.style.display = 'flex';
   }
 }
 
