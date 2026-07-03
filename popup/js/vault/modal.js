@@ -17,6 +17,8 @@ export function openModal(wordObj = null) {
   document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
   document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
   document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
+  document.getElementById('form-blocks').value = wordObj && wordObj.blocks ? wordObj.blocks.join('\n') : '';
+  document.getElementById('form-joints').value = wordObj && wordObj.joints ? wordObj.joints.join('\n') : '';
   document.getElementById('form-level').value = wordObj ? (wordObj.level || '').toUpperCase().trim() : '';
   document.getElementById('form-practice-type').value = wordObj ? (wordObj.practiceType || 'both') : 'both';
   document.getElementById('form-mastered').checked = wordObj ? (wordObj.mastered || false) : false;
@@ -77,16 +79,25 @@ function updateFormLabels(practiceType) {
   
   const wordInput = document.getElementById('form-word');
   const posInput = document.getElementById('form-part-of-speech');
+  const pronContainer = document.getElementById('form-pronunciation-container');
+  const posContainer = document.getElementById('form-pos-container');
+  const syntaxDetails = document.getElementById('form-syntax-details-container');
 
   if (practiceType === 'syntax') {
     if (wordLabel) wordLabel.textContent = 'Pattern Name *';
     if (defLabel) defLabel.textContent = 'Pattern Rule / Explanation *';
     if (exLabel) exLabel.textContent = 'Target Sentence (will be scrambled)';
     if (!posInput.value) posInput.value = 'Grammatical Pattern';
+    if (pronContainer) pronContainer.style.display = 'none';
+    if (posContainer) posContainer.style.display = 'none';
+    if (syntaxDetails) syntaxDetails.style.display = 'block';
   } else {
     if (wordLabel) wordLabel.textContent = 'Word *';
     if (defLabel) defLabel.textContent = 'Definition *';
     if (exLabel) exLabel.textContent = 'Example Sentence';
+    if (pronContainer) pronContainer.style.display = 'block';
+    if (posContainer) posContainer.style.display = 'block';
+    if (syntaxDetails) syntaxDetails.style.display = 'none';
   }
 }
 

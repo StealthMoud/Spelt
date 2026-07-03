@@ -1131,7 +1131,7 @@
             <textarea id="form-definition" class="premium-input textarea-item" required autocomplete="off"></textarea>
           </div>
           <div class="modal-input-row">
-            <div class="modal-input-item" style="flex: 1;">
+            <div class="modal-input-item" id="form-pronunciation-container" style="flex: 1;">
               <label>Pronunciation</label>
               <div style="position: relative; display: flex; align-items: center; width: 100%;">
                 <input type="text" id="form-transcription" class="premium-input" placeholder="/.../" autocomplete="off" style="padding-right: 48px;">
@@ -1152,7 +1152,7 @@
             </div>
           </div>
           <div class="modal-input-row">
-            <div class="modal-input-item" style="flex: 1;">
+            <div class="modal-input-item" id="form-pos-container" style="flex: 1;">
               <label>Part of Speech</label>
               <input type="text" id="form-part-of-speech" class="premium-input" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
             </div>
@@ -1172,6 +1172,15 @@
           <div class="modal-input-item">
             <label>Example Sentence</label>
             <textarea id="form-example" class="premium-input textarea-item" placeholder="Use the word in a sentence..." autocomplete="off" style="height: 36px;"></textarea>
+          </div>
+          
+          <div class="modal-input-item" id="form-syntax-details-container" style="display: none; padding-top: 4px;">
+            <label style="color: var(--purple-light);">Puzzle Blocks (One block per line)</label>
+            <textarea id="form-blocks" class="premium-input textarea-item" placeholder="Type first chunk here...&#10;Type second chunk here..." autocomplete="off" style="height: 48px; margin-bottom: 8px; border-color: hsla(260, 60%, 50%, 0.3);"></textarea>
+            
+            <label style="color: var(--purple-light);">Puzzle Joints (One joint per line)</label>
+            <textarea id="form-joints" class="premium-input textarea-item" placeholder="," autocomplete="off" style="height: 40px; border-color: hsla(260, 60%, 50%, 0.3);"></textarea>
+            <div style="font-size: 0.62rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">Leave blank to auto-generate from the Target Sentence. Note: The number of joints must be exactly 1 less than the number of blocks.</div>
           </div>
 
           <div class="modal-input-item" style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; cursor: pointer; user-select: none;">

@@ -124,7 +124,20 @@ function renderBlocksUI() {
 function renderSyntaxFrontFace(card) {
   currentSyntaxCard = card;
   
-  if (!card.blocks || card.blocks.length === 0) {
+  if (card.blocks && card.blocks.length > 0) {
+    if (card.joints && card.joints.length === card.blocks.length - 1) {
+      let reconstructed = '';
+      for (let i = 0; i < card.blocks.length; i++) {
+        reconstructed += card.blocks[i];
+        if (i < card.joints.length) {
+          reconstructed += card.joints[i];
+        }
+      }
+      card.example = reconstructed;
+    } else {
+      card.example = card.blocks.join(' ');
+    }
+  } else {
     const fallbackText = card.example || card.word || '';
     if (fallbackText) {
       // Split by commas, or every 3-4 words if no commas.

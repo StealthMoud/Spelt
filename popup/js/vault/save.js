@@ -14,6 +14,19 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
   const level = document.getElementById('form-level').value.trim();
   const practiceType = document.getElementById('form-practice-type').value;
   const mastered = document.getElementById('form-mastered').checked;
+  const blocksStr = document.getElementById('form-blocks')?.value || '';
+  const jointsStr = document.getElementById('form-joints')?.value || '';
+
+  let blocks = undefined;
+  let joints = undefined;
+  if (practiceType === 'syntax' && blocksStr.trim() !== '') {
+    blocks = blocksStr.split('\n').map(s => s.trim()).filter(Boolean);
+    if (jointsStr.trim() !== '') {
+      joints = jointsStr.split('\n').map(s => s.trim());
+    } else {
+      joints = [];
+    }
+  }
  
   const executeSave = async () => {
     try {
@@ -36,7 +49,9 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
               level,
               practiceType,
               mastered,
-              misspellings: currentFormMisspellings
+              misspellings: currentFormMisspellings,
+              blocks: blocks !== undefined ? blocks : freshList[idx].blocks,
+              joints: joints !== undefined ? joints : freshList[idx].joints
             };
             if (mastered && !wasMastered) {
               freshList[idx].rep = 0;
@@ -51,7 +66,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
           }
         });
       } else {
-        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings });
+        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings, blocks, joints });
         if (mastered) {
           await atomicUpdate(async (list) => {
             const wObj = list.find(w => w.id === addedWord.id);

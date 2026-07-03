@@ -82,6 +82,8 @@ export async function addWord(wordData) {
     level: levelVal.toUpperCase().trim(),
     otherLevels: otherLevels,
     misspellings: Array.isArray(wordData.misspellings) ? wordData.misspellings : [],
+    blocks: Array.isArray(wordData.blocks) ? wordData.blocks : undefined,
+    joints: Array.isArray(wordData.joints) ? wordData.joints : undefined,
     totalErrors: wordData.totalErrors || 0,
     correctStreak: 0
   };
