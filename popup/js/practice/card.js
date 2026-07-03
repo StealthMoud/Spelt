@@ -629,7 +629,8 @@ async function setupAISyntaxExplain(card) {
   if (!explainBtn || !explanationBubble) return;
 
   explanationBubble.style.display = 'none';
-  explanationBubble.innerHTML = '';
+  const textEl = document.getElementById('ai-syntax-explanation-text');
+  if (textEl) textEl.innerHTML = '';
 
   const isConfigured = await isGeminiConfigured();
   const mode = getPracticeMode();
