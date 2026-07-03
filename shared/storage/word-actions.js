@@ -1,4 +1,4 @@
-import { getWords, saveWords, getStored } from './core.js';
+import { getWords, saveWords, getStored, atomicUpdate } from './core.js';
 import { fetchTranslation } from './translation.js';
 import { fetchDynamicDefinition } from './definitions.js';
 import { fetchDynamicExample } from './examples.js';
@@ -8,10 +8,10 @@ import { logActivity } from './sessions.js';
 
 // Add a single word
 export async function addWord(wordData) {
-  const list = await getWords();
+  let initialCheckList = await getWords();
   const normalizedWord = wordData.word.trim();
   
-  if (list.some(w => w.word.toLowerCase() === normalizedWord.toLowerCase())) {
+  if (initialCheckList.some(w => w.word.toLowerCase() === normalizedWord.toLowerCase())) {
     throw new Error('Word already exists in library');
   }
 
@@ -86,15 +86,21 @@ export async function addWord(wordData) {
     correctStreak: 0
   };
 
-  list.push(newWord);
-  await saveWords(list);
+  await atomicUpdate(async (freshList) => {
+    // Re-check existence to prevent race condition insertions
+    if (!freshList.some(w => w.word.toLowerCase() === normalizedWord.toLowerCase())) {
+      freshList.push(newWord);
+    }
+  });
+
   await logActivity();
   return newWord;
 }
 
 // Delete a single word by its ID
 export async function deleteWord(wordId) {
-  const list = await getWords();
-  const filtered = list.filter(w => w.id !== wordId);
-  await saveWords(filtered);
+  await atomicUpdate(async (freshList) => {
+    const idx = freshList.findIndex(w => w.id === wordId);
+    if (idx !== -1) freshList.splice(idx, 1);
+  });
 }
