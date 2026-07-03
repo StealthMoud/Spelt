@@ -1,3 +1,16 @@
+export function getLocalMidnight(time = Date.now()) {
+  const date = new Date(time);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+export function getNextReviewDate(intervalDays, fromTime = Date.now()) {
+  const days = Math.max(1, Math.round(Number(intervalDays) || 1));
+  const dueDate = new Date(getLocalMidnight(fromTime));
+  dueDate.setDate(dueDate.getDate() + days);
+  return dueDate.getTime();
+}
+
 // Compute SM-2 spaced repetition values
 // quality: 1 (Again), 3 (Hard), 4 (Good), 5 (Easy)
 // multiplier scales the computed interval (0.5 = faster, 1.5 = slower)
@@ -51,7 +64,7 @@ export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect
   // successful reviews get pushed forward by the computed interval
   const nextDate = q < 3
     ? Date.now()
-    : Date.now() + interval * 24 * 60 * 60 * 1000;
+    : getNextReviewDate(interval);
 
   return { rep, interval, ef, nextDate };
 }
