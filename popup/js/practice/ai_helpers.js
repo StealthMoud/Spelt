@@ -134,6 +134,38 @@ Do NOT use markdown. Plain text only.`;
 }
 
 /**
+ * Generate a subtle puzzle hint to help order scrambled syntax blocks.
+ */
+export async function generateSyntaxPuzzleHint(card) {
+  const targetLang = await getStored('spelt_target_lang') || 'fa';
+  let targetLangName = 'Farsi (Persian)';
+  if (targetLang === 'es') targetLangName = 'Spanish';
+  else if (targetLang === 'fr') targetLangName = 'French';
+  else if (targetLang === 'de') targetLangName = 'German';
+  else if (targetLang === 'it') targetLangName = 'Italian';
+  else if (targetLang === 'pt') targetLangName = 'Portuguese';
+  else if (targetLang === 'ru') targetLangName = 'Russian';
+  else if (targetLang === 'ar') targetLangName = 'Arabic';
+  else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
+  else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
+  else if (targetLang === 'ja') targetLangName = 'Japanese';
+  else if (targetLang === 'ko') targetLangName = 'Korean';
+  else if (targetLang === 'tr') targetLangName = 'Turkish';
+
+  const prompt = `You are a syntax and grammar coach helping a student learn English sentence structure.
+The student is trying to reconstruct a scrambled sentence based on this structure pattern: "${card.definition}"
+The correct sentence is: "${card.example}"
+
+Provide a subtle, 1-2 sentence hint to help the student figure out how to order the sentence clauses. 
+For example, you can give a hint about what the sentence should start with, or the logical relationship between the clauses.
+DO NOT give them the full correct sentence. DO NOT just give them the answer.
+Write the hint entirely in ${targetLangName}.
+Do NOT use markdown. Plain text only.`;
+
+  return await askGeminiText(prompt);
+}
+
+/**
  * Verify a student's custom practice sentence using AI.
  */
 export async function verifyPracticeWriting(card, userSentence, mode) {

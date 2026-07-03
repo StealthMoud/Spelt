@@ -1,7 +1,7 @@
 import { getWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured, atomicUpdate } from '../../../shared/storage.js';
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
-import { generateHint, generateSessionSummary, generateSyntaxExplanation, verifyPracticeWriting } from './ai_helpers.js';
+import { generateHint, generateSessionSummary, generateSyntaxExplanation, generateSyntaxPuzzleHint, verifyPracticeWriting } from './ai_helpers.js';
 import { populateBackFace } from './actions.js';
 
 let currentSyntaxCard = null;
@@ -466,7 +466,7 @@ async function setupAIHintButton(card) {
     try {
       let hint = '';
       if (card.practiceType === 'syntax') {
-        hint = await generateSyntaxExplanation(card);
+        hint = await generateSyntaxPuzzleHint(card);
       } else {
         if (forceRegen) {
           card.aiHint = null;
@@ -543,7 +543,7 @@ async function setupBackAIHintButton(card) {
     try {
       let hint = '';
       if (card.practiceType === 'syntax') {
-        hint = await generateSyntaxExplanation(card);
+        hint = await generateSyntaxPuzzleHint(card);
       } else {
         if (forceRegen) {
           card.aiHint = null;
@@ -642,13 +642,15 @@ async function setupAISyntaxExplain(card) {
   explainBtn.style.display = 'inline-flex';
 
   const handleExplainRequest = async () => {
-    explanationBubble.innerHTML = '<span style="color: var(--text-muted);">Asking AI Coach...</span>';
+    const textEl = document.getElementById('ai-syntax-explanation-text');
+    if (!textEl) return;
+    textEl.innerHTML = '<span style="color: var(--text-muted);">Asking AI Coach...</span>';
     explanationBubble.style.display = 'block';
     try {
       const explanation = await generateSyntaxExplanation(card);
-      explanationBubble.innerHTML = explanation.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
+      textEl.innerHTML = explanation.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
     } catch (err) {
-      explanationBubble.textContent = `Could not generate explanation: ${err.message}`;
+      textEl.textContent = `Could not generate explanation: ${err.message}`;
     }
   };
 
@@ -662,6 +664,16 @@ async function setupAISyntaxExplain(card) {
       handleExplainRequest();
     }
   });
+
+  const closeBtn = document.getElementById('ai-syntax-explain-close');
+  if (closeBtn) {
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    newCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      explanationBubble.style.display = 'none';
+    });
+  }
 }
 
 async function setupAIWritingPractice(card) {
