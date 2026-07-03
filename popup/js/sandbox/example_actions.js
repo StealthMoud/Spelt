@@ -1,4 +1,4 @@
-import { playTextAudio, getStored, fetchTranslation, getWords, saveWords } from '../../../shared/storage.js';
+import { playTextAudio, getStored, fetchTranslation, getWords, saveWords, atomicUpdate } from '../../../shared/storage.js';
 
 export async function handleExampleActions(e) {
   const playExBtn = e.target.closest('.play-example-btn');
@@ -31,9 +31,10 @@ export async function handleExampleActions(e) {
               trans = fetchedTrans; transEl.textContent = `"${trans}"`;
               const wordAttr = container.getAttribute('data-word');
               if (wordAttr) {
-                const allWords = await getWords();
-                const wObj = allWords.find(w => w.word.toLowerCase() === wordAttr.toLowerCase());
-                if (wObj) { wObj.exampleTranslation = trans; await saveWords(allWords); }
+                await atomicUpdate(async (allWords) => {
+                  const wObj = allWords.find(w => w.word.toLowerCase() === wordAttr.toLowerCase());
+                  if (wObj) { wObj.exampleTranslation = trans; }
+                });
               }
             } else {
               transEl.textContent = 'Translation failed'; return;
