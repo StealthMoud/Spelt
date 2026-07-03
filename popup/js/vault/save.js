@@ -1,4 +1,4 @@
-import { getWords, addWord, saveWords, fetchDynamicDefinition } from '../../../shared/storage.js';
+import { addWord, fetchDynamicDefinition, atomicUpdate, getNextReviewDate } from '../../../shared/storage.js';
 import { showConfirm } from './confirm.js';
 import { closeModal } from './modal.js';
 
@@ -18,48 +18,48 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
   const executeSave = async () => {
     try {
       if (id) {
-        const freshList = await getWords();
-        const idx = freshList.findIndex(w => w.id === id);
-        if (idx !== -1) {
-          const wasMastered = freshList[idx].mastered;
-          const oldEx = freshList[idx].example;
-          const exampleTranslation = oldEx === example ? (freshList[idx].exampleTranslation || '') : '';
-          freshList[idx] = { 
-            ...freshList[idx], 
-            word, 
-            definition, 
-            transcription, 
-            translation, 
-            partOfSpeech, 
-            example, 
-            exampleTranslation, 
-            level,
-            practiceType,
-            mastered,
-            misspellings: currentFormMisspellings
-          };
-          if (mastered && !wasMastered) {
-            freshList[idx].rep = 0;
-            freshList[idx].interval = 30;
-            freshList[idx].nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-          } else if (!mastered && wasMastered) {
-            freshList[idx].mastered = false;
-            freshList[idx].rep = 0;
-            freshList[idx].interval = 1;
-            freshList[idx].nextDate = Date.now();
+        await atomicUpdate(async (freshList) => {
+          const idx = freshList.findIndex(w => w.id === id);
+          if (idx !== -1) {
+            const wasMastered = freshList[idx].mastered;
+            const oldEx = freshList[idx].example;
+            const exampleTranslation = oldEx === example ? (freshList[idx].exampleTranslation || '') : '';
+            freshList[idx] = {
+              ...freshList[idx],
+              word,
+              definition,
+              transcription,
+              translation,
+              partOfSpeech,
+              example,
+              exampleTranslation,
+              level,
+              practiceType,
+              mastered,
+              misspellings: currentFormMisspellings
+            };
+            if (mastered && !wasMastered) {
+              freshList[idx].rep = 0;
+              freshList[idx].interval = 30;
+              freshList[idx].nextDate = getNextReviewDate(30);
+            } else if (!mastered && wasMastered) {
+              freshList[idx].mastered = false;
+              freshList[idx].rep = 0;
+              freshList[idx].interval = 1;
+              freshList[idx].nextDate = Date.now();
+            }
           }
-          await saveWords(freshList);
-        }
+        });
       } else {
         const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings });
         if (mastered) {
-          const list = await getWords();
-          const wObj = list.find(w => w.id === addedWord.id);
-          if (wObj) {
-            wObj.interval = 30;
-            wObj.nextDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-            await saveWords(list);
-          }
+          await atomicUpdate(async (list) => {
+            const wObj = list.find(w => w.id === addedWord.id);
+            if (wObj) {
+              wObj.interval = 30;
+              wObj.nextDate = getNextReviewDate(30);
+            }
+          });
         }
       }
       closeModal();
