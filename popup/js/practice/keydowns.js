@@ -51,6 +51,11 @@ export function registerKeydowns() {
         if (mode === 'recall') {
           e.preventDefault(); e.stopPropagation();
           revealRecall();
+        } else if (mode === 'syntax') {
+          const syntaxInput = document.getElementById('syntax-joints-input');
+          if (e.key === 'Enter' && document.activeElement !== syntaxInput) {
+            e.preventDefault(); e.stopPropagation(); syntaxInput?.focus();
+          }
         } else {
           const spellInput = document.getElementById('spelling-input');
           if (e.key === ' ') {
@@ -62,6 +67,7 @@ export function registerKeydowns() {
           }
         }
       } else if ((e.key === 'r' || e.key === 'R' || e.key === 'p' || e.key === 'P') && !isTyping) {
+        if (mode === 'syntax') return;
         e.preventDefault(); e.stopPropagation();
         const query = mode === 'recall' ? '#recall-front-audio-container .audio-play-btn' : '#practice-audio-container .audio-play-btn';
         document.querySelector(query)?.click();
@@ -75,6 +81,7 @@ export function registerKeydowns() {
     else if (e.key === '4') { e.preventDefault(); e.stopPropagation(); await submitRating(5); }
     else if (e.key === '5') { e.preventDefault(); e.stopPropagation(); document.querySelector('#practice-tab .srs-mastered')?.click(); }
     else if ((e.key === ' ' || e.key === 'r' || e.key === 'R' || e.key === 'p' || e.key === 'P') && !isTyping) {
+      if (mode === 'syntax') return;
       e.preventDefault(); e.stopPropagation();
       (document.querySelector('#back-audio-container .audio-play-btn') || document.querySelector('#popup-deck-card .audio-play-btn'))?.click();
     } else {
