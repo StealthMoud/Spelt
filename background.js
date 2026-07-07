@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'reviewWord') {
     reviewWord(message.wordId, message.q, message.typedWrongWord, message.responseTimeMs, message.mode)
       .then(updatedCard => sendResponse({ success: true, card: updatedCard }))
-      .catch(err => sendResponse({ success: false, error: err.message }));
+      .catch(err => sendResponse({ success: false, error: err.message || (typeof err === 'string' ? err : 'Background script error') }));
     return true; // Keep message channel open for async response
   }
 });

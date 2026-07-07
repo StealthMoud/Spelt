@@ -61,6 +61,9 @@ export async function getWords() {
   const migratedTabsV5 = await getStored('spelt_migrated_practice_types_v5');
   const runMigrationTabsV5 = !migratedTabsV5;
 
+  const migratedSyntaxJoints = await getStored('spelt_migrated_syntax_joints_v6');
+  const runMigrationSyntaxJoints = !migratedSyntaxJoints;
+
   let modified = false;
   const sanitized = words.map(w => {
     if (!w) return w;
@@ -215,6 +218,30 @@ export async function getWords() {
       }
     }
 
+    if (runMigrationSyntaxJoints && w.practiceType === 'syntax' && w.example && Array.isArray(w.blocks) && w.blocks.length > 0) {
+      let currentText = w.example;
+      let newJoints = [];
+      let blocks = w.blocks;
+      for (let i = 0; i < blocks.length - 1; i++) {
+        let block = blocks[i];
+        let nextBlock = blocks[i + 1];
+        let idx = currentText.indexOf(block);
+        if (idx !== -1) {
+          let nextIdx = currentText.indexOf(nextBlock, idx + block.length);
+          if (nextIdx !== -1) {
+            newJoints.push(currentText.substring(idx + block.length, nextIdx));
+            currentText = currentText.substring(nextIdx);
+          } else {
+            newJoints.push(" ");
+          }
+        } else {
+          newJoints.push(" ");
+        }
+      }
+      w.joints = newJoints;
+      cardModified = true;
+    }
+
     if (cardModified) modified = true;
     return w;
   });
@@ -231,6 +258,11 @@ export async function getWords() {
 
   if (runMigrationTabsV5) {
     await setStored('spelt_migrated_practice_types_v5', true);
+    modified = true;
+  }
+
+  if (runMigrationSyntaxJoints) {
+    await setStored('spelt_migrated_syntax_joints_v6', true);
     modified = true;
   }
 
