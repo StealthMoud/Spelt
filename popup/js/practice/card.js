@@ -100,11 +100,14 @@ function renderBlocksUI() {
       layoutContainer.style.display = 'block';
 
       // Blank out joints
-      let sentenceWithBlanks = currentSyntaxCard.example || '';
-      (currentSyntaxCard.joints || []).forEach(joint => {
-        const regex = new RegExp('\\b' + joint.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b', 'gi');
-        sentenceWithBlanks = sentenceWithBlanks.replace(regex, '[ ______ ]');
-      });
+      let sentenceWithBlanks = '';
+      const blocks = currentSyntaxCard.blocks || [];
+      for (let i = 0; i < blocks.length; i++) {
+        sentenceWithBlanks += blocks[i];
+        if (i < blocks.length - 1) {
+          sentenceWithBlanks += ' [ ______ ] ';
+        }
+      }
       document.getElementById('syntax-sentence-layout').textContent = sentenceWithBlanks;
       setTimeout(() => jointsInput.focus(), 100);
     } else {
