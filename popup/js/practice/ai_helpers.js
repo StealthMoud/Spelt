@@ -162,11 +162,9 @@ Do NOT use markdown. Plain text only.`;
   return await askGeminiText(prompt);
 }
 
-/**
- * Verify a student's custom practice sentence using AI.
- */
 export async function verifyPracticeWriting(card, userSentence, mode) {
   let prompt = '';
+  if (mode === 'syntax') {
     prompt = `Evaluate the student's custom practice sentence for the structure pattern: "${card.definition}".
 Target structure example: "${card.example}"
 They wrote the following sentence:
