@@ -1,22 +1,18 @@
 import { getWords, saveWords, getStored, setStored, fetchTranslation, getFallbackExample, atomicUpdate } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
 import { getDueCards, setPracticeMode } from './state.js';
-import { checkSpelling, revealRecall, checkSyntax } from './actions.js';
+import { checkSpelling, revealRecall } from './actions.js';
 import { submitRating, submitMasteredRating } from './rate.js';
 import { loadPracticeDeck } from './card.js';
 
 export function registerPracticeListeners() {
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
   document.getElementById('reveal-recall-btn')?.addEventListener('click', revealRecall);
-  document.getElementById('check-syntax-btn')?.addEventListener('click', checkSyntax);
-  
+
   document.getElementById('spelling-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
   });
 
-  document.getElementById('syntax-joints-input')?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); checkSyntax(); }
-  });
 
   const initModeToggle = async () => {
     const savedMode = await getStored('spelt_practice_mode') || 'spelling';
@@ -24,14 +20,12 @@ export function registerPracticeListeners() {
     
     const spellingPill = document.getElementById('practice-mode-spelling');
     const recallPill = document.getElementById('practice-mode-recall');
-    const syntaxPill = document.getElementById('practice-mode-syntax');
     
     const setPillsActive = (activeMode) => {
-      [spellingPill, recallPill, syntaxPill].forEach(pill => {
+      [spellingPill, recallPill].forEach(pill => {
         if (pill) pill.classList.remove('active');
       });
       if (activeMode === 'recall' && recallPill) recallPill.classList.add('active');
-      else if (activeMode === 'syntax' && syntaxPill) syntaxPill.classList.add('active');
       else if (spellingPill) spellingPill.classList.add('active');
     };
     
@@ -46,7 +40,6 @@ export function registerPracticeListeners() {
     
     if (spellingPill) spellingPill.addEventListener('click', () => switchMode('spelling'));
     if (recallPill) recallPill.addEventListener('click', () => switchMode('recall'));
-    if (syntaxPill) syntaxPill.addEventListener('click', () => switchMode('syntax'));
   };
   
   initModeToggle().catch(err => console.error(err));

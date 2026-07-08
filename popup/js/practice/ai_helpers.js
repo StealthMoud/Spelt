@@ -65,19 +65,6 @@ Give a direct, highly concise tip (1-2 sentences max) using an association, root
   return await askGeminiText(prompt);
 }
 
-export async function generateSyntaxFeedback(card, typedJoints) {
-  const prompt = `Evaluate the sentence structure error.
-They are learning the structure pattern: "${card.definition || 'N/A'}"
-The target sentence is: "${card.example || 'N/A'}"
-The student's submitted joints/segments: "${typedJoints}"
-The correct joints/linking phrases: "${(card.joints || []).join(', ')}"
-
-Provide a direct, highly concise explanation (1-2 sentences max) pointing out the error in their joints/assembly and how to correct it. Do NOT use any encouraging words, greetings, pleasantries, or fluff (e.g., do NOT say "Great effort!", "Nice try!", "Keep it up!"). Go straight to the explanation. Do NOT use markdown. Plain text only.`;
-
-  return await askGeminiText(prompt);
-}
-
-
 export async function generateSessionSummary(sessionData) {
   const { totalReviewed, correctCount, incorrectCount, hardestWords, totalTimeMs, mode } = sessionData;
   
@@ -97,94 +84,8 @@ Summarize the performance directly, highlighting strengths and specific focus ar
   return await askGeminiText(prompt);
 }
 
-/**
- * Generate a 1-sentence grammatical tip explaining a syntax structure pattern.
- */
-export async function generateSyntaxExplanation(card) {
-  const targetLang = await getStored('spelt_target_lang') || 'fa';
-  let targetLangName = 'Farsi (Persian)';
-  if (targetLang === 'es') targetLangName = 'Spanish';
-  else if (targetLang === 'fr') targetLangName = 'French';
-  else if (targetLang === 'de') targetLangName = 'German';
-  else if (targetLang === 'it') targetLangName = 'Italian';
-  else if (targetLang === 'pt') targetLangName = 'Portuguese';
-  else if (targetLang === 'ru') targetLangName = 'Russian';
-  else if (targetLang === 'ar') targetLangName = 'Arabic';
-  else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
-  else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
-  else if (targetLang === 'ja') targetLangName = 'Japanese';
-  else if (targetLang === 'ko') targetLangName = 'Korean';
-  else if (targetLang === 'tr') targetLangName = 'Turkish';
-
-  const prompt = `You are a syntax and grammar coach helping a student learn English sentence structure.
-The structure pattern they are studying is: "${card.definition}"
-Example sentence: "${card.example}"
-Translation in ${targetLangName}: "${card.translation || 'N/A'}"
-
-Provide a brief, clear, 1-2 sentence explanation of this grammatical structure and how to construct it.
-CRITICAL INSTRUCTION: To prevent text direction issues, you MUST provide the English explanation on one line, and the ${targetLangName} translation on a completely separate new line. Do NOT mix English and ${targetLangName} on the same line.
-Do NOT use any introductory fluff, greetings, or encouraging words. Go straight to the grammatical explanation.
-Do NOT use markdown. Plain text only.`;
-
-  return await askGeminiText(prompt);
-}
-
-/**
- * Generate a subtle puzzle hint to help order scrambled syntax blocks.
- */
-export async function generateSyntaxPuzzleHint(card) {
-  const targetLang = await getStored('spelt_target_lang') || 'fa';
-  let targetLangName = 'Farsi (Persian)';
-  if (targetLang === 'es') targetLangName = 'Spanish';
-  else if (targetLang === 'fr') targetLangName = 'French';
-  else if (targetLang === 'de') targetLangName = 'German';
-  else if (targetLang === 'it') targetLangName = 'Italian';
-  else if (targetLang === 'pt') targetLangName = 'Portuguese';
-  else if (targetLang === 'ru') targetLangName = 'Russian';
-  else if (targetLang === 'ar') targetLangName = 'Arabic';
-  else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
-  else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
-  else if (targetLang === 'ja') targetLangName = 'Japanese';
-  else if (targetLang === 'ko') targetLangName = 'Korean';
-  else if (targetLang === 'tr') targetLangName = 'Turkish';
-
-  const prompt = `You are a syntax and grammar coach helping a student learn English sentence structure.
-The student is trying to reconstruct a scrambled sentence based on this structure pattern: "${card.definition}"
-The correct sentence is: "${card.example}"
-
-Provide a subtle, 1-2 sentence hint to help the student figure out how to order the sentence clauses. 
-For example, you can give a hint about what the sentence should start with, or the logical relationship between the clauses.
-DO NOT give them the full correct sentence. DO NOT just give them the answer.
-Do NOT use any greeting, pleasantries, or encouraging fluff. Write the hint directly.
-Write the hint entirely in ${targetLangName}.
-Do NOT use markdown. Plain text only.`;
-
-  return await askGeminiText(prompt);
-}
-
 export async function verifyPracticeWriting(card, userSentence, mode) {
-  let prompt = '';
-  if (mode === 'syntax') {
-    prompt = `Evaluate the student's custom practice sentence for the structure pattern: "${card.definition}".
-Target structure example: "${card.example}"
-They wrote the following sentence:
-"${userSentence}"
-
-Evaluate their sentence:
-1. Did they correctly follow the syntax structure pattern?
-2. Are the spelling, punctuation, and grammar correct?
-3. Does it sound natural in English?
-
-Provide a direct, concise evaluation in 2 sentences max. Do NOT use any encouraging fluff, pleasantries, or filler in the Coach Feedback (e.g. do NOT say 'Nice effort!', 'Good try!', 'Keep practicing!'). Keep the feedback strictly technical and direct.
-Format your response in clean HTML:
-- Start with a status indicator: e.g., "<span style='color: #10b981; font-weight: 700;'>✓ Correct Pattern</span>" or "<span style='color: #ef4444; font-weight: 700;'>✗ Pattern Incorrect</span>".
-- If corrections are needed, add: "<div style='margin-top: 4px;'><strong>Correction:</strong> ...</div>"
-- Add: "<div style='margin-top: 4px;'><strong>Coach Feedback:</strong> ...</div>"
-
-Do NOT use markdown code blocks (\`\`\`).`;
-  } else {
-    // Spelling or Recall mode vocabulary practice
-    prompt = `Evaluate the student's practice sentence using the English word/phrase: "${card.word}" (Part of speech: "${card.partOfSpeech}", Definition: "${card.definition || 'N/A'}").
+  const prompt = `Evaluate the student's practice sentence using the English word/phrase: "${card.word}" (Part of speech: "${card.partOfSpeech}", Definition: "${card.definition || 'N/A'}").
 They wrote the following sentence:
 "${userSentence}"
 
@@ -200,7 +101,6 @@ Format your response in clean HTML:
 - Add: "<div style='margin-top: 4px;'><strong>Coach Feedback:</strong> ...</div>"
 
 Do NOT use markdown code blocks (\`\`\`).`;
-  }
 
   return await askGeminiText(prompt);
 }

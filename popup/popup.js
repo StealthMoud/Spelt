@@ -23,10 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dueCount = words.filter(w => {
         if (hasReviewedWord(w.id, mode)) return false;
         if (w.mastered) return false;
-        if (mode === 'syntax') {
-          if (w.practiceType !== 'syntax') return false;
-          return w.nextDate <= Date.now();
-        } else if (mode === 'recall') {
+        if (mode === 'recall') {
           if (w.practiceType !== 'both' && w.practiceType !== 'recall') return false;
           return w.meaningNextDate <= Date.now();
         } else {

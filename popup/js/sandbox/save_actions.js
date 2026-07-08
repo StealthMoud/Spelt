@@ -30,7 +30,6 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
       let typeLabel = 'Spelling';
       if (practiceType === 'recall') typeLabel = 'Recall';
       if (practiceType === 'both') typeLabel = 'Spelling & Recall';
-      if (practiceType === 'syntax') typeLabel = 'Syntax';
       banner.innerHTML = `✅ Word <strong>"${word}"</strong> added for <strong>${typeLabel}</strong> practice!`;
       
       const closeBtn = feedbackMsg.querySelector('.feedback-close-btn');

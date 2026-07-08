@@ -14,38 +14,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
   const level = document.getElementById('form-level').value.trim();
   const practiceType = document.getElementById('form-practice-type').value;
   const mastered = document.getElementById('form-mastered').checked;
-  const blocksStr = document.getElementById('form-blocks')?.value || '';
-  const jointsStr = document.getElementById('form-joints')?.value || '';
 
-  let blocks = undefined;
-  let joints = undefined;
-  if (practiceType === 'syntax' && blocksStr.trim() !== '') {
-    blocks = blocksStr.split('\n').map(s => s.trim()).filter(Boolean);
-    if (jointsStr.trim() !== '') {
-      joints = jointsStr.split('\n'); // do not trim joints because spaces matter!
-    } else {
-      // Auto-generate joints from the target sentence
-      joints = [];
-      let currentText = example;
-      for (let i = 0; i < blocks.length - 1; i++) {
-        let block = blocks[i];
-        let nextBlock = blocks[i + 1];
-        let idx = currentText.indexOf(block);
-        if (idx !== -1) {
-          let nextIdx = currentText.indexOf(nextBlock, idx + block.length);
-          if (nextIdx !== -1) {
-            joints.push(currentText.substring(idx + block.length, nextIdx));
-            currentText = currentText.substring(nextIdx);
-          } else {
-            joints.push(" ");
-          }
-        } else {
-          joints.push(" ");
-        }
-      }
-    }
-  }
- 
   const executeSave = async () => {
     try {
       if (id) {
@@ -67,9 +36,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
               level,
               practiceType,
               mastered,
-              misspellings: currentFormMisspellings,
-              blocks: blocks !== undefined ? blocks : freshList[idx].blocks,
-              joints: joints !== undefined ? joints : freshList[idx].joints
+              misspellings: currentFormMisspellings
             };
             if (mastered && !wasMastered) {
               freshList[idx].rep = 0;
@@ -84,7 +51,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
           }
         });
       } else {
-        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings, blocks, joints });
+        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings });
         if (mastered) {
           await atomicUpdate(async (list) => {
             const wObj = list.find(w => w.id === addedWord.id);
@@ -105,7 +72,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
 
   try {
     const isOnline = navigator.onLine;
-    if (isOnline && practiceType !== 'syntax') {
+    if (isOnline) {
       // 1. Try our robust definition lookup (queries Cambridge and Oxford, handling multi-word hyphens)
       const res = await fetchDynamicDefinition(word);
       

@@ -15,26 +15,24 @@
                 <div class="custom-option selected" data-value="both" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Both (Spelling & Recall)</div>
                 <div class="custom-option" data-value="spelling" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Spelling Only</div>
                 <div class="custom-option" data-value="recall" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Recall Only</div>
-                <div class="custom-option" data-value="syntax" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Syntax Structure</div>
               </div>
               <select id="form-practice-type" style="display: none;">
                 <option value="both">Both (Spelling & Recall)</option>
                 <option value="spelling">Spelling Only</option>
                 <option value="recall">Recall Only</option>
-                <option value="syntax">Syntax Structure</option>
               </select>
             </div>
           </div>
           <div class="modal-input-item">
             <label>Word *</label>
-            <div style="position: relative; display: flex; align-items: center; width: 100%;">
-              <input type="text" id="form-word" class="premium-input" required autocomplete="off" style="padding-right: 86px;">
-              <button type="button" id="form-auto-fill-btn" title="Auto-fill details from dictionary" style="position: absolute; right: 46px; background: hsla(170, 80%, 30%, 0.15); border: 1px solid var(--primary); color: var(--primary-light); padding: 2px 6px; font-size: 0.65rem; height: 20px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 2px; transition: all 0.2s ease; cursor: pointer;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 8px; height: 8px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <div style="display: flex; align-items: center; width: 100%; gap: 6px;">
+              <input type="text" id="form-word" class="premium-input" required autocomplete="off" style="flex: 1; min-width: 0;">
+              <button type="button" id="form-auto-fill-btn" title="Auto-fill details from dictionary" style="background: hsla(170, 80%, 30%, 0.15); border: 1px solid var(--primary); color: var(--primary-light); padding: 4px 8px; font-size: 0.65rem; height: 26px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 4px; transition: all 0.2s ease; cursor: pointer; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 <span>Auto</span>
               </button>
-              <button type="button" id="form-ai-fill-btn" title="Auto-fill details using Gemini AI" style="position: absolute; right: 6px; background: hsla(265, 80%, 30%, 0.15); border: 1px solid var(--purple); color: var(--purple-light); padding: 2px 6px; font-size: 0.65rem; height: 20px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 2px; transition: all 0.2s ease; cursor: pointer;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 8px; height: 8px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <button type="button" id="form-ai-fill-btn" title="Auto-fill details using Gemini AI" style="background: hsla(265, 80%, 30%, 0.15); border: 1px solid var(--purple); color: var(--purple-light); padding: 4px 8px; font-size: 0.65rem; height: 26px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 4px; transition: all 0.2s ease; cursor: pointer; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 <span>AI</span>
               </button>
             </div>

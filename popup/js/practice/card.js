@@ -1,12 +1,9 @@
 import { getWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured, atomicUpdate } from '../../../shared/storage.js';
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
-import { generateHint, generateSessionSummary, generateSyntaxExplanation, generateSyntaxPuzzleHint, verifyPracticeWriting } from './ai_helpers.js';
+import { generateHint, generateSessionSummary, verifyPracticeWriting } from './ai_helpers.js';
 import { populateBackFace } from './actions.js';
 
-let currentSyntaxCard = null;
-let scrambledPool = [];
-let orderedBlocks = [];
 let writingFeedbackTimeoutId = null;
 let aiHintTimeoutId = null;
 
@@ -19,191 +16,14 @@ function shuffleArray(array) {
   return copy;
 }
 
-function renderBlocksUI() {
-  if (!currentSyntaxCard) return;
-  const scrambledContainer = document.getElementById('syntax-blocks-scrambled');
-  const orderedContainer = document.getElementById('syntax-blocks-ordered');
-  
-  if (!scrambledContainer || !orderedContainer) return;
-  scrambledContainer.innerHTML = '';
-  orderedContainer.innerHTML = '';
 
-  scrambledPool.forEach((blockText, idx) => {
-    const btn = document.createElement('button');
-    btn.className = 'practice-mode-pill';
-    btn.style.cssText = 'padding: 6px 12px; font-size: 0.7rem; background: hsla(0, 0%, 100%, 0.03); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; text-align: left; transition: all 0.15s ease; font-weight: 500; outline: none;';
-    btn.textContent = blockText;
-    
-    // Premium hover effect
-    btn.addEventListener('mouseenter', () => {
-      btn.style.background = 'hsla(260, 60%, 50%, 0.12)';
-      btn.style.borderColor = 'hsla(260, 60%, 50%, 0.3)';
-      btn.style.color = '#c4b5fd';
-      btn.style.transform = 'translateY(-1px)';
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.background = 'hsla(0, 0%, 100%, 0.03)';
-      btn.style.borderColor = 'var(--border)';
-      btn.style.color = 'var(--text-muted)';
-      btn.style.transform = 'none';
-    });
-    
-    btn.addEventListener('click', () => {
-      scrambledPool.splice(idx, 1);
-      orderedBlocks.push(blockText);
-      renderBlocksUI();
-    });
-    scrambledContainer.appendChild(btn);
-  });
-
-  orderedBlocks.forEach((blockText, idx) => {
-    const el = document.createElement('div');
-    el.style.cssText = 'padding: 6px 10px; font-size: 0.72rem; background: rgba(167, 139, 250, 0.06); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: var(--radius-sm); color: #c4b5fd; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 500; transition: all 0.15s ease;';
-    el.innerHTML = `<span style="word-break: break-word; flex: 1;">${blockText}</span><span class="remove-x" style="font-size: 0.65rem; color: rgba(167, 139, 250, 0.6); margin-left: 6px; flex-shrink: 0; transition: color 0.15s ease;">✕</span>`;
-    
-    // Destructive/Remove hover effect
-    el.addEventListener('mouseenter', () => {
-      el.style.background = 'rgba(239, 68, 68, 0.06)';
-      el.style.borderColor = 'rgba(239, 68, 68, 0.25)';
-      el.style.color = '#fca5a5';
-      const xSpan = el.querySelector('.remove-x');
-      if (xSpan) xSpan.style.color = '#ef4444';
-    });
-    el.addEventListener('mouseleave', () => {
-      el.style.background = 'rgba(167, 139, 250, 0.06)';
-      el.style.borderColor = 'rgba(167, 139, 250, 0.2)';
-      el.style.color = '#c4b5fd';
-      const xSpan = el.querySelector('.remove-x');
-      if (xSpan) xSpan.style.color = 'rgba(167, 139, 250, 0.6)';
-    });
-
-    el.addEventListener('click', () => {
-      orderedBlocks.splice(idx, 1);
-      scrambledPool.push(blockText);
-      renderBlocksUI();
-    });
-    orderedContainer.appendChild(el);
-  });
-
-  const isFull = orderedBlocks.length === (currentSyntaxCard.blocks || []).length;
-  const orderedBox = document.getElementById('syntax-blocks-ordered');
-  const jointsInput = document.getElementById('syntax-joints-input');
-  const checkBtn = document.getElementById('check-syntax-btn');
-  const layoutContainer = document.getElementById('syntax-sentence-layout-container');
-
-  if (isFull) {
-    const isCorrect = orderedBlocks.every((val, index) => val === currentSyntaxCard.blocks[index]);
-    if (isCorrect) {
-      orderedBox.style.borderColor = 'var(--success)';
-      jointsInput.removeAttribute('disabled');
-      checkBtn.removeAttribute('disabled');
-      layoutContainer.style.display = 'block';
-
-      // Blank out joints
-      let sentenceWithBlanks = '';
-      const blocks = currentSyntaxCard.blocks || [];
-      for (let i = 0; i < blocks.length; i++) {
-        sentenceWithBlanks += blocks[i];
-        if (i < blocks.length - 1) {
-          sentenceWithBlanks += ' [ ______ ] ';
-        }
-      }
-      document.getElementById('syntax-sentence-layout').textContent = sentenceWithBlanks;
-      setTimeout(() => jointsInput.focus(), 100);
-    } else {
-      orderedBox.style.borderColor = 'var(--danger)';
-      jointsInput.setAttribute('disabled', 'true');
-      checkBtn.setAttribute('disabled', 'true');
-      layoutContainer.style.display = 'none';
-    }
-  } else {
-    orderedBox.style.borderColor = 'var(--border)';
-    jointsInput.setAttribute('disabled', 'true');
-    checkBtn.setAttribute('disabled', 'true');
-    layoutContainer.style.display = 'none';
-  }
-}
-
-function renderSyntaxFrontFace(card) {
-  currentSyntaxCard = card;
-  
-  if (card.blocks && card.blocks.length > 0) {
-    if (card.joints && card.joints.length === card.blocks.length - 1) {
-      let reconstructed = '';
-      for (let i = 0; i < card.blocks.length; i++) {
-        reconstructed += card.blocks[i];
-        if (i < card.joints.length) {
-          reconstructed += card.joints[i];
-        }
-      }
-      card.example = reconstructed;
-    } else {
-      card.example = card.blocks.join(' ');
-    }
-  } else {
-    const fallbackText = card.example || card.word || '';
-    if (fallbackText) {
-      // Split by commas, or every 3-4 words if no commas.
-      if (fallbackText.includes(',')) {
-        card.blocks = fallbackText.split(',').map(s => s.trim() + (fallbackText.indexOf(s) < fallbackText.lastIndexOf(',') ? ',' : '')).filter(Boolean);
-      } else {
-        const words = fallbackText.split(' ');
-        card.blocks = [];
-        for (let i = 0; i < words.length; i += 3) {
-          card.blocks.push(words.slice(i, i + 3).join(' '));
-        }
-      }
-      card.joints = card.joints || [];
-    }
-  }
-
-  orderedBlocks = [];
-  scrambledPool = shuffleArray(card.blocks || []);
-  
-  document.getElementById('syntax-front-translation').textContent = card.translation || 'No translation added.';
-  document.getElementById('syntax-front-pattern').textContent = card.definition || 'No template description.';
-  
-  chrome.storage?.local.get('spelt_target_lang', (res) => {
-    const lang = res.spelt_target_lang || 'fa';
-    let targetLangName = 'Translation';
-    if (lang === 'es') targetLangName = 'Translation (Spanish)';
-    else if (lang === 'fr') targetLangName = 'Translation (French)';
-    else if (lang === 'de') targetLangName = 'Translation (German)';
-    else if (lang === 'it') targetLangName = 'Translation (Italian)';
-    else if (lang === 'pt') targetLangName = 'Translation (Portuguese)';
-    else if (lang === 'ru') targetLangName = 'Translation (Russian)';
-    else if (lang === 'ar') targetLangName = 'Translation (Arabic)';
-    else if (lang === 'fa') targetLangName = 'Translation (Farsi)';
-    else if (lang === 'zh') targetLangName = 'Translation (Chinese)';
-    else if (lang === 'ja') targetLangName = 'Translation (Japanese)';
-    else if (lang === 'ko') targetLangName = 'Translation (Korean)';
-    else if (lang === 'tr') targetLangName = 'Translation (Turkish)';
-    
-    const labelEl = document.getElementById('syntax-translation-label');
-    if (labelEl) labelEl.textContent = targetLangName;
-  });
-  
-  const jointsInput = document.getElementById('syntax-joints-input');
-  if (jointsInput) {
-    jointsInput.value = '';
-    jointsInput.setAttribute('disabled', 'true');
-  }
-  const checkBtn = document.getElementById('check-syntax-btn');
-  if (checkBtn) {
-    checkBtn.setAttribute('disabled', 'true');
-  }
-
-  renderBlocksUI();
-}
 
 export async function loadPracticeDeck() {
   refreshReviewedWordDay();
   const words = await getWords();
   const mode = getPracticeMode();
   
-  if (mode === 'syntax') {
-    setDueCards(words.filter(w => w.practiceType === 'syntax' && w.nextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
-  } else if (mode === 'recall') {
+  if (mode === 'recall') {
     setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'recall') && w.meaningNextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
   } else {
     setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'spelling') && w.nextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
@@ -254,7 +74,6 @@ export function showPracticeCard() {
   // Show AI components if configured
   setupAIHintButton(card);
   setupBackAIHintButton(card);
-  setupAISyntaxExplain(card);
   setupAIWritingPractice(card);
   setupAISpellingFeedback();
   
@@ -266,28 +85,15 @@ export function populateFrontFace(card) {
 
   const frontSpellingContent = document.getElementById('front-spelling-content');
   const frontRecallContent = document.getElementById('front-recall-content');
-  const frontSyntaxContent = document.getElementById('front-syntax-content');
   
   const frontSpellingWrapper = document.getElementById('front-spelling-wrapper');
   const frontRecallWrapper = document.getElementById('front-recall-wrapper');
-  const frontSyntaxWrapper = document.getElementById('front-syntax-wrapper');
 
-  if (mode === 'syntax') {
-    if (frontSpellingContent) frontSpellingContent.style.display = 'none';
-    if (frontRecallContent) frontRecallContent.style.display = 'none';
-    if (frontSyntaxContent) frontSyntaxContent.style.display = 'flex';
-    if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'none';
-    if (frontRecallWrapper) frontRecallWrapper.style.display = 'none';
-    if (frontSyntaxWrapper) frontSyntaxWrapper.style.display = 'flex';
-
-    renderSyntaxFrontFace(card);
-  } else if (mode === 'recall') {
+  if (mode === 'recall') {
     if (frontSpellingContent) frontSpellingContent.style.display = 'none';
     if (frontRecallContent) frontRecallContent.style.display = 'flex';
-    if (frontSyntaxContent) frontSyntaxContent.style.display = 'none';
     if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'none';
     if (frontRecallWrapper) frontRecallWrapper.style.display = 'flex';
-    if (frontSyntaxWrapper) frontSyntaxWrapper.style.display = 'none';
 
     document.getElementById('recall-front-word').textContent = card.word;
     document.getElementById('recall-front-transcription').textContent = card.transcription || '/--/';
@@ -323,10 +129,8 @@ export function populateFrontFace(card) {
   } else {
     if (frontSpellingContent) frontSpellingContent.style.display = 'flex';
     if (frontRecallContent) frontRecallContent.style.display = 'none';
-    if (frontSyntaxContent) frontSyntaxContent.style.display = 'none';
     if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'flex';
     if (frontRecallWrapper) frontRecallWrapper.style.display = 'none';
-    if (frontSyntaxWrapper) frontSyntaxWrapper.style.display = 'none';
 
     document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
     document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
@@ -370,7 +174,7 @@ export function populateFrontFace(card) {
   }
 
   // Handle Cambridge pronunciation auto-fetch if level doesn't exist
-  if (card.word && !card.level && card.practiceType !== 'syntax') {
+  if (card.word && !card.level) {
     fetchCambridgePronunciation(card.word).then(async cambridge => {
       if (cambridge.level) {
         card.level = cambridge.level;
@@ -417,9 +221,7 @@ export async function syncPracticeDeck() {
     const f = fresh.find(w => w.id === c.id);
     if (!f) return false;
     const isDue = mode === 'recall' ? f.meaningNextDate <= now : f.nextDate <= now;
-    const matchesMode = mode === 'syntax'
-      ? f.practiceType === 'syntax'
-      : mode === 'recall'
+    const matchesMode = mode === 'recall'
         ? (f.practiceType === 'both' || f.practiceType === 'recall') && f.meaningNextDate <= now
         : (f.practiceType === 'both' || f.practiceType === 'spelling');
     return !f.mastered && isDue && matchesMode && f.id !== activeId;
@@ -428,9 +230,7 @@ export async function syncPracticeDeck() {
   const ids = new Set(due.map(c => c.id));
   due.push(...fresh.filter(w => {
     const isDue = mode === 'recall' ? w.meaningNextDate <= now : w.nextDate <= now;
-    const matchesMode = mode === 'syntax'
-      ? w.practiceType === 'syntax'
-      : mode === 'recall'
+    const matchesMode = mode === 'recall'
         ? (w.practiceType === 'both' || w.practiceType === 'recall')
         : (w.practiceType === 'both' || w.practiceType === 'spelling');
     return isDue && matchesMode && !w.mastered && !ids.has(w.id) && !hasReviewedWord(w.id, mode);
@@ -481,14 +281,10 @@ async function setupAIHintButton(card) {
     hintBubble.style.display = 'block';
     try {
       let hint = '';
-      if (card.practiceType === 'syntax') {
-        hint = await generateSyntaxPuzzleHint(card);
-      } else {
-        if (forceRegen) {
-          card.aiHint = null;
-        }
-        hint = await generateHint(card);
+      if (forceRegen) {
+        card.aiHint = null;
       }
+      hint = await generateHint(card);
       hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
@@ -558,14 +354,10 @@ async function setupBackAIHintButton(card) {
     hintBubble.style.display = 'block';
     try {
       let hint = '';
-      if (card.practiceType === 'syntax') {
-        hint = await generateSyntaxPuzzleHint(card);
-      } else {
-        if (forceRegen) {
-          card.aiHint = null;
-        }
-        hint = await generateHint(card);
+      if (forceRegen) {
+        card.aiHint = null;
       }
+      hint = await generateHint(card);
       hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
@@ -639,71 +431,7 @@ async function triggerSessionSummary() {
   });
 }
 
-async function setupAISyntaxExplain(card) {
-  const explainBtn = document.getElementById('ai-syntax-explain-btn');
-  const explanationBubble = document.getElementById('ai-syntax-explanation-bubble');
-  if (!explainBtn || !explanationBubble) return;
 
-  makeElementDraggable(explanationBubble);
-
-  explanationBubble.style.display = 'none';
-  const textEl = document.getElementById('ai-syntax-explanation-text');
-  if (textEl) textEl.innerHTML = '';
-
-  const isConfigured = await isGeminiConfigured();
-  const mode = getPracticeMode();
-
-  if (!isConfigured || mode !== 'syntax') {
-    explainBtn.style.display = 'none';
-    return;
-  }
-
-  explainBtn.style.display = 'inline-flex';
-
-  const handleExplainRequest = async (forceRegen = false) => {
-    const textEl = document.getElementById('ai-syntax-explanation-text');
-    if (!textEl) return;
-    textEl.innerHTML = forceRegen ? '<span style="color: var(--text-muted);">Regenerating...</span>' : '<span style="color: var(--text-muted);">Asking AI Coach...</span>';
-    explanationBubble.style.display = 'block';
-    try {
-      const explanation = await generateSyntaxExplanation(card);
-      textEl.innerHTML = explanation.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
-    } catch (err) {
-      textEl.textContent = `Could not generate explanation: ${err.message}`;
-    }
-  };
-
-  const newExplainBtn = explainBtn.cloneNode(true);
-  explainBtn.parentNode.replaceChild(newExplainBtn, explainBtn);
-  newExplainBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (explanationBubble.style.display === 'block') {
-      explanationBubble.style.display = 'none';
-    } else {
-      handleExplainRequest();
-    }
-  });
-
-  const closeBtn = document.getElementById('ai-syntax-explain-close');
-  if (closeBtn) {
-    const newCloseBtn = closeBtn.cloneNode(true);
-    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-    newCloseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      explanationBubble.style.display = 'none';
-    });
-  }
-
-  const regenBtn = document.getElementById('ai-syntax-explain-regen');
-  if (regenBtn) {
-    const newRegenBtn = regenBtn.cloneNode(true);
-    regenBtn.parentNode.replaceChild(newRegenBtn, regenBtn);
-    newRegenBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleExplainRequest(true);
-    });
-  }
-}
 
 async function setupAIWritingPractice(card) {
   const practicePanel = document.getElementById('ai-writing-practice-panel');
@@ -746,13 +474,8 @@ async function setupAIWritingPractice(card) {
   practicePanel.style.display = 'flex';
   const mode = getPracticeMode();
 
-  if (mode === 'syntax') {
-    if (titleText) titleText.textContent = 'Structure Writing Practice';
-    inputEl.setAttribute('placeholder', `Write a sentence following the structure pattern...`);
-  } else {
-    if (titleText) titleText.textContent = 'Active Vocabulary Practice';
-    inputEl.setAttribute('placeholder', `Write a sentence using the word "${card.word}"...`);
-  }
+  if (titleText) titleText.textContent = 'Active Vocabulary Practice';
+  inputEl.setAttribute('placeholder', `Write a sentence using the word "${card.word}"...`);
 
   // Set up collapsible toggle
   const newHeaderEl = headerEl.cloneNode(true);

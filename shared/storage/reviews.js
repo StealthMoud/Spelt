@@ -40,29 +40,7 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
         historyEntry.rt = responseTimeMs;
       }
       card.history.push(historyEntry);
-    } else if (mode === 'syntax') {
-      const isCorrect = q >= 3;
-      const { rep, interval, ef, nextDate } = calcSM2(
-        q,
-        card.rep || 0,
-        card.interval || 0,
-        card.ef || 2.0,
-        1.0,
-        isCorrect,
-        1.0
-      );
 
-      card.rep = rep;
-      card.interval = interval;
-      card.ef = ef;
-      card.nextDate = nextDate;
-      card.lastReviewedAt = Date.now();
-
-      const historyEntry = { date: Date.now(), q, interval, mode: 'syntax' };
-      if (responseTimeMs !== null && responseTimeMs > 0) {
-        historyEntry.rt = responseTimeMs;
-      }
-      card.history.push(historyEntry);
     } else {
       const isCorrect = (typedWrongWord === null || typedWrongWord === undefined);
       // Compute error weight from accumulated difficulty history

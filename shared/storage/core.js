@@ -61,8 +61,7 @@ export async function getWords() {
   const migratedTabsV5 = await getStored('spelt_migrated_practice_types_v5');
   const runMigrationTabsV5 = !migratedTabsV5;
 
-  const migratedSyntaxJoints = await getStored('spelt_migrated_syntax_joints_v6');
-  const runMigrationSyntaxJoints = !migratedSyntaxJoints;
+
 
   let modified = false;
   const sanitized = words.map(w => {
@@ -195,14 +194,12 @@ export async function getWords() {
     if (runMigrationTabsV5 && !w.mastered) {
       const partOfSpeechLower = (w.partOfSpeech || '').toLowerCase();
       const isGrammaticalPattern = partOfSpeechLower.includes('grammatical pattern');
-      const hasBlocks = Array.isArray(w.blocks) && w.blocks.length > 0;
-      
       const tokens = (w.word || '').trim().split(/\s+/).filter(Boolean);
       const wordCount = tokens.length;
 
-      if (isGrammaticalPattern || hasBlocks || wordCount > 3) {
-        if (w.practiceType !== 'syntax') {
-          w.practiceType = 'syntax';
+      if (isGrammaticalPattern || wordCount > 3) {
+        if (w.practiceType !== 'recall') {
+          w.practiceType = 'recall';
           cardModified = true;
         }
       } else if (wordCount > 1 && wordCount <= 3) {
@@ -216,30 +213,6 @@ export async function getWords() {
           cardModified = true;
         }
       }
-    }
-
-    if (runMigrationSyntaxJoints && w.practiceType === 'syntax' && w.example && Array.isArray(w.blocks) && w.blocks.length > 0) {
-      let currentText = w.example;
-      let newJoints = [];
-      let blocks = w.blocks;
-      for (let i = 0; i < blocks.length - 1; i++) {
-        let block = blocks[i];
-        let nextBlock = blocks[i + 1];
-        let idx = currentText.indexOf(block);
-        if (idx !== -1) {
-          let nextIdx = currentText.indexOf(nextBlock, idx + block.length);
-          if (nextIdx !== -1) {
-            newJoints.push(currentText.substring(idx + block.length, nextIdx));
-            currentText = currentText.substring(nextIdx);
-          } else {
-            newJoints.push(" ");
-          }
-        } else {
-          newJoints.push(" ");
-        }
-      }
-      w.joints = newJoints;
-      cardModified = true;
     }
 
     if (cardModified) modified = true;
@@ -261,16 +234,20 @@ export async function getWords() {
     modified = true;
   }
 
-  if (runMigrationSyntaxJoints) {
-    await setStored('spelt_migrated_syntax_joints_v6', true);
-    modified = true;
-  }
+  // Filter out any syntax cards and remove nulls
+  const filtered = sanitized.filter(w => {
+    if (w && w.practiceType === 'syntax') {
+      modified = true;
+      return false;
+    }
+    return w !== null && w !== undefined;
+  });
 
   if (modified) {
-    await saveWords(sanitized);
+    await saveWords(filtered);
   }
 
-  return sanitized;
+  return filtered;
 }
 
 export async function saveWords(words) {

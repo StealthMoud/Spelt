@@ -82,7 +82,6 @@ export function showImportOptionsModal(onSelect, onCancel) {
   const btnBoth = document.getElementById('import-option-both');
   const btnSpelling = document.getElementById('import-option-spelling');
   const btnRecall = document.getElementById('import-option-recall');
-  const btnSyntax = document.getElementById('import-option-syntax');
   const btnCancel = document.getElementById('import-option-cancel');
 
   modal.style.display = 'flex';
@@ -107,11 +106,6 @@ export function showImportOptionsModal(onSelect, onCancel) {
     close();
   };
 
-  const handleSyntax = () => {
-    onSelect('syntax');
-    close();
-  };
-
   const handleCancel = () => {
     if (onCancel) onCancel();
     close();
@@ -121,13 +115,11 @@ export function showImportOptionsModal(onSelect, onCancel) {
     btnBoth.removeEventListener('click', handleBoth);
     btnSpelling.removeEventListener('click', handleSpelling);
     btnRecall.removeEventListener('click', handleRecall);
-    if (btnSyntax) btnSyntax.removeEventListener('click', handleSyntax);
     btnCancel.removeEventListener('click', handleCancel);
   };
 
   btnBoth.addEventListener('click', handleBoth);
   btnSpelling.addEventListener('click', handleSpelling);
   btnRecall.addEventListener('click', handleRecall);
-  if (btnSyntax) btnSyntax.addEventListener('click', handleSyntax);
   btnCancel.addEventListener('click', handleCancel);
 }

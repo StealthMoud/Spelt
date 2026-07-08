@@ -644,9 +644,6 @@ function parseTimestamp(value) {
 
 function inferPracticeType(card) {
   const tokenCount = String(card.word || '').trim().split(/\s+/).filter(Boolean).length;
-  const hasBlocks = Array.isArray(card.blocks) && card.blocks.length > 0;
-  const pos = String(card.partOfSpeech || '').toLowerCase();
-  if (hasBlocks || pos.includes('grammatical pattern') || tokenCount > 3) return 'syntax';
   if (tokenCount > 1) return 'recall';
   return 'spelling';
 }
@@ -675,7 +672,7 @@ async function runIntegrityAudit({ repair = false } = {}) {
 
   const seenIds = new Set();
   const repairedWords = [];
-  const allowedPracticeTypes = new Set(['spelling', 'recall', 'syntax', 'both']);
+  const allowedPracticeTypes = new Set(['spelling', 'recall', 'both']);
   const allowedLevels = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 
   sourceWords.forEach((item, idx) => {
@@ -752,20 +749,7 @@ async function runIntegrityAudit({ repair = false } = {}) {
       if (repair) card.history = [];
     }
 
-    if (card.practiceType === 'syntax') {
-      if (!Array.isArray(card.blocks)) {
-        bump('Syntax card missing blocks', repair);
-        if (repair) card.blocks = [];
-      }
-      if (!Array.isArray(card.joints)) {
-        bump('Syntax card missing joints', repair);
-        if (repair) card.joints = [];
-      }
-      if (typeof card.writingExample !== 'string') {
-        bump('Syntax card missing writingExample', repair);
-        if (repair) card.writingExample = card.example || '';
-      }
-    }
+
 
     if (typeof card.level === 'string' && card.level.trim()) {
       const upper = card.level.trim().toUpperCase();

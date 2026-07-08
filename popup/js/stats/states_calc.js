@@ -44,11 +44,7 @@ export function calculateForecast(words) {
         countDiff((w.meaningNextDate || w.nextDate || 0) - now);
       }
     }
-    if (w.practiceType === 'syntax') {
-      if (!hasReviewedWord(w.id, 'syntax')) {
-        countDiff((w.nextDate || 0) - now);
-      }
-    }
+
   });
 
   return { dueToday, dueTomorrow, dueWeek, dueMonth };

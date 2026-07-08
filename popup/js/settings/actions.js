@@ -70,11 +70,7 @@ export async function importDb(e, onDbRestoredCallback) {
         throw new Error('Invalid backup file');
       }
 
-      // Automatically check if this file contains syntax patterns
-      const hasSyntax = importedWords.some(item => 
-        item.practiceType === 'syntax' || 
-        (item.blocks !== undefined && Array.isArray(item.blocks))
-      );
+
 
       const processImport = async (targetPracticeType) => {
         let addedCount = 0;
@@ -86,12 +82,11 @@ export async function importDb(e, onDbRestoredCallback) {
             const id = item.id || 'word_' + Math.random().toString(36).substring(2, 11);
             
             let practiceType = item.practiceType || 'both';
-            if (!isFullBackup) {
-              if (hasSyntax) {
-                practiceType = 'syntax';
-              } else if (targetPracticeType) {
-                practiceType = targetPracticeType;
-              }
+            if (practiceType === 'syntax') {
+              practiceType = 'recall';
+            }
+            if (!isFullBackup && targetPracticeType) {
+              practiceType = targetPracticeType;
             }
 
             const newCard = {
@@ -124,12 +119,7 @@ export async function importDb(e, onDbRestoredCallback) {
               meaningNextDate: item.meaningNextDate !== undefined ? item.meaningNextDate : Date.now()
             };
 
-            if (practiceType === 'syntax') {
-              newCard.blocks = Array.isArray(item.blocks) ? item.blocks : [];
-              newCard.joints = Array.isArray(item.joints) ? item.joints : [];
-              newCard.writingExample = item.writingExample || item.example || '';
-              newCard.ef = item.ef !== undefined ? item.ef : 2.0;
-            }
+
 
             // Match existing card by ID or by matching word + type
             const idx = freshList.findIndex(w => 
@@ -237,12 +227,7 @@ export async function importDb(e, onDbRestoredCallback) {
           'This will merge the chosen backup file into your existing library. Existing words will be updated with any new translations/examples, but their spacing and history will be preserved. No data will be wiped. Proceed?',
           () => processImport(null)
         );
-      } else if (hasSyntax) {
-        showConfirm(
-          'Import Syntax Patterns',
-          `This file contains ${importedWords.length} syntax pattern structures. Do you want to merge them into your library for Syntax practice?`,
-          () => processImport('syntax')
-        );
+
       } else {
         showImportOptionsModal(async (choice) => {
           await processImport(choice);

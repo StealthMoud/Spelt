@@ -4,7 +4,7 @@ let onDeckUpdatedCallback = null;
 let isSubmitting = false;
 const reviewedWordIds = new Set();
 let reviewedWordDate = getLocalDateKey();
-let practiceMode = 'spelling'; // 'spelling', 'recall', or 'syntax'
+let practiceMode = 'spelling'; // 'spelling' or 'recall'
 
 // AI session summary tracking
 let sessionStats = { totalReviewed: 0, correctCount: 0, incorrectCount: 0, hardestWords: [], totalTimeMs: 0 };

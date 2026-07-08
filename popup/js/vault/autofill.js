@@ -171,23 +171,7 @@ export function registerAutofillListeners() {
       else if (targetLang === 'ko') targetLangName = 'Korean';
       else if (targetLang === 'tr') targetLangName = 'Turkish';
 
-      const practiceType = document.getElementById('form-practice-type')?.value || 'both';
-      
-      let prompt = '';
-      if (practiceType === 'syntax') {
-        prompt = `You are an English syntax and grammar expert helping an advanced language student study the grammatical pattern: "${word}".
-Provide the following details in a clean JSON format matching the schema:
-{
-  "definition": "A clear, concise rule or explanation of how this grammatical pattern works.",
-  "translation": "An accurate translation or explanation of this pattern in ${targetLangName}",
-  "level": "CEFR level: choose carefully from B1, B2, C1, C2. Leave blank if none exists.",
-  "example": "A high-quality, complex IELTS-level example sentence demonstrating this pattern.",
-  "blocks": ["first logical chunk", "second logical chunk", "third logical chunk"]
-}
-CRITICAL INSTRUCTION: Break the "example" sentence into 2-4 logical chunks (clauses or phrases) in the "blocks" array. DO NOT INCLUDE ANY CONNECTING PUNCTUATION OR SPACES inside the blocks. The chunks must combine perfectly to form the sentence.
-Respond ONLY with the JSON object. Do not include markdown block ticks (\`\`\`json).`;
-      } else {
-        prompt = `You are a lexicographer helping a language student study the word/phrase: "${word}".
+      const prompt = `You are a lexicographer helping a language student study the word/phrase: "${word}".
 Provide the following details in a clean JSON format matching the schema:
 {
   "definition": "definition of the word or phrase in English",
@@ -198,18 +182,15 @@ Provide the following details in a clean JSON format matching the schema:
   "example": "A high-quality IELTS study example sentence containing the word/phrase in context"
 }
 Respond ONLY with the JSON object. Do not include markdown block ticks (\`\`\`json).`;
-      }
 
       const aiData = await askGemini(prompt);
 
       if (aiData.definition) document.getElementById('form-definition').value = aiData.definition;
-      if (aiData.transcription && practiceType !== 'syntax') document.getElementById('form-transcription').value = aiData.transcription;
-      if (aiData.partOfSpeech && practiceType !== 'syntax') document.getElementById('form-part-of-speech').value = aiData.partOfSpeech;
+      if (aiData.transcription) document.getElementById('form-transcription').value = aiData.transcription;
+      if (aiData.partOfSpeech) document.getElementById('form-part-of-speech').value = aiData.partOfSpeech;
       if (aiData.translation) document.getElementById('form-translation').value = aiData.translation;
       if (aiData.level) document.getElementById('form-level').value = aiData.level.toUpperCase().trim();
       if (aiData.example) document.getElementById('form-example').value = aiData.example;
-      if (aiData.blocks && practiceType === 'syntax') document.getElementById('form-blocks').value = aiData.blocks.join('\n');
-      if (practiceType === 'syntax') document.getElementById('form-joints').value = ''; // Ensure joints are empty so save.js computes them
 
     } catch (err) {
       alert(err.message || 'AI Autofill failed. Please check your Gemini API key in Settings.');
