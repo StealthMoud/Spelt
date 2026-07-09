@@ -35,9 +35,6 @@ CRITICAL: Be completely direct. Avoid any greetings, pleasantries, introductory 
   return hint;
 }
 
-/**
- * Generate AI feedback when the user misspells a word.
- */
 export async function generateMisspellingFeedback(card, typedWord) {
   const allErrors = [...new Set([...(card.misspellings || []), typedWord].filter(Boolean))];
   const errorCount = card.totalErrors || allErrors.length;
@@ -46,7 +43,12 @@ export async function generateMisspellingFeedback(card, typedWord) {
 ${allErrors.length > 1 ? `Their past misspellings include: ${allErrors.slice(0, 5).join(', ')}` : ''}
 ${errorCount > 1 ? `They have misspelled this word ${errorCount} times total.` : ''}
 
-Give a direct, highly concise spelling tip (1-2 sentences max). Point out the exact mistake/letter pattern they got wrong and how to fix it. Do NOT use any encouraging words, greetings, pleasantries, or fluff (e.g., do NOT say "Great effort!", "Nice try!", "Keep practicing!"). Go straight to the correction. Do NOT use markdown. Plain text only.`;
+Analyze the error:
+1. Identify the exact mistake in "${typedWord}" compared to the correct spelling "${card.word}". If there are past misspellings, detect if there is a recurring pattern or trap (e.g., suffix confusion, vowel substitutions, or doubled letters).
+2. Give a direct correction explanation.
+3. Provide a memorable trick, mnemonic breakdown, prefix/suffix rule, or association to help the correct spelling stick in their mind easily and prevent future mistakes.
+
+Ensure the feedback is direct, objective, and concise (2-3 sentences max). Do NOT use any encouraging fluff, greetings, pleasantries, or motivational phrases (e.g., do NOT say "Nice attempt!", "Keep practicing!", "Here is a trick"). Keep the feedback strictly technical and helpful. Do NOT use markdown. Plain text only.`;
 
   return await askGeminiText(prompt);
 }
@@ -60,7 +62,7 @@ Definition: "${card.definition || 'N/A'}"
 ${card.partOfSpeech ? `Part of speech: ${card.partOfSpeech}` : ''}
 ${card.example ? `Example: "${card.example}"` : ''}
 
-Give a direct, highly concise tip (1-2 sentences max) using an association, root breakdown, etymology, or visual imagery to help remember the meaning. Do NOT use any encouraging words, greetings, pleasantries, or fluff (e.g., do NOT say "Don't worry!", "Great effort!", "Nice try!"). Go straight to the memory tip. Do NOT use markdown. Plain text only.`;
+Provide a direct, highly concise tip (2 sentences max) using a memorable association, root breakdown, etymology, or visual trick to help the word's meaning stick in the mind easily. Do NOT use any encouraging words, greetings, pleasantries, or fluff. Go straight to the memory trick. Do NOT use markdown. Plain text only.`;
 
   return await askGeminiText(prompt);
 }
