@@ -407,10 +407,16 @@ function isResponseMimeTypeError(errorMessage) {
  * Get the ordered list of available models for fallback, filtered against the user's actual models.
  * Auto mode always scans strongest to weakest. A manual model acts as a first-choice override.
  */
-async function getAvailableModelTiers(preferredModel) {
+async function getAvailableModelTiers(preferredModel, preferFlash = false) {
   const storedList = await getStored('spelt_gemini_models_list') || [];
   const availableModels = sortGeminiModels(storedList.length > 0 ? storedList : MODEL_TIERS);
-  const fallbackModels = availableModels.length > 0 ? availableModels : sortGeminiModels(MODEL_TIERS);
+  let fallbackModels = availableModels.length > 0 ? availableModels : sortGeminiModels(MODEL_TIERS);
+
+  if (preferFlash) {
+    const flashModels = fallbackModels.filter(m => m.toLowerCase().includes('flash') || m.toLowerCase().includes('lite'));
+    const proModels = fallbackModels.filter(m => !m.toLowerCase().includes('flash') && !m.toLowerCase().includes('lite'));
+    fallbackModels = [...flashModels, ...proModels];
+  }
 
   if (!preferredModel || preferredModel === GEMINI_AUTO_MODEL) {
     return fallbackModels;
@@ -625,7 +631,8 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
  * Requires Gemini API keys to be set in chrome.storage.local.
  * Automatically falls back through model/key trials on rate limit.
  */
-export async function askGemini(prompt) {
+export async function askGemini(prompt, options = {}) {
+  const preferFlash = options.preferFlash !== false;
   return enqueue(async () => {
     const keys = await getStoredKeys();
     if (keys.length === 0) {
@@ -633,7 +640,7 @@ export async function askGemini(prompt) {
     }
 
     const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
-    const modelTiers = await getAvailableModelTiers(preferredModel);
+    const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
 
     const result = await fetchWithFallback(keys, {
       contents: [{ parts: [{ text: prompt }] }]
@@ -674,7 +681,8 @@ export async function askGemini(prompt) {
  * Used for free-form responses like hints, mnemonics, and feedback.
  * Automatically falls back through model/key trials on rate limit.
  */
-export async function askGeminiText(prompt) {
+export async function askGeminiText(prompt, options = {}) {
+  const preferFlash = options.preferFlash !== false;
   return enqueue(async () => {
     const keys = await getStoredKeys();
     if (keys.length === 0) {
@@ -682,7 +690,7 @@ export async function askGeminiText(prompt) {
     }
 
     const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
-    const modelTiers = await getAvailableModelTiers(preferredModel);
+    const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
 
     const result = await fetchWithFallback(keys, {
       contents: [{ parts: [{ text: prompt }] }]
