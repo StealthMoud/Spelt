@@ -134,7 +134,7 @@ Format your response in clean HTML:
 - If corrections are needed, add: "<div style='margin-top: 4px;'><strong>Correction:</strong> ...</div>"
 - Add: "<div style='margin-top: 4px;'><strong>Coach Feedback:</strong> ...</div>"
 
-Do NOT use markdown code blocks (```).`;
+Do NOT use markdown code blocks (\`\`\`).`;
 
   return await askGeminiText(prompt);
 }
