@@ -1,4 +1,5 @@
 export let currentFormMisspellings = [];
+let currentFormWordObj = null;
 
 export function getCurrentFormMisspellings() {
   return currentFormMisspellings;
@@ -22,6 +23,7 @@ export function openModal(wordObj = null) {
   document.getElementById('form-practice-type').value = wordObj ? (wordObj.practiceType || 'both') : 'both';
   document.getElementById('form-mastered').checked = wordObj ? (wordObj.mastered || false) : false;
   
+  currentFormWordObj = wordObj;
   currentFormMisspellings = wordObj && wordObj.misspellings ? [...wordObj.misspellings] : [];
   renderPastErrorsList();
 
@@ -54,15 +56,66 @@ export function closeModal() {
 export function renderPastErrorsList() {
   const pastContainer = document.getElementById('form-past-errors-container');
   const pastList = document.getElementById('form-past-errors-list');
+  const statsEl = document.getElementById('form-past-errors-stats');
+  const correctWord = document.getElementById('form-word')?.value.trim() || '';
+
   if (pastContainer && pastList) {
     const validErrors = currentFormMisspellings.filter(Boolean);
     if (validErrors.length > 0) {
-      pastList.innerHTML = [...new Set(validErrors)].map(err => `
-        <span class="error-trash-chip" data-error="${err}">
-          <span>${err}</span>
-          <span class="delete-error-x">&times;</span>
-        </span>
-      `).join('');
+      // Count frequency of each misspelling
+      const counts = {};
+      validErrors.forEach(err => {
+        counts[err] = (counts[err] || 0) + 1;
+      });
+
+      // Simple Levenshtein function
+      const getDistance = (a, b) => {
+        const al = a.toLowerCase();
+        const bl = b.toLowerCase();
+        const r = Array(bl.length + 1).fill(0).map((_, i) => [i]);
+        for (let j = 0; j <= al.length; j++) r[0][j] = j;
+        for (let i = 1; i <= bl.length; i++) {
+          for (let j = 1; j <= al.length; j++) {
+            r[i][j] = bl.charAt(i - 1) === al.charAt(j - 1) 
+              ? r[i - 1][j - 1] 
+              : Math.min(r[i - 1][j - 1] + 1, r[i][j - 1] + 1, r[i - 1][j] + 1);
+          }
+        }
+        return r[bl.length][al.length];
+      };
+
+      // Unique misspellings
+      const uniqueErrors = [...new Set(validErrors)];
+
+      pastList.innerHTML = uniqueErrors.map(err => {
+        const count = counts[err];
+        const dist = correctWord ? getDistance(err, correctWord) : 0;
+        const distText = dist > 0 ? `${dist} ${dist === 1 ? 'edit' : 'edits'} away` : '';
+        const countBadge = count > 1 ? `<span style="font-size: 0.58rem; background: hsla(5, 85%, 55%, 0.18); color: var(--danger); padding: 1px 4px; border-radius: 3px; font-weight: 700; margin-left: 4px;">${count}x</span>` : '';
+        const badgeText = distText || countBadge ? `(${distText}${distText && countBadge ? ', ' : ''}${countBadge})` : '';
+
+        return `
+          <div class="error-trash-chip" data-error="${err}" style="display: flex; align-items: center; justify-content: space-between; width: 100%; box-sizing: border-box; background: hsla(5, 80%, 15%, 0.12); border: 1px solid hsla(5, 80%, 35%, 0.2); padding: 5px 8px; font-size: 0.72rem; color: var(--text-main); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition-fast) ease;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-weight: 600; color: var(--danger);">${err}</span>
+              ${badgeText ? `<span style="font-size: 0.62rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 2px;">${distText} ${countBadge}</span>` : ''}
+            </div>
+            <span class="delete-error-x" style="font-weight: 700; opacity: 0.6; font-size: 0.8rem; padding: 0 2px;">&times;</span>
+          </div>
+        `;
+      }).join('');
+
+      // Render stats
+      if (statsEl) {
+        const uniqueCount = uniqueErrors.length;
+        let statsStr = `${uniqueCount} unique error${uniqueCount > 1 ? 's' : ''}`;
+        if (currentFormWordObj) {
+          const streak = currentFormWordObj.correctStreak || 0;
+          statsStr += ` · Streak: ${streak}`;
+        }
+        statsEl.textContent = statsStr;
+      }
+
       pastContainer.style.display = 'block';
     } else {
       pastList.innerHTML = '';
