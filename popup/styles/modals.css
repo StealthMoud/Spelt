@@ -118,6 +118,30 @@
   transform: scale(0.95) translateY(0) !important;
 }
 
+/* Word form autofill buttons styling */
+#form-auto-fill-btn:hover {
+  background: hsla(155, 65%, 48%, 0.14) !important;
+  border-color: var(--primary) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 2px 10px var(--primary-glow) !important;
+  transform: translateY(-0.5px);
+}
+#form-auto-fill-btn:active {
+  transform: scale(0.95) !important;
+}
+
+#form-ai-fill-btn:hover {
+  background: hsla(265, 80%, 65%, 0.14) !important;
+  border-color: var(--purple) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 2px 10px var(--purple-glow) !important;
+  transform: translateY(-0.5px);
+}
+#form-ai-fill-btn:active {
+  transform: scale(0.95) !important;
+}
+
+
 
 /* Spelling Error Log delete button styles */
 .error-trash-chip .delete-error-x {
