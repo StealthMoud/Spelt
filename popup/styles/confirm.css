@@ -33,7 +33,7 @@
 }
 
 .audio-play-btn-mini {
-  background: hsla(155, 10%, 20%, 0.25);
+  background: hsl(155, 12%, 12%);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--primary-light);
