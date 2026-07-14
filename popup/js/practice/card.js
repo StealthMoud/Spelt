@@ -166,8 +166,16 @@ export function populateFrontFace(card) {
       document.getElementById('practice-example').textContent = censorWordInExample(card.word, rawExample);
       exampleContainer.style.display = 'block';
     } else exampleContainer.style.display = 'none';
-    if (exampleTransEl) { exampleTransEl.style.display = 'none'; exampleTransEl.textContent = ''; }
-    if (translateBtn) translateBtn.classList.remove('active');
+    const isTransActive = translateBtn && translateBtn.classList.contains('active');
+    if (isTransActive && card.exampleTranslation) {
+      if (exampleTransEl) {
+        exampleTransEl.textContent = `"${card.exampleTranslation}"`;
+        exampleTransEl.style.display = 'block';
+      }
+    } else {
+      if (exampleTransEl) { exampleTransEl.style.display = 'none'; exampleTransEl.textContent = ''; }
+      if (translateBtn) translateBtn.classList.remove('active');
+    }
 
     const audioContainer = document.getElementById('practice-audio-container');
     if (audioContainer) audioContainer.innerHTML = renderAudioButtons(card.word);

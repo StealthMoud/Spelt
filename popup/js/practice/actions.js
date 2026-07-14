@@ -62,9 +62,15 @@ export function populateBackFace(card) {
   } else {
     backExampleContainer.style.display = 'none';
   }
-  if (backTransContainer) backTransContainer.style.display = 'none';
-  if (backTransDisplay) backTransDisplay.textContent = '';
-  if (backTranslateBtn) backTranslateBtn.classList.remove('active');
+  const isTranslationActive = backTranslateBtn && backTranslateBtn.classList.contains('active');
+  if (isTranslationActive && card.exampleTranslation) {
+    if (backTransDisplay) backTransDisplay.textContent = `"${card.exampleTranslation}"`;
+    if (backTransContainer) backTransContainer.style.display = 'block';
+  } else {
+    if (backTransContainer) backTransContainer.style.display = 'none';
+    if (backTransDisplay) backTransDisplay.textContent = '';
+    if (backTranslateBtn) backTranslateBtn.classList.remove('active');
+  }
 
   const audioContainer = document.getElementById('back-audio-container');
   if (audioContainer) {
