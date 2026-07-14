@@ -128,14 +128,25 @@ export function getSpellingVariant(word) {
   if (!word) return null;
   const lower = word.toLowerCase().trim();
   
-  // Check if it's a US spelling
+  // Check if it's a US spelling in static DB
   if (US_TO_UK[lower]) {
     return { us: lower, uk: US_TO_UK[lower] };
   }
   
-  // Check if it's a UK spelling
+  // Check if it's a UK spelling in static DB
   if (UK_TO_US[lower]) {
     return { us: UK_TO_US[lower], uk: lower };
+  }
+
+  // Fallback to heuristic rules
+  const usNorm = normalizeToUs(lower);
+  const ukNorm = normalizeToUk(lower);
+
+  if (usNorm !== lower) {
+    return { us: usNorm, uk: lower };
+  }
+  if (ukNorm !== lower) {
+    return { us: lower, uk: ukNorm };
   }
   
   return null;
@@ -154,8 +165,11 @@ export function areSpellingVariants(word1, word2) {
   if (a === b) return true;
   
   const variant = getSpellingVariant(a);
-  if (!variant) return false;
-  return variant.us === b || variant.uk === b;
+  if (variant && (variant.us === b || variant.uk === b)) {
+    return true;
+  }
+  
+  return normalizeToUs(a) === normalizeToUs(b);
 }
 
 /**
@@ -180,4 +194,158 @@ export function toUkSpelling(word) {
   const variant = getSpellingVariant(word);
   if (variant) return variant.uk;
   return word.toLowerCase().trim();
+}
+
+// ── Heuristic Normalizers ────────────────────────────────────────────
+
+function normalizeToUs(word) {
+  if (!word) return '';
+  let w = word.toLowerCase().trim();
+
+  if (UK_TO_US[w]) return UK_TO_US[w];
+  if (US_TO_UK[w]) return w;
+
+  // 1. -our -> -or
+  w = w.replace(/(\w+)our(s|ly|able|ably|ability|ite|ites|ed|ing|ist|ists|ment|hood)?\b/g, (match, base, suffix) => {
+    const baseLower = base.toLowerCase();
+    if (['p', 't', 's', 'fl', 'h', 'f', 'y', 'our'].includes(baseLower)) {
+      return match;
+    }
+    return base + 'or' + (suffix || '');
+  });
+
+  // 2. -ise / -isation / -isable / -ising / -ised -> -ize / -ization / -izable / -izing / -ized
+  const exclusionsIse = [
+    'exercise', 'advise', 'devise', 'surprise', 'promise', 'compromise',
+    'supervise', 'arise', 'rise', 'raise', 'despise', 'disguise',
+    'enterprise', 'merchandise', 'advertise', 'revise', 'praise',
+    'appraise', 'chastise', 'comprise', 'demise', 'excise', 'incise',
+    'premise', 'surmise', 'televise'
+  ];
+
+  let isExcluded = false;
+  for (const excl of exclusionsIse) {
+    if (w.startsWith(excl)) {
+      isExcluded = true;
+      break;
+    }
+  }
+
+  if (!isExcluded) {
+    w = w.replace(/isation(s)?\b/g, 'ization$1');
+    w = w.replace(/ise(s|d|r|rs|able|ability|ing)?\b/g, 'ize$1');
+    w = w.replace(/yse(s|d|r|rs|able|ability|ing)?\b/g, 'yze$1');
+  }
+
+  // 3. -logue -> -log
+  w = w.replace(/logue(s)?\b/g, 'log$1');
+
+  // 4. Double 'll' -> Single 'l'
+  w = w.replace(/([aeiou])ll(ed|ing|er|ers|est|or|ors|ist|ists|y)\b/g, (match, vowel, suffix) => {
+    const root = w.slice(0, w.indexOf('ll'));
+    const exclusionsL = [
+      'compe', 'contro', 'prope', 'rebe', 'exce', 'dispe', 'expe', 'impe', 'patro',
+      'a', 'ca', 'fa', 'ha', 'ma', 'ta', 'wa', 'pu', 'fu', 'fi', 'bi', 'mi', 'ti', 'wi', 'ski', 'spi', 'thri', 'chi', 'she'
+    ];
+    if (exclusionsL.includes(root)) {
+      return match;
+    }
+    return vowel + 'l' + suffix;
+  });
+
+  // 5. -re -> -er preceded by consonant (except c/g)
+  w = w.replace(/([^cgo])re\b/g, '$1er');
+
+  // 6. -ence -> -ense (only for license, defense, offense, pretense)
+  w = w.replace(/(def|off|pret|lic)ence(s)?\b/g, '$1ense$2');
+
+  return w;
+}
+
+function normalizeToUk(word) {
+  if (!word) return '';
+  let w = word.toLowerCase().trim();
+
+  if (US_TO_UK[w]) return US_TO_UK[w];
+  if (UK_TO_US[w]) return w;
+
+  // 1. -or -> -our
+  w = w.replace(/(\w+)or(s|ly|able|ably|ability|ite|ites|ed|ing|ist|ists|ment|hood)?\b/g, (match, base, suffix) => {
+    const baseLower = base.toLowerCase();
+    const exclusionsOr = [
+      'doct', 'act', 'fact', 'mot', 'err', 'horr', 'mirr', 'sens', 'collect', 'direct', 
+      'select', 'invest', 'translat', 'calculat', 'cre-at', 'creat', 'inspect', 'conduct',
+      'instruct', 'edit', 'invent', 'narrat', 'surviv', 'spons', 'anch', 'auth', 'tut',
+      'sculpt', 'visit', 'competit', 'exhibit', 'trait', 'audit', 'debt', 'process',
+      'profess', 'assess', 'possess', 'oppress', 'depress', 'compress', 'express',
+      'impress', 'suppress', 'aggress', 'regress', 'progress', 'digress', 'congress',
+      'fl', 'h', 'f', 'p', 't', 's', 'y'
+    ];
+    if (exclusionsOr.some(ex => baseLower.endsWith(ex) || baseLower === ex)) {
+      return match;
+    }
+    return base + 'our' + (suffix || '');
+  });
+
+  // 2. -ize -> -ise
+  const exclusionsIze = [
+    'size', 'capsize', 'seize', 'prize', 'maize', 'gaze', 'daze', 'blaze', 'craze', 'graze'
+  ];
+  let isExcluded = false;
+  for (const excl of exclusionsIze) {
+    if (w.startsWith(excl)) {
+      isExcluded = true;
+      break;
+    }
+  }
+  if (!isExcluded) {
+    w = w.replace(/ization(s)?\b/g, 'isation$1');
+    w = w.replace(/ize(s|d|r|rs|able|ability|ing)?\b/g, 'ise$1');
+    w = w.replace(/yze(s|d|r|rs|able|ability|ing)?\b/g, 'yse$1');
+  }
+
+  // 3. -log -> -logue
+  w = w.replace(/(\w+)log(s)?\b/g, (match, base, plural) => {
+    const baseLower = base.toLowerCase();
+    const exclusionsLog = ['b', 'c', 'd', 'f', 'fr', 'j', '', 'sm'];
+    if (exclusionsLog.includes(baseLower)) {
+      return match;
+    }
+    return base + 'logue' + (plural || '');
+  });
+
+  // 4. Single 'l' -> Double 'l'
+  w = w.replace(/([aeiou])l(ed|ing|er|ers|est|or|ors|ist|ists|y)\b/g, (match, vowel, suffix) => {
+    const root = w.slice(0, w.indexOf('l'));
+    const exclusionsL = [
+      'compe', 'contro', 'prope', 'rebe', 'exce', 'dispe', 'expe', 'impe', 'patro',
+      'a', 'ca', 'fa', 'ha', 'ma', 'ta', 'wa', 'pu', 'fu', 'fi', 'bi', 'mi', 'ti', 'wi', 'ski', 'spi', 'thri', 'chi', 'she'
+    ];
+    if (exclusionsL.includes(root)) {
+      return match;
+    }
+    return vowel + 'll' + suffix;
+  });
+
+  // 5. -er -> -re preceded by consonant (except c/g)
+  w = w.replace(/([^cgo])er\b/g, (match, char) => {
+    const exclusionsEr = [
+      'aft', 'und', 'ov', 'butt', 'wat', 'lett', 'bett', 'matt', 'wint', 'summ', 'filt', 'sist',
+      'oth', 'moth', 'fath', 'broth', 'eith', 'neith', 'leath', 'weath', 'feath', 'gath', 'rath',
+      'teth', 'charact', 'mast', 'post', 'comput', 'slid', 'us', 'play', 'read', 'writ', 'speak',
+      'sing', 'danc', 'runn', 'walk', 'work', 'teach', 'learn', 'listen', 'watch', 'look', 'find',
+      'keep', 'make', 'take', 'give', 'show', 'tell', 'ask', 'call', 'try', 'help', 'need', 'feel',
+      'seem', 'become', 'leave', 'put', 'mean', 'let', 'begin', 'start', 'hear', 'play', 'run'
+    ];
+    const root = w.slice(0, w.lastIndexOf('er'));
+    if (exclusionsEr.some(ex => root.endsWith(ex) || root === ex)) {
+      return match;
+    }
+    return char + 're';
+  });
+
+  // 6. -ense -> -ence (only for license, defense, offense, pretense)
+  w = w.replace(/(def|off|pret|lic)ense(s)?\b/g, '$1ence$2');
+
+  return w;
 }
