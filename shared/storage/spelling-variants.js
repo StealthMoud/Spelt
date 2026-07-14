@@ -62,6 +62,11 @@ const US_TO_UK = {
   'clamor': 'clamour', 'demeanor': 'demeanour', 'parlor': 'parlour',
   'rancor': 'rancour', 'rigor': 'rigour', 'candor': 'candour',
   'fervor': 'fervour', 'odor': 'odour',
+  'favorite': 'favourite', 'favorable': 'favourable', 'favorably': 'favourably',
+  'honorable': 'honourable', 'honorably': 'honourably', 'colored': 'coloured',
+  'coloring': 'colouring', 'colorful': 'colourful', 'behavioral': 'behavioural',
+  'neighborhood': 'neighbourhood', 'labored': 'laboured', 'laborer': 'labourer',
+  'rumored': 'rumoured', 'flavoring': 'flavouring',
 
   // -er / -re
   'center': 'centre', 'theater': 'theatre', 'fiber': 'fibre',
