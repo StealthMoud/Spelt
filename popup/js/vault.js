@@ -25,10 +25,13 @@ export async function initVault(onVaultUpdated) {
   );
 
   document.getElementById('form-past-errors-list')?.addEventListener('click', (e) => {
-    const chip = e.target.closest('.error-trash-chip');
-    if (chip) {
-      setCurrentFormMisspellings(currentFormMisspellings.filter(x => x !== chip.getAttribute('data-error')));
-      renderPastErrorsList();
+    const deleteBtn = e.target.closest('.delete-error-x');
+    if (deleteBtn) {
+      const chip = deleteBtn.closest('.error-trash-chip');
+      if (chip) {
+        setCurrentFormMisspellings(currentFormMisspellings.filter(x => x !== chip.getAttribute('data-error')));
+        renderPastErrorsList();
+      }
     }
   });
 

@@ -95,12 +95,14 @@ export function renderPastErrorsList() {
         const badgeText = distText || countBadge ? `(${distText}${distText && countBadge ? ', ' : ''}${countBadge})` : '';
 
         return `
-          <div class="error-trash-chip" data-error="${err}" style="display: flex; align-items: center; justify-content: space-between; width: 100%; box-sizing: border-box; background: hsla(5, 80%, 15%, 0.12); border: 1px solid hsla(5, 80%, 35%, 0.2); padding: 5px 8px; font-size: 0.72rem; color: var(--text-main); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition-fast) ease;">
+          <div class="error-trash-chip" data-error="${err}" style="display: flex; align-items: center; justify-content: space-between; width: 100%; box-sizing: border-box; background: hsla(5, 80%, 15%, 0.12); border: 1px solid hsla(5, 80%, 35%, 0.2); padding: 5px 8px; font-size: 0.72rem; color: var(--text-main); border-radius: var(--radius-sm); cursor: default; transition: all var(--transition-fast) ease;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-weight: 600; color: var(--danger);">${err}</span>
               ${badgeText ? `<span style="font-size: 0.62rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 2px;">${distText} ${countBadge}</span>` : ''}
             </div>
-            <span class="delete-error-x" style="font-weight: 700; opacity: 0.6; font-size: 0.8rem; padding: 0 2px;">&times;</span>
+            <button type="button" class="delete-error-x" title="Remove error from log">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         `;
       }).join('');

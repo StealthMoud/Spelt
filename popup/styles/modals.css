@@ -75,13 +75,73 @@
   padding-top: 8px;
 }
 
+/* Premium Modal Actions */
+.modal-actions-row .submit-btn {
+  padding: 7px 16px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-md) !important;
+  letter-spacing: 0.02em !important;
+  transition: all var(--transition-fast) var(--spring-curve) !important;
+}
+
+#form-cancel-btn {
+  background: hsla(0, 0%, 100%, 0.03) !important;
+  border: 1px solid hsla(0, 0%, 100%, 0.08) !important;
+  color: var(--text-muted) !important;
+}
+
+#form-cancel-btn:hover {
+  background: hsla(5, 85%, 55%, 0.08) !important;
+  border-color: hsla(5, 85%, 55%, 0.4) !important;
+  color: var(--danger) !important;
+  box-shadow: 0 2px 10px hsla(5, 85%, 55%, 0.1) !important;
+  transform: translateY(-1px) !important;
+}
+
 .primary-save-btn {
   background: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
   color: var(--bg-dark) !important;
-  border-color: var(--primary) !important;
+  box-shadow: 0 2px 8px hsla(155, 65%, 48%, 0.15) !important;
 }
+
 .primary-save-btn:hover {
   background: var(--primary-light) !important;
+  border-color: var(--primary-light) !important;
   color: var(--bg-dark) !important;
-  box-shadow: 0 2px 12px var(--primary-glow) !important;
+  box-shadow: 0 4px 14px hsla(155, 65%, 48%, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+.modal-actions-row .submit-btn:active {
+  transform: scale(0.95) translateY(0) !important;
+}
+
+
+/* Spelling Error Log delete button styles */
+.error-trash-chip .delete-error-x {
+  background: hsla(0, 0%, 100%, 0.04);
+  border: 1px solid hsla(0, 0%, 100%, 0.08);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast) ease;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+}
+.error-trash-chip .delete-error-x:hover {
+  background: hsla(5, 85%, 55%, 0.15) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+  transform: scale(1.08);
+  opacity: 1 !important;
+}
+.error-trash-chip .delete-error-x:active {
+  transform: scale(0.92);
 }
