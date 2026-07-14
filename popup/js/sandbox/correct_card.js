@@ -1,4 +1,4 @@
-import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../../shared/storage.js';
+import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation, getStored, isGeminiConfigured, askGemini, atomicUpdate, getSpellingVariant } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
@@ -7,7 +7,7 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
   let ipa = '', level = defResult.level || '';
   try {
     const cambridge = await fetchCambridgePronunciation(word);
-    ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`) : (cambridge.ukIpa || cambridge.usIpa || '');
+    ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`) : (cambridge.usIpa || cambridge.ukIpa || '');
     if (!level) level = cambridge.level || '';
   } catch (_) {}
   if (!ipa) ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
@@ -132,10 +132,17 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
       `;
     }
     
+    // Look up US/UK spelling variant
+    const spellingVariant = getSpellingVariant(word);
+    const variantHtml = spellingVariant && spellingVariant.us !== spellingVariant.uk
+      ? `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 2px 0 4px; text-align: center; letter-spacing: 0.01em;"><span style="color: var(--primary-light);">US:</span> <strong>${spellingVariant.us}</strong> <span style="margin: 0 3px;">·</span> <span style="color: var(--primary-light);">UK:</span> <strong>${spellingVariant.uk}</strong></p>`
+      : '';
+
     document.getElementById('feedback-msg').innerHTML = `
       ${closeBtnHtml}
       <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
       <p style="margin: 6px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em;">${word} <span id="feedback-ipa-display" style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span></p>
+      ${variantHtml}
       ${renderAudioButtons(word)}
       
       <div class="feedback-details">
@@ -222,11 +229,12 @@ Here is the current stored draft:
 
 Please:
 1. Enrich the definition to be clean, accurate, and easy to understand in English.
-2. Ensure the UK/US IPA pronunciation transcription is correct and clear (e.g. /iˈnɪɡ.mə/).
+2. Ensure the UK/US IPA pronunciation transcription is correct and clear (e.g. /iˈnɪɡ.mə/). Show US IPA first, then UK.
 3. Ensure part of speech is correct (noun, verb, phrasal verb, adjective, etc.).
 4. Refine the translation in ${targetLangName}.
 5. Select the single best CEFR level (A1, A2, B1, B2, C1, or C2).
 6. Provide a premium, natural academic/IELTS-style context sentence containing the word.
+7. If the word has US/UK spelling variants (e.g., license/licence, color/colour), include both in the "spellingNote" field.
 
 Respond ONLY with a JSON object matching this schema:
 {

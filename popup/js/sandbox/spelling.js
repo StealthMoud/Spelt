@@ -1,4 +1,4 @@
-import { getWords, fetchCambridgePronunciation, fetchDynamicDefinition } from '../../../shared/storage.js';
+import { getWords, fetchCambridgePronunciation, fetchDynamicDefinition, getSpellingVariant } from '../../../shared/storage.js';
 
 export const spellingMap = {
   'definately': 'definitely', 'definitley': 'definitely', 'accomodate': 'accommodate', 'acomodate': 'accommodate',
@@ -34,6 +34,9 @@ export async function isWordSpellingValid(word) {
   
   if (Object.values(spellingMap).includes(lower)) return true;
   if (commonWords.includes(lower)) return true;
+  
+  // Check if the word is a known US/UK spelling variant
+  if (getSpellingVariant(lower)) return true;
   
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lower)}`);

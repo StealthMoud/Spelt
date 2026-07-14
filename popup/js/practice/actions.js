@@ -1,4 +1,4 @@
-import { getFallbackExample, computeErrorWeight, calcSM2 } from '../../../shared/storage.js';
+import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt } from './state.js';
 import { renderAudioButtons } from './helpers.js';
 import { isGeminiConfigured, generateMisspellingFeedback, generateRecallFeedback } from './ai_helpers.js';
@@ -34,6 +34,20 @@ export function populateBackFace(card) {
       backLevelRow.style.display = 'block';
     } else {
       backLevelRow.style.display = 'none';
+    }
+  }
+
+  // Populate US/UK spelling variant row
+  const variantRow = document.getElementById('back-spelling-variants-row');
+  if (variantRow) {
+    const variant = card.usSpelling && card.ukSpelling
+      ? { us: card.usSpelling, uk: card.ukSpelling }
+      : getSpellingVariant(card.word);
+    if (variant && variant.us !== variant.uk) {
+      variantRow.innerHTML = `<span style="color: var(--primary-light);">US:</span> <span style="font-weight: 600;">${variant.us}</span> <span style="color: var(--text-muted); margin: 0 4px;">·</span> <span style="color: var(--primary-light);">UK:</span> <span style="font-weight: 600;">${variant.uk}</span>`;
+      variantRow.style.display = 'block';
+    } else {
+      variantRow.style.display = 'none';
     }
   }
 
@@ -84,7 +98,9 @@ export function checkSpelling() {
   if (!card) return;
 
   const typed = document.getElementById('spelling-input').value.trim();
-  const isOk = typed.toLowerCase() === card.word.toLowerCase();
+  const exactMatch = typed.toLowerCase() === card.word.toLowerCase();
+  const isVariantMatch = !exactMatch && areSpellingVariants(typed, card.word);
+  const isOk = exactMatch || isVariantMatch;
   const badge = document.getElementById('spelling-result-badge');
   const typedDisplay = document.getElementById('user-typed-display');
 
@@ -96,7 +112,15 @@ export function checkSpelling() {
   if (badge) {
     badge.style.display = 'inline-flex';
     if (isOk) {
-      badge.textContent = 'Correct'; badge.className = 'result-badge success';
+      if (isVariantMatch) {
+        // Determine which variant they typed
+        const variant = getSpellingVariant(typed);
+        const variantLabel = variant && variant.us === typed.toLowerCase() ? 'US' : 'UK';
+        badge.textContent = `Correct (${variantLabel} spelling)`;
+      } else {
+        badge.textContent = 'Correct';
+      }
+      badge.className = 'result-badge success';
     } else {
       badge.textContent = 'Incorrect'; badge.className = 'result-badge danger';
     }

@@ -1,5 +1,5 @@
 export function parseCambridgePage(html) {
-  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '', senses: [], allLevels: [] };
+  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '', senses: [], allLevels: [], usHeadword: '', ukHeadword: '' };
   
   const ukRegex = /<span\s+class="uk dpron-i\s*"[^>]*>([\s\S]*?)<\/span>\s*<\/span>/g;
   const ukMatch = ukRegex.exec(html);
@@ -53,6 +53,36 @@ export function parseCambridgePage(html) {
 
   result.allLevels = [...levelsSet];
   result.level = result.senses.find(s => s.level)?.level || result.allLevels[0] || '';
+
+  // Extract US/UK variant headwords from Cambridge page
+  // Cambridge uses 'var dvar' class for variant spellings (e.g., "licence" page shows "license" as US variant)
+  const variantRegex = /<span\s+class="[^"]*(?:var\s+dvar|v\s+dv)[^"]*"[^>]*>([\s\S]*?)<\/span>/gi;
+  let varMatch;
+  while ((varMatch = variantRegex.exec(html)) !== null) {
+    const varText = varMatch[1].replace(/<[^>]*>/g, '').trim().toLowerCase();
+    if (varText.includes('us')) {
+      // Extract the US variant word — look for the word itself near this context
+      const usWordRegex = /<span\s+class="[^"]*v-g[^"]*"[^>]*>[\s\S]*?<span\s+class="[^"]*v[^"]*"[^>]*>([^<]+)<\/span>/i;
+      const usWordMatch = usWordRegex.exec(html.slice(Math.max(0, varMatch.index - 200), varMatch.index + 300));
+      if (usWordMatch) {
+        result.usHeadword = usWordMatch[1].trim().toLowerCase();
+      }
+    }
+  }
+
+  // Simpler approach: look for "US spelling" or variant block in the page
+  const headwordRegex = /<span\s+class="[^"]*hw\s+dhw[^"]*"[^>]*>([^<]+)<\/span>/gi;
+  const headwords = [];
+  let hwMatch;
+  while ((hwMatch = headwordRegex.exec(html)) !== null) {
+    const hw = hwMatch[1].trim().toLowerCase();
+    if (!headwords.includes(hw)) headwords.push(hw);
+  }
+  // If multiple distinct headwords found, first is typically UK, variant could be US
+  if (headwords.length >= 1 && !result.ukHeadword) {
+    result.ukHeadword = headwords[0];
+  }
+
   return result;
 }
 

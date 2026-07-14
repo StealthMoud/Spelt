@@ -5,6 +5,7 @@ import { fetchDynamicExample } from './examples.js';
 import { getFallbackExample } from './sentence.js';
 import { fetchCambridgePronunciation } from './cambridge.js';
 import { logActivity } from './sessions.js';
+import { getSpellingVariant } from './spelling-variants.js';
 
 // Add a single word
 export async function addWord(wordData) {
@@ -44,9 +45,9 @@ export async function addWord(wordData) {
       const cambridge = await fetchCambridgePronunciation(normalizedWord);
       if (!transcriptionVal || transcriptionVal === '/--/') {
         if (cambridge.ukIpa && cambridge.usIpa) {
-          transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+          transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`;
         } else {
-          transcriptionVal = cambridge.ukIpa || cambridge.usIpa || '';
+          transcriptionVal = cambridge.usIpa || cambridge.ukIpa || '';
         }
       }
       if (!levelVal) levelVal = cambridge.level || '';
@@ -55,6 +56,9 @@ export async function addWord(wordData) {
       }
     } catch (_) {}
   }
+
+  // Look up US/UK spelling variant
+  const spellingVariant = getSpellingVariant(normalizedWord);
 
   const newWord = {
     id: 'w_' + Math.random().toString(36).substr(2, 9),
@@ -85,7 +89,9 @@ export async function addWord(wordData) {
     blocks: Array.isArray(wordData.blocks) ? wordData.blocks : undefined,
     joints: Array.isArray(wordData.joints) ? wordData.joints : undefined,
     totalErrors: wordData.totalErrors || 0,
-    correctStreak: 0
+    correctStreak: 0,
+    usSpelling: wordData.usSpelling || (spellingVariant ? spellingVariant.us : ''),
+    ukSpelling: wordData.ukSpelling || (spellingVariant ? spellingVariant.uk : '')
   };
 
   await atomicUpdate(async (freshList) => {

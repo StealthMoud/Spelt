@@ -98,9 +98,9 @@ export function registerAutofillListeners() {
       let transcriptionVal = '';
       if (cambridge.ukIpa || cambridge.usIpa) {
         if (cambridge.ukIpa && cambridge.usIpa) {
-          transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`;
+          transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`;
         } else {
-          transcriptionVal = cambridge.ukIpa || cambridge.usIpa || '';
+          transcriptionVal = cambridge.usIpa || cambridge.ukIpa || '';
         }
       } else {
         transcriptionVal = dictIpa;
@@ -175,12 +175,14 @@ export function registerAutofillListeners() {
 Provide the following details in a clean JSON format matching the schema:
 {
   "definition": "definition of the word or phrase in English",
-  "transcription": "UK / US IPA transcription, e.g. /iˈnɪɡ.mə/",
+  "transcription": "US / UK IPA transcription (US first), e.g. /iˈnɪɡ.mə/",
   "partOfSpeech": "e.g. noun, verb, adjective, adverb, phrasal verb, idiom",
   "translation": "accurate context-aware translation in ${targetLangName}",
   "level": "CEFR level: choose carefully from: A1, A2, B1, B2, C1, C2. Leave blank if none exists",
   "example": "A high-quality IELTS study example sentence containing the word/phrase in context"
 }
+IMPORTANT: For the transcription field, always show US IPA first, then UK IPA (e.g. "/lɑːrdʒ/ (US) / /lɑːdʒ/ (UK)").
+If the word has US/UK spelling variants (e.g. license/licence, color/colour, organize/organise), note this naturally but the word itself should remain as provided.
 Respond ONLY with the JSON object. Do not include markdown block ticks (\`\`\`json).`;
 
       const aiData = await askGemini(prompt);

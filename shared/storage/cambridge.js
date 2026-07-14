@@ -5,7 +5,7 @@ import { parseCambridgePage, parseOxfordPage } from './cambridge-parser.js';
 export async function fetchCambridgePronunciation(word) {
   const cleanWord = word.trim().toLowerCase();
   const urlWord = cleanWord.replace(/\s+/g, '-');
-  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '', senses: [], allLevels: [] };
+  let result = { ukIpa: '', usIpa: '', ukAudio: '', usAudio: '', level: '', senses: [], allLevels: [], usHeadword: '', ukHeadword: '' };
   
   // 1. Try Cambridge Dictionary first
   try {

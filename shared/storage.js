@@ -85,3 +85,10 @@ export {
   isSupportedGeminiTextModel,
   sortGeminiModels
 } from './storage/gemini.js';
+
+export {
+  getSpellingVariant,
+  areSpellingVariants,
+  toUsSpelling,
+  toUkSpelling
+} from './storage/spelling-variants.js';

@@ -13,7 +13,7 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
     let ipa = '', level = '';
     try {
       const cambridge = await fetchCambridgePronunciation(correctWord);
-      ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`) : (cambridge.ukIpa || cambridge.usIpa || '');
+      ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`) : (cambridge.usIpa || cambridge.ukIpa || '');
       level = cambridge.level || '';
     } catch (_) {}
 

@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGeminiText, isGeminiConfigured, getStored, atomicUpdate } from '../../../shared/storage.js';
+import { getWords, saveWords, askGeminiText, isGeminiConfigured, getStored, atomicUpdate, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 
 /**
  * Generate a mnemonic hint for a word using AI.
@@ -8,11 +8,17 @@ export async function generateHint(card) {
   // Return cached hint if available
   if (card.aiHint) return card.aiHint;
 
+  const variant = getSpellingVariant(card.word);
+  const variantNote = variant && variant.us !== variant.uk
+    ? `\nNote: This word has US/UK spelling variants: US "${variant.us}" / UK "${variant.uk}". Mention both spellings in your mnemonic so the learner is aware of both forms.`
+    : '';
+
   const prompt = `You are a vocabulary coach helping a language learner memorize the English word/phrase: "${card.word}".
 ${card.definition ? `Definition: "${card.definition}"` : ''}
 ${card.transcription ? `Pronunciation: ${card.transcription}` : ''}
 ${card.partOfSpeech ? `Part of speech: ${card.partOfSpeech}` : ''}
 ${card.misspellings?.length ? `Common misspellings: ${[...new Set(card.misspellings)].slice(0, 5).join(', ')}` : ''}
+${variantNote}
 
 Create a short, intuitive, and highly logical mnemonic or memory trick to help the learner remember:
 1. The SPELLING of the word (ensure any spelling trick or breakdown is 100% accurate and makes sense).
@@ -36,12 +42,26 @@ CRITICAL: Be completely direct. Avoid any greetings, pleasantries, introductory 
 }
 
 export async function generateMisspellingFeedback(card, typedWord) {
+  // Check if the "misspelling" is actually a valid US/UK variant
+  const isVariant = areSpellingVariants(typedWord, card.word);
+  if (isVariant) {
+    const variant = getSpellingVariant(typedWord);
+    const typedVariant = variant && variant.us === typedWord.toLowerCase() ? 'American' : 'British';
+    return `"${typedWord}" is the valid ${typedVariant} English spelling of this word. Both US (${variant.us}) and UK (${variant.uk}) spellings are correct.`;
+  }
+
   const allErrors = [...new Set([...(card.misspellings || []), typedWord].filter(Boolean))];
   const errorCount = card.totalErrors || allErrors.length;
+
+  const variant = getSpellingVariant(card.word);
+  const variantNote = variant && variant.us !== variant.uk
+    ? `\nIMPORTANT: This word has valid US/UK spelling variants: US "${variant.us}" / UK "${variant.uk}". If the student typed one of these variants, do NOT treat it as an error — acknowledge it as a valid alternate spelling. Only analyze actual misspellings.`
+    : '';
 
   const prompt = `Evaluate the spelling error for the word "${card.word}" when the student typed "${typedWord}".
 ${allErrors.length > 1 ? `Their past misspellings include: ${allErrors.slice(0, 5).join(', ')}` : ''}
 ${errorCount > 1 ? `They have misspelled this word ${errorCount} times total.` : ''}
+${variantNote}
 
 Analyze the error:
 1. Identify the exact mistake in "${typedWord}" compared to the correct spelling "${card.word}". If there are past misspellings, detect if there is a recurring pattern or trap (e.g., suffix confusion, vowel substitutions, or doubled letters).
@@ -57,10 +77,16 @@ Ensure the feedback is direct, objective, and concise (2-3 sentences max). Do NO
  * Generate AI feedback for recall mode when user rates "Again".
  */
 export async function generateRecallFeedback(card) {
+  const variant = getSpellingVariant(card.word);
+  const variantNote = variant && variant.us !== variant.uk
+    ? `\nNote: This word has US/UK spelling variants: US "${variant.us}" / UK "${variant.uk}".`
+    : '';
+
   const prompt = `Provide a memory aid for the meaning of "${card.word}".
 Definition: "${card.definition || 'N/A'}"
 ${card.partOfSpeech ? `Part of speech: ${card.partOfSpeech}` : ''}
 ${card.example ? `Example: "${card.example}"` : ''}
+${variantNote}
 
 Provide a direct, highly concise tip (2 sentences max) using a memorable association, root breakdown, etymology, or visual trick to help the word's meaning stick in the mind easily. Do NOT use any encouraging words, greetings, pleasantries, or fluff. Go straight to the memory trick. Do NOT use markdown. Plain text only.`;
 
@@ -87,13 +113,19 @@ Summarize the performance directly, highlighting strengths and specific focus ar
 }
 
 export async function verifyPracticeWriting(card, userSentence, mode) {
+  const variant = getSpellingVariant(card.word);
+  const variantNote = variant && variant.us !== variant.uk
+    ? `\nIMPORTANT: This word has valid US/UK spelling variants: US "${variant.us}" / UK "${variant.uk}". Accept BOTH spellings as correct. Do NOT mark the American or British spelling as wrong.`
+    : '';
+
   const prompt = `Evaluate the student's practice sentence using the English word/phrase: "${card.word}" (Part of speech: "${card.partOfSpeech}", Definition: "${card.definition || 'N/A'}").
 They wrote the following sentence:
 "${userSentence}"
+${variantNote}
 
 Evaluate their sentence:
 1. Did they use the word "${card.word}" correctly in context?
-2. Are the spelling, punctuation, and grammar correct?
+2. Are the spelling, punctuation, and grammar correct? Note: Both American and British English spellings are acceptable (e.g., color/colour, organize/organise, license/licence).
 3. Does it sound natural in English?
 
 Provide a direct, concise evaluation in 2 sentences max. Do NOT use any encouraging fluff, pleasantries, or filler in the Coach Feedback (e.g. do NOT say 'Nice effort!', 'Good try!', 'Keep practicing!'). Keep the feedback strictly technical and direct.
@@ -102,7 +134,7 @@ Format your response in clean HTML:
 - If corrections are needed, add: "<div style='margin-top: 4px;'><strong>Correction:</strong> ...</div>"
 - Add: "<div style='margin-top: 4px;'><strong>Coach Feedback:</strong> ...</div>"
 
-Do NOT use markdown code blocks (\`\`\`).`;
+Do NOT use markdown code blocks (```).`;
 
   return await askGeminiText(prompt);
 }

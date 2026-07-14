@@ -9,7 +9,7 @@ export async function renderMisspellingCard(originalWord, suggestions, activeInd
   let def = defResult.definition, ipa = '', partOfSpeech = '', example = '', level = defResult.level || '';
   try {
     const cambridge = await fetchCambridgePronunciation(suggestion);
-    ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.ukIpa} (UK) / ${cambridge.usIpa} (US)`) : (cambridge.ukIpa || cambridge.usIpa || '');
+    ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`) : (cambridge.usIpa || cambridge.ukIpa || '');
     if (!level) level = cambridge.level || '';
   } catch (_) {}
 
