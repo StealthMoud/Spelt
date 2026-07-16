@@ -1,7 +1,7 @@
 import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt } from './state.js';
 import { renderAudioButtons } from './helpers.js';
-import { isGeminiConfigured, generateMisspellingFeedback, generateRecallFeedback } from './ai_helpers.js';
+import { isGeminiConfigured, generateMisspellingFeedback } from './ai_helpers.js';
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
@@ -210,31 +210,9 @@ export function revealRecall() {
   // Populate shared back face
   populateBackFace(card);
 
-  // Handle AI feedback — button-gated to prevent rate limits
+  // Hide AI Coach panel in recall mode since there are no spelling errors
   const fbRow = document.getElementById('ai-feedback-row');
-  const fbText = document.getElementById('ai-feedback-text');
-  if (fbRow && fbText) {
-    isGeminiConfigured().then(configured => {
-      if (configured) {
-        fbRow.style.display = 'block';
-        fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">✨ <span>AI Coach</span></button>`;
-        fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', async (ev) => {
-          const btn = ev.currentTarget;
-          btn.disabled = true;
-          btn.querySelector('span').textContent = 'Checking...';
-          btn.style.opacity = '0.6';
-          try {
-            const feedback = await generateRecallFeedback(card);
-            fbText.textContent = feedback;
-          } catch (err) {
-            fbText.textContent = `Mnemonic help: ${err.message}`;
-          }
-        });
-      } else {
-        fbRow.style.display = 'none';
-      }
-    });
-  }
+  if (fbRow) fbRow.style.display = 'none';
 
   // Hide past misspellings (not relevant in recall mode)
   const pastContainer = document.getElementById('past-misspellings-container');
