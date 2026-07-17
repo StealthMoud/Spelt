@@ -75,6 +75,7 @@ export {
 export {
   askGemini,
   askGeminiText,
+  askGeminiTextStream,
   isGeminiConfigured,
   getAiStatus,
   GEMINI_AUTO_MODEL,
@@ -83,7 +84,8 @@ export {
   getGeminiModelMeta,
   getGeminiModelOptions,
   isSupportedGeminiTextModel,
-  sortGeminiModels
+  sortGeminiModels,
+  invalidateGeminiCache
 } from './storage/gemini.js';
 
 export {

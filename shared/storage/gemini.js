@@ -280,6 +280,23 @@ async function saveBadModels(badModelsSet) {
 const noMimeTypeSupport = new Set();
 
 /**
+ * In-memory config cache — avoids 6+ chrome.storage.local.get calls per request.
+ * Invalidated on writes and after 30s TTL.
+ */
+const _cache = { keys: null, keysTTL: 0, model: null, modelTTL: 0, modelsList: null, modelsListTTL: 0, keyModels: null, keyModelsTTL: 0 };
+const CACHE_TTL = 30000;
+
+function cachedGet(field, fetcher) {
+  const now = Date.now();
+  if (_cache[field] !== null && now < _cache[field + 'TTL']) return Promise.resolve(_cache[field]);
+  return fetcher().then(val => { _cache[field] = val; _cache[field + 'TTL'] = now + CACHE_TTL; return val; });
+}
+
+export function invalidateGeminiCache() {
+  _cache.keys = null; _cache.model = null; _cache.modelsList = null; _cache.keyModels = null;
+}
+
+/**
  * Sequential request queue to prevent concurrent requests from cascading
  * through all model tiers simultaneously (which burns quota on every tier).
  * Requests are processed one at a time with minimum spacing.
@@ -306,13 +323,16 @@ async function enqueue(fn) {
 /**
  * Load all configured API keys from storage, with automatic migration fallback.
  */
-export async function getStoredKeys() {
+async function _fetchKeys() {
   const res = await new Promise(r => chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key'], r)) || {};
   let keys = res.spelt_gemini_keys || [];
   if (keys.length === 0 && res.spelt_gemini_key) {
     keys = [res.spelt_gemini_key];
   }
   return keys.filter(Boolean);
+}
+export async function getStoredKeys() {
+  return cachedGet('keys', _fetchKeys);
 }
 
 /**
@@ -408,7 +428,7 @@ function isResponseMimeTypeError(errorMessage) {
  * Auto mode always scans strongest to weakest. A manual model acts as a first-choice override.
  */
 async function getAvailableModelTiers(preferredModel, preferFlash = false) {
-  const storedList = await getStored('spelt_gemini_models_list') || [];
+  const storedList = await cachedGet('modelsList', () => getStored('spelt_gemini_models_list').then(v => v || []));
   const availableModels = sortGeminiModels(storedList.length > 0 ? storedList : MODEL_TIERS);
   let fallbackModels = availableModels.length > 0 ? availableModels : sortGeminiModels(MODEL_TIERS);
 
@@ -712,6 +732,106 @@ export async function askGeminiText(prompt, options = {}) {
 
     return text.trim();
   });
+}
+
+/**
+ * Streaming variant — sends text chunks to onChunk(accumulatedText) as they arrive.
+ * Bypasses the queue entirely for fastest possible UX.
+ * Falls back through model tiers on error, same as askGeminiText.
+ */
+export async function askGeminiTextStream(prompt, options = {}, onChunk) {
+  const preferFlash = options.preferFlash !== false;
+  const keys = await getStoredKeys();
+  if (keys.length === 0) throw new Error('No Gemini API keys configured.');
+
+  const preferredModel = await cachedGet('model', () => getStored('spelt_gemini_model').then(v => v || GEMINI_AUTO_MODEL));
+  const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
+
+  const body = { contents: [{ parts: [{ text: prompt }] }] };
+  if (options.maxOutputTokens || options.temperature !== undefined) {
+    body.generationConfig = {};
+    if (options.maxOutputTokens) body.generationConfig.maxOutputTokens = options.maxOutputTokens;
+    if (options.temperature !== undefined) body.generationConfig.temperature = options.temperature;
+  }
+
+  const badModels = await getBadModels();
+  const cooldowns = await getCooldowns();
+  const trials = await getTrialSequence(modelTiers, keys);
+  let lastError = null;
+
+  for (const trial of trials) {
+    const { model, key } = trial;
+    const keyId = getKeyIdentifier(key);
+    const trialId = `${model}::${keyId}`;
+    if (badModels.has(trialId)) continue;
+    if (Date.now() < (cooldowns[trialId] || 0)) continue;
+
+    try {
+      const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
+      const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:streamGenerateContent?key=${key}&alt=sse`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData.error?.message || '';
+        const error = new Error(errMsg || `API status ${response.status}`);
+        error.status = response.status;
+        error.apiMessage = errMsg;
+        throw error;
+      }
+
+      // Stream SSE chunks
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+          try {
+            const chunk = JSON.parse(jsonStr);
+            const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (text) {
+              fullText += text;
+              if (onChunk) onChunk(fullText);
+            }
+          } catch (_) { /* skip malformed chunk */ }
+        }
+      }
+
+      chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
+      return fullText.trim();
+    } catch (err) {
+      const status = err.status;
+      const errMsg = err.apiMessage || err.message;
+      if (isTransientError(status, errMsg)) {
+        const delay = status === 429 ? parseRetryDelay(errMsg) : (status >= 500 ? 30000 : 15000);
+        await applyCooldown(trialId, delay);
+      } else {
+        badModels.add(trialId);
+        await saveBadModels(badModels);
+      }
+      lastError = err;
+      continue;
+    }
+  }
+
+  throw new Error(lastError ? lastError.message : 'All AI models exhausted.');
 }
 
 /**

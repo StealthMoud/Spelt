@@ -1,7 +1,7 @@
 import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt } from './state.js';
 import { renderAudioButtons } from './helpers.js';
-import { isGeminiConfigured, generateMisspellingFeedback } from './ai_helpers.js';
+import { isGeminiConfigured, generateMisspellingFeedback, generateMisspellingFeedbackStream } from './ai_helpers.js';
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
@@ -156,8 +156,10 @@ export function checkSpelling() {
             btn.querySelector('span').textContent = 'Analyzing...';
             btn.style.opacity = '0.6';
             try {
-              const feedback = await generateMisspellingFeedback(card, typed);
-              fbText.textContent = feedback;
+              await generateMisspellingFeedbackStream(card, typed, (text) => {
+                // Stream text into UI as it arrives
+                fbText.textContent = text;
+              });
             } catch (err) {
               fbText.textContent = `Could not load feedback: ${err.message}`;
             }

@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGeminiText, isGeminiConfigured, getStored, atomicUpdate, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
+import { getWords, saveWords, askGeminiText, askGeminiTextStream, isGeminiConfigured, getStored, atomicUpdate, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 
 // ── Speed config: tight output limits for snappy responses ──────────
 const FAST_OPTS = { maxOutputTokens: 150, temperature: 0.3 };
@@ -66,6 +66,51 @@ Identify the exact mistake, give correction, and a memorable trick to prevent it
   // Cache result
   feedbackCache.set(cacheKey, feedback);
   return feedback;
+}
+
+/**
+ * Streaming variant — calls onChunk(text) as words arrive.
+ * Falls back to non-streaming if streaming fails.
+ */
+export async function generateMisspellingFeedbackStream(card, typedWord, onChunk) {
+  const isVariant = areSpellingVariants(typedWord, card.word);
+  if (isVariant) {
+    const variant = getSpellingVariant(typedWord);
+    const typedVariant = variant && variant.us === typedWord.toLowerCase() ? 'American' : 'British';
+    const msg = `"${typedWord}" is the valid ${typedVariant} English spelling. Both US (${variant.us}) and UK (${variant.uk}) are correct.`;
+    if (onChunk) onChunk(msg);
+    return msg;
+  }
+
+  const cacheKey = `${card.word}::${typedWord.toLowerCase()}`;
+  if (feedbackCache.has(cacheKey)) {
+    const cached = feedbackCache.get(cacheKey);
+    if (onChunk) onChunk(cached);
+    return cached;
+  }
+
+  const allErrors = [...new Set([...(card.misspellings || []), typedWord].filter(Boolean))];
+  const errorCount = card.totalErrors || allErrors.length;
+
+  const variant = getSpellingVariant(card.word);
+  const variantNote = variant && variant.us !== variant.uk
+    ? ` (US "${variant.us}" / UK "${variant.uk}" are both valid.)`
+    : '';
+
+  const prompt = `Correct: "${card.word}". Typed: "${typedWord}".${errorCount > 1 ? ` Misspelled ${errorCount}x.` : ''}${allErrors.length > 1 ? ` Past errors: ${allErrors.slice(0, 3).join(', ')}.` : ''}${variantNote}
+Identify the exact mistake, give correction, and a memorable trick to prevent it. 2-3 sentences max. No fluff, no markdown. Plain text.`;
+
+  try {
+    const result = await askGeminiTextStream(prompt, FAST_OPTS, onChunk);
+    feedbackCache.set(cacheKey, result);
+    return result;
+  } catch (err) {
+    // Fallback to non-streaming
+    const result = await askGeminiText(prompt, FAST_OPTS);
+    feedbackCache.set(cacheKey, result);
+    if (onChunk) onChunk(result);
+    return result;
+  }
 }
 
 /**
