@@ -41,6 +41,11 @@ export {
 } from './storage/cambridge.js';
 
 export {
+  parseCambridgePage,
+  parseOxfordPage
+} from './storage/cambridge-parser.js';
+
+export {
   fetchTranslation,
   translateWord
 } from './storage/translation.js';

@@ -5,7 +5,9 @@ import {
   fetchDynamicExample, 
   getFallbackExample,
   askGemini,
-  getStored
+  getStored,
+  parseCambridgePage,
+  parseOxfordPage
 } from '../../../shared/storage.js';
 
 function getBaseLemmas(word) {
@@ -43,6 +45,55 @@ function getBaseLemmas(word) {
   return [...new Set(lemmas)].filter(l => l.length > 1 && l !== clean);
 }
 
+/**
+ * Parse examples from Cambridge HTML (extracted to avoid duplication).
+ */
+function extractCambridgeExamples(html, cleanWord) {
+  const regex = /<(div|span)\s+class="examp[^>]*>([\s\S]*?)<\/\1>/g;
+  let match;
+  const sentences = [];
+  while (match = regex.exec(html)) {
+    let text = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    if (text && text.toLowerCase().includes(cleanWord)) {
+      text = text.replace(/^\[[^\]]+\]\s*/, '').trim();
+      text = text.replace(/^(formal|informal|humorous|approving|disapproving|saying)\s+/i, '');
+      sentences.push(text);
+    }
+  }
+  return sentences;
+}
+
+/**
+ * Parse examples from Oxford HTML.
+ */
+function extractOxfordExamples(html, cleanWord) {
+  const regex = /<span\s+class="x"[^>]*>([\s\S]*?)<\/span>/g;
+  let match;
+  const sentences = [];
+  while (match = regex.exec(html)) {
+    const text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    if (text && text.toLowerCase().includes(cleanWord)) {
+      sentences.push(text);
+    }
+  }
+  return sentences;
+}
+
+/**
+ * Pick the best example sentence from a list.
+ */
+function pickBest(list) {
+  const filtered = list.filter(s => {
+    if (s.length < 20 || s.length > 150) return false;
+    if (/[\[\]\(\)\/=\|]/.test(s)) return false;
+    return true;
+  });
+  const target = filtered.length > 0 ? filtered : list;
+  if (target.length === 0) return '';
+  target.sort((a, b) => Math.abs(a.length - 60) - Math.abs(b.length - 60));
+  return target[0];
+}
+
 export function registerAutofillListeners() {
   document.getElementById('form-auto-fill-btn')?.addEventListener('click', async (e) => {
     e.preventDefault(); e.stopPropagation();
@@ -51,13 +102,16 @@ export function registerAutofillListeners() {
     const btn = document.getElementById('form-auto-fill-btn');
     btn.disabled = true; btn.style.opacity = '0.5';
     try {
-      // ── Run ALL independent fetches in parallel for speed ──
-      const [translation, dictResult, defResult, cambridge, dynamicExample] = await Promise.all([
+      const cleanWord = word.trim().toLowerCase();
+      const urlWord = cleanWord.replace(/\s+/g, '-');
+
+      // ── SINGLE-FETCH: fetch each unique page exactly once, all in parallel ──
+      const [translation, dictApiResult, cambridgeHtml, oxfordHtml] = await Promise.all([
         translateWord(word).catch(() => ''),
-        // Dictionary API
+        // Free dictionary API
         (async () => {
           try {
-            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`);
+            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`);
             if (response.ok) {
               const data = await response.json();
               const first = data[0];
@@ -83,52 +137,101 @@ export function registerAutofillListeners() {
           } catch (_) {}
           return { def: '', ipa: '', pos: '', ex: '' };
         })(),
-        fetchDynamicDefinition(word).catch(() => ({ definition: '', level: '' })),
-        fetchCambridgePronunciation(word).catch(() => ({ usIpa: '', ukIpa: '', level: '' })),
-        fetchDynamicExample(word).catch(() => '')
+        // Cambridge — ONE fetch for pronunciation + definition + example
+        fetch(`https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0' }
+        }).then(r => r.ok ? r.text() : '').catch(() => ''),
+        // Oxford — ONE fetch for fallback pronunciation + definition + example
+        fetch(`https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0' }
+        }).then(r => r.ok ? r.text() : '').catch(() => '')
       ]);
 
-      // Populate fields from parallel results
-      document.getElementById('form-translation').value = translation || '';
+      // ── PARSE all data from the single HTML pages (no more network calls) ──
+      const cambridge = cambridgeHtml ? parseCambridgePage(cambridgeHtml) : { ukIpa: '', usIpa: '', level: '', senses: [], allLevels: [] };
+      const oxford = oxfordHtml ? parseOxfordPage(oxfordHtml) : { ukIpa: '', usIpa: '', level: '' };
 
-      const finalDef = defResult.definition || dictResult.def;
-      document.getElementById('form-definition').value = finalDef || '';
+      // Merge pronunciation (Cambridge first, Oxford fallback)
+      const pronResult = { ...cambridge };
+      if (!pronResult.ukIpa) pronResult.ukIpa = oxford.ukIpa || '';
+      if (!pronResult.usIpa) pronResult.usIpa = oxford.usIpa || '';
 
-      let transcriptionVal = '';
-      if (cambridge.ukIpa || cambridge.usIpa) {
-        if (cambridge.ukIpa && cambridge.usIpa) {
-          transcriptionVal = cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`;
-        } else {
-          transcriptionVal = cambridge.usIpa || cambridge.ukIpa || '';
+      // Definition: Cambridge senses first, then Oxford regex, then dictAPI
+      let definition = cambridge.senses?.[0]?.definition || '';
+      if (!definition && cambridgeHtml) {
+        const defRegex = /<div\s+class="def ddef_d[^>]*>([\s\S]*?)<\/div>/;
+        const dm = defRegex.exec(cambridgeHtml);
+        if (dm) {
+          let text = dm[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+          if (text.endsWith(':')) text = text.slice(0, -1).trim();
+          definition = text;
         }
-      } else {
-        transcriptionVal = dictResult.ipa;
       }
-      document.getElementById('form-transcription').value = transcriptionVal || '';
+      if (!definition && oxfordHtml) {
+        const oxDefRegex = /<span\s+class="def"[^>]*>([\s\S]*?)<\/span>/;
+        const om = oxDefRegex.exec(oxfordHtml);
+        if (om) {
+          let text = om[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+          if (text.endsWith(':')) text = text.slice(0, -1).trim();
+          definition = text;
+        }
+      }
+      if (!definition) definition = dictApiResult.def;
 
-      // Level with morphological lemma fallback for inflected words
-      let finalLevel = defResult.level || cambridge.level || '';
-      if (!finalLevel) {
+      // Example: Cambridge first, then Oxford, then dictAPI, then fallback
+      let exampleSentences = cambridgeHtml ? extractCambridgeExamples(cambridgeHtml, cleanWord) : [];
+      let example = pickBest(exampleSentences);
+      if (!example && oxfordHtml) {
+        exampleSentences = extractOxfordExamples(oxfordHtml, cleanWord);
+        example = pickBest(exampleSentences);
+      }
+      if (!example) example = dictApiResult.ex;
+
+      // Level
+      let level = cambridge.senses?.find(s => s.level)?.level || cambridge.level || '';
+      if (!level) {
+        // Try Oxford level
+        if (oxford.level) level = oxford.level;
+      }
+      if (!level) {
+        // Lemma fallback — fetch Cambridge only for each lemma (single fetch per lemma)
         const lemmas = getBaseLemmas(word);
         for (const lemma of lemmas) {
-          // Run both lemma lookups in parallel
-          const [lemmaDef, lemmaPr] = await Promise.all([
-            fetchDynamicDefinition(lemma).catch(() => ({ level: '' })),
-            fetchCambridgePronunciation(lemma).catch(() => ({ level: '' }))
-          ]);
-          if (lemmaDef.level) { finalLevel = lemmaDef.level; break; }
-          if (lemmaPr.level) { finalLevel = lemmaPr.level; break; }
+          const lemmaUrl = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(lemma)}`;
+          try {
+            const lres = await fetch(lemmaUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+            if (lres.ok) {
+              const lhtml = await lres.text();
+              const lparsed = parseCambridgePage(lhtml);
+              const ll = lparsed.senses?.find(s => s.level)?.level || lparsed.level;
+              if (ll) { level = ll; break; }
+            }
+          } catch (_) {}
         }
       }
-      document.getElementById('form-level').value = finalLevel ? finalLevel.toUpperCase().trim() : '';
 
-      const finalPos = dictResult.pos || 'unknown';
+      // Transcription
+      let transcriptionVal = '';
+      if (pronResult.ukIpa || pronResult.usIpa) {
+        if (pronResult.ukIpa && pronResult.usIpa) {
+          transcriptionVal = pronResult.ukIpa === pronResult.usIpa ? pronResult.ukIpa : `${pronResult.usIpa} (US) / ${pronResult.ukIpa} (UK)`;
+        } else {
+          transcriptionVal = pronResult.usIpa || pronResult.ukIpa || '';
+        }
+      } else {
+        transcriptionVal = dictApiResult.ipa;
+      }
+
+      const finalPos = dictApiResult.pos || 'unknown';
+      if (!example) example = getFallbackExample(word, finalPos);
+
+      // ── Populate all fields ──
+      document.getElementById('form-translation').value = translation || '';
+      document.getElementById('form-definition').value = definition || '';
+      document.getElementById('form-transcription').value = transcriptionVal || '';
+      document.getElementById('form-level').value = level ? level.toUpperCase().trim() : '';
       document.getElementById('form-part-of-speech').value = finalPos;
-
-      let newExample = dynamicExample;
-      if (!newExample) newExample = dictResult.ex;
-      if (!newExample) newExample = getFallbackExample(word, finalPos);
-      document.getElementById('form-example').value = newExample || '';
+      document.getElementById('form-example').value = example || '';
 
     } catch (err) {
       console.error('Autofill failed:', err);
