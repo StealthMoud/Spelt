@@ -167,7 +167,7 @@ export function registerAutofillListeners() {
 {"definition":"English definition","transcription":"US / UK IPA (US first, e.g. /lɑːrdʒ/ (US) / /lɑːdʒ/ (UK))","partOfSpeech":"noun/verb/adjective/etc","translation":"${targetLangName} translation","level":"CEFR: A1/A2/B1/B2/C1/C2 or blank","example":"IELTS-level example sentence"}
 JSON only. No markdown.`;
 
-      const aiData = await askGemini(prompt, { maxOutputTokens: 400, temperature: 0.3 });
+      const aiData = await askGemini(prompt, { maxOutputTokens: 1024, temperature: 0.3 });
 
       if (aiData.definition) document.getElementById('form-definition').value = aiData.definition;
       if (aiData.transcription) document.getElementById('form-transcription').value = aiData.transcription;
