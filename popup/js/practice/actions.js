@@ -1,7 +1,7 @@
 import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt } from './state.js';
 import { renderAudioButtons } from './helpers.js';
-import { isGeminiConfigured, generateMisspellingFeedback, generateMisspellingFeedbackStream } from './ai_helpers.js';
+import { isGeminiConfigured, generateMisspellingFeedbackStream } from './ai_helpers.js';
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
@@ -141,27 +141,51 @@ export function checkSpelling() {
   // Populate shared back face
   populateBackFace(card);
 
-  // Handle AI feedback — button-gated to prevent rate limits
+  // Handle AI feedback — PREFIRE: start API call immediately on wrong answer,
+  // so response is ready by the time user clicks the button
   const fbRow = document.getElementById('ai-feedback-row');
   const fbText = document.getElementById('ai-feedback-text');
   if (fbRow && fbText) {
     if (!isOk) {
       isGeminiConfigured().then(configured => {
         if (configured) {
+          // ── Prefire: start streaming NOW, before user clicks ──
+          let prefiredText = '';
+          let prefiredDone = false;
+          let prefiredError = null;
+          let liveCallback = null;
+
+          generateMisspellingFeedbackStream(card, typed, (text) => {
+            prefiredText = text;
+            if (liveCallback) liveCallback(text);
+          }).then(() => {
+            prefiredDone = true;
+          }).catch(err => {
+            prefiredError = err;
+          });
+
           fbRow.style.display = 'block';
           fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">✨ <span>AI Coach</span></button>`;
-          fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', async (ev) => {
+          fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', (ev) => {
             const btn = ev.currentTarget;
             btn.disabled = true;
-            btn.querySelector('span').textContent = 'Analyzing...';
-            btn.style.opacity = '0.6';
-            try {
-              await generateMisspellingFeedbackStream(card, typed, (text) => {
-                // Stream text into UI as it arrives
-                fbText.textContent = text;
-              });
-            } catch (err) {
-              fbText.textContent = `Could not load feedback: ${err.message}`;
+
+            if (prefiredError) {
+              fbText.textContent = `Could not load feedback: ${prefiredError.message}`;
+              return;
+            }
+
+            if (prefiredText) {
+              // Already have text — show instantly
+              fbText.textContent = prefiredText;
+              if (!prefiredDone) {
+                liveCallback = (text) => { fbText.textContent = text; };
+              }
+            } else {
+              // API hasn't returned anything yet — show loading + wire live updates
+              btn.querySelector('span').textContent = 'Analyzing...';
+              btn.style.opacity = '0.6';
+              liveCallback = (text) => { fbText.textContent = text; };
             }
           });
         } else {
