@@ -82,8 +82,8 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
                 coachBubble.style.display = 'block';
                 if (coachBubble.textContent.trim() === 'Loading coaching tips...') {
                   try {
-                    const prompt = `The language student keeps misspelling the word/phrase: "${w.word}". Their common spelling errors/typos include: "${uniqueTypos.join(', ') || 'none'}". Generate 1-2 sentences with a memorable spelling mnemonic, trick, or rule to help them remember how to spell it correctly. Plain text only.`;
-                    const tips = await askGeminiText(prompt);
+                    const prompt = `Word: "${w.word}". Common typos: "${uniqueTypos.join(', ') || 'none'}". Give a memorable spelling mnemonic or trick. 1-2 sentences. Plain text only.`;
+                    const tips = await askGeminiText(prompt, { maxOutputTokens: 150, temperature: 0.3 });
                     coachBubble.textContent = tips;
                   } catch (err) {
                     coachBubble.textContent = `Could not load coaching tips: ${err.message}`;

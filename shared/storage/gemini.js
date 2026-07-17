@@ -285,7 +285,7 @@ const noMimeTypeSupport = new Set();
  * Requests are processed one at a time with minimum spacing.
  */
 let requestQueue = Promise.resolve();
-const MIN_REQUEST_SPACING_MS = 1000; // 1 second between requests
+const MIN_REQUEST_SPACING_MS = 300; // 300ms between requests (was 1s — too slow for UX)
 let lastRequestTime = 0;
 
 async function enqueue(fn) {
@@ -692,9 +692,17 @@ export async function askGeminiText(prompt, options = {}) {
     const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
     const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
 
-    const result = await fetchWithFallback(keys, {
+    // Build body with optional generationConfig (maxOutputTokens, temperature, etc.)
+    const body = {
       contents: [{ parts: [{ text: prompt }] }]
-    }, modelTiers, false /* wantJson */);
+    };
+    if (options.maxOutputTokens || options.temperature !== undefined) {
+      body.generationConfig = {};
+      if (options.maxOutputTokens) body.generationConfig.maxOutputTokens = options.maxOutputTokens;
+      if (options.temperature !== undefined) body.generationConfig.temperature = options.temperature;
+    }
+
+    const result = await fetchWithFallback(keys, body, modelTiers, false /* wantJson */);
 
     const data = await result.response.json();
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
