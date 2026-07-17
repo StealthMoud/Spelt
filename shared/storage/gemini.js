@@ -497,6 +497,22 @@ async function callModel(key, model, bodyPayload) {
 }
 
 /**
+ * Wrapper that auto-retries once on 503 (server momentarily overloaded).
+ * 503s typically clear in 1-3 seconds — no point cooldowning 30s.
+ */
+async function callModelWithRetry(key, model, bodyPayload) {
+  try {
+    return await callModel(key, model, bodyPayload);
+  } catch (err) {
+    if (err.status === 503) {
+      await new Promise(r => setTimeout(r, 2000));
+      return await callModel(key, model, bodyPayload);
+    }
+    throw err;
+  }
+}
+
+/**
  * Core fetch wrapper with automatic model fallback on rate limit.
  * Uses the selected strategy's ordered model/key trials, strongest model first.
  *
@@ -541,7 +557,7 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
       : bodyPayload;
 
     try {
-      const response = await callModel(key, model, payload);
+      const response = await callModelWithRetry(key, model, payload);
       chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
       
       // Success! Clear the cooldown for this model-key in storage so it is immediately marked as Ready
@@ -580,7 +596,7 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
             };
           }
 
-          const response = await callModel(key, model, fallbackPayload);
+          const response = await callModelWithRetry(key, model, fallbackPayload);
           chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
           
           // Success! Clear the cooldown for this model-key in storage
@@ -598,7 +614,7 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
 
           if (isTransientError(retryStatus, retryMsg)) {
             const isServerErr = retryStatus >= 500;
-            const delay = retryStatus === 429 ? parseRetryDelay(retryMsg) : (isServerErr ? 30000 : 15000);
+            const delay = retryStatus === 429 ? parseRetryDelay(retryMsg) : (isServerErr ? 5000 : 10000);
             await applyCooldown(trialId, delay);
             console.warn(`[Spelt AI] Trial ${trialId} transient failure on retry (status ${retryStatus || 'network'}). Cooldown ${Math.ceil(delay / 1000)}s.`);
           } else {
@@ -615,7 +631,7 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
       // Case 2: Transient failure (rate limit, 5xx server overload, network drop)
       if (isTransientError(status, errMsg)) {
         const isServerErr = status >= 500;
-        const delay = status === 429 ? parseRetryDelay(errMsg) : (isServerErr ? 30000 : 15000);
+        const delay = status === 429 ? parseRetryDelay(errMsg) : (isServerErr ? 5000 : 10000);
         await applyCooldown(trialId, delay);
         console.warn(`[Spelt AI] Trial ${trialId} transient failure (status ${status || 'network'}): ${errMsg}. Cooldown ${Math.ceil(delay / 1000)}s. Trying next...`);
         lastError = err;
@@ -663,7 +679,13 @@ export async function askGemini(prompt, options = {}) {
     const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
 
     const result = await fetchWithFallback(keys, {
-      contents: [{ parts: [{ text: prompt }] }]
+      contents: [{ parts: [{ text: prompt }] }],
+      ...(options.maxOutputTokens || options.temperature !== undefined ? {
+        generationConfig: {
+          ...(options.maxOutputTokens ? { maxOutputTokens: options.maxOutputTokens } : {}),
+          ...(options.temperature !== undefined ? { temperature: options.temperature } : {})
+        }
+      } : {})
     }, modelTiers, true /* wantJson */);
 
     const data = await result.response.json();
@@ -768,13 +790,20 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
 
     try {
       const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
-      const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:streamGenerateContent?key=${key}&alt=sse`;
-
-      const response = await fetch(url, {
+      const streamUrl = `https://generativelanguage.googleapis.com/v1/${cleanModel}:streamGenerateContent?key=${key}&alt=sse`;
+      const fetchOpts = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-      });
+      };
+
+      let response = await fetch(streamUrl, fetchOpts);
+
+      // Auto-retry once on 503 (momentary server overload)
+      if (response.status === 503) {
+        await new Promise(r => setTimeout(r, 2000));
+        response = await fetch(streamUrl, fetchOpts);
+      }
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
@@ -820,7 +849,7 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
       const status = err.status;
       const errMsg = err.apiMessage || err.message;
       if (isTransientError(status, errMsg)) {
-        const delay = status === 429 ? parseRetryDelay(errMsg) : (status >= 500 ? 30000 : 15000);
+        const delay = status === 429 ? parseRetryDelay(errMsg) : (status >= 500 ? 5000 : 10000);
         await applyCooldown(trialId, delay);
       } else {
         badModels.add(trialId);

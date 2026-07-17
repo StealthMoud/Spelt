@@ -51,50 +51,49 @@ export function registerAutofillListeners() {
     const btn = document.getElementById('form-auto-fill-btn');
     btn.disabled = true; btn.style.opacity = '0.5';
     try {
-      // 1. Fetch translation
-      let translation = '';
-      try {
-        translation = await translateWord(word);
-      } catch (_) {}
-      document.getElementById('form-translation').value = translation || '';
-
-      // 2. Fetch dictionary definitions, partOfSpeech, etc. from dictionary API as a base fallback
-      let dictDef = '';
-      let dictEx = '';
-      let dictIpa = '';
-      let dictPos = '';
-      try {
-        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`);
-        if (response.ok) {
-          const data = await response.json();
-          const first = data[0];
-          if (first) {
-            dictDef = first.meanings[0]?.definitions[0]?.definition || '';
-            dictIpa = first.phonetics.find(p => p.text)?.text || '';
-            dictPos = first.meanings[0]?.partOfSpeech || '';
-            if (first.meanings) {
-              outerLoop: for (const m of first.meanings) {
-                if (m.definitions) {
-                  for (const d of m.definitions) {
-                    if (d.example) {
-                      dictEx = d.example.trim();
-                      break outerLoop;
+      // ── Run ALL independent fetches in parallel for speed ──
+      const [translation, dictResult, defResult, cambridge, dynamicExample] = await Promise.all([
+        translateWord(word).catch(() => ''),
+        // Dictionary API
+        (async () => {
+          try {
+            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`);
+            if (response.ok) {
+              const data = await response.json();
+              const first = data[0];
+              if (first) {
+                let dictEx = '';
+                if (first.meanings) {
+                  outerLoop: for (const m of first.meanings) {
+                    if (m.definitions) {
+                      for (const d of m.definitions) {
+                        if (d.example) { dictEx = d.example.trim(); break outerLoop; }
+                      }
                     }
                   }
                 }
+                return {
+                  def: first.meanings[0]?.definitions[0]?.definition || '',
+                  ipa: first.phonetics.find(p => p.text)?.text || '',
+                  pos: first.meanings[0]?.partOfSpeech || '',
+                  ex: dictEx
+                };
               }
             }
-          }
-        }
-      } catch (_) {}
+          } catch (_) {}
+          return { def: '', ipa: '', pos: '', ex: '' };
+        })(),
+        fetchDynamicDefinition(word).catch(() => ({ definition: '', level: '' })),
+        fetchCambridgePronunciation(word).catch(() => ({ usIpa: '', ukIpa: '', level: '' })),
+        fetchDynamicExample(word).catch(() => '')
+      ]);
 
-      // 3. Fetch premium dynamic definition
-      const defResult = await fetchDynamicDefinition(word);
-      const finalDef = defResult.definition || dictDef;
+      // Populate fields from parallel results
+      document.getElementById('form-translation').value = translation || '';
+
+      const finalDef = defResult.definition || dictResult.def;
       document.getElementById('form-definition').value = finalDef || '';
 
-      // 4. Fetch premium transcription
-      const cambridge = await fetchCambridgePronunciation(word);
       let transcriptionVal = '';
       if (cambridge.ukIpa || cambridge.usIpa) {
         if (cambridge.ukIpa && cambridge.usIpa) {
@@ -103,39 +102,32 @@ export function registerAutofillListeners() {
           transcriptionVal = cambridge.usIpa || cambridge.ukIpa || '';
         }
       } else {
-        transcriptionVal = dictIpa;
+        transcriptionVal = dictResult.ipa;
       }
       document.getElementById('form-transcription').value = transcriptionVal || '';
 
-      // 5. Calculate final level and levels with morphological lemma fallback for inflected words
+      // Level with morphological lemma fallback for inflected words
       let finalLevel = defResult.level || cambridge.level || '';
       if (!finalLevel) {
         const lemmas = getBaseLemmas(word);
         for (const lemma of lemmas) {
-          const lemmaDef = await fetchDynamicDefinition(lemma);
-          if (lemmaDef.level) {
-            finalLevel = lemmaDef.level;
-            break;
-          }
-          const lemmaPr = await fetchCambridgePronunciation(lemma);
-          if (lemmaPr.level) {
-            finalLevel = lemmaPr.level;
-            break;
-          }
+          // Run both lemma lookups in parallel
+          const [lemmaDef, lemmaPr] = await Promise.all([
+            fetchDynamicDefinition(lemma).catch(() => ({ level: '' })),
+            fetchCambridgePronunciation(lemma).catch(() => ({ level: '' }))
+          ]);
+          if (lemmaDef.level) { finalLevel = lemmaDef.level; break; }
+          if (lemmaPr.level) { finalLevel = lemmaPr.level; break; }
         }
       }
       document.getElementById('form-level').value = finalLevel ? finalLevel.toUpperCase().trim() : '';
 
-      // Sanitize Part of Speech to fall back if currently placeholder "Unknown"
-      const finalPos = dictPos || 'unknown';
+      const finalPos = dictResult.pos || 'unknown';
       document.getElementById('form-part-of-speech').value = finalPos;
 
-      // 6. Fetch premium dynamic example
-      let newExample = await fetchDynamicExample(word);
-      if (!newExample) newExample = dictEx;
-      if (!newExample) {
-        newExample = getFallbackExample(word, finalPos);
-      }
+      let newExample = dynamicExample;
+      if (!newExample) newExample = dictResult.ex;
+      if (!newExample) newExample = getFallbackExample(word, finalPos);
       document.getElementById('form-example').value = newExample || '';
 
     } catch (err) {
@@ -171,21 +163,11 @@ export function registerAutofillListeners() {
       else if (targetLang === 'ko') targetLangName = 'Korean';
       else if (targetLang === 'tr') targetLangName = 'Turkish';
 
-      const prompt = `You are a lexicographer helping a language student study the word/phrase: "${word}".
-Provide the following details in a clean JSON format matching the schema:
-{
-  "definition": "definition of the word or phrase in English",
-  "transcription": "US / UK IPA transcription (US first), e.g. /iˈnɪɡ.mə/",
-  "partOfSpeech": "e.g. noun, verb, adjective, adverb, phrasal verb, idiom",
-  "translation": "accurate context-aware translation in ${targetLangName}",
-  "level": "CEFR level: choose carefully from: A1, A2, B1, B2, C1, C2. Leave blank if none exists",
-  "example": "A high-quality IELTS study example sentence containing the word/phrase in context"
-}
-IMPORTANT: For the transcription field, always show US IPA first, then UK IPA (e.g. "/lɑːrdʒ/ (US) / /lɑːdʒ/ (UK)").
-If the word has US/UK spelling variants (e.g. license/licence, color/colour, organize/organise), note this naturally but the word itself should remain as provided.
-Respond ONLY with the JSON object. Do not include markdown block ticks (\`\`\`json).`;
+      const prompt = `Word: "${word}". Provide JSON:
+{"definition":"English definition","transcription":"US / UK IPA (US first, e.g. /lɑːrdʒ/ (US) / /lɑːdʒ/ (UK))","partOfSpeech":"noun/verb/adjective/etc","translation":"${targetLangName} translation","level":"CEFR: A1/A2/B1/B2/C1/C2 or blank","example":"IELTS-level example sentence"}
+JSON only. No markdown.`;
 
-      const aiData = await askGemini(prompt);
+      const aiData = await askGemini(prompt, { maxOutputTokens: 400, temperature: 0.3 });
 
       if (aiData.definition) document.getElementById('form-definition').value = aiData.definition;
       if (aiData.transcription) document.getElementById('form-transcription').value = aiData.transcription;
