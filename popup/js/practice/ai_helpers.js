@@ -117,7 +117,7 @@ Provide a brilliant, targeted spelling trick or mnemonic that directly targets t
     const result = await askGeminiTextStream(prompt, FAST_OPTS, onChunk);
     feedbackCache.set(cacheKey, result);
     return result;
-  } catch (err) {
+  } catch (_err) {
     // Fallback to non-streaming
     const result = await askGeminiText(prompt, FAST_OPTS);
     feedbackCache.set(cacheKey, result);
@@ -153,7 +153,7 @@ Summarize performance, highlight strengths and focus areas. 2-3 sentences. No fl
   return await askGeminiText(prompt, MEDIUM_OPTS);
 }
 
-export async function verifyPracticeWriting(card, userSentence, mode) {
+export async function verifyPracticeWriting(card, userSentence, _mode) {
   const variant = getSpellingVariant(card.word);
   const variantNote = variant && variant.us !== variant.uk
     ? ` US/UK: ${variant.us}/${variant.uk} both valid.`

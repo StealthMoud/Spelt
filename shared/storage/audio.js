@@ -30,7 +30,7 @@ export async function playWordAudio(word, accent) {
         return;
       }
     }
-  } catch (err) {
+  } catch (_err) {
     triggerNetworkError();
     console.info('Cambridge pronunciation play failed, trying static fallback...');
   }
@@ -42,7 +42,7 @@ export async function playWordAudio(word, accent) {
     const audio = new Audio(primaryUrl);
     await audio.play();
     return;
-  } catch (e) {
+  } catch (_e) {
     console.info('Google static audio failed, trying API dictionary fallback...');
   }
 
@@ -62,7 +62,7 @@ export async function playWordAudio(word, accent) {
         }
       }
     }
-  } catch (e) {
+  } catch (_e) {
     triggerNetworkError();
     console.info('Dictionary API fallback failed, using TTS...');
   }
@@ -97,7 +97,7 @@ export async function playTextAudio(text, accent) {
       await audio.play();
       return;
     }
-  } catch (err) {
+  } catch (_err) {
     triggerNetworkError();
     console.info('Google Translate TTS failed, falling back to SpeechSynthesis...');
   }
