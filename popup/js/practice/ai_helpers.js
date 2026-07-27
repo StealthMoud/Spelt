@@ -63,8 +63,12 @@ export async function generateMisspellingFeedback(card, typedWord) {
     ? ` (US "${variant.us}" / UK "${variant.uk}" both valid)`
     : '';
 
-  const prompt = `Word: "${card.word}" (${card.definition || 'N/A'}). User typed misspelling: "${typedWord}".${variantNote}
-Provide a clever memory trick, root breakdown, visual association, or mnemonic to link "${card.word}" in mind so the user never misspells it again. Focus purely on the memory trick and association. 1-2 sentences. No greetings, no repetitive preamble like "You misspelled...", no markdown. Plain text.`;
+  const prompt = `Correct word: "${card.word}" (${card.definition || 'N/A'}).
+User's misspelled attempt: "${typedWord}".${variantNote}
+
+Provide a brilliant, targeted spelling trick or mnemonic that directly targets the exact letters/syllables where the user made a mistake (e.g. emphasize "PEN" vs "PAN", tricky vowels, double letters, or syllable breakdowns like PEN + I + TEN + TIARY).
+- Give a memorable word-play, association, or root breakdown so they never misspell this word again.
+- Keep it concise: 1-2 punchy sentences. No conversational filler, no greetings, no markdown. Plain text only.`;
 
   const feedback = await askGeminiText(prompt, FAST_OPTS);
 
@@ -102,8 +106,12 @@ export async function generateMisspellingFeedbackStream(card, typedWord, onChunk
     ? ` (US "${variant.us}" / UK "${variant.uk}" both valid)`
     : '';
 
-  const prompt = `Word: "${card.word}" (${card.definition || 'N/A'}). User typed misspelling: "${typedWord}".${variantNote}
-Provide a clever memory trick, root breakdown, visual association, or mnemonic to link "${card.word}" in mind so the user never misspells it again. Focus purely on the memory trick and association. 1-2 sentences. No greetings, no repetitive preamble like "You misspelled...", no markdown. Plain text.`;
+  const prompt = `Correct word: "${card.word}" (${card.definition || 'N/A'}).
+User's misspelled attempt: "${typedWord}".${variantNote}
+
+Provide a brilliant, targeted spelling trick or mnemonic that directly targets the exact letters/syllables where the user made a mistake (e.g. emphasize "PEN" vs "PAN", tricky vowels, double letters, or syllable breakdowns like PEN + I + TEN + TIARY).
+- Give a memorable word-play, association, or root breakdown so they never misspell this word again.
+- Keep it concise: 1-2 punchy sentences. No conversational filler, no greetings, no markdown. Plain text only.`;
 
   try {
     const result = await askGeminiTextStream(prompt, FAST_OPTS, onChunk);

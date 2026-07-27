@@ -852,6 +852,26 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
         }
       }
 
+      // Flush remaining stream bytes and buffer lines
+      buffer += decoder.decode();
+      if (buffer.trim()) {
+        const lines = buffer.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data: ')) continue;
+          const jsonStr = trimmed.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+          try {
+            const chunk = JSON.parse(jsonStr);
+            const text = extractCandidateText(chunk.candidates?.[0]);
+            if (text) {
+              fullText += text;
+              if (onChunk) onChunk(fullText);
+            }
+          } catch (_) { /* skip malformed chunk */ }
+        }
+      }
+
       chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
       return fullText.trim();
     } catch (err) {
