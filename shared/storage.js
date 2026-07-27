@@ -40,6 +40,13 @@ export {
 } from './storage/cambridge.js';
 
 export {
+  getCambridgeDocument,
+  getOxfordDocument,
+  clearDictionaryCache,
+  enrichWord
+} from './storage/dictionary-source.js';
+
+export {
   parseCambridgePage,
   parseOxfordPage
 } from './storage/cambridge-parser.js';

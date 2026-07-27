@@ -1,19 +1,14 @@
-import { getWords, saveWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation, getStored, isGeminiConfigured, askGemini, atomicUpdate, getSpellingVariant } from '../../../shared/storage.js';
+import { getWords, saveWords, translateWord, enrichWord, getFallbackExample, getStored, isGeminiConfigured, askGemini, atomicUpdate, getSpellingVariant } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
-  const defResult = await fetchDynamicDefinition(word);
-  const def = defResult.definition || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
-  let ipa = '', level = defResult.level || '';
-  try {
-    const cambridge = await fetchCambridgePronunciation(word);
-    ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`) : (cambridge.usIpa || cambridge.ukIpa || '');
-    if (!level) level = cambridge.level || '';
-  } catch (_) {}
-  if (!ipa) ipa = apiData.phonetics.find(p => p.text)?.text || '/--/';
-  
+  const enriched = await enrichWord(word);
+  const def = enriched.definition || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
+  let ipa = enriched.ipa || apiData.phonetics.find(p => p.text)?.text || '/--/';
+  let level = enriched.level || '';
+
   const partOfSpeech = apiData.meanings[0]?.partOfSpeech || '';
-  const example = extractExample(apiData) || await fetchDynamicExample(word) || getFallbackExample(word, partOfSpeech);
+  const example = extractExample(apiData) || enriched.example || getFallbackExample(word, partOfSpeech);
   
   let translation = '';
   try { translation = await translateWord(word); } catch (_) {}

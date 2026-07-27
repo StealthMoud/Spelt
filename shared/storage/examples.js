@@ -1,9 +1,9 @@
+import { getCambridgeDocument, getOxfordDocument } from './dictionary-source.js';
 import { triggerNetworkSuccess, triggerNetworkError } from './core.js';
 
 // Fetch a real English sentence example dynamically from Cambridge, Oxford, or Tatoeba
 export async function fetchDynamicExample(word) {
   const cleanWord = word.trim().toLowerCase();
-  const urlWord = cleanWord.replace(/\s+/g, '-');
   
   const pickBest = (list) => {
     const filtered = list.filter(s => {
@@ -22,53 +22,37 @@ export async function fetchDynamicExample(word) {
   };
 
   // 1. Try Cambridge Dictionary
-  try {
-    const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`;
-    const res = await fetch(url);
-    if (res.ok) {
-      triggerNetworkSuccess();
-      const html = await res.text();
-      const regex = /<(div|span)\s+class=\"examp[^>]*>([\s\S]*?)<\/\1>/g;
-      let match;
-      const sentences = [];
-      while (match = regex.exec(html)) {
-        let text = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-        if (text && text.toLowerCase().includes(cleanWord)) {
-          text = text.replace(/^\[[^\]]+\]\s*/, '').trim();
-          text = text.replace(/^(formal|informal|humorous|approving|disapproving|saying)\s+/i, '');
-          sentences.push(text);
-        }
+  const cam = await getCambridgeDocument(cleanWord);
+  if (cam.html) {
+    const regex = /<(div|span)\s+class="examp[^>]*>([\s\S]*?)<\/\1>/g;
+    let match;
+    const sentences = [];
+    while ((match = regex.exec(cam.html))) {
+      let text = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      if (text && text.toLowerCase().includes(cleanWord)) {
+        text = text.replace(/^\[[^\]]+\]\s*/, '').trim();
+        text = text.replace(/^(formal|informal|humorous|approving|disapproving|saying)\s+/i, '');
+        sentences.push(text);
       }
-      const best = pickBest(sentences);
-      if (best) return best;
     }
-  } catch (err) {
-    triggerNetworkError();
-    console.info('Cambridge example fetch failed:', err.message || err);
+    const best = pickBest(sentences);
+    if (best) return best;
   }
 
   // 2. Try Oxford Learner's Dictionary
-  try {
-    const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`;
-    const res = await fetch(url);
-    if (res.ok) {
-      triggerNetworkSuccess();
-      const html = await res.text();
-      const regex = /<span\s+class=\"x\"[^>]*>([\s\S]*?)<\/span>/g;
-      let match;
-      const sentences = [];
-      while (match = regex.exec(html)) {
-        const text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-        if (text && text.toLowerCase().includes(cleanWord)) {
-          sentences.push(text);
-        }
+  const ox = await getOxfordDocument(cleanWord);
+  if (ox.html) {
+    const regex = /<span\s+class="x"[^>]*>([\s\S]*?)<\/span>/g;
+    let match;
+    const sentences = [];
+    while ((match = regex.exec(ox.html))) {
+      let text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      if (text && text.toLowerCase().includes(cleanWord)) {
+        sentences.push(text);
       }
-      const best = pickBest(sentences);
-      if (best) return best;
     }
-  } catch (err) {
-    triggerNetworkError();
-    console.info('Oxford example fetch failed:', err.message || err);
+    const best = pickBest(sentences);
+    if (best) return best;
   }
 
   // 3. Try Tatoeba API
