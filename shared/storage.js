@@ -5,7 +5,6 @@ export {
   saveWords,
   atomicUpdate,
   resetDb,
-  logDebug,
   triggerNetworkError,
   triggerNetworkSuccess
 } from './storage/core.js';

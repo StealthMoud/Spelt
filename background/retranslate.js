@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGemini, logDebug, atomicUpdate } from '../shared/storage.js';
+import { getWords, saveWords, askGemini, atomicUpdate } from '../shared/storage.js';
 
 async function updateWordTranslation(wordId, targetLang) {
   const initialList = await getWords();
@@ -87,12 +87,6 @@ Respond ONLY with the JSON object. Do not include markdown code block ticks (\`\
       }
     }
   });
-
-  await logDebug({
-    word: wordStr,
-    hasExistingData,
-    aiData
-  });
 }
 
 export async function runBackgroundRetranslate(targetLang) {
@@ -104,7 +98,6 @@ export async function runBackgroundRetranslate(targetLang) {
     }
 
     const words = await getWords();
-    await logDebug({ type: 'start', count: words.length, targetLang });
     if (words.length === 0) return;
 
     for (let i = 0; i < words.length; i++) {
@@ -112,14 +105,12 @@ export async function runBackgroundRetranslate(targetLang) {
       try {
         await updateWordTranslation(w.id, targetLang);
       } catch (err) {
-        await logDebug({ word: w.word, error: err.message });
         console.error(`Error refreshing "${w.word}" via AI:`, err);
       }
       // Wait 6 seconds between requests to stay well within the 15 RPM free tier limit
       await new Promise(resolve => setTimeout(resolve, 6000));
     }
 
-    await logDebug({ type: 'completed', count: words.length });
     chrome.runtime.sendMessage({ action: 'retranslateCompleted', count: words.length }).catch(() => {});
   } catch (err) {
     console.error('Background AI refresh failed:', err);

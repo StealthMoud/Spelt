@@ -1,14 +1,10 @@
 // Background service worker entry point for Spelt extension
 // Delegates logic to modular, decoupled sub-modules
 
-import { startReloader } from './background/reloader.js';
 import { runBackgroundRetranslate } from './background/retranslate.js';
 import { setupRules, registerContextMenu } from './background/rules.js';
 import { listenSelectionActions } from './background/selection.js';
 import { reviewWord } from './shared/storage.js';
-
-// Start hot-reloading loop during development
-startReloader();
 
 // Initialize rules and context menus
 setupRules();

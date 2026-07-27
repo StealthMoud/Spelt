@@ -296,13 +296,3 @@ export async function resetDb() {
   await setStored('spelt_activity', {});
   await setStored('spelt_streak', { current: 0, lastDate: '', max: 0 });
 }
-
-export async function logDebug(data) {
-  try {
-    await fetch('http://localhost:8081/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-  } catch (_) {}
-}
