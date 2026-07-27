@@ -24,7 +24,7 @@ export async function fetchDynamicExample(word) {
   // 1. Try Cambridge Dictionary
   try {
     const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const res = await fetch(url);
     if (res.ok) {
       triggerNetworkSuccess();
       const html = await res.text();
@@ -50,7 +50,7 @@ export async function fetchDynamicExample(word) {
   // 2. Try Oxford Learner's Dictionary
   try {
     const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const res = await fetch(url);
     if (res.ok) {
       triggerNetworkSuccess();
       const html = await res.text();

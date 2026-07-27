@@ -5,6 +5,10 @@ let isSubmitting = false;
 const reviewedWordIds = new Set();
 let reviewedWordDate = getLocalDateKey();
 let practiceMode = 'spelling'; // 'spelling' or 'recall'
+let lastSpellingResult = false;
+
+export function getLastSpellingResult() { return lastSpellingResult; }
+export function setLastSpellingResult(val) { lastSpellingResult = val; }
 
 // AI session summary tracking
 let sessionStats = { totalReviewed: 0, correctCount: 0, incorrectCount: 0, hardestWords: [], totalTimeMs: 0 };

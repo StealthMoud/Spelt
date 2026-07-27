@@ -1,4 +1,4 @@
-import { getWords, saveWords, getStored, atomicUpdate } from './core.js';
+import { getWords, getStored, atomicUpdate } from './core.js';
 import { fetchTranslation } from './translation.js';
 import { fetchDynamicDefinition } from './definitions.js';
 import { fetchDynamicExample } from './examples.js';
@@ -61,7 +61,7 @@ export async function addWord(wordData) {
   const spellingVariant = getSpellingVariant(normalizedWord);
 
   const newWord = {
-    id: 'w_' + Math.random().toString(36).substr(2, 9),
+    id: `w_${crypto.randomUUID()}`,
     word: normalizedWord,
     definition: definitionVal,
     transcription: transcriptionVal,

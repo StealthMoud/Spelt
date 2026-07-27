@@ -45,7 +45,7 @@ export async function isWordSpellingValid(word) {
   
   try {
     const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(lower)}`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const res = await fetch(url);
     if (res.ok) {
       const finalUrl = res.url.toLowerCase();
       if (!finalUrl.endsWith('/english/') && !finalUrl.endsWith('/english')) {

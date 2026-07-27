@@ -649,7 +649,7 @@ function inferPracticeType(card) {
 }
 
 function makeCardId(index) {
-  return `word_repaired_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 7)}`;
+  return `word_repaired_${crypto.randomUUID()}`;
 }
 
 async function runIntegrityAudit({ repair = false } = {}) {

@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGeminiText, askGeminiTextStream, isGeminiConfigured, getStored, atomicUpdate, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
+import { askGeminiText, askGeminiTextStream, isGeminiConfigured, atomicUpdate, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 
 // ── Speed config: generous output limits to prevent cut-off messages ──────────
 const FAST_OPTS = { maxOutputTokens: 350, temperature: 0.3 };

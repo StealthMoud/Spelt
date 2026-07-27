@@ -1,4 +1,4 @@
-import { getWords, saveWords, getStored, setStored, fetchTranslation, getFallbackExample, atomicUpdate } from '../../../shared/storage.js';
+import { getStored, setStored, fetchTranslation, getFallbackExample, atomicUpdate } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
 import { getDueCards, setPracticeMode } from './state.js';
 import { checkSpelling, revealRecall } from './actions.js';

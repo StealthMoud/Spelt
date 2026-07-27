@@ -3,7 +3,6 @@ import { fetchTranslation } from './translation.js';
 import { fetchDynamicDefinition } from './definitions.js';
 import { fetchDynamicExample } from './examples.js';
 import { isFallbackExample, getFallbackExample } from './sentence.js';
-import { logActivity } from './sessions.js';
 import { addWord } from './word-actions.js';
 
 // Register a misspelling event and force-enqueue card for SRS practice
@@ -13,7 +12,7 @@ export async function registerMisspelling(correctWord, wrongSpelling, details = 
 
   if (wordObj) {
     // 1. Perform all slow async fetches outside the atomic lock
-    let tr = wordObj.translation?.trim() ? null : null;
+    let tr = null;
     if (!wordObj.translation?.trim()) {
       const targetLang = await getStored('spelt_target_lang');
       if (targetLang && targetLang !== 'none') {

@@ -1,5 +1,5 @@
 import { atomicUpdate, getNextReviewDate } from '../../../shared/storage.js';
-import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, markReviewedWord, getPracticeMode, trackReview } from './state.js';
+import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, markReviewedWord, getPracticeMode, trackReview, getLastSpellingResult } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
 
@@ -40,7 +40,7 @@ export async function submitRating(score) {
       trackReview(card.word, score >= 3, responseTime || 0);
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
-      const isOk = typed.toLowerCase() === card.word.toLowerCase();
+      const isOk = getLastSpellingResult();
       updatedCard = await reviewWordInBackground(card.id, score, isOk ? null : typed, responseTime, 'spelling');
     }
     await trackSession(score);
@@ -77,7 +77,7 @@ export async function submitMasteredRating(card) {
       trackReview(card.word, true, responseTime || 0);
     } else {
       const typed = document.getElementById('spelling-input').value.trim();
-      const isOk = typed.toLowerCase() === card.word.toLowerCase();
+      const isOk = getLastSpellingResult();
       await reviewWordInBackground(card.id, 5, isOk ? null : typed, responseTime, 'spelling');
     }
     await trackSession(5);

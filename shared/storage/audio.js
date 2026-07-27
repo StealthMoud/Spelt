@@ -24,6 +24,8 @@ export async function playWordAudio(word, accent) {
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         const audio = new Audio(blobUrl);
+        audio.addEventListener('ended', () => URL.revokeObjectURL(blobUrl), { once: true });
+        audio.addEventListener('error', () => URL.revokeObjectURL(blobUrl), { once: true });
         await audio.play();
         return;
       }
@@ -90,6 +92,8 @@ export async function playTextAudio(text, accent) {
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const audio = new Audio(blobUrl);
+      audio.addEventListener('ended', () => URL.revokeObjectURL(blobUrl), { once: true });
+      audio.addEventListener('error', () => URL.revokeObjectURL(blobUrl), { once: true });
       await audio.play();
       return;
     }

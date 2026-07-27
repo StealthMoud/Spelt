@@ -138,13 +138,9 @@ export function registerAutofillListeners() {
           return { def: '', ipa: '', pos: '', ex: '' };
         })(),
         // Cambridge — ONE fetch for pronunciation + definition + example
-        fetch(`https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`, {
-          headers: { 'User-Agent': 'Mozilla/5.0' }
-        }).then(r => r.ok ? r.text() : '').catch(() => ''),
+        fetch(`https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`).then(r => r.ok ? r.text() : '').catch(() => ''),
         // Oxford — ONE fetch for fallback pronunciation + definition + example
-        fetch(`https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`, {
-          headers: { 'User-Agent': 'Mozilla/5.0' }
-        }).then(r => r.ok ? r.text() : '').catch(() => '')
+        fetch(`https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`).then(r => r.ok ? r.text() : '').catch(() => '')
       ]);
 
       // ── PARSE all data from the single HTML pages (no more network calls) ──
@@ -199,7 +195,7 @@ export function registerAutofillListeners() {
         for (const lemma of lemmas) {
           const lemmaUrl = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(lemma)}`;
           try {
-            const lres = await fetch(lemmaUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+            const lres = await fetch(lemmaUrl);
             if (lres.ok) {
               const lhtml = await lres.text();
               const lparsed = parseCambridgePage(lhtml);

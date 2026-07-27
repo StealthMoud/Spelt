@@ -45,7 +45,7 @@ export function drawSparkline(containerId, dataPoints, width = 300, height = 60,
   
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-  const gradId = `spark-grad-${Math.random().toString(36).substr(2, 9)}`;
+  const gradId = `spark-grad-${crypto.randomUUID()}`;
   gradient.setAttribute('id', gradId);
   gradient.setAttribute('x1', '0%'); gradient.setAttribute('y1', '0%');
   gradient.setAttribute('x2', '0%'); gradient.setAttribute('y2', '100%');

@@ -1,5 +1,6 @@
 import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
-import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt } from './state.js';
+import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt, setLastSpellingResult } from './state.js';
+import { isAnswerCorrect } from './answer.js';
 import { renderAudioButtons } from './helpers.js';
 import { isGeminiConfigured, generateMisspellingFeedbackStream } from './ai_helpers.js';
 
@@ -106,7 +107,8 @@ export function checkSpelling() {
   const typed = document.getElementById('spelling-input').value.trim();
   const exactMatch = typed.toLowerCase() === card.word.toLowerCase();
   const isVariantMatch = !exactMatch && areSpellingVariants(typed, card.word);
-  const isOk = exactMatch || isVariantMatch;
+  const isOk = isAnswerCorrect(typed, card.word);
+  setLastSpellingResult(isOk);
   const badge = document.getElementById('spelling-result-badge');
   const typedDisplay = document.getElementById('user-typed-display');
 
