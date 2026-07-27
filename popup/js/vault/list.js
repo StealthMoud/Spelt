@@ -41,7 +41,7 @@ export function renderList(wordsList, selectedWordIds, openModalCallback, delete
   const sortField = document.getElementById('vault-sort-field')?.value || 'alpha';
   const sortDir = document.getElementById('vault-sort-dir-btn')?.getAttribute('data-dir') || 'asc';
 
-  listEl.innerHTML = '';
+  listEl.replaceChildren();
   let filtered = getFilteredWords(wordsList);
 
   filtered.sort((a, b) => {
@@ -62,36 +62,104 @@ export function renderList(wordsList, selectedWordIds, openModalCallback, delete
   filtered.forEach(w => {
     const li = document.createElement('li');
     li.className = 'vault-list-item';
-    const review = formatTimeUntil(w);
-    const isChecked = selectedWordIds.has(w.id) ? 'checked' : '';
-    const errText = w.misspellings && w.misspellings.filter(Boolean).length > 0 
-      ? `<span class="error-tag">Errors: ${[...new Set(w.misspellings.filter(Boolean))].join(', ')}</span>` : '';
-    
-    li.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
-        <input type="checkbox" class="word-select-checkbox" data-id="${w.id}" ${isChecked}>
-        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <strong style="color: var(--primary-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem;">${w.word}</strong>
-            <span class="review-pill" style="color: ${review.color}; border-color: ${review.color}25; background: ${review.color}10;">${review.text}</span>
-          </div>
-          <span style="color: var(--text-muted); font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px;">${w.definition || 'No definition'}</span>
-          ${errText}
-        </div>
-      </div>
-      <div style="display: flex; gap: 6px; margin-left: 8px;">
-        <button class="table-icon-btn edit-btn" data-id="${w.id}" title="Edit word"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg></button>
-        <button class="table-icon-btn delete-btn" data-id="${w.id}" title="Delete word"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-      </div>
-    `;
-    
-    li.querySelector('.word-select-checkbox').addEventListener('change', (e) => {
+
+    const mainCol = document.createElement('div');
+    mainCol.style.display = 'flex';
+    mainCol.style.alignItems = 'center';
+    mainCol.style.gap = '8px';
+    mainCol.style.minWidth = '0';
+    mainCol.style.flex = '1';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'word-select-checkbox';
+    checkbox.setAttribute('data-id', w.id);
+    checkbox.checked = selectedWordIds.has(w.id);
+    checkbox.addEventListener('change', (e) => {
       if (e.target.checked) selectedWordIds.add(w.id);
       else selectedWordIds.delete(w.id);
       updateBulkUIState(filtered, selectedWordIds);
     });
-    li.querySelector('.edit-btn').addEventListener('click', () => openModalCallback(w));
-    li.querySelector('.delete-btn').addEventListener('click', () => deleteWordCallback(w));
+
+    const infoCol = document.createElement('div');
+    infoCol.style.display = 'flex';
+    infoCol.style.flexDirection = 'column';
+    infoCol.style.gap = '2px';
+    infoCol.style.minWidth = '0';
+    infoCol.style.flex = '1';
+
+    const wordRow = document.createElement('div');
+    wordRow.style.display = 'flex';
+    wordRow.style.alignItems = 'center';
+    wordRow.style.gap = '6px';
+
+    const wordStrong = document.createElement('strong');
+    wordStrong.style.color = 'var(--primary-light)';
+    wordStrong.style.overflow = 'hidden';
+    wordStrong.style.textOverflow = 'ellipsis';
+    wordStrong.style.whiteSpace = 'nowrap';
+    wordStrong.style.fontSize = '0.88rem';
+    wordStrong.textContent = w.word;
+
+    const review = formatTimeUntil(w);
+    const reviewPill = document.createElement('span');
+    reviewPill.className = 'review-pill';
+    reviewPill.style.color = review.color;
+    reviewPill.style.borderColor = `${review.color}25`;
+    reviewPill.style.background = `${review.color}10`;
+    reviewPill.textContent = review.text;
+
+    wordRow.appendChild(wordStrong);
+    wordRow.appendChild(reviewPill);
+
+    const defSpan = document.createElement('span');
+    defSpan.style.color = 'var(--text-muted)';
+    defSpan.style.fontSize = '0.78rem';
+    defSpan.style.overflow = 'hidden';
+    defSpan.style.textOverflow = 'ellipsis';
+    defSpan.style.whiteSpace = 'nowrap';
+    defSpan.style.marginBottom = '2px';
+    defSpan.textContent = w.definition || 'No definition';
+
+    infoCol.appendChild(wordRow);
+    infoCol.appendChild(defSpan);
+
+    if (w.misspellings && w.misspellings.filter(Boolean).length > 0) {
+      const errSpan = document.createElement('span');
+      errSpan.className = 'error-tag';
+      errSpan.textContent = `Errors: ${[...new Set(w.misspellings.filter(Boolean))].join(', ')}`;
+      infoCol.appendChild(errSpan);
+    }
+
+    mainCol.appendChild(checkbox);
+    mainCol.appendChild(infoCol);
+
+    const actionCol = document.createElement('div');
+    actionCol.style.display = 'flex';
+    actionCol.style.gap = '6px';
+    actionCol.style.marginLeft = '8px';
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'table-icon-btn edit-btn';
+    editBtn.setAttribute('data-id', w.id);
+    editBtn.title = 'Edit word';
+    editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>`;
+    editBtn.addEventListener('click', () => openModalCallback(w));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'table-icon-btn delete-btn';
+    deleteBtn.setAttribute('data-id', w.id);
+    deleteBtn.title = 'Delete word';
+    deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+    deleteBtn.addEventListener('click', () => deleteWordCallback(w));
+
+    actionCol.appendChild(editBtn);
+    actionCol.appendChild(deleteBtn);
+
+    li.appendChild(mainCol);
+    li.appendChild(actionCol);
     listEl.appendChild(li);
   });
   updateBulkUIState(filtered, selectedWordIds);

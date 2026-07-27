@@ -1,6 +1,7 @@
 import { fetchCambridgePronunciation, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, registerMisspelling, translateWord, getWords } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 import { findSuggestions } from './spelling.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 export async function handleManualCorrection(correctWord, originalWord, wrongAttempt = '', reloadVaultCallback, loadPracticeCallback) {
   const feedbackMsg = document.getElementById('feedback-msg');
@@ -40,19 +41,19 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
         <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
-        <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
+        <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${escapeHtml(correctWord)}</strong> (${escapeHtml(originalWord)} saved as misspelling).</p>
         <div class="feedback-details">
           <div class="feedback-meta-row">
-            ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
-            ${level ? `<span class="feedback-badge level">${level}</span>` : ''}
-            ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
+            ${partOfSpeech ? `<span class="feedback-badge pos">${escapeHtml(partOfSpeech)}</span>` : ''}
+            ${level ? `<span class="feedback-badge level">${escapeHtml(level)}</span>` : ''}
+            ${translation ? `<span class="feedback-badge trans">${escapeHtml(translation)}</span>` : ''}
           </div>
-          <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
-          ${example ? `<div class="feedback-example" data-word="${correctWord}">
+          <p class="feedback-definition"><strong>Definition:</strong> ${escapeHtml(def)}</p>
+          ${example ? `<div class="feedback-example" data-word="${escapeHtml(correctWord)}">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <span class="clue-label" style="margin: 0;">Example</span>
                 <div style="display: flex; gap: 4px;">
-                  <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${example.replace(/"/g, '&quot;')}">
+                  <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${escapeHtml(example)}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                   </button>
                   <button type="button" class="translate-example-btn" title="Translate Example">
@@ -60,14 +61,14 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
                   </button>
                 </div>
               </div>
-              <p class="feedback-example-text">"${example}"</p>
-              <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
+              <p class="feedback-example-text">"${escapeHtml(example)}"</p>
+              <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${escapeHtml(exampleTranslation)}"` : ''}</p>
             </div>` : ''}
         </div>
         ${renderAudioButtons(correctWord)}
         <div style="display: flex; justify-content: center; margin-top: 8px;">
           <button type="button" class="submit-btn sandbox-edit-btn" 
-            data-word="${correctWord.replace(/"/g, '&quot;')}"
+            data-word="${escapeHtml(correctWord)}"
             style="width: auto; padding: 4px 10px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
             <span>Edit Target/Details</span>

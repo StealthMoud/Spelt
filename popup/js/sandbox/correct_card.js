@@ -1,6 +1,7 @@
 import { getWords, translateWord, enrichWord, getFallbackExample, getStored, isGeminiConfigured, askGemini, atomicUpdate, getSpellingVariant } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 import { showConfirm } from '../vault/confirm.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
   const enriched = await enrichWord(word);
@@ -131,29 +132,29 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
     // Look up US/UK spelling variant
     const spellingVariant = getSpellingVariant(word);
     const variantHtml = spellingVariant && spellingVariant.us !== spellingVariant.uk
-      ? `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 2px 0 4px; text-align: center; letter-spacing: 0.01em;"><span style="color: var(--primary-light);">US:</span> <strong>${spellingVariant.us}</strong> <span style="margin: 0 3px;">·</span> <span style="color: var(--primary-light);">UK:</span> <strong>${spellingVariant.uk}</strong></p>`
+      ? `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 2px 0 4px; text-align: center; letter-spacing: 0.01em;"><span style="color: var(--primary-light);">US:</span> <strong>${escapeHtml(spellingVariant.us)}</strong> <span style="margin: 0 3px;">·</span> <span style="color: var(--primary-light);">UK:</span> <strong>${escapeHtml(spellingVariant.uk)}</strong></p>`
       : '';
 
     document.getElementById('feedback-msg').innerHTML = `
       ${closeBtnHtml}
       <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
-      <p style="margin: 6px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em;">${word} <span id="feedback-ipa-display" style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span></p>
+      <p style="margin: 6px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em;">${escapeHtml(word)} <span id="feedback-ipa-display" style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${escapeHtml(ipa)}</span></p>
       ${variantHtml}
       ${renderAudioButtons(word)}
       
       <div class="feedback-details">
         <div class="feedback-meta-row" id="feedback-meta-row">
-          ${partOfSpeech ? `<span class="feedback-badge pos" id="feedback-pos-badge">${partOfSpeech}</span>` : ''}
-          ${wordLevel ? `<span class="feedback-badge level" id="feedback-level-badge">${wordLevel}</span>` : ''}
-          ${translation ? `<span class="feedback-badge trans" id="feedback-trans-badge">${translation}</span>` : ''}
+          ${partOfSpeech ? `<span class="feedback-badge pos" id="feedback-pos-badge">${escapeHtml(partOfSpeech)}</span>` : ''}
+          ${wordLevel ? `<span class="feedback-badge level" id="feedback-level-badge">${escapeHtml(wordLevel)}</span>` : ''}
+          ${translation ? `<span class="feedback-badge trans" id="feedback-trans-badge">${escapeHtml(translation)}</span>` : ''}
         </div>
-        <p class="feedback-definition" id="feedback-def-display"><strong>Definition:</strong> ${def}</p>
+        <p class="feedback-definition" id="feedback-def-display"><strong>Definition:</strong> ${escapeHtml(def)}</p>
         ${example ? `
-          <div class="feedback-example" data-word="${word}" id="feedback-example-container">
+          <div class="feedback-example" data-word="${escapeHtml(word)}" id="feedback-example-container">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
               <span class="clue-label" style="margin: 0;">Example</span>
               <div style="display: flex; gap: 4px;">
-                <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${example.replace(/"/g, '&quot;')}">
+                <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${escapeHtml(example)}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 </button>
                 <button type="button" class="translate-example-btn" title="Translate Example">
@@ -161,8 +162,8 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
                 </button>
               </div>
             </div>
-            <p class="feedback-example-text" id="feedback-example-text">"${example}"</p>
-            <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
+            <p class="feedback-example-text" id="feedback-example-text">"${escapeHtml(example)}"</p>
+            <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${escapeHtml(exampleTranslation)}"` : ''}</p>
           </div>
         ` : ''}
       </div>

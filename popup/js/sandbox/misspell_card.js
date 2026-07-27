@@ -1,5 +1,6 @@
 import { getWords, translateWord, fetchDynamicDefinition, fetchDynamicExample, getFallbackExample, fetchCambridgePronunciation } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 export async function renderMisspellingCard(originalWord, suggestions, activeIndex) {
   const feedbackMsg = document.getElementById('feedback-msg');
@@ -34,28 +35,28 @@ export async function renderMisspellingCard(originalWord, suggestions, activeInd
   const alts = suggestions.filter((_, i) => i !== activeIndex);
   if (alts.length > 0) {
     altChips = `<p style="font-size: 0.68rem; color: var(--text-muted); margin: 6px 0 2px;">Other suggestions: ` +
-      alts.map(alt => `<button type="button" class="alt-suggestion-chip" data-index="${suggestions.indexOf(alt)}">${alt}</button>`).join('') + `</p>`;
+      alts.map(alt => `<button type="button" class="alt-suggestion-chip" data-index="${suggestions.indexOf(alt)}">${escapeHtml(alt)}</button>`).join('') + `</p>`;
   }
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
     <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
-    <p style="margin: 6px 0; font-size: 0.74rem;">"${originalWord}" is incorrect. Did you mean:</p>
-    <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${suggestion}${ipa !== '/--/' ? ` <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${ipa}</span>` : ''}</p>
+    <p style="margin: 6px 0; font-size: 0.74rem;">"${escapeHtml(originalWord)}" is incorrect. Did you mean:</p>
+    <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${escapeHtml(suggestion)}${ipa !== '/--/' ? ` <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${escapeHtml(ipa)}</span>` : ''}</p>
     ${renderAudioButtons(suggestion)}
     
     <div class="feedback-details">
       <div class="feedback-meta-row">
-        ${partOfSpeech ? `<span class="feedback-badge pos">${partOfSpeech}</span>` : ''}
-        ${level ? `<span class="feedback-badge level">${level}</span>` : ''}
-        ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
+        ${partOfSpeech ? `<span class="feedback-badge pos">${escapeHtml(partOfSpeech)}</span>` : ''}
+        ${level ? `<span class="feedback-badge level">${escapeHtml(level)}</span>` : ''}
+        ${translation ? `<span class="feedback-badge trans">${escapeHtml(translation)}</span>` : ''}
       </div>
-      <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
+      <p class="feedback-definition"><strong>Definition:</strong> ${escapeHtml(def)}</p>
       ${example ? `
-        <div class="feedback-example" data-word="${suggestion}">
+        <div class="feedback-example" data-word="${escapeHtml(suggestion)}">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <span class="clue-label" style="margin: 0;">Example</span>
             <div style="display: flex; gap: 4px;">
-              <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${example.replace(/"/g, '&quot;')}">
+              <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${escapeHtml(example)}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
               </button>
               <button type="button" class="translate-example-btn" title="Translate Example">
@@ -63,19 +64,19 @@ export async function renderMisspellingCard(originalWord, suggestions, activeInd
               </button>
             </div>
           </div>
-          <p class="feedback-example-text">"${example}"</p>
-          <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${exampleTranslation}"` : ''}</p>
+          <p class="feedback-example-text">"${escapeHtml(example)}"</p>
+          <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${escapeHtml(exampleTranslation)}"` : ''}</p>
         </div>
       ` : ''}
     </div>
     
     ${altChips}
     <div style="display: flex; gap: 6px; margin-top: 8px;">
-      <button type="button" class="submit-btn accept-suggestion-btn" data-suggestion="${suggestion}" data-original="${originalWord}" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
+      <button type="button" class="submit-btn accept-suggestion-btn" data-suggestion="${escapeHtml(suggestion)}" data-original="${escapeHtml(originalWord)}" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><polyline points="20 6 9 17 4 12"/></svg>
         <span>Accept</span>
       </button>
-      <button type="button" class="submit-btn reject-suggestion-btn" data-original="${originalWord}" style="width: auto; padding: 4px 8px; font-size: 0.72rem; background: hsla(5, 80%, 15%, 0.3); border-color: var(--danger); color: var(--danger);">
+      <button type="button" class="submit-btn reject-suggestion-btn" data-original="${escapeHtml(originalWord)}" style="width: auto; padding: 4px 8px; font-size: 0.72rem; background: hsla(5, 80%, 15%, 0.3); border-color: var(--danger); color: var(--danger);">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         <span>Reject</span>
       </button>
