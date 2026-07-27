@@ -41,7 +41,9 @@ export function setStored(key, value) {
     } else {
       try {
         localStorage.setItem(key, JSON.stringify(value));
-      } catch {}
+      } catch (_) {
+        // Fallback for storage quota or restricted environment
+      }
       mockDb[key] = value;
       resolve();
     }

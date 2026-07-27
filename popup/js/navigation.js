@@ -1,3 +1,5 @@
+import { stopAiStatusMonitor } from './settings.js';
+
 // Tab switching navigation controller for Spelt extension popup
 export function initNavigation(onTabChanged) {
   const tabs = document.querySelectorAll('.tab-btn');
@@ -7,6 +9,10 @@ export function initNavigation(onTabChanged) {
     tab.addEventListener('click', () => {
       const target = tab.getAttribute('data-tab');
       
+      if (target !== 'settings-tab') {
+        stopAiStatusMonitor();
+      }
+
       tabs.forEach(t => t.classList.remove('active'));
       panes.forEach(p => p.classList.remove('active'));
       

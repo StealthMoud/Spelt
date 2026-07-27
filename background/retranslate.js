@@ -1,4 +1,5 @@
 import { getWords, saveWords, askGemini, atomicUpdate } from '../shared/storage.js';
+import { getLanguageName } from '../src/core/languages.js';
 
 async function updateWordTranslation(wordId, targetLang) {
   const initialList = await getWords();
@@ -6,19 +7,7 @@ async function updateWordTranslation(wordId, targetLang) {
   if (!card) return;
 
   const wordStr = card.word;
-  let targetLangName = 'Farsi (Persian)';
-  if (targetLang === 'es') targetLangName = 'Spanish';
-  else if (targetLang === 'fr') targetLangName = 'French';
-  else if (targetLang === 'de') targetLangName = 'German';
-  else if (targetLang === 'it') targetLangName = 'Italian';
-  else if (targetLang === 'pt') targetLangName = 'Portuguese';
-  else if (targetLang === 'ru') targetLangName = 'Russian';
-  else if (targetLang === 'ar') targetLangName = 'Arabic';
-  else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
-  else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
-  else if (targetLang === 'ja') targetLangName = 'Japanese';
-  else if (targetLang === 'ko') targetLangName = 'Korean';
-  else if (targetLang === 'tr') targetLangName = 'Turkish';
+  const targetLangName = getLanguageName(targetLang);
 
   const hasExistingData = card.definition || card.translation || card.example;
   

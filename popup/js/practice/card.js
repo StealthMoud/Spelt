@@ -246,21 +246,19 @@ export async function syncPracticeDeck() {
   }
 }
 
-async function setupAIHintButton(card) {
-  const hintBtn = document.getElementById('ai-hint-btn');
-  const hintBubble = document.getElementById('ai-hint-bubble');
-  const hintText = document.getElementById('ai-hint-text');
-  const regenBtn = document.getElementById('ai-hint-regen');
-  const closeBtn = document.getElementById('ai-hint-close');
+async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defaultBottom }, card) {
+  const hintBtn = document.getElementById(btnId);
+  const hintBubble = document.getElementById(bubbleId);
+  const hintText = document.getElementById(textId);
+  const regenBtn = document.getElementById(regenId);
+  const closeBtn = document.getElementById(closeId);
   if (!hintBtn || !hintBubble || !hintText) return;
 
-  // Reset dragged positions back to default stylesheet styles on setup
   hintBubble.style.top = 'auto';
   hintBubble.style.right = '14px';
-  hintBubble.style.bottom = '62px';
+  hintBubble.style.bottom = defaultBottom;
   hintBubble.style.left = '14px';
 
-  // Make the hint bubble draggable
   makeElementDraggable(hintBubble);
 
   const isConfigured = await isGeminiConfigured();
@@ -274,27 +272,27 @@ async function setupAIHintButton(card) {
   hintText.textContent = '';
 
   const handleHintRequest = async (forceRegen = false) => {
+    const currentCard = card || peekCard();
+    if (!currentCard) return;
     hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
     hintBubble.style.display = 'block';
     try {
-      let hint = '';
       if (forceRegen) {
-        card.aiHint = null;
+        currentCard.aiHint = null;
         try {
           await atomicUpdate(async (words) => {
-            const w = words.find(x => x.id === card.id);
+            const w = words.find(x => x.id === currentCard.id);
             if (w) delete w.aiHint;
           });
         } catch (_) {}
       }
-      hint = await generateHint(card);
+      const hint = await generateHint(currentCard);
       hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${escapeHtml(l)}</div>`).join('');
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
     }
   };
 
-  // Wire event listeners by replacing/cloning buttons to strip previous listeners
   const newHintBtn = hintBtn.cloneNode(true);
   hintBtn.parentNode.replaceChild(newHintBtn, hintBtn);
   newHintBtn.addEventListener('click', (e) => {
@@ -325,83 +323,26 @@ async function setupAIHintButton(card) {
   }
 }
 
-async function setupBackAIHintButton(card) {
-  const hintBtn = document.getElementById('back-ai-hint-btn');
-  const hintBubble = document.getElementById('back-ai-hint-bubble');
-  const hintText = document.getElementById('back-ai-hint-text');
-  const regenBtn = document.getElementById('back-ai-hint-regen');
-  const closeBtn = document.getElementById('back-ai-hint-close');
-  if (!hintBtn || !hintBubble || !hintText) return;
+function setupAIHintButton(card) {
+  return mountHintPanel({
+    btnId: 'ai-hint-btn',
+    bubbleId: 'ai-hint-bubble',
+    textId: 'ai-hint-text',
+    regenId: 'ai-hint-regen',
+    closeId: 'ai-hint-close',
+    defaultBottom: '62px'
+  }, card);
+}
 
-  // Reset dragged positions back to default stylesheet styles on setup
-  hintBubble.style.top = 'auto';
-  hintBubble.style.right = '14px';
-  hintBubble.style.bottom = '74px';
-  hintBubble.style.left = '14px';
-
-  // Make the hint bubble draggable
-  makeElementDraggable(hintBubble);
-
-  const isConfigured = await isGeminiConfigured();
-  if (!isConfigured) {
-    hintBtn.style.display = 'none';
-    return;
-  }
-
-  hintBtn.style.display = 'inline-flex';
-  hintBubble.style.display = 'none';
-  hintText.textContent = '';
-
-  const handleHintRequest = async (forceRegen = false) => {
-    hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
-    hintBubble.style.display = 'block';
-    try {
-      let hint = '';
-      if (forceRegen) {
-        card.aiHint = null;
-        try {
-          await atomicUpdate(async (words) => {
-            const w = words.find(x => x.id === card.id);
-            if (w) delete w.aiHint;
-          });
-        } catch (_) {}
-      }
-      hint = await generateHint(card);
-      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
-    } catch (err) {
-      hintText.textContent = `Could not generate hint: ${err.message}`;
-    }
-  };
-
-  // Wire event listeners by replacing/cloning buttons to strip previous listeners
-  const newHintBtn = hintBtn.cloneNode(true);
-  hintBtn.parentNode.replaceChild(newHintBtn, hintBtn);
-  newHintBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (hintBubble.style.display === 'block') {
-      hintBubble.style.display = 'none';
-    } else {
-      handleHintRequest(false);
-    }
-  });
-
-  if (regenBtn) {
-    const newRegenBtn = regenBtn.cloneNode(true);
-    regenBtn.parentNode.replaceChild(newRegenBtn, regenBtn);
-    newRegenBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleHintRequest(true);
-    });
-  }
-
-  if (closeBtn) {
-    const newCloseBtn = closeBtn.cloneNode(true);
-    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-    newCloseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hintBubble.style.display = 'none';
-    });
-  }
+function setupBackAIHintButton(card) {
+  return mountHintPanel({
+    btnId: 'back-ai-hint-btn',
+    bubbleId: 'back-ai-hint-bubble',
+    textId: 'back-ai-hint-text',
+    regenId: 'back-ai-hint-regen',
+    closeId: 'back-ai-hint-close',
+    defaultBottom: '74px'
+  }, card);
 }
 
 async function triggerSessionSummary() {

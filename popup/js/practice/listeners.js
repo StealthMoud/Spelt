@@ -1,5 +1,6 @@
 import { getStored, setStored, fetchTranslation, getFallbackExample, atomicUpdate } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
+import { showConfirm } from '../vault/confirm.js';
 import { getDueCards, setPracticeMode } from './state.js';
 import { checkSpelling, revealRecall } from './actions.js';
 import { submitRating, submitMasteredRating } from './rate.js';
@@ -107,24 +108,9 @@ export function registerPracticeListeners() {
       const card = getDueCards()[0];
       if (!card) return;
       if (scoreAttr === 'mastered') {
-        const modal = document.getElementById('popup-confirm-modal');
-        if (modal) {
-          document.getElementById('popup-confirm-title').textContent = 'Mark as Mastered?';
-          document.getElementById('popup-confirm-msg').textContent = `Are you sure you want to mark "${card.word}" as Mastered?`;
-          
-          const confirmBtn = document.getElementById('popup-confirm-ok-btn');
-          const cancelBtn = document.getElementById('popup-confirm-cancel-btn');
-          
-          const onConfirm = async () => { modal.style.display = 'none'; cleanup(); await submitMasteredRating(card); };
-          const onCancel = () => { modal.style.display = 'none'; cleanup(); };
-          const cleanup = () => { confirmBtn.removeEventListener('click', onConfirm); cancelBtn.removeEventListener('click', onCancel); };
-          
-          confirmBtn.addEventListener('click', onConfirm);
-          cancelBtn.addEventListener('click', onCancel);
-          modal.style.display = 'flex';
-        } else if (confirm(`Mark "${card.word}" as Mastered?`)) {
+        showConfirm('Mark as Mastered?', `Are you sure you want to mark "${card.word}" as Mastered?`, async () => {
           await submitMasteredRating(card);
-        }
+        });
       } else {
         await submitRating(parseInt(scoreAttr, 10));
       }

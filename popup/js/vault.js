@@ -1,4 +1,5 @@
 import { getWords, saveWords, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../shared/storage.js';
+import { getLanguageName } from '../../src/core/languages.js';
 import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';
 import { saveWord } from './vault/save.js';
@@ -109,19 +110,7 @@ export async function initVault(onVaultUpdated) {
       showConfirm('AI Enrich Progress', `Enriched 0 of ${total} words...`, null, false);
 
       const targetLang = await getStored('spelt_target_lang') || 'fa';
-      let targetLangName = 'Farsi (Persian)';
-      if (targetLang === 'es') targetLangName = 'Spanish';
-      else if (targetLang === 'fr') targetLangName = 'French';
-      else if (targetLang === 'de') targetLangName = 'German';
-      else if (targetLang === 'it') targetLangName = 'Italian';
-      else if (targetLang === 'pt') targetLangName = 'Portuguese';
-      else if (targetLang === 'ru') targetLangName = 'Russian';
-      else if (targetLang === 'ar') targetLangName = 'Arabic';
-      else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
-      else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
-      else if (targetLang === 'ja') targetLangName = 'Japanese';
-      else if (targetLang === 'ko') targetLangName = 'Korean';
-      else if (targetLang === 'tr') targetLangName = 'Turkish';
+      const targetLangName = getLanguageName(targetLang);
 
       let done = 0;
       for (const id of idsToEnrich) {

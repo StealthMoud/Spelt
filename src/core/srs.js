@@ -13,7 +13,7 @@ export function getNextReviewDate(intervalDays, fromTime = Date.now()) {
 
 export function calcSM2(q, prevRep, prevInt, prevEF, multiplier = 1.0, isCorrect = true, _errorWeight = 1.0) {
   let rep = typeof prevRep === 'number' && !isNaN(prevRep) ? prevRep : 0;
-  let interval = 0;
+  let interval;
   let ef = typeof prevEF === 'number' && !isNaN(prevEF) ? prevEF : 2.5;
 
   if (q < 3) {

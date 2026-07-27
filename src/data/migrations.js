@@ -3,6 +3,37 @@ import { getLocalMidnight, getNextReviewDate } from '../core/srs.js';
 
 export const CURRENT_SCHEMA_VERSION = 6;
 
+const oldHardcodedExamples = new Set([
+  'the hotel can accommodate up to three hundred guests.',
+  'we will definitely attend the conference next week.',
+  'please separate the recycling from the general waste.',
+  'did you receive the email i sent you yesterday?',
+  'i did not mean to embarrass you in front of the team.',
+  'we will wait here until the rain finally stops.',
+  'the new government promised to lower taxes.',
+  'we must do more to protect our natural environment.',
+  'the accident occurred at the corner of the street.',
+  'he paused on the threshold before entering the room.',
+  'his pronunciation of the word was perfectly clear.',
+  'she marked the meeting date on her wall calendar.',
+  'it is necessary to wear a helmet when riding a bike.',
+  'he is currently writing a novel about his travels.',
+  'my colleague helped me finish the project on time.',
+  'the launch of the new product was highly successful.',
+  'we plan to start our journey early tomorrow morning.',
+  'the children spent all day playing on the sandy beach.',
+  'the test was very easy and everyone passed it.',
+  'please try to spell the word again if you make a mistake.',
+  'her perseverance in the face of multiple setbacks was truly inspiring.',
+  'a civilized society is judged by how it treats its most vulnerable members.',
+  'successful collaboration between the two teams led to a breakthrough.',
+  'the research team conducted a detailed analysis of the data.',
+  'there is a strong correlation between regular study and high test scores.',
+  'the experiment provided validation for the scientist\'s theory.',
+  'the teacher conducted an assessment of the students\' language skills.',
+  'the new results show a significant improvement over the previous trials.'
+]);
+
 export async function runSchemaMigrations(words) {
   if (!Array.isArray(words)) return [];
 
@@ -15,6 +46,11 @@ export async function runSchemaMigrations(words) {
   const sanitized = words.map(w => {
     if (!w) return w;
     let cardModified = false;
+
+    if (w.example && oldHardcodedExamples.has(w.example.trim().toLowerCase())) {
+      w.example = '';
+      cardModified = true;
+    }
 
     if (w.rep === undefined || w.rep === null || isNaN(w.rep)) {
       w.rep = 0; cardModified = true;
