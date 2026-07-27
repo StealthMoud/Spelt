@@ -40,7 +40,14 @@ export async function initVault(onVaultUpdated) {
   registerAutofillListeners();
   registerAudioListeners();
 
-  const onSearchChange = () => { selectedWordIds.clear(); renderList(wordsList, selectedWordIds, openModal, deleteWord); };
+  let searchDebounceTimeout = null;
+  const onSearchChange = () => {
+    clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = setTimeout(() => {
+      selectedWordIds.clear();
+      renderList(wordsList, selectedWordIds, openModal, deleteWord);
+    }, 150);
+  };
   document.getElementById('vault-search').addEventListener('input', onSearchChange);
   document.getElementById('vault-filter-status')?.addEventListener('change', onSearchChange);
   document.getElementById('vault-sort-field')?.addEventListener('change', onSearchChange);
