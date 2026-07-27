@@ -43,14 +43,19 @@ export async function showToastInTab(tabId, message, isSuccess = true) {
           pointer-events: auto;
         `;
 
-        const iconSvg = success 
-          ? `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="20 6 9 17 4 12"/></svg>`
-          : `<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+        const iconWrapper = document.createElement('div');
+        iconWrapper.style.display = 'inline-flex';
+        iconWrapper.style.alignItems = 'center';
+        iconWrapper.innerHTML = success 
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="var(--success, #10b981)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="20 6 9 17 4 12"/></svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="var(--danger, #ef4444)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
 
-        toast.innerHTML = `
-          ${iconSvg}
-          <span style="font-family: inherit;">${msg}</span>
-        `;
+        const textSpan = document.createElement('span');
+        textSpan.style.fontFamily = 'inherit';
+        textSpan.textContent = msg;
+
+        toast.appendChild(iconWrapper);
+        toast.appendChild(textSpan);
 
         container.appendChild(toast);
         toast.offsetHeight;

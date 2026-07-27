@@ -162,9 +162,30 @@ export async function verifyPracticeWriting(card, userSentence, mode) {
   const prompt = `Word: "${card.word}" (${card.partOfSpeech || 'unknown'}, "${card.definition || 'N/A'}").${variantNote}
 Student wrote: "${userSentence}"
 Evaluate: correct usage, spelling/grammar, naturalness. 2 sentences max. No fluff.
-HTML format: Start with <span style='color: #10b981; font-weight: 700;'>✓ Correct Usage</span> or <span style='color: #ef4444; font-weight: 700;'>✗ Incorrect</span>. If corrections needed: <div style='margin-top: 4px;'><strong>Correction:</strong> ...</div>. Add: <div style='margin-top: 4px;'><strong>Coach Feedback:</strong> ...</div>. No markdown code blocks.`;
+Return JSON with schema:
+{
+  "verdict": "correct" or "incorrect",
+  "correction": "corrected sentence if any, or empty string",
+  "feedback": "brief coaching feedback"
+}
+Respond ONLY with the JSON object. Do not include markdown code block ticks.`;
 
-  return await askGeminiText(prompt, MEDIUM_OPTS);
+  try {
+    const raw = await askGeminiText(prompt, MEDIUM_OPTS);
+    const cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    return {
+      verdict: parsed.verdict === 'incorrect' ? 'incorrect' : 'correct',
+      correction: typeof parsed.correction === 'string' ? parsed.correction.trim() : '',
+      feedback: typeof parsed.feedback === 'string' ? parsed.feedback.trim() : raw
+    };
+  } catch (_) {
+    return {
+      verdict: 'correct',
+      correction: '',
+      feedback: userSentence
+    };
+  }
 }
 
 /**

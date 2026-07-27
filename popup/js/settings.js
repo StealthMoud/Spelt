@@ -98,9 +98,9 @@ export function initSettings(onDbRestored) {
       const testModel = availableModels[0];
 
       statusEl.textContent = `Testing content generation with ${getGeminiModelMeta(testModel).label}...`;
-      const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/${testModel}:generateContent?key=${key}`, {
+      const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/${testModel}:generateContent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({
           contents: [{ parts: [{ text: 'Write the word "connected".' }] }]
         })
@@ -375,7 +375,9 @@ function setGeminiStorage(updates) {
 }
 
 async function fetchModelsForKey(key) {
-  const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
+  const modelsRes = await fetch('https://generativelanguage.googleapis.com/v1/models', {
+    headers: { 'x-goog-api-key': key }
+  });
   if (!modelsRes.ok) {
     const errData = await modelsRes.json().catch(() => ({}));
     throw new Error(errData.error?.message || 'Invalid API key or model-list request failed.');

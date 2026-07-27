@@ -1,4 +1,5 @@
 import { getWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured, atomicUpdate } from '../../../shared/storage.js';
+import { escapeHtml } from '../../../shared/dom.js';
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 import { generateHint, generateSessionSummary, verifyPracticeWriting } from './ai_helpers.js';
@@ -299,7 +300,7 @@ async function setupAIHintButton(card) {
         } catch (_) {}
       }
       hint = await generateHint(card);
-      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
+      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${escapeHtml(l)}</div>`).join('');
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
     }
@@ -524,16 +525,48 @@ async function setupAIWritingPractice(card) {
     }
   });
 
-  const showFeedback = (html, autoHideDuration) => {
+  const showFeedback = (content, autoHideDuration) => {
     if (writingFeedbackTimeoutId) {
       clearTimeout(writingFeedbackTimeoutId);
       writingFeedbackTimeoutId = null;
     }
-    if (feedbackContentEl) {
-      feedbackContentEl.innerHTML = html;
-    } else {
-      feedbackEl.innerHTML = html;
+    const targetEl = feedbackContentEl || feedbackEl;
+    targetEl.replaceChildren();
+
+    if (typeof content === 'string') {
+      const span = document.createElement('span');
+      span.style.fontSize = '0.65rem';
+      span.textContent = content;
+      targetEl.appendChild(span);
+    } else if (content && typeof content === 'object') {
+      const isOk = content.verdict === 'correct';
+      const badge = document.createElement('span');
+      badge.style.color = isOk ? 'var(--success)' : 'var(--danger)';
+      badge.style.fontWeight = '700';
+      badge.textContent = isOk ? '✓ Correct Usage' : '✗ Incorrect';
+      targetEl.appendChild(badge);
+
+      if (content.correction) {
+        const corrDiv = document.createElement('div');
+        corrDiv.style.marginTop = '4px';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Correction: ';
+        corrDiv.appendChild(strong);
+        corrDiv.appendChild(document.createTextNode(content.correction));
+        targetEl.appendChild(corrDiv);
+      }
+
+      if (content.feedback) {
+        const fbDiv = document.createElement('div');
+        fbDiv.style.marginTop = '4px';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Coach Feedback: ';
+        fbDiv.appendChild(strong);
+        fbDiv.appendChild(document.createTextNode(content.feedback));
+        targetEl.appendChild(fbDiv);
+      }
     }
+
     feedbackEl.style.display = 'block';
 
     if (autoHideDuration) {
@@ -547,18 +580,18 @@ async function setupAIWritingPractice(card) {
   const handleVerifyRequest = async () => {
     const userText = inputEl.value.trim();
     if (!userText) {
-      showFeedback('<span style="color: var(--danger); font-size: 0.65rem;">Please write a sentence first.</span>', 0);
+      showFeedback('Please write a sentence first.', 0);
       return;
     }
 
-    showFeedback('<span style="color: var(--text-muted); font-size: 0.65rem;">AI Coach is grading your sentence...</span>', 0);
+    showFeedback('AI Coach is grading your sentence...', 0);
     verifyBtn.setAttribute('disabled', 'true');
 
     try {
       const feedback = await verifyPracticeWriting(card, userText, mode);
       showFeedback(feedback, 0); // No timer: user closes it manually
     } catch (err) {
-      showFeedback(`<span style="color: var(--danger); font-size: 0.65rem;">Could not verify sentence: ${err.message}</span>`, 0);
+      showFeedback(`Could not verify sentence: ${err.message}`, 0);
     } finally {
       verifyBtn.removeAttribute('disabled');
     }

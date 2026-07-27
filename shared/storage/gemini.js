@@ -474,11 +474,11 @@ function getShortestWait(cooldowns) {
  */
 async function callModel(key, model, bodyPayload) {
   const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
-  const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent?key=${key}`;
+  const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent`;
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify(bodyPayload)
   });
 
@@ -799,10 +799,10 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
 
     try {
       const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
-      const streamUrl = `https://generativelanguage.googleapis.com/v1/${cleanModel}:streamGenerateContent?key=${key}&alt=sse`;
+      const streamUrl = `https://generativelanguage.googleapis.com/v1/${cleanModel}:streamGenerateContent?alt=sse`;
       const fetchOpts = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify(body)
       };
 
