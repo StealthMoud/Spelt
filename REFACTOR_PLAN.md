@@ -9,109 +9,107 @@ Do not batch unrelated tasks into one commit. Follow the commit rules in
 
 ---
 
-# ⚠️ STATUS — verified 2026-07-27 against commit `9dc2704`
+# ⚠️ STATUS — verified 2026-07-27 against commit `2b23bb9`
 
-Execution steps 1–9 were attempted across nine commits (`25a9401`..`9dc2704`). **Steps 10–15 have
-not been started.** Below is what was verified by inspection, not by commit message.
+Fifteen commits have landed (`25a9401`..`2b23bb9`). Execution steps 1–10 and 14 are **done**.
+Everything below was verified by inspecting the code and re-running the measurements, not by
+reading commit messages.
 
-**Read this section before doing anything else.** Where a task is marked ⚠️, the commit claims it
-but the code does not fully deliver it — re-check before moving on.
+**`npm run check` currently passes** (lint 0 errors / 34 warnings, 15/15 tests, build OK).
+That is the floor, not the finish line — six tasks remain, listed under "Remaining work".
 
 ### Done and verified ✅
 
 | Task | Evidence |
 |---|---|
-| 1.1 dev reloader + `logDebug` removed | `background/reloader.js` gone, `grep localhost` → 0 hits |
+| 1.1 dev reloader + `logDebug` removed | `background/reloader.js` gone; `grep localhost` → 0 |
 | 1.2 host permissions corrected | `generativelanguage`, `datamuse`, `gstatic` added; localhost removed |
-| 2.1 US/UK variant bug | new [popup/js/practice/answer.js](popup/js/practice/answer.js); `rate.js` now reads `getLastSpellingResult()` |
-| 2.2 dead ternary | [misspellings.js:15](shared/storage/misspellings.js#L15) → `let tr = null;` |
-| 2.3 dictionary session cache | [shared/storage/dictionary-source.js](shared/storage/dictionary-source.js) created |
+| 1.3 naming purge | marketing-word hits **64 → 4**; emoji in UI strings → 0 |
+| 1.4 README / CHROMEWEBSTORE rewritten | no `🤖 Premium AI Coaching`, no "state-of-the-art" |
+| 1.5 housekeeping | `samples/` and `debug_extension.log` deleted; lockfile tracked; scripts moved to [scripts/](scripts/) |
+| 2.1 US/UK variant bug | [popup/js/practice/answer.js](popup/js/practice/answer.js); `rate.js` reads `getLastSpellingResult()` |
+| 2.2 dead ternary | `let tr = null;` |
+| 2.3 dictionary session cache | [shared/storage/dictionary-source.js](shared/storage/dictionary-source.js) |
 | 2.4 `User-Agent` headers | 0 remaining |
-| 2.5 object-URL leak | `revokeObjectURL` on `ended`/`error` in [audio.js](shared/storage/audio.js#L27) |
-| 2.6 `crypto.randomUUID()` | `substr(2,9)` gone from all 3 sites |
-| 2.7 schema versioning | `getWordsRaw()` + `spelt_schema_version` in [src/data/](src/data/) |
-| 2.8 opaque deck | `peekCard`/`advanceDeck`/`requeueCard`/`replaceDeck` in [practice/state.js](popup/js/practice/state.js) |
-| 2.9 shared due selectors | [src/core/selectors.js](src/core/selectors.js), 8 call sites |
+| 2.5 object-URL leak | `revokeObjectURL` on `ended`/`error` |
+| 2.6 `crypto.randomUUID()` | all 3 sites |
+| 2.7 schema versioning | `getWordsRaw()` + `spelt_schema_version` |
+| 2.8 opaque deck | `peekCard`/`advanceDeck`/`requeueCard`/`replaceDeck` |
+| 2.9 shared due selectors | [src/core/selectors.js](src/core/selectors.js) |
+| 2.11 `alert()` removed | **6 → 0** |
+| 2.12 unused imports | lint clean of errors |
 | 3.2 model-authored HTML | prompt no longer requests raw HTML |
 | 3.3 API keys → `x-goog-api-key` header | all 4 sites |
+| 3.4 CSP declared | but see ⚠️ note under 5.1 below |
 | 4.1 `src/core` + `src/data` | real migration; `shared/*` are re-export shims |
-| 9.2 tests | 15/15 pass via `node --test` |
+| 5.2 CSS consolidation | **45 → 12 stylesheets**, domain-named, no numeric suffixes |
+| 8 (partial) vault search debounce | landed |
+| 9.1 lint + format | **0 errors**; `check` script added |
+| 9.2 tests | 15/15 pass |
 
-### Partially done — finish these ⚠️
+### Remaining work — 6 tasks
 
-| Task | What is missing |
-|---|---|
-| **9.1 lint** | Config exists but **`npm run lint` fails: 46 errors, 58 warnings.** See §A below. |
-| **3.1 escaping** | `escapeHtml` + [shared/dom.js](shared/dom.js) exist and `background/toast.js` is fixed, but `innerHTML` count is **74 (was 75)**. The helper was added; the migration was not done. See §B. |
-| **4.2 `card.js` split** | 708 → **682 lines**. The duplicated `setupAIHintButton`/`setupBackAIHintButton` pair and `makeElementDraggable` are still in place. |
-| **4.3 clone-and-replace** | **8 `cloneNode(true)` listener-shedding sites remain.** No `AbortController` scoping. |
-| **4.4 `settings.js` split** | 839 → 630. `runIntegrityAudit` was extracted to [src/data/integrity.js](src/data/integrity.js) ✅, but `initSettings` is still a large nested-function block. |
-| **1.5 housekeeping** | `samples/` and `debug_extension.log` **still present**. `package-lock.json` still git-ignored. |
-| **2.11 `alert()`** | **6 sites remain** — and the linter now flags every one as an error. |
+Ordered by dependency. Do them in this order.
 
-### Not started ❌
+| # | Task | Current measurement | Plan § |
+| --- | --- | --- | --- |
+| **R1** | **Self-host the font.** `@import url('https://fonts.googleapis.com/…')` is still line 1 of [popup/styles/tokens.css](popup/styles/tokens.css). ⚠️ The CSP added in `2b23bb9` deliberately omits `style-src` to avoid breaking it — so 3.4 is only half-landed. Self-host the font, **then** add `style-src 'self'` to the CSP. | 1 remote import; no `assets/fonts/` | 5.1 + 3.4 |
+| **R2** | **Finish token scale + reduced motion.** `tokens.css` has only 3 of the `--space-*` / `--text-*` / `--shadow-*` / `--z-*` values from 5.4. No `prefers-reduced-motion` block anywhere — the infinite `badgePulse` still runs for everyone. | 3 scale tokens; 0 media queries | 5.4, 5.5 |
+| **R3** | **Finish escaping (10 unescaped sites).** `escapeHtml` now has 7 importers and `vault/list.js` is converted ✅, but **10 `innerHTML` templates still interpolate untrusted values unescaped.** Four take `err.message`; four take **Gemini model output** (`aiData.definition`, `.partOfSpeech`, `.level`, `.translation` at [correct_card.js:223-241](popup/js/sandbox/correct_card.js#L223)) — that is task 3.2 still leaking through a different path. | 10 sites | 3.1, 3.2 |
+| **R4** | **Inline styles → classes.** Untouched by the CSS consolidation: the 12 new stylesheets were merged, but markup was not migrated onto them. | **292** `style="` in [src/html/](src/html/); 167 `.style.display =` in JS | 5.3 |
+| **R5** | **Accessibility.** Nothing has been done here at all. | **0** `aria-*` / `role` in [src/html/](src/html/); 0 `<dialog>` | Phase 7, 6.7 |
+| **R6** | **Structural leftovers + CI.** `card.js` is 682 lines with the duplicated hint-panel pair and `makeElementDraggable` intact; 8 `cloneNode(true)` listener-shedding sites; [popup/popup.html](popup/popup.html) still tracked as a 1186-line generated artefact; no `.github/workflows/`. | 8 cloneNode; 4 draggable; no CI | 4.2, 4.3, 9.3, 9.4 |
 
-| Task | Current measurement |
-|---|---|
-| **1.3 naming purge** | 64 marketing-word hits; 32 `.premium-input`; 10 emoji in UI strings |
-| **1.4 README** | still opens features with `## 🤖 Premium AI Coaching (Gemini-Powered)`, "state-of-the-art", `### 💎 Elite Premium Aesthetics` |
-| **3.4 CSP** | no `content_security_policy` in [manifest.json](manifest.json) |
-| **Phase 5 (all)** | **45 stylesheets**, numbered splits intact; remote Google Fonts `@import` still at [variables.css:1](popup/styles/variables.css#L1); **292 inline `style=`**; no `prefers-reduced-motion` |
-| **Phase 6 (all)** | 4 draggable overlays; 0 `<dialog>`; 163 `.style.display =` assignments |
-| **Phase 7 (all)** | **0 `aria-*` / `role` attributes in [src/html/](src/html/)** |
-| **Phase 8 (most)** | no vault-search debounce; `renderStats()` still ungated |
-| **9.3 build** | [popup/popup.html](popup/popup.html) still tracked (1186 generated lines); no `dist/` |
-| **9.4 CI** | no `.github/workflows/` |
+Phase 6 (UI/UX rework) is **not** in this list — it depends on R4 landing first. Treat it as a
+separate follow-up once R1–R6 are green.
 
 ---
 
-## §A — Fix the linter first (blocks everything)
+## §A — Rules for the remaining work
 
-`npm run lint` currently fails. Nothing else should merge until it is green. Breakdown:
+1. **`npm run check` must pass after every task.** It passes right now; do not regress it. The
+   34 remaining warnings are `no-unused-vars` — clear them as you touch each file rather than in
+   one sweep.
+2. **Re-measure, don't assume.** Each task in the table above has a number attached. After
+   finishing a task, re-run its measurement command (see §B) and confirm the number moved. Three
+   earlier commits claimed work that the measurements showed had not landed — that is what this
+   status section exists to catch.
+3. **One task per commit**, 3–5 word lowercase messages per
+   [.agents/rules/git-commits.md](.agents/rules/git-commits.md).
+4. **Do not start Phase 6** before R4. Phase 6 rewrites the same markup R4 restyles.
 
-| Count | Rule | Action |
-|---|---|---|
-| 58 | `no-unused-vars` (warnings) | Delete the dead imports. Task 2.12 in this plan lists the known ones; the linter now finds the rest. |
-| 23 | `no-empty` | Almost all are the `catch (_) {}` idiom. **Decide once:** either set `allowEmptyCatch: true` in [eslint.config.js](eslint.config.js), or add a one-line comment in each block explaining why the error is swallowed. Do not mix both. |
-| 11 | `no-useless-escape` | Over-escaped regex character classes, e.g. [examples.js:11](shared/storage/examples.js#L11) `/[\[\]\(\)\/=\|]/` → `/[[\]()/=|]/`. |
-| 6 | `no-restricted-globals` | The 6 remaining `alert()` calls — this **is** task 2.11. Finish it and these clear. |
-| 2 | `no-cond-assign` | `if (match = regex.exec(html))` in [definitions.js](shared/storage/definitions.js#L26). Hoist the assignment. |
-| 2 | `no-useless-assignment` | Dead writes; delete. |
-| 1 | `no-undef` | A genuine missing binding — investigate, do not silence. |
-| 1 | `preserve-caught-error` | [gemini.js:725](shared/storage/gemini.js#L725) rethrows without `{ cause }`. Add it. |
+## §B — Verification commands
 
-**Then add `"check": "npm run lint && npm test && npm run build"` to
-[package.json](package.json) scripts** — the plan's definition of done references it and it does
-not exist yet.
+Run from the repo root. These are the exact measurements behind the table above.
 
-## §B — Finish the escaping migration (3.1)
+```sh
+npm run check                                                    # must exit 0
 
-The infrastructure landed but the call sites did not. `escapeHtml` is imported in exactly **2**
-files ([components/audio_buttons.js](popup/js/components/audio_buttons.js),
-[practice/card.js](popup/js/practice/card.js)) out of 74 `innerHTML` sites.
+# R1  expect 0, then a local @font-face
+grep -rn "fonts.googleapis" popup/styles/
+grep -o "style-src[^;\"]*" manifest.json                         # expect style-src 'self'
 
-Work in this order, and re-measure after each:
+# R2  expect >= 15 scale tokens, and 1+ reduced-motion block
+grep -cE "^\s+--(space|text|shadow|z)-" popup/styles/tokens.css
+grep -rc "prefers-reduced-motion" popup/styles/
 
-1. [popup/js/vault/list.js](popup/js/vault/list.js) `renderList` — hottest path, largest template,
-   interpolates `w.word` / `w.definition` / misspellings straight from user and imported data.
-   Convert to `createElement` + `textContent`.
-2. The four sandbox card builders — [correct_card.js](popup/js/sandbox/correct_card.js) (33 inline
-   styles + ~15 unescaped interpolations), [misspell_card.js](popup/js/sandbox/misspell_card.js),
-   [manual_correct.js](popup/js/sandbox/manual_correct.js),
-   [accept.js](popup/js/sandbox/accept.js). Do task 5.3 (inline styles) on these same four files in
-   the same pass — they are the same lines.
-3. Sweep the remainder: any `innerHTML = x` where `x` is not markup becomes `textContent = x`.
-   Roughly 40 of the 74 qualify.
+# R3  expect 0
+grep -rn 'innerHTML.*\${' --include="*.js" popup shared src | grep -v escapeHtml | wc -l
 
-Add an ESLint `no-restricted-syntax` rule banning `innerHTML` assignment outside
-[shared/dom.js](shared/dom.js) once the count is near zero, so it cannot regress.
+# R4  expect < 20, and < 40
+grep -o 'style="' -r src/html | wc -l
+grep -rn "\.style\.display *=" --include="*.js" popup | wc -l
 
-## §C — Ordering note for what remains
+# R5  expect > 40, and 2+
+grep -rn "aria-\|role=" src/html | wc -l
+grep -c "<dialog" src/html/modals.html
 
-Steps 10–15 of the execution table are unchanged and still correct. Do **not** start Phase 6
-(UI/UX) before Phase 5 (CSS consolidation) — Phase 6 rewrites markup that Phase 5 restyles, and
-doing it in the wrong order means touching the same files twice. Likewise 1.3 (the class-name
-purge) stays last, for the same reason.
+# R6  expect 0, 0, no output, and a workflow file
+grep -rn "cloneNode(true)" --include="*.js" popup | wc -l
+grep -rn "makeElementDraggable" --include="*.js" popup | wc -l
+git ls-files popup/popup.html
+ls .github/workflows/
+```
 
 ---
 
