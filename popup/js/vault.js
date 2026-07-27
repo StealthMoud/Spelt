@@ -1,4 +1,4 @@
-import { getWords, saveWords, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../shared/storage.js';
+import { getWords, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../shared/storage.js';
 import { getLanguageName } from '../../src/core/languages.js';
 import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';

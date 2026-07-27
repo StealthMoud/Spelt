@@ -625,25 +625,6 @@ async function triggerRetranslate() {
   });
 }
 
-function summarizeIssueBuckets(issues) {
-  const sorted = [...issues.entries()].sort((a, b) => b[1] - a[1]);
-  return sorted.slice(0, 4).map(([name, count]) => `${name} (${count})`);
-}
 
-function parseTimestamp(value) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const asNum = Number(value);
-    if (Number.isFinite(asNum)) return asNum;
-    const asDate = Date.parse(value);
-    if (!Number.isNaN(asDate)) return asDate;
-  }
-  if (value instanceof Date) return value.getTime();
-  if (value && typeof value === 'object' && typeof value.getTime === 'function') {
-    const ts = value.getTime();
-    if (Number.isFinite(ts)) return ts;
-  }
-  return null;
-}
 
 

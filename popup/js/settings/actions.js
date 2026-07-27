@@ -1,4 +1,4 @@
-import { getWords, saveWords, resetDb, atomicUpdate } from '../../../shared/storage.js';
+import { getWords, resetDb, atomicUpdate } from '../../../shared/storage.js';
 import { showConfirm, showImportOptionsModal } from '../vault.js';
 
 export async function exportDb() {
