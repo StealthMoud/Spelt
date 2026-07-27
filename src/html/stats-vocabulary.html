@@ -45,7 +45,7 @@
                 <span>Hardest Words (Leech List)</span>
               </h4>
               <div class="flex-gap-xs-center">
-                <select id="stats-leeches-limit" class="field vault-sort-select leeches-limit-select">
+                <select id="stats-leeches-limit" class="field vault-sort-select leeches-limit-select" aria-label="Leech list count limit">
                   <option value="5">Top 5</option>
                   <option value="10" selected>Top 10</option>
                   <option value="50">Top 50</option>
@@ -53,11 +53,11 @@
                   <option value="custom">Custom...</option>
                 </select>
                 <div id="stats-leeches-custom-container" class="leeches-custom-box">
-                  <button type="button" id="stats-leeches-dec-btn" class="icon-btn leeches-spin-btn">
+                  <button type="button" id="stats-leeches-dec-btn" class="icon-btn leeches-spin-btn" title="Decrease count" aria-label="Decrease custom leech count">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="icon-svg-xs"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </button>
-                  <input type="number" id="stats-leeches-custom-val" class="field leeches-custom-input" min="1" max="500" value="15">
-                  <button type="button" id="stats-leeches-inc-btn" class="icon-btn leeches-spin-btn">
+                  <input type="number" id="stats-leeches-custom-val" class="field leeches-custom-input" min="1" max="500" value="15" aria-label="Custom leech count">
+                  <button type="button" id="stats-leeches-inc-btn" class="icon-btn leeches-spin-btn" title="Increase count" aria-label="Increase custom leech count">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="icon-svg-xs"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </button>
                 </div>

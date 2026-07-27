@@ -4,15 +4,15 @@
         <h3 id="popup-confirm-title" class="danger-title">Confirm Action</h3>
         <p id="popup-confirm-msg" class="modal-desc-text"></p>
         <div id="popup-confirm-input-container" class="confirm-input-wrap hidden">
-          <label id="popup-confirm-input-label" class="confirm-label"></label>
-          <input type="text" id="popup-confirm-input" class="field confirm-input-field" placeholder="Confirm text..." autocomplete="off">
+          <label id="popup-confirm-input-label" for="popup-confirm-input" class="confirm-label"></label>
+          <input type="text" id="popup-confirm-input" class="field confirm-input-field" placeholder="Confirm text..." autocomplete="off" aria-label="Confirmation input">
         </div>
         <div class="modal-actions-row actions-center">
-          <button type="button" id="popup-confirm-cancel-btn" class="submit-btn btn-compact">
+          <button type="button" id="popup-confirm-cancel-btn" class="submit-btn btn-compact" aria-label="Cancel confirmation">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             <span>Cancel</span>
           </button>
-          <button type="button" id="popup-confirm-ok-btn" class="submit-btn btn-primary btn-compact">
+          <button type="button" id="popup-confirm-ok-btn" class="submit-btn btn-primary btn-compact" aria-label="Confirm action">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="20 6 9 17 4 12"/></svg>
             <span>OK</span>
           </button>
@@ -53,7 +53,7 @@
         </div>
 
         <div class="modal-actions-row actions-center">
-          <button type="button" id="import-option-cancel" class="submit-btn btn-compact">
+          <button type="button" id="import-option-cancel" class="submit-btn btn-compact" aria-label="Cancel Import">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             <span>Cancel Import</span>
           </button>

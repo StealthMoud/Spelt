@@ -4,7 +4,7 @@
           <div class="settings-block">
             <strong>Auto-Translation Language</strong>
             <p>Automatically fetch translations for new words in Sandbox or Vault.</p>
-            <select id="setting-target-lang" class="field select-input">
+            <select id="setting-target-lang" class="field select-input" aria-label="Auto-Translation Language">
               <option value="none">None (Disabled)</option>
               <option value="es">Spanish (Español)</option>
               <option value="fr">French (Français)</option>
@@ -31,14 +31,14 @@
 
             <!-- Add new key -->
             <div class="gemini-key-add-row">
-              <input type="password" id="setting-gemini-key-input" class="field gemini-key-input" placeholder="Add Gemini API Key...">
-              <button id="add-gemini-key-btn" class="submit-btn gemini-key-add-btn">Add Key</button>
+              <input type="password" id="setting-gemini-key-input" class="field gemini-key-input" placeholder="Add Gemini API Key..." aria-label="Gemini API Key">
+              <button id="add-gemini-key-btn" class="submit-btn gemini-key-add-btn" aria-label="Add Gemini Key">Add Key</button>
             </div>
             
             <div id="gemini-model-container" class="gemini-model-row hidden">
               <div class="gemini-model-select-wrap">
                 <label for="setting-gemini-model" class="gemini-model-label">Model Strategy:</label>
-                <select id="setting-gemini-model" class="field select-input gemini-model-select"></select>
+                <select id="setting-gemini-model" class="field select-input gemini-model-select" aria-label="Model Strategy"></select>
               </div>
               <p class="setting-sub-text">
                 Auto uses the strongest verified text model first. Manual choices still fall back through weaker verified models when needed.
@@ -110,25 +110,25 @@
           <div class="settings-block">
             <strong>Database Operations</strong>
             <div class="btn-row">
-              <button id="export-db-btn" class="submit-btn">
+              <button id="export-db-btn" class="submit-btn" aria-label="Export database">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span>Export</span>
               </button>
-              <input type="file" id="import-db-file" class="hidden" accept=".json">
-              <button id="import-db-trigger-btn" class="submit-btn btn-import-flex">
+              <input type="file" id="import-db-file" class="hidden" accept=".json" aria-label="Import database JSON file">
+              <button id="import-db-trigger-btn" class="submit-btn btn-import-flex" aria-label="Import database">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <span>Import</span>
               </button>
             </div>
-            <button id="retranslate-all-btn" class="submit-btn btn-retranslate">
+            <button id="retranslate-all-btn" class="submit-btn btn-retranslate" aria-label="Refresh All Translations & Details">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               <span>Refresh All Translations & Details</span>
             </button>
-            <button id="integrity-check-btn" class="submit-btn btn-integrity">
+            <button id="integrity-check-btn" class="submit-btn btn-integrity" aria-label="Run Integrity Check & Repair">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/></svg>
               <span>Run Integrity Check & Repair</span>
             </button>
-            <button id="wipe-db-btn" class="submit-btn btn-danger">
+            <button id="wipe-db-btn" class="submit-btn btn-danger" aria-label="Erase Database">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               <span>Erase Database</span>
             </button>

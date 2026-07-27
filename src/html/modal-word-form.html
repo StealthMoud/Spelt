@@ -5,9 +5,9 @@
         <form id="word-entry-form">
           <input type="hidden" id="edit-word-id">
           <div class="modal-input-item">
-            <label>Practice Target</label>
+            <label for="form-practice-type">Practice Target</label>
             <div class="custom-select-wrapper select-wrapper" id="practice-type-custom-select">
-              <button type="button" class="field custom-select-trigger select-trigger">
+              <button type="button" class="field custom-select-trigger select-trigger" aria-label="Practice Target">
                 <span>Both (Spelling & Recall)</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron icon-svg-sm"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
@@ -16,7 +16,7 @@
                 <div class="custom-option select-option-item" data-value="spelling">Spelling Only</div>
                 <div class="custom-option select-option-item" data-value="recall">Recall Only</div>
               </div>
-              <select id="form-practice-type" class="hidden">
+              <select id="form-practice-type" class="hidden" aria-label="Practice Target">
                 <option value="both">Both (Spelling & Recall)</option>
                 <option value="spelling">Spelling Only</option>
                 <option value="recall">Recall Only</option>
@@ -24,39 +24,39 @@
             </div>
           </div>
           <div class="modal-input-item">
-            <label>Word *</label>
+            <label for="form-word">Word *</label>
             <div class="flex-row-gap">
               <input type="text" id="form-word" class="field flex-1" required autocomplete="off">
-              <button type="button" id="form-auto-fill-btn" title="Auto-fill details from dictionary" class="submit-btn btn-auto-fill">
+              <button type="button" id="form-auto-fill-btn" title="Auto-fill details from dictionary" aria-label="Auto-fill details from dictionary" class="submit-btn btn-auto-fill">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 <span>Auto</span>
               </button>
-              <button type="button" id="form-ai-fill-btn" title="Auto-fill details using Gemini AI" class="submit-btn btn-ai-fill">
+              <button type="button" id="form-ai-fill-btn" title="Auto-fill details using Gemini AI" aria-label="Auto-fill details using Gemini AI" class="submit-btn btn-ai-fill">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 <span>AI</span>
               </button>
             </div>
           </div>
           <div class="modal-input-item">
-            <label>Definition *</label>
+            <label for="form-definition">Definition *</label>
             <textarea id="form-definition" class="field textarea-item" required autocomplete="off"></textarea>
           </div>
           <div class="modal-input-row">
             <div class="modal-input-item flex-1">
-              <label>Pronunciation</label>
+              <label for="form-transcription">Pronunciation</label>
               <div class="relative-input-wrap">
                 <input type="text" id="form-transcription" class="field input-pr-lg" placeholder="/.../" autocomplete="off">
                 <div class="form-audio-controls">
-                  <button type="button" id="form-play-us" class="audio-play-btn-mini" title="Play US pronunciation">US</button>
-                  <button type="button" id="form-play-uk" class="audio-play-btn-mini" title="Play UK pronunciation">UK</button>
+                  <button type="button" id="form-play-us" class="audio-play-btn-mini" title="Play US pronunciation" aria-label="Play US pronunciation">US</button>
+                  <button type="button" id="form-play-uk" class="audio-play-btn-mini" title="Play UK pronunciation" aria-label="Play UK pronunciation">UK</button>
                 </div>
               </div>
             </div>
             <div class="modal-input-item flex-1">
-              <label>Translation</label>
+              <label for="form-translation">Translation</label>
               <div class="relative-input-wrap">
                 <input type="text" id="form-translation" class="field input-pr-sm" autocomplete="off">
-                <button type="button" id="form-auto-translate-btn" title="Auto-translate word" class="btn-translate-icon">
+                <button type="button" id="form-auto-translate-btn" title="Auto-translate word" aria-label="Auto-translate word" class="btn-translate-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 </button>
               </div>
@@ -64,12 +64,12 @@
           </div>
           <div class="modal-input-row">
             <div class="modal-input-item flex-1">
-              <label>Part of Speech</label>
+              <label for="form-part-of-speech">Part of Speech</label>
               <input type="text" id="form-part-of-speech" class="field" placeholder="e.g. noun, verb, adjective..." autocomplete="off">
             </div>
             <div class="modal-input-item flex-1">
-              <label>CEFR Level</label>
-              <select id="form-level" class="field select-input">
+              <label for="form-level">CEFR Level</label>
+              <select id="form-level" class="field select-input" aria-label="CEFR Level">
                 <option value="">None (Unknown)</option>
                 <option value="A1">A1 (Beginner)</option>
                 <option value="A2">A2 (Elementary)</option>
@@ -81,7 +81,7 @@
             </div>
           </div>
           <div class="modal-input-item">
-            <label>Example Sentence</label>
+            <label for="form-example">Example Sentence</label>
             <textarea id="form-example" class="field textarea-item" placeholder="Use the word in a sentence..." autocomplete="off"></textarea>
           </div>
 
@@ -97,11 +97,11 @@
             <div id="form-past-errors-list" class="errors-log-list"></div>
           </div>
           <div class="modal-actions-row">
-            <button type="button" id="form-cancel-btn" class="submit-btn">
+            <button type="button" id="form-cancel-btn" class="submit-btn" aria-label="Cancel form">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               <span>Cancel</span>
             </button>
-            <button type="submit" class="submit-btn btn-primary">
+            <button type="submit" class="submit-btn btn-primary" aria-label="Save word">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="20 6 9 17 4 12"/></svg>
               <span>Save</span>
             </button>

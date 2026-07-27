@@ -2,10 +2,10 @@
       <section id="vault-tab" class="tab-pane">
         <div class="vault-filter-row">
           <div class="search-box">
-            <input type="text" id="vault-search" class="field" placeholder="Search words...">
+            <input type="text" id="vault-search" class="field" placeholder="Search words..." aria-label="Search words">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon-svg"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
-          <button id="add-word-btn" class="submit-btn">
+          <button id="add-word-btn" class="submit-btn" aria-label="Add Word">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Add Word</span>
           </button>
@@ -22,7 +22,7 @@
               <div class="custom-option select-option-item" data-value="date">Date Added</div>
               <div class="custom-option select-option-item" data-value="review">Next Review</div>
             </div>
-            <select id="vault-sort-field" class="hidden">
+            <select id="vault-sort-field" class="hidden" aria-label="Sort field">
               <option value="alpha">A — Z</option>
               <option value="date">Date Added</option>
               <option value="review">Next Review</option>
@@ -43,7 +43,7 @@
               <div class="custom-option select-option-item" data-value="spelling">Spelling Words</div>
               <div class="custom-option select-option-item" data-value="recall">Recall Phrases</div>
             </div>
-            <select id="vault-filter-status" class="hidden">
+            <select id="vault-filter-status" class="hidden" aria-label="Filter status">
               <option value="all">All Words</option>
               <option value="learning">Active</option>
               <option value="mastered">Mastered</option>
@@ -52,7 +52,7 @@
               <option value="recall">Recall Phrases</option>
             </select>
           </div>
-          <button id="vault-sort-dir-btn" class="submit-btn vault-sort-dir-btn" data-dir="asc" title="Toggle sort direction">
+          <button id="vault-sort-dir-btn" class="submit-btn vault-sort-dir-btn" data-dir="asc" title="Toggle sort direction" aria-label="Toggle sort direction">
             <svg id="sort-dir-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
             <span id="sort-dir-label">ASC</span>
           </button>
@@ -64,15 +64,15 @@
             <span>Select All (<span id="vault-selected-count">0</span>)</span>
           </label>
           <div class="flex-gap-xs">
-            <button id="vault-demaster-selected" class="submit-btn btn-primary btn-restudy">
+            <button id="vault-demaster-selected" class="submit-btn btn-primary btn-restudy" aria-label="Re-study Selected">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
               <span>Re-study Selected</span>
             </button>
-            <button id="vault-enrich-selected" class="submit-btn btn-primary btn-enrich">
+            <button id="vault-enrich-selected" class="submit-btn btn-primary btn-enrich" aria-label="AI Enrich Selected">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span>AI Enrich</span>
             </button>
-            <button id="vault-delete-selected" class="submit-btn btn-danger btn-delete-compact">
+            <button id="vault-delete-selected" class="submit-btn btn-danger btn-delete-compact" aria-label="Delete Selected">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               <span>Delete Selected</span>
             </button>
