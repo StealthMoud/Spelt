@@ -14,7 +14,7 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
   const example = extractExample(apiData) || enriched.example || getFallbackExample(word, partOfSpeech);
   
   let translation = '';
-  try { translation = await translateWord(word); } catch (_) {}
+  try { translation = await translateWord(word); } catch {}
 
   try {
     const words = await getWords();
@@ -220,7 +220,7 @@ export async function handleAiEnhance(btn, reloadVaultListCallback) {
 
     // Update DOM displays
     const defDisplay = document.getElementById('feedback-def-display');
-    if (defDisplay) defDisplay.innerHTML = `<strong>Definition:</strong> ${aiData.definition}`;
+    if (defDisplay) defDisplay.innerHTML = `<strong>Definition:</strong> ${escapeHtml(aiData.definition)}`;
 
     const ipaDisplay = document.getElementById('feedback-ipa-display');
     if (ipaDisplay) ipaDisplay.textContent = aiData.transcription;
@@ -232,13 +232,13 @@ export async function handleAiEnhance(btn, reloadVaultListCallback) {
     if (metaRow) {
       metaRow.innerHTML = '';
       if (aiData.partOfSpeech) {
-        metaRow.innerHTML += `<span class="feedback-badge pos" id="feedback-pos-badge">${aiData.partOfSpeech}</span>`;
+        metaRow.innerHTML += `<span class="feedback-badge pos" id="feedback-pos-badge">${escapeHtml(aiData.partOfSpeech)}</span>`;
       }
       if (aiData.level) {
-        metaRow.innerHTML += `<span class="feedback-badge level" id="feedback-level-badge">${aiData.level.toUpperCase()}</span>`;
+        metaRow.innerHTML += `<span class="feedback-badge level" id="feedback-level-badge">${escapeHtml(aiData.level.toUpperCase())}</span>`;
       }
       if (aiData.translation) {
-        metaRow.innerHTML += `<span class="feedback-badge trans" id="feedback-trans-badge">${aiData.translation}</span>`;
+        metaRow.innerHTML += `<span class="feedback-badge trans" id="feedback-trans-badge">${escapeHtml(aiData.translation)}</span>`;
       }
     }
 

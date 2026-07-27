@@ -1,5 +1,6 @@
 import { addWord, registerMisspelling, translateWord, getFallbackExample } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons } from './helpers.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCallback) {
   const feedbackMsg = document.getElementById('feedback-msg');
@@ -30,7 +31,7 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
       let typeLabel = 'Spelling';
       if (practiceType === 'recall') typeLabel = 'Recall';
       if (practiceType === 'both') typeLabel = 'Spelling & Recall';
-      banner.innerHTML = `Word <strong>"${word}"</strong> added for <strong>${typeLabel}</strong> practice!`;
+      banner.innerHTML = `Word <strong>"${escapeHtml(word)}"</strong> added for <strong>${escapeHtml(typeLabel)}</strong> practice!`;
       
       const closeBtn = feedbackMsg.querySelector('.feedback-close-btn');
       if (closeBtn) {
@@ -90,7 +91,7 @@ export async function saveManualAnyway(correctWord, originalWord, wrongAttempt =
     const example = getFallbackExample(correctWord, partOfSpeech);
     
     let translation = '';
-    try { translation = await translateWord(correctWord); } catch (_) {}
+    try { translation = await translateWord(correctWord); } catch {}
 
     await registerMisspelling(correctWord, originalWord, { definition: def, transcription: '/--/', partOfSpeech, example });
     if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
@@ -100,13 +101,13 @@ export async function saveManualAnyway(correctWord, originalWord, wrongAttempt =
     feedbackMsg.innerHTML = `
       ${closeBtnHtml}
       <h4 style="color: var(--success); margin: 0 0 4px;">Correction Saved!</h4>
-      <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
+      <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${escapeHtml(correctWord)}</strong> (${escapeHtml(originalWord)} saved as misspelling).</p>
       
       <div class="feedback-details">
         <div class="feedback-meta-row">
-          ${translation ? `<span class="feedback-badge trans">${translation}</span>` : ''}
+          ${translation ? `<span class="feedback-badge trans">${escapeHtml(translation)}</span>` : ''}
         </div>
-        <p class="feedback-definition"><strong>Definition:</strong> ${def}</p>
+        <p class="feedback-definition"><strong>Definition:</strong> ${escapeHtml(def)}</p>
       </div>
       ${renderAudioButtons(correctWord)}
     `;
@@ -115,6 +116,6 @@ export async function saveManualAnyway(correctWord, originalWord, wrongAttempt =
     if (reloadVaultCallback) await reloadVaultCallback();
     if (loadPracticeCallback) await loadPracticeCallback();
   } catch (err) {
-    feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`;
+    feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${escapeHtml(err.message)}</p>`;
   }
 }

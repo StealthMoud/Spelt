@@ -3,6 +3,7 @@ import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt, setLastSpel
 import { isAnswerCorrect } from './answer.js';
 import { renderAudioButtons } from './helpers.js';
 import { isGeminiConfigured, generateMisspellingFeedbackStream } from './ai_helpers.js';
+import { escapeHtml } from '../../shared/dom.js';
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ export function populateBackFace(card) {
       ? { us: card.usSpelling, uk: card.ukSpelling }
       : getSpellingVariant(card.word);
     if (variant && variant.us !== variant.uk) {
-      variantRow.innerHTML = `<span style="color: var(--primary-light);">US:</span> <span style="font-weight: 600;">${variant.us}</span> <span style="color: var(--text-muted); margin: 0 4px;">·</span> <span style="color: var(--primary-light);">UK:</span> <span style="font-weight: 600;">${variant.uk}</span>`;
+      variantRow.innerHTML = `<span style="color: var(--primary-light);">US:</span> <span style="font-weight: 600;">${escapeHtml(variant.us)}</span> <span style="color: var(--text-muted); margin: 0 4px;">·</span> <span style="color: var(--primary-light);">UK:</span> <span style="font-weight: 600;">${escapeHtml(variant.uk)}</span>`;
       variantRow.style.display = 'block';
     } else {
       variantRow.style.display = 'none';

@@ -15,7 +15,7 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
       const cambridge = await fetchCambridgePronunciation(correctWord);
       ipa = cambridge.ukIpa && cambridge.usIpa ? (cambridge.ukIpa === cambridge.usIpa ? cambridge.ukIpa : `${cambridge.usIpa} (US) / ${cambridge.ukIpa} (UK)`) : (cambridge.usIpa || cambridge.ukIpa || '');
       level = cambridge.level || '';
-    } catch (_) {}
+    } catch {}
 
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(correctWord.toLowerCase())}`);
     if (response.ok) {
@@ -31,7 +31,7 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
       const exampleTranslation = existing ? (existing.exampleTranslation || '') : '';
       
       let translation = '';
-      try { translation = await translateWord(correctWord); } catch (_) {}
+      try { translation = await translateWord(correctWord); } catch {}
 
       await registerMisspelling(correctWord, originalWord, { definition: def, transcription: ipa, partOfSpeech, example, exampleTranslation, level });
       if (wrongAttempt && wrongAttempt.toLowerCase() !== originalWord.toLowerCase() && wrongAttempt.toLowerCase() !== correctWord.toLowerCase()) {
@@ -101,5 +101,5 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
         </div>
       `;
     }
-  } catch (err) { feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${err.message}</p>`; }
+  } catch (err) { feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${escapeHtml(err.message)}</p>`; }
 }

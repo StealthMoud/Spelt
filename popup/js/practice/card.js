@@ -126,7 +126,7 @@ export function populateFrontFace(card) {
     const transEl = document.getElementById('practice-translation');
     if (transEl) {
       if (card.translation) {
-        transEl.innerHTML = `<span class="translation-blur-text">${card.translation}</span><span class="translation-reveal-hint">Reveal</span>`;
+        transEl.innerHTML = `<span class="translation-blur-text">${escapeHtml(card.translation)}</span><span class="translation-reveal-hint">Reveal</span>`;
         transEl.className = 'translation-clue-box';
         const newEl = transEl.cloneNode(true);
         transEl.parentNode.replaceChild(newEl, transEl);
@@ -274,7 +274,7 @@ async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defau
             const w = words.find(x => x.id === currentCard.id);
             if (w) delete w.aiHint;
           });
-        } catch (_) {}
+        } catch {}
       }
       const hint = await generateHint(currentCard);
       hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${escapeHtml(l)}</div>`).join('');

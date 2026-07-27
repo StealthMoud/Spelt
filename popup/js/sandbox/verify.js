@@ -3,6 +3,7 @@ import { findSuggestions } from './spelling.js';
 import { handleCorrectSpelling } from './correct_card.js';
 import { renderMisspellingCard } from './misspell_card.js';
 import { showManualCorrectionForm } from './manual_form.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 export async function handleVerify(reloadVaultListCallback) {
   const wordInput = document.getElementById('word-input');
@@ -26,13 +27,13 @@ export async function handleVerify(reloadVaultListCallback) {
         if (cambridgeData.ukIpa || cambridgeData.usIpa || cambridgeData.level || cambridgeData.ukAudio) {
           isWordValid = true;
         }
-      } catch (_) {}
+      } catch {}
       
       if (!isWordValid) {
         try {
           const defResult = await fetchDynamicDefinition(lowerWord);
           if (defResult.definition && defResult.definition !== 'No definition found') isWordValid = true;
-        } catch (_) {}
+        } catch {}
       }
       
       if (isWordValid) {
@@ -57,5 +58,5 @@ export async function handleVerify(reloadVaultListCallback) {
         }
       }
     }
-  } catch (err) { feedbackMsg.innerHTML = `<p style="color: var(--danger);">Error: ${err.message}</p>`; }
+  } catch (err) { feedbackMsg.innerHTML = `<p style="color: var(--danger);">Error: ${escapeHtml(err.message)}</p>`; }
 }
