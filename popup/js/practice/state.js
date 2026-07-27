@@ -16,10 +16,24 @@ let sessionStats = { totalReviewed: 0, correctCount: 0, incorrectCount: 0, harde
 export function getPracticeMode() { return practiceMode; }
 export function setPracticeMode(val) { practiceMode = val; }
 
-export function getDueCards() { return dueCards; }
-export function setDueCards(val) {
+export function peekCard() {
+  return dueCards[0] || null;
+}
+export function advanceDeck() {
+  return dueCards.shift();
+}
+export function requeueCard(card) {
+  if (card) dueCards.push(card);
+}
+export function replaceDeck(cards) {
   dueCards.length = 0;
-  dueCards.push(...val);
+  if (Array.isArray(cards)) dueCards.push(...cards);
+}
+export function getDueCards() {
+  return Object.freeze([...dueCards]);
+}
+export function setDueCards(val) {
+  replaceDeck(val);
 }
 export function getCardShownAt() { return cardShownAt; }
 export function setCardShownAt(val) { cardShownAt = val; }

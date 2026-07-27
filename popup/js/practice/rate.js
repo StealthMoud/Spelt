@@ -1,5 +1,5 @@
 import { atomicUpdate, getNextReviewDate } from '../../../shared/storage.js';
-import { getDueCards, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, markReviewedWord, getPracticeMode, trackReview, getLastSpellingResult } from './state.js';
+import { getDueCards, peekCard, advanceDeck, requeueCard, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, markReviewedWord, getPracticeMode, trackReview, getLastSpellingResult } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
 
@@ -26,8 +26,7 @@ function reviewWordInBackground(wordId, q, typedWrongWord = null, responseTimeMs
 
 export async function submitRating(score) {
   if (getIsSubmitting()) return;
-  const dueCards = getDueCards();
-  const card = dueCards[0];
+  const card = peekCard();
   if (!card) return;
   setIsSubmitting(true);
   try {
@@ -50,9 +49,9 @@ export async function submitRating(score) {
     
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
-      dueCards.shift();
+      advanceDeck();
       if (updatedCard && score < 3) {
-        dueCards.push(updatedCard);
+        requeueCard(updatedCard);
       }
       getOnDeckUpdated()?.();
       showPracticeCard();
@@ -98,7 +97,7 @@ export async function submitMasteredRating(card) {
     });
     document.getElementById('popup-deck-card').classList.remove('flipped');
     setTimeout(() => {
-      getDueCards().shift();
+      advanceDeck();
       getOnDeckUpdated()?.();
       showPracticeCard();
       setIsSubmitting(false);

@@ -1,4 +1,5 @@
 import { getWords } from '../shared/storage.js';
+import { selectDueCards } from '../src/core/selectors.js';
 import { initNavigation } from './js/navigation.js';
 import { initPractice, loadPracticeDeck, syncPracticeDeck, hasReviewedWord, getPracticeMode, refreshReviewedWordDay, clearReviewedWords } from './js/practice.js';
 import { initVault, reloadVaultList } from './js/vault.js';
@@ -20,17 +21,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       refreshReviewedWordDay();
       const words = await getWords();
       const mode = getPracticeMode();
-      const dueCount = words.filter(w => {
-        if (hasReviewedWord(w.id, mode)) return false;
-        if (w.mastered) return false;
-        if (mode === 'recall') {
-          if (w.practiceType !== 'both' && w.practiceType !== 'recall') return false;
-          return w.meaningNextDate <= Date.now();
-        } else {
-          if (w.practiceType !== 'both' && w.practiceType !== 'spelling') return false;
-          return w.nextDate <= Date.now();
-        }
-      }).length;
+      const dueCards = selectDueCards(words, mode, {
+        excludeIds: new Set(words.filter(w => hasReviewedWord(w.id, mode)).map(w => w.id))
+      });
+      const dueCount = dueCards.length;
 
       dueCountEl.textContent = dueCount;
       totalCountEl.textContent = words.length;

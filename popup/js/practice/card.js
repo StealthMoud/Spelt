@@ -1,4 +1,5 @@
 import { getWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured, atomicUpdate } from '../../../shared/storage.js';
+import { selectDueCards, isDueInMode } from '../../../src/core/selectors.js';
 import { escapeHtml } from '../../../shared/dom.js';
 import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
@@ -23,13 +24,8 @@ export async function loadPracticeDeck() {
   refreshReviewedWordDay();
   const words = await getWords();
   const mode = getPracticeMode();
-  
-  if (mode === 'recall') {
-    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'recall') && w.meaningNextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
-  } else {
-    setDueCards(words.filter(w => (w.practiceType === 'both' || w.practiceType === 'spelling') && w.nextDate <= Date.now() && !w.mastered && !hasReviewedWord(w.id, mode)));
-  }
-  
+  const reviewedSet = new Set(words.filter(w => hasReviewedWord(w.id, mode)).map(w => w.id));
+  setDueCards(selectDueCards(words, mode, { excludeIds: reviewedSet }));
   getOnDeckUpdated()?.(); showPracticeCard();
 }
 
@@ -229,20 +225,12 @@ export async function syncPracticeDeck() {
   const restDue = currentDue.slice(1).map(c => fresh.find(w => w.id === c.id) || c).filter(c => {
     const f = fresh.find(w => w.id === c.id);
     if (!f) return false;
-    const isDue = mode === 'recall' ? f.meaningNextDate <= now : f.nextDate <= now;
-    const matchesMode = mode === 'recall'
-        ? (f.practiceType === 'both' || f.practiceType === 'recall') && f.meaningNextDate <= now
-        : (f.practiceType === 'both' || f.practiceType === 'spelling');
-    return !f.mastered && isDue && matchesMode && f.id !== activeId;
+    return isDueInMode(f, mode, now) && f.id !== activeId;
   });
   due.push(...restDue);
   const ids = new Set(due.map(c => c.id));
   due.push(...fresh.filter(w => {
-    const isDue = mode === 'recall' ? w.meaningNextDate <= now : w.nextDate <= now;
-    const matchesMode = mode === 'recall'
-        ? (w.practiceType === 'both' || w.practiceType === 'recall')
-        : (w.practiceType === 'both' || w.practiceType === 'spelling');
-    return isDue && matchesMode && !w.mastered && !ids.has(w.id) && !hasReviewedWord(w.id, mode);
+    return isDueInMode(w, mode, now) && !ids.has(w.id) && !hasReviewedWord(w.id, mode);
   }));
   setDueCards(due); getOnDeckUpdated()?.();
   const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');

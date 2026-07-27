@@ -1,3 +1,5 @@
+import { isDueInMode } from '../../src/core/selectors.js';
+
 export function formatTimeUntil(w) {
   if (w.mastered) {
     return { text: 'Mastered', color: 'var(--success)' };
@@ -30,7 +32,7 @@ export function getFilteredWords(wordsList) {
   } else if (statusFilter === 'mastered') {
     filtered = filtered.filter(w => w.mastered);
   } else if (statusFilter === 'due') {
-    filtered = filtered.filter(w => w.nextDate <= Date.now() && !w.mastered);
+    filtered = filtered.filter(w => isDueInMode(w, 'spelling') || isDueInMode(w, 'recall'));
   } else if (statusFilter === 'spelling') {
     filtered = filtered.filter(w => w.practiceType === 'both' || w.practiceType === 'spelling');
   } else if (statusFilter === 'recall') {
