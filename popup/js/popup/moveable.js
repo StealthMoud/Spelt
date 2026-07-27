@@ -13,7 +13,7 @@ export function initMoveable() {
           const width = res.spelt_popup_width || 360;
           const height = res.spelt_popup_height || 530;
           chrome.windows.create({
-            url: chrome.runtime.getURL('popup/popup.html'),
+            url: chrome.runtime.getURL('dist/popup.html'),
             type: 'popup',
             width: width,
             height: height

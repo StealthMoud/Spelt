@@ -131,7 +131,7 @@ if (!fs.existsSync(docsPath)) {
 
   // Set up mock data in storage
   console.log('Injecting mock storage data...');
-  await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+  await page.goto(`chrome-extension://${extensionId}/dist/popup.html`);
   
   await page.evaluate(() => {
     return new Promise((resolve) => {

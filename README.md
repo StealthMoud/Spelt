@@ -18,9 +18,14 @@ Spelt helps you track words you type incorrectly and review them until you maste
 - **Sandbox**: `Enter` to verify, `Space` to play audio, `Esc` to close card
 - **Practice**: `Enter` to check answer, `1`–`5` to rate review recall (Again to Mastered)
 
-## Local Development & Testing
+## Local Development & Installation
+
+Run `npm run build` before loading the unpacked extension in Chrome (`chrome://extensions`).
 
 ```bash
+# Compile popup HTML
+npm run build
+
 # Run unit tests
 npm test
 
