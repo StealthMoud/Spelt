@@ -46,11 +46,20 @@ export function openModal(wordObj = null) {
   }
   
   modal.classList.remove('hidden');
+  if (typeof modal.showModal === 'function' && !modal.open) {
+    modal.showModal();
+  }
   document.getElementById('form-word').focus();
 }
 
 export function closeModal() {
-  document.getElementById('word-form-modal').classList.add('hidden');
+  const modal = document.getElementById('word-form-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    if (typeof modal.close === 'function' && modal.open) {
+      modal.close();
+    }
+  }
 }
 
 export function renderPastErrorsList() {

@@ -1,20 +1,31 @@
 /* Modals entry scales and visual overlay */
-.modal-overlay {
+dialog.modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  margin: 0;
+  border: none;
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(6px);
   justify-content: center;
   align-items: center;
   z-index: 1000;
   padding: 12px;
+  box-sizing: border-box;
+  color: inherit;
 }
-.modal-overlay[style*="display: flex"] {
+dialog.modal-overlay::backdrop {
+  background: transparent;
+}
+dialog.modal-overlay[open]:not(.hidden) {
   display: flex;
   animation: paneEnter 0.22s ease forwards;
 }
-.modal-overlay[style*="display: flex"] .modal-card {
+dialog.modal-overlay[open]:not(.hidden) .modal-card {
   animation: modalPop 0.32s var(--spring-curve) forwards;
 }
 

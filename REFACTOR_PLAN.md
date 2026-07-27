@@ -47,21 +47,39 @@ That is the floor, not the finish line — six tasks remain, listed under "Remai
 | 9.1 lint + format | **0 errors**; `check` script added |
 | 9.2 tests | 15/15 pass |
 
-### Remaining work — 6 tasks
+### Round 2 (`0c09bc2`..`79e8d64`) — R1–R5 done, R6 mostly not
 
-Ordered by dependency. Do them in this order.
+| # | Task | Result |
+| --- | --- | --- |
+| **R1** | Font | ✅ Resolved by **dropping Outfit for a system font stack** rather than self-hosting. Remote `@import` gone, `style-src 'self'` now in the CSP, 3.4 fully closed. Note this is a deliberate visual change: the extension no longer ships a custom typeface. |
+| **R2** | Tokens + reduced motion | ✅ 22 scale tokens; `prefers-reduced-motion` block in [animations.css](popup/styles/animations.css) |
+| **R3** | Escaping | ✅ **10 → 0** unescaped interpolations. The Gemini-output path at `correct_card.js` is closed. |
+| **R4** | Inline styles | ✅ **292 → 0** in [src/html/](src/html/); `.style.display =` **167 → 2** |
+| **R5** | Accessibility | ⚠️ **Partial.** 70 `aria-*`/`role` attributes added ✅ — but the modal work (6.7) was not done. |
+| **R6** | Structural + CI | ⚠️ **Mostly not done.** Only the CI workflow landed. |
+
+Also cleared: all 34 lint warnings (**now 0 errors, 0 warnings**). `npm run check` exits 0.
+
+### Remaining work — 2 tasks
 
 | # | Task | Current measurement | Plan § |
 | --- | --- | --- | --- |
-| **R1** | **Self-host the font.** `@import url('https://fonts.googleapis.com/…')` is still line 1 of [popup/styles/tokens.css](popup/styles/tokens.css). ⚠️ The CSP added in `2b23bb9` deliberately omits `style-src` to avoid breaking it — so 3.4 is only half-landed. Self-host the font, **then** add `style-src 'self'` to the CSP. | 1 remote import; no `assets/fonts/` | 5.1 + 3.4 |
-| **R2** | **Finish token scale + reduced motion.** `tokens.css` has only 3 of the `--space-*` / `--text-*` / `--shadow-*` / `--z-*` values from 5.4. No `prefers-reduced-motion` block anywhere — the infinite `badgePulse` still runs for everyone. | 3 scale tokens; 0 media queries | 5.4, 5.5 |
-| **R3** | **Finish escaping (10 unescaped sites).** `escapeHtml` now has 7 importers and `vault/list.js` is converted ✅, but **10 `innerHTML` templates still interpolate untrusted values unescaped.** Four take `err.message`; four take **Gemini model output** (`aiData.definition`, `.partOfSpeech`, `.level`, `.translation` at [correct_card.js:223-241](popup/js/sandbox/correct_card.js#L223)) — that is task 3.2 still leaking through a different path. | 10 sites | 3.1, 3.2 |
-| **R4** | **Inline styles → classes.** Untouched by the CSS consolidation: the 12 new stylesheets were merged, but markup was not migrated onto them. | **292** `style="` in [src/html/](src/html/); 167 `.style.display =` in JS | 5.3 |
-| **R5** | **Accessibility.** Nothing has been done here at all. | **0** `aria-*` / `role` in [src/html/](src/html/); 0 `<dialog>` | Phase 7, 6.7 |
-| **R6** | **Structural leftovers + CI.** `card.js` is 682 lines with the duplicated hint-panel pair and `makeElementDraggable` intact; 8 `cloneNode(true)` listener-shedding sites; [popup/popup.html](popup/popup.html) still tracked as a 1186-line generated artefact; no `.github/workflows/`. | 8 cloneNode; 4 draggable; no CI | 4.2, 4.3, 9.3, 9.4 |
+| **R5b** | **Modals.** The 70 aria attributes went on buttons and tabs; the dialogs were skipped. `#word-form-modal` and `#popup-confirm-modal` are still `div`s toggled with `.style.display`, with **no `role`, no `aria-modal`, no focus trap, no focus restore, and no `Escape` handler** (the only Escape binding lives in [practice/keydowns.js](popup/js/practice/keydowns.js) and fires solely while the Practice tab is active). Convert both to `<dialog>` + `showModal()`, which supplies focus trapping, Escape and a backdrop for free. Also split `showConfirm(title, msg, onConfirm, cancelable)` into `confirm()` / `progress()` / `notify()` — it is currently used for all three. | 0 `<dialog>`; 0 `aria-modal` | 6.7 |
+| **R6** | **Structural leftovers.** `mountHintPanel` was extracted ✅ (the duplicated hint-panel pair is gone), but everything else in 4.2/4.3/9.3 remains: **8 `cloneNode(true)`** listener-shedding sites and `makeElementDraggable` (4 refs) are all still inside [practice/card.js](popup/js/practice/card.js), which is **672 lines**. [popup/popup.html](popup/popup.html) is still tracked as a 1186-line generated artefact. | 8 cloneNode; 4 draggable; card.js 672; popup.html tracked | 4.2, 4.3, 9.3 |
 
-Phase 6 (UI/UX rework) is **not** in this list — it depends on R4 landing first. Treat it as a
-separate follow-up once R1–R6 are green.
+**R6 breakdown** — do these four in order:
+
+1. Move `makeElementDraggable` out to `popup/js/components/draggable.js`.
+2. Replace all 8 `cloneNode(true)` listener-shedding sites with **one** `AbortController` per card:
+   bind controls once at init, `cardScope.abort()` on card change, pass `{ signal }` to each
+   `addEventListener`. This is the pattern already described in §4.3.
+3. Split the remainder of `card.js` into `deck.js` / `front_face.js` / `ai_panels.js` per the table
+   in §4.2. Target: no file over ~250 lines.
+4. Emit the build to `dist/`, add `dist/` to [.gitignore](.gitignore), and
+   `git rm --cached popup/popup.html` so the generated file stops being tracked. Update the
+   `default_popup` path in [manifest.json](manifest.json) to match wherever the build now writes.
+
+Phase 6 (the wider UI/UX rework, §6.1–6.6) remains out of scope for this pass.
 
 ---
 
@@ -80,35 +98,38 @@ separate follow-up once R1–R6 are green.
 
 ## §B — Verification commands
 
-Run from the repo root. These are the exact measurements behind the table above.
+Run from the repo root.
+
+### Open tasks
 
 ```sh
 npm run check                                                    # must exit 0
 
-# R1  expect 0, then a local @font-face
-grep -rn "fonts.googleapis" popup/styles/
-grep -o "style-src[^;\"]*" manifest.json                         # expect style-src 'self'
+# R5b  expect 2 dialogs, 2 aria-modal, and an Escape/close handler
+grep -c "<dialog" src/html/modal-confirm.html src/html/modal-word-form.html
+grep -rn "aria-modal" src/html/ | wc -l
+grep -rn "showModal\|close()" popup/js/vault/confirm.js popup/js/vault/modal.js | wc -l
 
-# R2  expect >= 15 scale tokens, and 1+ reduced-motion block
-grep -cE "^\s+--(space|text|shadow|z)-" popup/styles/tokens.css
-grep -rc "prefers-reduced-motion" popup/styles/
-
-# R3  expect 0
-grep -rn 'innerHTML.*\${' --include="*.js" popup shared src | grep -v escapeHtml | wc -l
-
-# R4  expect < 20, and < 40
-grep -o 'style="' -r src/html | wc -l
-grep -rn "\.style\.display *=" --include="*.js" popup | wc -l
-
-# R5  expect > 40, and 2+
-grep -rn "aria-\|role=" src/html | wc -l
-grep -c "<dialog" src/html/modals.html
-
-# R6  expect 0, 0, no output, and a workflow file
+# R6  expect 0, 0, no output, and no file over ~250 lines
 grep -rn "cloneNode(true)" --include="*.js" popup | wc -l
-grep -rn "makeElementDraggable" --include="*.js" popup | wc -l
+grep -rn "makeElementDraggable" --include="*.js" popup/js/practice | wc -l
 git ls-files popup/popup.html
-ls .github/workflows/
+wc -l popup/js/practice/*.js | sort -rn | head -5
+```
+
+### Regression guard — these are green, keep them green
+
+```sh
+grep -rn "fonts.googleapis" popup/styles/ | wc -l                # 0
+grep -o "style-src[^;\"]*" manifest.json                         # style-src 'self'
+grep -cE "^\s+--(space|text|shadow|z)-" popup/styles/tokens.css  # 22
+grep -rc "prefers-reduced-motion" popup/styles/ | grep -v ":0"   # 1 hit
+grep -rn 'innerHTML.*\${' --include="*.js" popup shared src | grep -v escapeHtml | wc -l   # 0
+grep -o 'style="' -r src/html | wc -l                            # 0
+grep -rn "\.style\.display *=" --include="*.js" popup | wc -l    # 2
+grep -rn "aria-\|role=" src/html | wc -l                         # 70
+grep -rn "\balert(" --include="*.js" popup src | wc -l           # 0
+ls popup/styles/ | wc -l                                         # 12
 ```
 
 ---

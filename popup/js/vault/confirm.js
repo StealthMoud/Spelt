@@ -1,3 +1,15 @@
+export function confirm(title, message, onOk, expectedConfirmText = null) {
+  return showConfirm(title, message, onOk, true, expectedConfirmText);
+}
+
+export function progress(title, message) {
+  return showConfirm(title, message, null, false);
+}
+
+export function notify(title, message, onOk = null) {
+  return showConfirm(title, message, onOk, false);
+}
+
 export function showConfirm(title, message, onOk, showCancel = true, expectedConfirmText = null) {
   const modal = document.getElementById('popup-confirm-modal');
   const titleEl = document.getElementById('popup-confirm-title');
@@ -28,6 +40,9 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
   }
 
   modal.classList.remove('hidden');
+  if (typeof modal.showModal === 'function' && !modal.open) {
+    modal.showModal();
+  }
   if (expectedConfirmText) {
     inputField.focus();
   }
@@ -51,6 +66,9 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
 
   const close = () => {
     modal.classList.add('hidden');
+    if (typeof modal.close === 'function' && modal.open) {
+      modal.close();
+    }
     cleanup();
   };
 
@@ -85,9 +103,15 @@ export function showImportOptionsModal(onSelect, onCancel) {
   const btnCancel = document.getElementById('import-option-cancel');
 
   modal.classList.remove('hidden');
+  if (typeof modal.showModal === 'function' && !modal.open) {
+    modal.showModal();
+  }
 
   const close = () => {
     modal.classList.add('hidden');
+    if (typeof modal.close === 'function' && modal.open) {
+      modal.close();
+    }
     cleanup();
   };
 

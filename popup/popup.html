@@ -996,7 +996,7 @@
       </section>
     </main>
 <!-- MODAL: Add Word Form -->
-    <div id="word-form-modal" class="modal-overlay">
+    <dialog id="word-form-modal" class="modal-overlay hidden" aria-modal="true">
       <div class="modal-card">
         <h3 id="form-modal-title">Add New Word</h3>
         <form id="word-entry-form">
@@ -1105,9 +1105,9 @@
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
 <!-- MODAL: Custom Confirm Dialog -->
-    <div id="popup-confirm-modal" class="modal-overlay">
+    <dialog id="popup-confirm-modal" class="modal-overlay hidden" aria-modal="true">
       <div class="modal-card modal-card-sm">
         <h3 id="popup-confirm-title" class="danger-title">Confirm Action</h3>
         <p id="popup-confirm-msg" class="modal-desc-text"></p>
@@ -1126,10 +1126,10 @@
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
 
     <!-- MODAL: Custom Import Options Selection Dialog -->
-    <div id="popup-import-options-modal" class="modal-overlay hidden">
+    <dialog id="popup-import-options-modal" class="modal-overlay hidden" aria-modal="true">
       <div class="modal-card modal-card-md">
         <h3>Select Practice Mode</h3>
         <p class="modal-desc-text">Select which modes you want to activate for the imported items. You can choose to practice spelling, recall, or both:</p>
@@ -1167,7 +1167,7 @@
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   </div>
 
   <div class="resizer resizer-l"></div>
