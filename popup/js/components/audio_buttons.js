@@ -1,4 +1,4 @@
-import { escapeHtml } from '../../shared/dom.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 export function renderAudioButtons(word, margin = '8px 0 4px') {
   const safeWord = escapeHtml(word);

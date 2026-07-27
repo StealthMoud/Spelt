@@ -3,7 +3,7 @@ import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt, setLastSpel
 import { isAnswerCorrect } from './answer.js';
 import { renderAudioButtons } from './helpers.js';
 import { isGeminiConfigured, generateMisspellingFeedbackStream } from './ai_helpers.js';
-import { escapeHtml } from '../../shared/dom.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 // ── Shared helpers ──────────────────────────────────────────────────
 

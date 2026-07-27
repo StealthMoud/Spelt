@@ -1,4 +1,4 @@
-import { isDueInMode } from '../../src/core/selectors.js';
+import { isDueInMode } from '../../../src/core/selectors.js';
 
 export function formatTimeUntil(w) {
   if (w.mastered) {

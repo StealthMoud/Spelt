@@ -11,7 +11,7 @@ import {
   collectModelsFromKeyMap,
   GEMINI_AUTO_MODEL
 } from '../../shared/storage.js';
-import { runIntegrityAudit } from '../src/data/integrity.js';
+import { runIntegrityAudit } from '../../src/data/integrity.js';
 
 let onDbRestoredCallback = null;
 let aiStatusIntervalId = null;
