@@ -291,6 +291,12 @@ async function setupAIHintButton(card) {
       let hint = '';
       if (forceRegen) {
         card.aiHint = null;
+        try {
+          await atomicUpdate(async (words) => {
+            const w = words.find(x => x.id === card.id);
+            if (w) delete w.aiHint;
+          });
+        } catch (_) {}
       }
       hint = await generateHint(card);
       hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');
@@ -364,6 +370,12 @@ async function setupBackAIHintButton(card) {
       let hint = '';
       if (forceRegen) {
         card.aiHint = null;
+        try {
+          await atomicUpdate(async (words) => {
+            const w = words.find(x => x.id === card.id);
+            if (w) delete w.aiHint;
+          });
+        } catch (_) {}
       }
       hint = await generateHint(card);
       hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${l.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`).join('');

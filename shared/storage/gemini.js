@@ -662,6 +662,15 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
   }
 }
 
+function extractCandidateText(candidate) {
+  if (!candidate || !candidate.content || !Array.isArray(candidate.content.parts)) {
+    return '';
+  }
+  return candidate.content.parts
+    .map(p => (p && typeof p.text === 'string') ? p.text : '')
+    .join('');
+}
+
 /**
  * Sends a prompt to Google Gemini API and returns the parsed JSON response.
  * Requires Gemini API keys to be set in chrome.storage.local.
@@ -689,7 +698,7 @@ export async function askGemini(prompt, options = {}) {
     }, modelTiers, true /* wantJson */);
 
     const data = await result.response.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    let text = extractCandidateText(data.candidates?.[0]);
     if (!text) {
       throw new Error('Invalid empty response from Gemini API.');
     }
@@ -747,7 +756,7 @@ export async function askGeminiText(prompt, options = {}) {
     const result = await fetchWithFallback(keys, body, modelTiers, false /* wantJson */);
 
     const data = await result.response.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    let text = extractCandidateText(data.candidates?.[0]);
     if (!text) {
       throw new Error('Invalid empty response from Gemini API.');
     }
@@ -834,7 +843,7 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
           if (!jsonStr || jsonStr === '[DONE]') continue;
           try {
             const chunk = JSON.parse(jsonStr);
-            const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const text = extractCandidateText(chunk.candidates?.[0]);
             if (text) {
               fullText += text;
               if (onChunk) onChunk(fullText);

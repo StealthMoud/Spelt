@@ -82,6 +82,7 @@
   /* AI Feedback/Hint Popups scale up in widescreen */
   #ai-feedback-row, 
   #ai-hint-bubble, 
+  #back-ai-hint-bubble,
   #ai-practice-writing-feedback {
     font-size: 1.25rem !important;
     padding-top: 14px !important;
@@ -93,7 +94,8 @@
     padding-right: 48px !important;
   }
 
-  #ai-hint-bubble {
+  #ai-hint-bubble,
+  #back-ai-hint-bubble {
     padding-right: 76px !important;
   }
 

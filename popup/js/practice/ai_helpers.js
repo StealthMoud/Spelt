@@ -1,8 +1,8 @@
 import { getWords, saveWords, askGeminiText, askGeminiTextStream, isGeminiConfigured, getStored, atomicUpdate, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
 
-// ── Speed config: tight output limits for snappy responses ──────────
-const FAST_OPTS = { maxOutputTokens: 150, temperature: 0.3 };
-const MEDIUM_OPTS = { maxOutputTokens: 256, temperature: 0.4 };
+// ── Speed config: generous output limits to prevent cut-off messages ──────────
+const FAST_OPTS = { maxOutputTokens: 350, temperature: 0.3 };
+const MEDIUM_OPTS = { maxOutputTokens: 512, temperature: 0.4 };
 
 // ── In-memory cache for misspelling feedback (word::typed → feedback) ──
 const feedbackCache = new Map();
@@ -12,8 +12,10 @@ const feedbackCache = new Map();
  * Caches the result to `word.aiHint` to avoid repeated API calls.
  */
 export async function generateHint(card) {
-  // Return cached hint if available
-  if (card.aiHint) return card.aiHint;
+  // Return cached hint if valid (at least 15 chars, not truncated)
+  if (card.aiHint && typeof card.aiHint === 'string' && card.aiHint.trim().length >= 15) {
+    return card.aiHint;
+  }
 
   const variant = getSpellingVariant(card.word);
   const variantNote = variant && variant.us !== variant.uk
@@ -46,20 +48,23 @@ export async function generateMisspellingFeedback(card, typedWord) {
     return `"${typedWord}" is the valid ${typedVariant} English spelling. Both US (${variant.us}) and UK (${variant.uk}) are correct.`;
   }
 
-  // Check in-memory cache
+  // Check in-memory cache with length validation
   const cacheKey = `${card.word}::${typedWord.toLowerCase()}`;
-  if (feedbackCache.has(cacheKey)) return feedbackCache.get(cacheKey);
-
-  const allErrors = [...new Set([...(card.misspellings || []), typedWord].filter(Boolean))];
-  const errorCount = card.totalErrors || allErrors.length;
+  if (feedbackCache.has(cacheKey)) {
+    const cached = feedbackCache.get(cacheKey);
+    if (typeof cached === 'string' && cached.trim().length >= 20) {
+      return cached;
+    }
+    feedbackCache.delete(cacheKey);
+  }
 
   const variant = getSpellingVariant(card.word);
   const variantNote = variant && variant.us !== variant.uk
-    ? ` (US "${variant.us}" / UK "${variant.uk}" are both valid.)`
+    ? ` (US "${variant.us}" / UK "${variant.uk}" both valid)`
     : '';
 
-  const prompt = `Correct: "${card.word}". Typed: "${typedWord}".${errorCount > 1 ? ` Misspelled ${errorCount}x.` : ''}${allErrors.length > 1 ? ` Past errors: ${allErrors.slice(0, 3).join(', ')}.` : ''}${variantNote}
-Identify the exact mistake, give correction, and a memorable trick to prevent it. 2-3 sentences max. No fluff, no markdown. Plain text.`;
+  const prompt = `Word: "${card.word}" (${card.definition || 'N/A'}). User typed misspelling: "${typedWord}".${variantNote}
+Provide a clever memory trick, root breakdown, visual association, or mnemonic to link "${card.word}" in mind so the user never misspells it again. Focus purely on the memory trick and association. 1-2 sentences. No greetings, no repetitive preamble like "You misspelled...", no markdown. Plain text.`;
 
   const feedback = await askGeminiText(prompt, FAST_OPTS);
 
@@ -85,20 +90,20 @@ export async function generateMisspellingFeedbackStream(card, typedWord, onChunk
   const cacheKey = `${card.word}::${typedWord.toLowerCase()}`;
   if (feedbackCache.has(cacheKey)) {
     const cached = feedbackCache.get(cacheKey);
-    if (onChunk) onChunk(cached);
-    return cached;
+    if (typeof cached === 'string' && cached.trim().length >= 20) {
+      if (onChunk) onChunk(cached);
+      return cached;
+    }
+    feedbackCache.delete(cacheKey);
   }
-
-  const allErrors = [...new Set([...(card.misspellings || []), typedWord].filter(Boolean))];
-  const errorCount = card.totalErrors || allErrors.length;
 
   const variant = getSpellingVariant(card.word);
   const variantNote = variant && variant.us !== variant.uk
-    ? ` (US "${variant.us}" / UK "${variant.uk}" are both valid.)`
+    ? ` (US "${variant.us}" / UK "${variant.uk}" both valid)`
     : '';
 
-  const prompt = `Correct: "${card.word}". Typed: "${typedWord}".${errorCount > 1 ? ` Misspelled ${errorCount}x.` : ''}${allErrors.length > 1 ? ` Past errors: ${allErrors.slice(0, 3).join(', ')}.` : ''}${variantNote}
-Identify the exact mistake, give correction, and a memorable trick to prevent it. 2-3 sentences max. No fluff, no markdown. Plain text.`;
+  const prompt = `Word: "${card.word}" (${card.definition || 'N/A'}). User typed misspelling: "${typedWord}".${variantNote}
+Provide a clever memory trick, root breakdown, visual association, or mnemonic to link "${card.word}" in mind so the user never misspells it again. Focus purely on the memory trick and association. 1-2 sentences. No greetings, no repetitive preamble like "You misspelled...", no markdown. Plain text.`;
 
   try {
     const result = await askGeminiTextStream(prompt, FAST_OPTS, onChunk);
