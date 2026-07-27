@@ -11,23 +11,23 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
 
   titleEl.textContent = title;
   msgEl.textContent = message;
-  cancelBtn.style.display = showCancel ? 'inline-flex' : 'none';
+  cancelBtn.classList.toggle('hidden', !showCancel);
 
   if (expectedConfirmText) {
     inputLabel.textContent = `Type "${expectedConfirmText}" to confirm:`;
     inputField.value = '';
-    inputContainer.style.display = 'block';
+    inputContainer.classList.remove('hidden');
     okBtn.disabled = true;
     okBtn.style.opacity = '0.5';
     okBtn.style.cursor = 'not-allowed';
   } else {
-    inputContainer.style.display = 'none';
+    inputContainer.classList.add('hidden');
     okBtn.disabled = false;
     okBtn.style.opacity = '1';
     okBtn.style.cursor = 'pointer';
   }
 
-  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
   if (expectedConfirmText) {
     inputField.focus();
   }
@@ -50,7 +50,7 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
   }
 
   const close = () => {
-    modal.style.display = 'none';
+    modal.classList.add('hidden');
     cleanup();
   };
 
@@ -84,10 +84,10 @@ export function showImportOptionsModal(onSelect, onCancel) {
   const btnRecall = document.getElementById('import-option-recall');
   const btnCancel = document.getElementById('import-option-cancel');
 
-  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
 
   const close = () => {
-    modal.style.display = 'none';
+    modal.classList.add('hidden');
     cleanup();
   };
 

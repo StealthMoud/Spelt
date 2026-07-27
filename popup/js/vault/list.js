@@ -10,10 +10,10 @@ export function updateBulkUIState(filtered, selectedWordIds) {
 
   if (!bulkRow) return;
   if (filtered.length === 0) {
-    bulkRow.style.display = 'none';
+    bulkRow.classList.add('hidden');
     return;
   }
-  bulkRow.style.display = 'flex';
+  bulkRow.classList.remove('hidden');
   
   const filteredSelected = filtered.filter(w => selectedWordIds.has(w.id));
   selectedCountSpan.textContent = filteredSelected.length;
@@ -53,22 +53,18 @@ export function renderList(wordsList, selectedWordIds, openModalCallback, delete
   });
 
   if (filtered.length === 0) {
-    emptyEl.style.display = 'block';
+    emptyEl.classList.remove('hidden');
     updateBulkUIState([], selectedWordIds);
     return;
   }
   
-  emptyEl.style.display = 'none';
+  emptyEl.classList.add('hidden');
   filtered.forEach(w => {
     const li = document.createElement('li');
     li.className = 'vault-list-item';
 
     const mainCol = document.createElement('div');
-    mainCol.style.display = 'flex';
-    mainCol.style.alignItems = 'center';
-    mainCol.style.gap = '8px';
-    mainCol.style.minWidth = '0';
-    mainCol.style.flex = '1';
+    mainCol.className = 'vault-item-main';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -82,23 +78,13 @@ export function renderList(wordsList, selectedWordIds, openModalCallback, delete
     });
 
     const infoCol = document.createElement('div');
-    infoCol.style.display = 'flex';
-    infoCol.style.flexDirection = 'column';
-    infoCol.style.gap = '2px';
-    infoCol.style.minWidth = '0';
-    infoCol.style.flex = '1';
+    infoCol.className = 'vault-item-info';
 
     const wordRow = document.createElement('div');
-    wordRow.style.display = 'flex';
-    wordRow.style.alignItems = 'center';
-    wordRow.style.gap = '6px';
+    wordRow.className = 'vault-item-word-row';
 
     const wordStrong = document.createElement('strong');
-    wordStrong.style.color = 'var(--primary-light)';
-    wordStrong.style.overflow = 'hidden';
-    wordStrong.style.textOverflow = 'ellipsis';
-    wordStrong.style.whiteSpace = 'nowrap';
-    wordStrong.style.fontSize = '0.88rem';
+    wordStrong.className = 'vault-item-word';
     wordStrong.textContent = w.word;
 
     const review = formatTimeUntil(w);
@@ -113,12 +99,7 @@ export function renderList(wordsList, selectedWordIds, openModalCallback, delete
     wordRow.appendChild(reviewPill);
 
     const defSpan = document.createElement('span');
-    defSpan.style.color = 'var(--text-muted)';
-    defSpan.style.fontSize = '0.78rem';
-    defSpan.style.overflow = 'hidden';
-    defSpan.style.textOverflow = 'ellipsis';
-    defSpan.style.whiteSpace = 'nowrap';
-    defSpan.style.marginBottom = '2px';
+    defSpan.className = 'vault-item-def';
     defSpan.textContent = w.definition || 'No definition';
 
     infoCol.appendChild(wordRow);
@@ -135,9 +116,7 @@ export function renderList(wordsList, selectedWordIds, openModalCallback, delete
     mainCol.appendChild(infoCol);
 
     const actionCol = document.createElement('div');
-    actionCol.style.display = 'flex';
-    actionCol.style.gap = '6px';
-    actionCol.style.marginLeft = '8px';
+    actionCol.className = 'vault-item-actions';
 
     const editBtn = document.createElement('button');
     editBtn.type = 'button';

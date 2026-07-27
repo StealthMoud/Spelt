@@ -21,9 +21,9 @@ export function populateBackFace(card) {
   if (backTranslationRow && backTranslationDisplay) {
     if (card.translation) {
       backTranslationDisplay.textContent = card.translation;
-      backTranslationRow.style.display = 'block';
+      backTranslationRow.classList.remove('hidden');
     } else {
-      backTranslationRow.style.display = 'none';
+      backTranslationRow.classList.add('hidden');
     }
   }
 
@@ -33,9 +33,9 @@ export function populateBackFace(card) {
     const activeLevel = card.level || document.getElementById('practice-level')?.textContent;
     if (activeLevel) {
       backLevelDisplay.textContent = activeLevel;
-      backLevelRow.style.display = 'block';
+      backLevelRow.classList.remove('hidden');
     } else {
-      backLevelRow.style.display = 'none';
+      backLevelRow.classList.add('hidden');
     }
   }
 
@@ -47,9 +47,9 @@ export function populateBackFace(card) {
       : getSpellingVariant(card.word);
     if (variant && variant.us !== variant.uk) {
       variantRow.innerHTML = `<span style="color: var(--primary-light);">US:</span> <span style="font-weight: 600;">${escapeHtml(variant.us)}</span> <span style="color: var(--text-muted); margin: 0 4px;">·</span> <span style="color: var(--primary-light);">UK:</span> <span style="font-weight: 600;">${escapeHtml(variant.uk)}</span>`;
-      variantRow.style.display = 'block';
+      variantRow.classList.remove('hidden');
     } else {
-      variantRow.style.display = 'none';
+      variantRow.classList.add('hidden');
     }
   }
 
@@ -60,16 +60,16 @@ export function populateBackFace(card) {
   const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
   if (rawExample) {
     document.getElementById('back-example-display').textContent = rawExample;
-    backExampleContainer.style.display = 'block';
+    backExampleContainer.classList.remove('hidden');
   } else {
-    backExampleContainer.style.display = 'none';
+    backExampleContainer.classList.add('hidden');
   }
   const isTranslationActive = backTranslateBtn && backTranslateBtn.classList.contains('active');
   if (isTranslationActive && card.exampleTranslation) {
     if (backTransDisplay) backTransDisplay.textContent = `"${card.exampleTranslation}"`;
-    if (backTransContainer) backTransContainer.style.display = 'block';
+    if (backTransContainer) backTransContainer.classList.remove('hidden');
   } else {
-    if (backTransContainer) backTransContainer.style.display = 'none';
+    if (backTransContainer) backTransContainer.classList.add('hidden');
     if (backTransDisplay) backTransDisplay.textContent = '';
     if (backTranslateBtn) backTranslateBtn.classList.remove('active');
   }
@@ -119,7 +119,7 @@ export function checkSpelling() {
 
   // Show spelling result
   if (badge) {
-    badge.style.display = 'inline-flex';
+    badge.classList.remove('hidden');
     if (isOk) {
       if (isVariantMatch) {
         // Determine which variant they typed
@@ -137,7 +137,7 @@ export function checkSpelling() {
   if (typedDisplay) {
     typedDisplay.textContent = typed || '(Blank)';
     typedDisplay.style.color = isOk ? 'var(--success)' : 'var(--danger)';
-    if (typedDisplay.parentElement) typedDisplay.parentElement.style.display = 'block';
+    if (typedDisplay.parentElement) typedDisplay.parentElement.classList.remove('hidden');
   }
   getOnDeckUpdated()?.();
 
@@ -167,7 +167,7 @@ export function checkSpelling() {
             prefiredError = err;
           });
 
-          fbRow.style.display = 'block';
+          fbRow.classList.remove('hidden');
           fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;"><span>AI Coach</span></button>`;
           fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', (ev) => {
             const btn = ev.currentTarget;
@@ -192,11 +192,11 @@ export function checkSpelling() {
             }
           });
         } else {
-          fbRow.style.display = 'none';
+          fbRow.classList.add('hidden');
         }
       });
     } else {
-      fbRow.style.display = 'none';
+      fbRow.classList.add('hidden');
     }
   }
 
@@ -208,8 +208,8 @@ export function checkSpelling() {
   }
   if (displayErrors.length > 0) {
     document.getElementById('back-misspellings-display').textContent = [...new Set(displayErrors)].join(', ');
-    pastContainer.style.display = 'block';
-  } else { pastContainer.style.display = 'none'; }
+    pastContainer.classList.remove('hidden');
+  } else { pastContainer.classList.add('hidden'); }
 
   // SRS interval hints (spelling track)
   const totalErrors = card.totalErrors !== undefined ? card.totalErrors : (card.misspellings || []).length;
@@ -232,20 +232,20 @@ export function revealRecall() {
 
   // Hide spelling-specific UI
   const badge = document.getElementById('spelling-result-badge');
-  if (badge) badge.style.display = 'none';
+  if (badge) badge.classList.add('hidden');
   const typedDisplay = document.getElementById('user-typed-display');
-  if (typedDisplay && typedDisplay.parentElement) typedDisplay.parentElement.style.display = 'none';
+  if (typedDisplay && typedDisplay.parentElement) typedDisplay.parentElement.classList.add('hidden');
 
   // Populate shared back face
   populateBackFace(card);
 
   // Hide AI Coach panel in recall mode since there are no spelling errors
   const fbRow = document.getElementById('ai-feedback-row');
-  if (fbRow) fbRow.style.display = 'none';
+  if (fbRow) fbRow.classList.add('hidden');
 
   // Hide past misspellings (not relevant in recall mode)
   const pastContainer = document.getElementById('past-misspellings-container');
-  if (pastContainer) pastContainer.style.display = 'none';
+  if (pastContainer) pastContainer.classList.add('hidden');
 
   // SRS interval hints (recall track)
   const hardInt = calcSM2(3, card.meaningRep || 0, card.meaningInterval || 0, card.meaningEf || 2.5, 1.0, true, 1.0).interval;

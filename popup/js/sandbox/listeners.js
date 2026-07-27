@@ -40,7 +40,7 @@ export function registerSandboxListeners(reloadVaultList, loadPracticeDeck) {
     const active = document.activeElement;
     const isTyping = active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && ['text', 'search'].includes(active.type)));
 
-    if (feedbackMsg.style.display === 'none') return;
+    if (feedbackMsg.classList.contains('hidden')) return;
 
     if ((e.key === 't' || e.key === 'T') && !isTyping) {
       e.preventDefault(); feedbackMsg.querySelector('.translate-example-btn')?.click(); return;
@@ -87,7 +87,7 @@ export function registerSandboxListeners(reloadVaultList, loadPracticeDeck) {
           if (word) playWordAudio(word, accent).catch(() => {});
         }
       } else if (e.key === 'Escape') {
-        e.preventDefault(); feedbackMsg.style.display = 'none'; document.getElementById('word-input')?.focus();
+        e.preventDefault(); feedbackMsg.classList.add('hidden'); document.getElementById('word-input')?.focus();
       }
     }
   });

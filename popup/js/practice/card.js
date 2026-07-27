@@ -26,22 +26,22 @@ export function showPracticeCard() {
   const dueCards = getDueCards();
 
   if (dueCards.length === 0) {
-    cardEl.style.display = 'none'; emptyEl.style.display = 'flex';
+    cardEl.classList.add('hidden'); emptyEl.classList.remove('hidden');
     // Trigger AI session summary
     triggerSessionSummary();
     return;
   }
 
-  cardEl.style.display = 'flex'; emptyEl.style.display = 'none';
+  cardEl.classList.remove('hidden'); emptyEl.classList.add('hidden');
   cardEl.classList.remove('flipped'); spellInput.value = '';
   setCardShownAt(Date.now());
 
   // Reset AI hint and feedback bubbles
   const hintBubble = document.getElementById('ai-hint-bubble');
-  if (hintBubble) hintBubble.style.display = 'none';
+  if (hintBubble) hintBubble.classList.add('hidden');
   const backHintBubble = document.getElementById('back-ai-hint-bubble');
   if (backHintBubble) {
-    backHintBubble.style.display = 'none';
+    backHintBubble.classList.add('hidden');
     backHintBubble.style.top = 'auto';
     backHintBubble.style.right = '14px';
     backHintBubble.style.bottom = '74px';
@@ -49,7 +49,7 @@ export function showPracticeCard() {
   }
   const fbBubble = document.getElementById('ai-feedback-row');
   if (fbBubble) {
-    fbBubble.style.display = 'none';
+    fbBubble.classList.add('hidden');
     fbBubble.style.top = 'auto';
     fbBubble.style.right = '14px';
     fbBubble.style.bottom = '74px';
@@ -77,10 +77,10 @@ export function populateFrontFace(card) {
   const frontRecallWrapper = document.getElementById('front-recall-wrapper');
 
   if (mode === 'recall') {
-    if (frontSpellingContent) frontSpellingContent.style.display = 'none';
-    if (frontRecallContent) frontRecallContent.style.display = 'flex';
-    if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'none';
-    if (frontRecallWrapper) frontRecallWrapper.style.display = 'flex';
+    if (frontSpellingContent) frontSpellingContent.classList.add('hidden');
+    if (frontRecallContent) frontRecallContent.classList.remove('hidden');
+    if (frontSpellingWrapper) frontSpellingWrapper.classList.add('hidden');
+    if (frontRecallWrapper) frontRecallWrapper.classList.remove('hidden');
 
     document.getElementById('recall-front-word').textContent = card.word;
     document.getElementById('recall-front-transcription').textContent = card.transcription || '/--/';
@@ -93,7 +93,7 @@ export function populateFrontFace(card) {
     if (levelContainer && levelEl) {
       let displayLevel = card.level || '';
       levelEl.textContent = displayLevel;
-      levelContainer.style.display = displayLevel ? 'inline-block' : 'none';
+      levelContainer.classList.toggle('hidden', !displayLevel);
     }
 
     // Populate and show example sentence on front for Recall mode context clues
@@ -101,9 +101,9 @@ export function populateFrontFace(card) {
     const exampleContainer = document.getElementById('recall-front-example-container');
     if (rawExample) {
       document.getElementById('recall-front-example').textContent = rawExample;
-      if (exampleContainer) exampleContainer.style.display = 'block';
+      if (exampleContainer) exampleContainer.classList.remove('hidden');
     } else {
-      if (exampleContainer) exampleContainer.style.display = 'none';
+      if (exampleContainer) exampleContainer.classList.add('hidden');
     }
 
     // Set dynamic hint/prompt text
@@ -114,10 +114,10 @@ export function populateFrontFace(card) {
         : 'What does this word mean?';
     }
   } else {
-    if (frontSpellingContent) frontSpellingContent.style.display = 'flex';
-    if (frontRecallContent) frontRecallContent.style.display = 'none';
-    if (frontSpellingWrapper) frontSpellingWrapper.style.display = 'flex';
-    if (frontRecallWrapper) frontRecallWrapper.style.display = 'none';
+    if (frontSpellingContent) frontSpellingContent.classList.remove('hidden');
+    if (frontRecallContent) frontRecallContent.classList.add('hidden');
+    if (frontSpellingWrapper) frontSpellingWrapper.classList.remove('hidden');
+    if (frontRecallWrapper) frontRecallWrapper.classList.add('hidden');
 
     document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
     document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
@@ -142,7 +142,7 @@ export function populateFrontFace(card) {
       let displayLevel = card.level || '';
       let otherLevels = card.otherLevels || [];
       levelEl.innerHTML = displayLevel ? formatLevelDisplay(displayLevel, otherLevels) : '';
-      levelContainer.style.display = displayLevel ? 'block' : 'none';
+      levelContainer.classList.toggle('hidden', !displayLevel);
     }
 
     const exampleContainer = document.getElementById('practice-example-container');
@@ -151,16 +151,16 @@ export function populateFrontFace(card) {
     const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
     if (rawExample) {
       document.getElementById('practice-example').textContent = censorWordInExample(card.word, rawExample);
-      exampleContainer.style.display = 'block';
-    } else exampleContainer.style.display = 'none';
+      exampleContainer.classList.remove('hidden');
+    } else exampleContainer.classList.add('hidden');
     const isTransActive = translateBtn && translateBtn.classList.contains('active');
     if (isTransActive && card.exampleTranslation) {
       if (exampleTransEl) {
         exampleTransEl.textContent = `"${card.exampleTranslation}"`;
-        exampleTransEl.style.display = 'block';
+        exampleTransEl.classList.remove('hidden');
       }
     } else {
-      if (exampleTransEl) { exampleTransEl.style.display = 'none'; exampleTransEl.textContent = ''; }
+      if (exampleTransEl) { exampleTransEl.classList.add('hidden'); exampleTransEl.textContent = ''; }
       if (translateBtn) translateBtn.classList.remove('active');
     }
 
@@ -181,14 +181,14 @@ export function populateFrontFace(card) {
           const levelContainer = document.getElementById('recall-front-level-container');
           if (levelEl && levelContainer) {
             levelEl.textContent = card.level;
-            levelContainer.style.display = 'inline-block';
+            levelContainer.classList.remove('hidden');
           }
         } else {
           const levelEl = document.getElementById('practice-level');
           const levelContainer = document.getElementById('practice-level-container');
           if (levelEl && levelContainer) {
             levelEl.innerHTML = formatLevelDisplay(card.level, card.otherLevels);
-            levelContainer.style.display = 'block';
+            levelContainer.classList.remove('hidden');
           }
         }
         
@@ -253,19 +253,19 @@ async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defau
 
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured) {
-    hintBtn.style.display = 'none';
+    hintBtn.classList.add('hidden');
     return;
   }
 
-  hintBtn.style.display = 'inline-flex';
-  hintBubble.style.display = 'none';
+  hintBtn.classList.remove('hidden');
+  hintBubble.classList.add('hidden');
   hintText.textContent = '';
 
   const handleHintRequest = async (forceRegen = false) => {
     const currentCard = card || peekCard();
     if (!currentCard) return;
     hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
-    hintBubble.style.display = 'block';
+    hintBubble.classList.remove('hidden');
     try {
       if (forceRegen) {
         currentCard.aiHint = null;
@@ -287,8 +287,8 @@ async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defau
   hintBtn.parentNode.replaceChild(newHintBtn, hintBtn);
   newHintBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (hintBubble.style.display === 'block') {
-      hintBubble.style.display = 'none';
+    if (!hintBubble.classList.contains('hidden')) {
+      hintBubble.classList.add('hidden');
     } else {
       handleHintRequest(false);
     }
@@ -308,7 +308,7 @@ async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defau
     closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
     newCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      hintBubble.style.display = 'none';
+      hintBubble.classList.add('hidden');
     });
   }
 }
@@ -340,7 +340,7 @@ async function triggerSessionSummary() {
   const textEl = document.getElementById('ai-session-summary-text');
   if (!container || !textEl) return;
 
-  container.style.display = 'none';
+  container.classList.add('hidden');
   textEl.textContent = '';
 
   const isConfigured = await isGeminiConfigured();
@@ -350,7 +350,7 @@ async function triggerSessionSummary() {
   if (stats.totalReviewed === 0) return;
 
   // Show button-gated AI summary — no auto-fire to prevent rate limits
-  container.style.display = 'block';
+  container.classList.remove('hidden');
   textEl.innerHTML = `<button type="button" id="ai-session-summary-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 5px 12px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease; margin: 4px auto;"><span>Generate AI Summary</span></button>`;
   textEl.querySelector('#ai-session-summary-btn')?.addEventListener('click', async (ev) => {
     const btn = ev.currentTarget;
@@ -397,8 +397,8 @@ async function setupAIWritingPractice(card) {
 
   // Clear inputs and state
   inputEl.value = '';
-  feedbackEl.style.display = 'none';
-  bodyEl.style.display = 'none'; // Collapsed by default!
+  feedbackEl.classList.add('hidden');
+  bodyEl.classList.add('hidden'); // Collapsed by default!
   if (feedbackContentEl) feedbackContentEl.innerHTML = '';
   if (writingFeedbackTimeoutId) {
     clearTimeout(writingFeedbackTimeoutId);
@@ -407,11 +407,11 @@ async function setupAIWritingPractice(card) {
 
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured) {
-    practicePanel.style.display = 'none';
+    practicePanel.classList.add('hidden');
     return;
   }
 
-  practicePanel.style.display = 'flex';
+  practicePanel.classList.remove('hidden');
   const mode = getPracticeMode();
 
   if (titleText) titleText.textContent = 'Active Vocabulary Practice';
@@ -432,13 +432,13 @@ async function setupAIWritingPractice(card) {
     const freshToggleText = document.getElementById('ai-writing-practice-toggle-text');
     const freshToggleIcon = document.getElementById('ai-writing-practice-toggle-icon');
     
-    if (bodyEl.style.display === 'none') {
-      bodyEl.style.display = 'flex';
+    if (bodyEl.classList.contains('hidden')) {
+      bodyEl.classList.remove('hidden');
       if (freshToggleText) freshToggleText.textContent = 'Collapse';
       if (freshToggleIcon) freshToggleIcon.style.transform = 'rotate(180deg)';
       inputEl.focus();
     } else {
-      bodyEl.style.display = 'none';
+      bodyEl.classList.add('hidden');
       if (freshToggleText) freshToggleText.textContent = 'Start Practice';
       if (freshToggleIcon) freshToggleIcon.style.transform = 'rotate(0deg)';
     }
@@ -486,11 +486,11 @@ async function setupAIWritingPractice(card) {
       }
     }
 
-    feedbackEl.style.display = 'block';
+    feedbackEl.classList.remove('hidden');
 
     if (autoHideDuration) {
       writingFeedbackTimeoutId = setTimeout(() => {
-        feedbackEl.style.display = 'none';
+        feedbackEl.classList.add('hidden');
         writingFeedbackTimeoutId = null;
       }, autoHideDuration);
     }
@@ -528,7 +528,7 @@ async function setupAIWritingPractice(card) {
     feedbackCloseBtn.parentNode.replaceChild(newCloseBtn, feedbackCloseBtn);
     newCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      feedbackEl.style.display = 'none';
+      feedbackEl.classList.add('hidden');
       if (writingFeedbackTimeoutId) {
         clearTimeout(writingFeedbackTimeoutId);
         writingFeedbackTimeoutId = null;
@@ -551,7 +551,7 @@ function setupAISpellingFeedback() {
     closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
     newCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      fbRow.style.display = 'none';
+      fbRow.classList.add('hidden');
     });
   }
 }

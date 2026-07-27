@@ -38,7 +38,7 @@ export async function handleFeedbackClick(e, reloadVaultList, loadPracticeDeck) 
   }
 
   const closeBtn = e.target.closest('.feedback-close-btn');
-  if (closeBtn) { feedbackMsg.style.display = 'none'; return; }
+  if (closeBtn) { feedbackMsg.classList.add('hidden'); return; }
 
   const playBtn = e.target.closest('.audio-play-btn');
   if (playBtn) {

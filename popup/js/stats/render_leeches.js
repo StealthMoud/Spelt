@@ -34,11 +34,11 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
   const leeches = allLeeches.slice(0, limit);
 
   if (leeches.length === 0) {
-    if (leechesEmpty) leechesEmpty.style.display = 'block';
-    leechesList.style.display = 'none';
+    if (leechesEmpty) leechesEmpty.classList.remove('hidden');
+    leechesList.classList.add('hidden');
   } else {
-    if (leechesEmpty) leechesEmpty.style.display = 'none';
-    leechesList.style.display = 'flex';
+    if (leechesEmpty) leechesEmpty.classList.add('hidden');
+    leechesList.classList.remove('hidden');
 
     leeches.forEach(w => {
       const uniqueTypos = [...new Set((w.misspellings || []))].filter(Boolean);
@@ -54,7 +54,7 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
             <span class="leech-word-text">${w.word}</span>
             <span class="leech-count-badge">${lifetimeErrors} lifetime error${lifetimeErrors > 1 ? 's' : ''}${streak > 0 ? ` · ${streak}✓ streak` : ''}</span>
           </div>
-          <button type="button" class="icon-btn leech-coach-btn" title="AI Coach Mnemonic" style="display: none; color: #a78bfa; padding: 2px 6px; align-items: center; gap: 3px;">
+          <button type="button" class="icon-btn leech-coach-btn hidden" title="AI Coach Mnemonic" style="color: #a78bfa; padding: 2px 6px; align-items: center; gap: 3px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             <span style="font-size: 0.65rem;">Coach</span>
           </button>
@@ -62,7 +62,7 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
         <div class="leech-typos" style="margin-top: 3px;">
           Common typos: <span class="leech-typos-list">${uniqueTypos.slice(0, 3).join(', ') || 'none'}</span>
         </div>
-        <div class="leech-coach-bubble" style="display: none; background: hsla(260, 50%, 30%, 0.12); border: 1px solid hsla(260, 50%, 60%, 0.25); border-radius: var(--radius-sm); padding: 6px 8px; margin-top: 6px; font-size: 0.68rem; color: #c4b5fd; line-height: 1.45; text-align: left; word-break: break-word;">
+        <div class="leech-coach-bubble hidden" style="background: hsla(260, 50%, 30%, 0.12); border: 1px solid hsla(260, 50%, 60%, 0.25); border-radius: var(--radius-sm); padding: 6px 8px; margin-top: 6px; font-size: 0.68rem; color: #c4b5fd; line-height: 1.45; text-align: left; word-break: break-word;">
           Loading coaching tips...
         </div>
       `;
@@ -74,12 +74,12 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
       if (coachBtn && coachBubble) {
         isGeminiConfigured().then(configured => {
           if (configured) {
-            coachBtn.style.display = 'inline-flex';
+            coachBtn.classList.remove('hidden');
             coachBtn.addEventListener('click', async () => {
-              if (coachBubble.style.display === 'block') {
-                coachBubble.style.display = 'none';
+              if (!coachBubble.classList.contains('hidden')) {
+                coachBubble.classList.add('hidden');
               } else {
-                coachBubble.style.display = 'block';
+                coachBubble.classList.remove('hidden');
                 if (coachBubble.textContent.trim() === 'Loading coaching tips...') {
                   try {
                     const prompt = `Word: "${w.word}". Common typos: "${uniqueTypos.join(', ') || 'none'}". Give a memorable spelling mnemonic or trick. 1-2 sentences. Plain text only.`;

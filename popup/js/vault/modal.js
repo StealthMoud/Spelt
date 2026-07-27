@@ -45,12 +45,12 @@ export function openModal(wordObj = null) {
     }
   }
   
-  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
   document.getElementById('form-word').focus();
 }
 
 export function closeModal() {
-  document.getElementById('word-form-modal').style.display = 'none';
+  document.getElementById('word-form-modal').classList.add('hidden');
 }
 
 export function renderPastErrorsList() {
@@ -118,10 +118,10 @@ export function renderPastErrorsList() {
         statsEl.textContent = statsStr;
       }
 
-      pastContainer.style.display = 'block';
+      pastContainer.classList.remove('hidden');
     } else {
       pastList.innerHTML = '';
-      pastContainer.style.display = 'none';
+      pastContainer.classList.add('hidden');
     }
   }
 }
@@ -138,9 +138,9 @@ function updateFormLabels(_practiceType) {
   if (wordLabel) wordLabel.textContent = 'Word *';
   if (defLabel) defLabel.textContent = 'Definition *';
   if (exLabel) exLabel.textContent = 'Example Sentence';
-  if (pronContainer) pronContainer.style.display = 'block';
-  if (posContainer) posContainer.style.display = 'block';
-  if (autoBtn) autoBtn.style.display = 'flex';
+  if (pronContainer) pronContainer.classList.remove('hidden');
+  if (posContainer) posContainer.classList.remove('hidden');
+  if (autoBtn) autoBtn.classList.remove('hidden');
 }
 
 // Add event listener to update labels dynamically when user changes dropdown

@@ -68,13 +68,13 @@ export function initSettings(onDbRestored) {
 
     const key = keyInput.value.trim();
     if (!key) {
-      statusEl.style.display = 'block';
+      statusEl.classList.remove('hidden');
       statusEl.style.color = 'var(--danger)';
       statusEl.textContent = 'Please enter an API Key first.';
       return;
     }
 
-    statusEl.style.display = 'block';
+    statusEl.classList.remove('hidden');
     statusEl.style.color = 'var(--primary-light)';
     statusEl.textContent = 'Verifying API key...';
 
@@ -263,7 +263,7 @@ export function initSettings(onDbRestored) {
         renderKeysList(updatedKeys, keyModelsMap, updatedModelsList);
         if (updatedKeys.length === 0) {
           const modelContainer = document.getElementById('gemini-model-container');
-          if (modelContainer) modelContainer.style.display = 'none';
+          if (modelContainer) modelContainer.classList.add('hidden');
         } else {
           await renderModelSelect(updates.spelt_gemini_model || currentModel, true);
         }
@@ -425,7 +425,7 @@ async function renderModelSelect(selectedModel = GEMINI_AUTO_MODEL, hasKeys = tr
   if (!modelSelect || !modelContainer) return;
 
   if (!hasKeys) {
-    modelContainer.style.display = 'none';
+    modelContainer.classList.add('hidden');
     return;
   }
 
@@ -462,7 +462,7 @@ async function renderModelSelect(selectedModel = GEMINI_AUTO_MODEL, hasKeys = tr
   const selectedValue = normalizeModelSelection(selectedModel);
   const availableValues = new Set([GEMINI_AUTO_MODEL, ...models]);
   modelSelect.value = availableValues.has(selectedValue) ? selectedValue : GEMINI_AUTO_MODEL;
-  modelContainer.style.display = 'flex';
+  modelContainer.classList.remove('hidden');
 }
 
 function createAiBadge(text, tone = 'neutral') {
@@ -482,18 +482,18 @@ async function renderAiStatusMonitor() {
   const hasKeys = keys.length > 0 || !!res.spelt_gemini_key;
 
   if (!hasKeys) {
-    monitorBlock.style.display = 'none';
+    monitorBlock.classList.add('hidden');
     return;
   }
 
   try {
     const statuses = await getAiStatus();
     if (statuses.length === 0) {
-      monitorBlock.style.display = 'none';
+      monitorBlock.classList.add('hidden');
       return;
     }
 
-    monitorBlock.style.display = 'flex';
+    monitorBlock.classList.remove('hidden');
     container.innerHTML = '';
 
     const groups = new Map();

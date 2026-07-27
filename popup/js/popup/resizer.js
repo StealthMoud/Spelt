@@ -24,7 +24,7 @@ export function initResizer() {
         // Standard dropdown popup
         // Show all 8 resizer handles (edges and corners)
         handles.forEach(h => {
-          h.style.display = 'block';
+          h.classList.remove('hidden');
         });
 
         // Apply saved or default dimensions
@@ -49,7 +49,7 @@ export function initResizer() {
       } else {
         // Detached standalone window
         // OS handles native window resizing, so we hide our custom resizer handles
-        handles.forEach(h => h.style.display = 'none');
+        handles.forEach(h => h.classList.add('hidden'));
         setStyles('100%', '100%', 'none', 'none');
       }
     });

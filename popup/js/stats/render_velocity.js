@@ -50,8 +50,8 @@ export function renderSandboxActivity(globalSandboxChecks, globalSandboxCorrect,
     if (elTotal) elTotal.textContent = globalSandboxChecks;
     if (elRate) elRate.textContent = `${Math.round((globalSandboxCorrect / globalSandboxChecks) * 100)}%`;
     if (elToday) elToday.textContent = globalSandboxToday;
-    if (emptyMsg) emptyMsg.style.display = 'none';
-    if (chart) chart.style.display = 'flex';
+    if (emptyMsg) emptyMsg.classList.add('hidden');
+    if (chart) chart.classList.remove('hidden');
 
     const points = chartBuckets.map(b => b.sandboxChecks);
     const labels = chartBuckets.map(b => b.fullDateLabel);
@@ -63,7 +63,7 @@ export function renderSandboxActivity(globalSandboxChecks, globalSandboxCorrect,
     if (elTotal) elTotal.textContent = '0';
     if (elRate) elRate.textContent = '--';
     if (elToday) elToday.textContent = '0';
-    if (emptyMsg) emptyMsg.style.display = 'block';
-    if (chart) chart.style.display = 'none';
+    if (emptyMsg) emptyMsg.classList.remove('hidden');
+    if (chart) chart.classList.add('hidden');
   }
 }

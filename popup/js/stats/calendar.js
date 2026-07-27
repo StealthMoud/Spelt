@@ -79,7 +79,7 @@ export function handleCalDayClick(date, renderStatsCallback) {
     
     const popover = document.getElementById('stats-calendar-popover');
     if (popover) {
-      popover.style.display = 'none';
+      popover.classList.add('hidden');
       const chartPanel = popover.closest('.stats-panel');
       if (chartPanel) {
         chartPanel.style.zIndex = '';

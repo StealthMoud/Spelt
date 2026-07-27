@@ -1,5 +1,5 @@
         <!-- Sub-tab 2: Vocabulary -->
-        <div id="stats-subtab-vocabulary" class="stats-subtab-content" style="display: none;">
+        <div id="stats-subtab-vocabulary" class="stats-subtab-content hidden">
           <div class="stats-panel velocity-panel">
             <h4 class="stats-section-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -40,30 +40,30 @@
 
           <div class="stats-panel leeches-panel">
             <div class="stats-header-row">
-              <h4 class="stats-section-title" style="border-bottom: none; padding-bottom: 0;">
+              <h4 class="stats-section-title ai-insights-header">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 <span>Hardest Words (Leech List)</span>
               </h4>
-              <div style="display: flex; gap: 6px; align-items: center;">
-                <select id="stats-leeches-limit" class="field vault-sort-select" style="width: 90px; height: 24px; padding: 2px 24px 2px 8px !important; font-size: 0.65rem !important;">
+              <div class="flex-gap-xs-center">
+                <select id="stats-leeches-limit" class="field vault-sort-select leeches-limit-select">
                   <option value="5">Top 5</option>
                   <option value="10" selected>Top 10</option>
                   <option value="50">Top 50</option>
                   <option value="all">All</option>
                   <option value="custom">Custom...</option>
                 </select>
-                <div id="stats-leeches-custom-container" style="display: none; align-items: center; gap: 3px; background: hsla(155, 20%, 6%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 4px; height: 24px; box-sizing: border-box; transition: all var(--transition-fast) ease;">
-                  <button type="button" id="stats-leeches-dec-btn" class="icon-btn" style="width: 16px; height: 16px; border: none; background: transparent; font-size: 0.6rem; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 0;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <div id="stats-leeches-custom-container" class="leeches-custom-box">
+                  <button type="button" id="stats-leeches-dec-btn" class="icon-btn leeches-spin-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="icon-svg-xs"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </button>
-                  <input type="number" id="stats-leeches-custom-val" class="field" style="width: 30px; height: 20px; border: none; background: transparent; padding: 0; text-align: center; font-size: 0.65rem; margin: 0; box-shadow: none !important;" min="1" max="500" value="15">
-                  <button type="button" id="stats-leeches-inc-btn" class="icon-btn" style="width: 16px; height: 16px; border: none; background: transparent; font-size: 0.6rem; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 0;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <input type="number" id="stats-leeches-custom-val" class="field leeches-custom-input" min="1" max="500" value="15">
+                  <button type="button" id="stats-leeches-inc-btn" class="icon-btn leeches-spin-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="icon-svg-xs"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </button>
                 </div>
               </div>
             </div>
-            <div id="stats-leeches-empty" class="leeches-empty-text" style="display: none;">
+            <div id="stats-leeches-empty" class="leeches-empty-text hidden">
               No spelling errors logged yet. Good job!
             </div>
             <ul id="stats-leeches-list" class="stats-leeches-list">
@@ -72,12 +72,12 @@
           </div>
 
           <!-- AI Vocab Coach Card -->
-          <div id="stats-ai-vocab-panel" class="stats-panel ai-insights-panel" style="display: none; margin-top: 12px; background: hsla(260, 50%, 30%, 0.12); border: 1px solid hsla(260, 50%, 60%, 0.25); padding: 10px 12px;">
-            <h5 class="stats-section-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; height: auto;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" class="title-icon" style="width: 12px; height: 12px; margin-right: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span style="color: #a78bfa; font-weight: 700; font-size: 0.7rem; text-transform: uppercase;">AI Vocab Coach</span>
+          <div id="stats-ai-vocab-panel" class="stats-panel ai-insights-panel ai-schedule-panel hidden">
+            <h5 class="stats-section-title ai-schedule-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" class="title-icon icon-svg-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span class="ai-schedule-title">AI Vocab Coach</span>
             </h5>
-            <div id="stats-ai-vocab-content" style="font-size: 0.68rem; color: #e2e8f0; line-height: 1.45; text-align: left;">
+            <div id="stats-ai-vocab-content" class="ai-schedule-body">
               Loading vocab recommendation...
             </div>
           </div>

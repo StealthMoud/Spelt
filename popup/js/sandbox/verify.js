@@ -11,7 +11,7 @@ export async function handleVerify(reloadVaultListCallback) {
   const word = wordInput?.value.trim();
   if (!word) return;
   try {
-    feedbackMsg.style.display = 'block';
+    feedbackMsg.classList.remove('hidden');
     feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Verifying spelling...</p>';
     const lowerWord = word.toLowerCase();
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`);

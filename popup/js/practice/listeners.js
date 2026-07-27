@@ -55,8 +55,8 @@ export function registerPracticeListeners() {
     if (!transEl || !btn) return;
     
     const displayEl = container || transEl;
-    if (displayEl.style.display === 'block') {
-      displayEl.style.display = 'none'; btn.classList.remove('active'); return;
+    if (!displayEl.classList.contains('hidden')) {
+      displayEl.classList.add('hidden'); btn.classList.remove('active'); return;
     }
     
     const rawExample = card.example || getFallbackExample(card.word, card.partOfSpeech);
@@ -69,7 +69,7 @@ export function registerPracticeListeners() {
         showConfirm('Preferred Language Required', 'Please configure a preferred language in Settings first.', null, false); return;
       }
       transEl.textContent = 'Translating...';
-      displayEl.style.display = 'block';
+      displayEl.classList.remove('hidden');
       trans = await fetchTranslation(rawExample, targetLang);
       if (trans) {
         card.exampleTranslation = trans;
@@ -82,7 +82,7 @@ export function registerPracticeListeners() {
       }
     }
     transEl.textContent = `"${trans}"`;
-    displayEl.style.display = 'block';
+    displayEl.classList.remove('hidden');
     btn.classList.add('active');
   };
 

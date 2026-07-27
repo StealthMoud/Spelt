@@ -151,3 +151,13 @@
 .offline-banner.connection-error svg {
   color: var(--warning);
 }
+
+.hidden {
+  display: none !important;
+}
+
+.text-center-bold {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}

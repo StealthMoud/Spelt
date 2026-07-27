@@ -29,7 +29,7 @@ export function registerKeydowns() {
   window.addEventListener('keydown', async (e) => {
     const practiceTab = document.getElementById('practice-tab');
     if (!practiceTab || !practiceTab.classList.contains('active')) return;
-    if (document.getElementById('word-form-modal')?.style.display === 'flex') return;
+    if (document.getElementById('word-form-modal')?.classList.contains('hidden') === false) return;
 
     const cardEl = document.getElementById('popup-deck-card');
     if (!cardEl || getDueCards().length === 0) return;
@@ -82,7 +82,7 @@ export function registerKeydowns() {
       (document.querySelector('#back-audio-container .audio-play-btn') || document.querySelector('#popup-deck-card .audio-play-btn'))?.click();
     } else {
       const modal = document.getElementById('popup-confirm-modal');
-      if (modal && modal.style.display === 'flex') {
+      if (modal && !modal.classList.contains('hidden')) {
         if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); document.getElementById('popup-confirm-ok-btn')?.click(); }
         else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); document.getElementById('popup-confirm-cancel-btn')?.click(); }
       }

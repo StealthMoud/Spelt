@@ -4,10 +4,10 @@ export function bindUiEvents(renderStats) {
   document.querySelectorAll('.stats-subtab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.stats-subtab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.stats-subtab-content').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+      document.querySelectorAll('.stats-subtab-content').forEach(p => { p.classList.remove('active'); p.classList.add('hidden'); });
       btn.classList.add('active');
       const target = document.getElementById(`stats-subtab-${btn.getAttribute('data-subtab')}`);
-      if (target) { target.classList.add('active'); target.style.display = 'flex'; }
+      if (target) { target.classList.add('active'); target.classList.remove('hidden'); }
     });
   });
 
@@ -30,15 +30,15 @@ export function bindUiEvents(renderStats) {
     select.value = currentStatsTimeframe; syncSelect();
     btn?.addEventListener('click', (e) => {
       e.stopPropagation();
-      const show = dropdown.style.display === 'none';
-      dropdown.style.display = show ? 'block' : 'none';
+      const show = dropdown.classList.contains('hidden');
+      dropdown.classList.toggle('hidden', !show);
       const row = btn.closest('.stats-header-row');
       if (row) { row.style.position = 'relative'; row.style.zIndex = show ? '60' : ''; }
     });
     dropdown?.querySelectorAll('.custom-select-option').forEach(opt => {
       opt.addEventListener('click', (e) => {
         e.stopPropagation(); select.value = opt.getAttribute('data-value'); syncSelect();
-        dropdown.style.display = 'none';
+        dropdown.classList.add('hidden');
         const row = btn.closest('.stats-header-row');
         if (row) row.style.zIndex = '';
         select.dispatchEvent(new Event('change'));
@@ -47,7 +47,7 @@ export function bindUiEvents(renderStats) {
     select.addEventListener('change', async (e) => {
       setTimeframe(e.target.value);
       const cr = document.getElementById('stats-custom-range');
-      if (cr) cr.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+      if (cr) cr.classList.toggle('hidden', e.target.value !== 'custom');
       await renderStats();
     });
   }
@@ -59,7 +59,7 @@ export function bindUiEvents(renderStats) {
   limitSelect?.addEventListener('change', (e) => {
     setLeechesLimit(e.target.value);
     chrome.storage?.local.set({ spelt_leeches_limit: e.target.value });
-    if (customContainer) customContainer.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+    if (customContainer) customContainer.classList.toggle('hidden', e.target.value !== 'custom');
     renderStats();
   });
 
@@ -80,8 +80,8 @@ export function bindUiEvents(renderStats) {
   });
 
   window.addEventListener('click', (e) => {
-    if (dropdown && dropdown.style.display !== 'none' && !btn.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.style.display = 'none';
+    if (dropdown && !dropdown.classList.contains('hidden') && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
       const row = btn.closest('.stats-header-row'); if (row) row.style.zIndex = '';
     }
   });

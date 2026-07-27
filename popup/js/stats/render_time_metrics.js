@@ -16,8 +16,8 @@ export function renderResponseTime(globalRtSum, globalRtCount, globalRtMin, glob
     if (avgEl) avgEl.textContent = formatRt(globalRtSum / globalRtCount);
     if (fastestEl) fastestEl.textContent = formatRt(globalRtMin);
     if (slowestEl) slowestEl.textContent = formatRt(globalRtMax);
-    if (emptyMsg) emptyMsg.style.display = 'none';
-    if (trendContainer) trendContainer.style.display = 'flex';
+    if (emptyMsg) emptyMsg.classList.add('hidden');
+    if (trendContainer) trendContainer.classList.remove('hidden');
 
     const rtPoints = chartBuckets.map(b => b.rtCount > 0 ? Math.round(b.rtSum / b.rtCount) : 0);
     const rtLabels = chartBuckets.map(b => b.fullDateLabel);
@@ -29,8 +29,8 @@ export function renderResponseTime(globalRtSum, globalRtCount, globalRtMin, glob
     if (avgEl) avgEl.textContent = '--';
     if (fastestEl) fastestEl.textContent = '--';
     if (slowestEl) slowestEl.textContent = '--';
-    if (emptyMsg) emptyMsg.style.display = 'block';
-    if (trendContainer) trendContainer.style.display = 'none';
+    if (emptyMsg) emptyMsg.classList.remove('hidden');
+    if (trendContainer) trendContainer.classList.add('hidden');
   }
 }
 
@@ -73,9 +73,9 @@ export function renderStudyTime(globalRtSum, globalRtCount, todayStudyTimeMs, se
 
   const hasData = (sessions && sessions.length > 0) || globalRtCount > 0;
   if (hasData) {
-    if (emptyMsg) emptyMsg.style.display = 'none';
+    if (emptyMsg) emptyMsg.classList.add('hidden');
     if (trendContainer) {
-      trendContainer.style.display = 'flex';
+      trendContainer.classList.remove('hidden');
       const points = chartBuckets.map(b => Number((b.studyTimeMs / 1000 / 60).toFixed(1)));
       const labels = chartBuckets.map(b => b.fullDateLabel);
       drawSparkline('study-trend-container', points, 320, 75, {
@@ -84,7 +84,7 @@ export function renderStudyTime(globalRtSum, globalRtCount, todayStudyTimeMs, se
       });
     }
   } else {
-    if (emptyMsg) emptyMsg.style.display = 'block';
-    if (trendContainer) trendContainer.style.display = 'none';
+    if (emptyMsg) emptyMsg.classList.remove('hidden');
+    if (trendContainer) trendContainer.classList.add('hidden');
   }
 }

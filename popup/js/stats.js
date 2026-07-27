@@ -32,7 +32,7 @@ export async function initStats() {
   const customContainer = document.getElementById('stats-leeches-custom-container');
   if (limitSelect) limitSelect.value = currentLeechesLimit;
   if (customInput) customInput.value = currentLeechesCustomVal;
-  if (customContainer) customContainer.style.display = currentLeechesLimit === 'custom' ? 'flex' : 'none';
+  if (customContainer) customContainer.classList.toggle('hidden', currentLeechesLimit !== 'custom');
 
   bindCalendarEvents(renderStats);
   bindUiEvents(renderStats);
@@ -42,7 +42,7 @@ export async function initStats() {
       if (changes.spelt_leeches_limit) {
         setLeechesLimit(changes.spelt_leeches_limit.newValue || '10');
         if (limitSelect) limitSelect.value = currentLeechesLimit;
-        if (customContainer) customContainer.style.display = currentLeechesLimit === 'custom' ? 'flex' : 'none';
+        if (customContainer) customContainer.classList.toggle('hidden', currentLeechesLimit !== 'custom');
         renderStats();
       }
       if (changes.spelt_leeches_custom_val) {

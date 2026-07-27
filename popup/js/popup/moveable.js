@@ -7,7 +7,7 @@ export function initMoveable() {
     if (win && win.type === 'popup') {
       header.style.cursor = 'move';
     } else if (popoutBtn) {
-      popoutBtn.style.display = 'flex';
+      popoutBtn.classList.remove('hidden');
       popoutBtn.addEventListener('click', () => {
         chrome.storage?.local.get(['spelt_popup_width', 'spelt_popup_height'], (res) => {
           const width = res.spelt_popup_width || 360;

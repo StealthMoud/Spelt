@@ -217,3 +217,20 @@
   transform: translateX(3px);
   box-shadow: 0 4px 12px hsla(155, 65%, 48%, 0.06);
 }
+
+.btn-restudy { padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: hsla(155, 65%, 48%, 0.12); border-color: var(--primary); color: var(--primary-light); }
+.btn-enrich { padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: hsla(260, 65%, 48%, 0.12); border-color: var(--purple); color: #c4b5fd; }
+.btn-delete-compact { padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; }
+.vault-select-label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--text-muted); cursor: pointer; user-select: none; }
+
+.select-wrapper { flex: 1; position: relative; }
+.select-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+.select-options-box { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: hsl(155, 12%, 8%); border: 1px solid var(--border-hover); border-radius: var(--radius-md); z-index: 100; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); padding: 4px; box-sizing: border-box; }
+.select-option-item { padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease; }
+
+.vault-item-main { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.vault-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.vault-item-word-row { display: flex; align-items: center; gap: 6px; }
+.vault-item-word { color: var(--primary-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; }
+.vault-item-def { color: var(--text-muted); font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px; }
+.vault-item-actions { display: flex; gap: 6px; margin-left: 8px; }

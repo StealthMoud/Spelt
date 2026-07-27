@@ -6,8 +6,8 @@ export function bindCalendarEvents(renderStats) {
     e.stopPropagation();
     const pop = document.getElementById('stats-calendar-popover');
     if (!pop) return;
-    const show = pop.style.display === 'none';
-    pop.style.display = show ? 'flex' : 'none';
+    const show = pop.classList.contains('hidden');
+    pop.classList.toggle('hidden', !show);
     const panel = pop.closest('.stats-panel');
     if (panel) {
       panel.style.zIndex = show ? '50' : ''; panel.style.position = show ? 'relative' : '';
@@ -34,10 +34,10 @@ export function bindCalendarEvents(renderStats) {
 
   window.addEventListener('click', (e) => {
     const pop = document.getElementById('stats-calendar-popover');
-    if (pop && pop.style.display !== 'none') {
+    if (pop && !pop.classList.contains('hidden')) {
       const clickInside = pop.contains(e.target) || e.target.id === 'stats-date-start' || e.target.id === 'stats-date-end' || e.target.closest('.cal-nav-btn');
       if (!clickInside) {
-        pop.style.display = 'none';
+        pop.classList.add('hidden');
         const panel = pop.closest('.stats-panel');
         if (panel) { panel.style.zIndex = ''; panel.style.position = ''; panel.classList.remove('calendar-open'); }
       }

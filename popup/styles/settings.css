@@ -419,3 +419,20 @@ kbd:hover {
   border-color: hsla(155, 65%, 48%, 0.3);
   box-shadow: 0 0 6px var(--primary-glow);
 }
+
+.btn-import-flex { flex: 1; justify-content: center; }
+.btn-retranslate { margin-top: 8px; width: 100%; justify-content: center; background: hsla(265, 80%, 65%, 0.08); border-color: var(--purple); color: var(--purple-light); }
+.btn-integrity { margin-top: 8px; width: 100%; justify-content: center; background: hsla(210, 70%, 55%, 0.08); border-color: hsla(210, 70%, 55%, 0.45); color: hsla(210, 90%, 78%, 1); }
+.setting-checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.setting-checkbox { accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px; margin: 0; }
+.setting-checkbox-label { cursor: pointer; font-size: 0.72rem; color: var(--text-muted); user-select: none; margin: 0; }
+.setting-sub-text { font-size: 0.65rem; color: var(--text-muted); margin: 2px 0 0 0; line-height: 1.35; }
+.gemini-model-row { display: none; margin-top: 8px; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; }
+.gemini-model-select-wrap { display: flex; align-items: center; gap: 8px; width: 100%; }
+.gemini-model-label { font-size: 0.7rem; color: var(--text-muted); margin: 0; white-space: nowrap; }
+.gemini-model-select { flex: 1; margin: 0; }
+.gemini-key-input { flex: 1; font-size: 0.72rem; min-width: 180px; margin: 0; }
+.gemini-key-add-btn { width: auto; font-size: 0.72rem; padding: 4px 10px; margin: 0; }
+.link-primary { color: var(--primary); text-decoration: underline; }
+.status-text-msg { font-size: 0.65rem; margin-top: 5px; font-weight: 500; }
+.text-muted-xs { font-size: 0.6rem; color: var(--text-muted); }

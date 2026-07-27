@@ -16,8 +16,8 @@ export async function handleExampleActions(e) {
       const textEl = container.querySelector('.feedback-example-text');
       const transEl = container.querySelector('.feedback-example-translation');
       if (textEl && transEl) {
-        if (transEl.style.display === 'block') {
-          transEl.style.display = 'none'; translateBtn.classList.remove('active');
+        if (!transEl.classList.contains('hidden')) {
+          transEl.classList.add('hidden'); translateBtn.classList.remove('active');
         } else {
           let trans = transEl.textContent.trim().replace(/^"|"$/g, '');
           if (!trans) {
@@ -26,7 +26,7 @@ export async function handleExampleActions(e) {
               showConfirm('Preferred Language Required', 'Please configure a preferred language in Settings first.', null, false); return;
             }
             const rawExample = textEl.textContent.trim().replace(/^"|"$/g, '');
-            transEl.textContent = 'Translating...'; transEl.style.display = 'block';
+            transEl.textContent = 'Translating...'; transEl.classList.remove('hidden');
             const fetchedTrans = await fetchTranslation(rawExample, targetLang);
             if (fetchedTrans) {
               trans = fetchedTrans; transEl.textContent = `"${trans}"`;
@@ -41,7 +41,7 @@ export async function handleExampleActions(e) {
               transEl.textContent = 'Translation failed'; return;
             }
           }
-          transEl.style.display = 'block'; translateBtn.classList.add('active');
+          transEl.classList.remove('hidden'); translateBtn.classList.add('active');
         }
       }
     }

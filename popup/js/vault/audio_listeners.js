@@ -18,7 +18,7 @@ export function registerAudioListeners() {
 
   window.addEventListener('keydown', (e) => {
     const modal = document.getElementById('word-form-modal');
-    if (!modal || modal.style.display === 'none') return;
+    if (!modal || modal.classList.contains('hidden')) return;
     if (e.key === ' ' || e.key === 'Escape') {
       const active = document.activeElement;
       const isTyping = active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && ['text', 'search'].includes(active.type)));

@@ -20,7 +20,7 @@ export async function renderAIInsights(words, streak, summary, cardStates, sessi
 
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured || words.length === 0) {
-    panel.style.display = 'none';
+    panel.classList.add('hidden');
     hideSubtabPanels();
     return;
   }
@@ -82,7 +82,7 @@ export async function renderAIInsights(words, streak, summary, cardStates, sessi
       
       const refreshBtn = document.getElementById('stats-ai-refresh-btn');
       if (refreshBtn) {
-        refreshBtn.style.display = 'inline-flex';
+        refreshBtn.classList.remove('hidden');
         if (cachedHash !== statsHash || cacheExpired) {
           // Visual indicator of stale data (hash mismatch or TTL expiry)
           refreshBtn.style.boxShadow = '0 0 10px var(--primary-glow)';
@@ -99,7 +99,7 @@ export async function renderAIInsights(words, streak, summary, cardStates, sessi
   } catch (_) {}
 
   // If no cache at all, show the Generate placeholder
-  panel.style.display = 'block';
+  panel.classList.remove('hidden');
   showGeneratePlaceholder();
 }
 
@@ -116,7 +116,7 @@ function showGeneratePlaceholder() {
     `;
   }
   const refreshBtn = document.getElementById('stats-ai-refresh-btn');
-  if (refreshBtn) refreshBtn.style.display = 'none';
+  if (refreshBtn) refreshBtn.classList.add('hidden');
   
   hideSubtabPanels();
 }
@@ -149,7 +149,7 @@ async function triggerInsightsGeneration(words, streak, summary, cardStates, ses
   // Set loading states
   contentEl.textContent = 'Generating custom learning insights...';
   if (refreshBtn) {
-    refreshBtn.style.display = 'inline-flex';
+    refreshBtn.classList.remove('hidden');
     refreshBtn.disabled = true;
     const svg = refreshBtn.querySelector('svg');
     if (svg) {
@@ -226,7 +226,7 @@ Return ONLY the raw JSON object. Do not wrap it in markdown formatting or code b
     distributeInsights(dataObj);
 
     if (refreshBtn) {
-      refreshBtn.style.display = 'inline-flex';
+      refreshBtn.classList.remove('hidden');
       refreshBtn.style.boxShadow = 'none';
       refreshBtn.title = 'Refresh AI Coach Insights';
     }
@@ -269,7 +269,7 @@ function distributeInsights(dataObj) {
     const el = document.getElementById('stats-ai-insights-content');
     if (el) el.innerHTML = dataObj.overview;
     const panel = document.getElementById('stats-ai-insights-panel');
-    if (panel) panel.style.display = 'block';
+    if (panel) panel.classList.remove('hidden');
   }
 
   // Vocabulary
@@ -277,9 +277,9 @@ function distributeInsights(dataObj) {
   const vocabContent = document.getElementById('stats-ai-vocab-content');
   if (vocabPanel && vocabContent && dataObj.vocabulary) {
     vocabContent.innerHTML = dataObj.vocabulary;
-    vocabPanel.style.display = 'block';
+    vocabPanel.classList.remove('hidden');
   } else if (vocabPanel) {
-    vocabPanel.style.display = 'none';
+    vocabPanel.classList.add('hidden');
   }
 
   // Activity
@@ -287,9 +287,9 @@ function distributeInsights(dataObj) {
   const actContent = document.getElementById('stats-ai-activity-content');
   if (actPanel && actContent && dataObj.activity) {
     actContent.innerHTML = dataObj.activity;
-    actPanel.style.display = 'block';
+    actPanel.classList.remove('hidden');
   } else if (actPanel) {
-    actPanel.style.display = 'none';
+    actPanel.classList.add('hidden');
   }
 
   // Performance
@@ -297,9 +297,9 @@ function distributeInsights(dataObj) {
   const perfContent = document.getElementById('stats-ai-perf-content');
   if (perfPanel && perfContent && dataObj.performance) {
     perfContent.innerHTML = dataObj.performance;
-    perfPanel.style.display = 'block';
+    perfPanel.classList.remove('hidden');
   } else if (perfPanel) {
-    perfPanel.style.display = 'none';
+    perfPanel.classList.add('hidden');
   }
 }
 
@@ -308,31 +308,31 @@ function showSubtabLoading() {
   const vocabContent = document.getElementById('stats-ai-vocab-content');
   if (vocabPanel && vocabContent) {
     vocabContent.textContent = 'Analyzing vocabulary distribution...';
-    vocabPanel.style.display = 'block';
+    vocabPanel.classList.remove('hidden');
   }
   
   const actPanel = document.getElementById('stats-ai-activity-panel');
   const actContent = document.getElementById('stats-ai-activity-content');
   if (actPanel && actContent) {
     actContent.textContent = 'Analyzing consistency patterns...';
-    actPanel.style.display = 'block';
+    actPanel.classList.remove('hidden');
   }
 
   const perfPanel = document.getElementById('stats-ai-perf-panel');
   const perfContent = document.getElementById('stats-ai-perf-content');
   if (perfPanel && perfContent) {
     perfContent.textContent = 'Analyzing response speed...';
-    perfPanel.style.display = 'block';
+    perfPanel.classList.remove('hidden');
   }
 }
 
 function hideSubtabPanels() {
   const vocabPanel = document.getElementById('stats-ai-vocab-panel');
-  if (vocabPanel) vocabPanel.style.display = 'none';
+  if (vocabPanel) vocabPanel.classList.add('hidden');
   
   const actPanel = document.getElementById('stats-ai-activity-panel');
-  if (actPanel) actPanel.style.display = 'none';
+  if (actPanel) actPanel.classList.add('hidden');
 
   const perfPanel = document.getElementById('stats-ai-perf-panel');
-  if (perfPanel) perfPanel.style.display = 'none';
+  if (perfPanel) perfPanel.classList.add('hidden');
 }
