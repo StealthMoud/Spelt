@@ -3,4 +3,3 @@
 *.log
 .agents/
 node_modules/
-take_screenshots.js
