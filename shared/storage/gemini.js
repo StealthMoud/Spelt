@@ -958,3 +958,13 @@ export async function getAiStatus() {
 
   return results;
 }
+
+export function collectModelsFromKeyMap(keyModelsMap, keys, fallbackModels = []) {
+  const models = [];
+  (keys || []).forEach(key => {
+    const keyModels = (keyModelsMap || {})[getGeminiKeyFingerprint(key)] || [];
+    models.push(...keyModels);
+  });
+  if (models.length === 0) models.push(...fallbackModels);
+  return sortGeminiModels(models);
+}
