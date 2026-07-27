@@ -3,5 +3,4 @@
 *.log
 .agents/
 node_modules/
-package-lock.json
 take_screenshots.js

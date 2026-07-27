@@ -4,9 +4,15 @@
   "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling.",
   "type": "module",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
   "devDependencies": {
-    "playwright": "^1.61.1"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
+    "playwright": "^1.61.1",
+    "prettier": "^3.9.6"
   }
 }
