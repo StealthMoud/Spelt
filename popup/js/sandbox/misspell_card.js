@@ -39,7 +39,7 @@ export async function renderMisspellingCard(originalWord, suggestions, activeInd
   }
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
-    <h4 style="color: var(--danger); margin: 0 0 6px;">❌ Misspelling Detected</h4>
+    <h4 style="color: var(--danger); margin: 0 0 6px;">Misspelling Detected</h4>
     <p style="margin: 6px 0; font-size: 0.74rem;">"${escapeHtml(originalWord)}" is incorrect. Did you mean:</p>
     <p style="margin: 4px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--primary-light);">${escapeHtml(suggestion)}${ipa !== '/--/' ? ` <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${escapeHtml(ipa)}</span>` : ''}</p>
     ${renderAudioButtons(suggestion)}

@@ -30,7 +30,7 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
       let typeLabel = 'Spelling';
       if (practiceType === 'recall') typeLabel = 'Recall';
       if (practiceType === 'both') typeLabel = 'Spelling & Recall';
-      banner.innerHTML = `✅ Word <strong>"${word}"</strong> added for <strong>${typeLabel}</strong> practice!`;
+      banner.innerHTML = `Word <strong>"${word}"</strong> added for <strong>${typeLabel}</strong> practice!`;
       
       const closeBtn = feedbackMsg.querySelector('.feedback-close-btn');
       if (closeBtn) {
@@ -39,7 +39,7 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
         feedbackMsg.prepend(banner);
       }
 
-      // Auto-dismiss with a premium slide-up and fade-out animation
+      // Auto-dismiss after 4s.
       setTimeout(() => {
         banner.style.opacity = '0';
         banner.style.transform = 'translateY(-8px)';
@@ -99,7 +99,7 @@ export async function saveManualAnyway(correctWord, originalWord, wrongAttempt =
 
     feedbackMsg.innerHTML = `
       ${closeBtnHtml}
-      <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
+      <h4 style="color: var(--success); margin: 0 0 4px;">Correction Saved!</h4>
       <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${correctWord}</strong> (${originalWord} saved as misspelling).</p>
       
       <div class="feedback-details">

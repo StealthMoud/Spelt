@@ -110,7 +110,7 @@ function showGeneratePlaceholder() {
       <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0;">
         <p style="margin: 0; font-size: 0.68rem; color: var(--text-muted);">Get personalized coaching tips and subtab analysis powered by Gemini AI.</p>
         <button type="button" id="stats-ai-generate-btn" class="submit-btn" style="width: auto; font-size: 0.68rem; padding: 5px 12px; border-radius: var(--radius-md); background: hsla(260, 60%, 50%, 0.2); border: 1px solid hsla(260, 60%, 65%, 0.4); color: #c4b5fd; cursor: pointer;">
-          ✨ Generate AI Insights
+          Generate AI Insights
         </button>
       </div>
     `;

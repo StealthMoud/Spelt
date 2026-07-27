@@ -167,7 +167,7 @@ export function checkSpelling() {
           });
 
           fbRow.style.display = 'block';
-          fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">✨ <span>AI Coach</span></button>`;
+          fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;"><span>AI Coach</span></button>`;
           fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', (ev) => {
             const btn = ev.currentTarget;
             btn.disabled = true;

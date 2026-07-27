@@ -1,5 +1,6 @@
 import { getWords, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../shared/storage.js';
 import { getLanguageName } from '../../src/core/languages.js';
+import { buildEnrichmentPrompt } from '../../shared/ai/prompts.js';
 import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';
 import { saveWord } from './vault/save.js';
@@ -118,35 +119,7 @@ export async function initVault(onVaultUpdated) {
           const list = await getWords();
           const w = list.find(x => x.id === id);
           if (w) {
-            const prompt = `You are a professional lexicographer. Improve, correct, and enrich the vocabulary details for the English word/phrase "${w.word}".
-Here is the current stored draft:
-{
-  "definition": "${(w.definition || '').replace(/"/g, '\\"')}",
-  "transcription": "${(w.transcription || '').replace(/"/g, '\\"')}",
-  "partOfSpeech": "${(w.partOfSpeech || '').replace(/"/g, '\\"')}",
-  "translation": "${(w.translation || '').replace(/"/g, '\\"')}",
-  "level": "${(w.level || '').replace(/"/g, '\\"')}",
-  "example": "${(w.example || '').replace(/"/g, '\\"')}"
-}
-
-Please:
-1. Enrich the definition to be clean, accurate, and easy to understand in English.
-2. Ensure the UK/US IPA pronunciation transcription is correct and clear (e.g. /iˈnɪɡ.mə/).
-3. Ensure part of speech is correct (noun, verb, phrasal verb, adjective, etc.).
-4. Refine the translation in ${targetLangName}.
-5. Select the single best CEFR level (A1, A2, B1, B2, C1, or C2).
-6. Provide a premium, natural academic/IELTS-style context sentence containing the word.
-
-Respond ONLY with a JSON object matching this schema:
-{
-  "definition": "...",
-  "transcription": "...",
-  "partOfSpeech": "...",
-  "translation": "...",
-  "level": "...",
-  "example": "..."
-}`;
-
+            const prompt = buildEnrichmentPrompt(w.word, w, targetLangName);
             const aiData = await askGemini(prompt);
             
             // Use atomicUpdate to prevent concurrent editing issues

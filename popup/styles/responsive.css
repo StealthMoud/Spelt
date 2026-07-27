@@ -260,7 +260,7 @@
   .settings-block { padding: 16px !important; }
   .settings-block strong { font-size: 1.1rem !important; }
   .settings-block p { font-size: 0.82rem !important; margin-top: 4px !important; }
-  .settings-block .premium-input { font-size: 0.95rem !important; padding: 10px !important; }
+  .settings-block .field { font-size: 0.95rem !important; padding: 10px !important; }
   .shortcut-row { padding: 10px 0 !important; font-size: 0.9rem !important; }
   .shortcut-row kbd { font-size: 0.8rem !important; padding: 4px 8px !important; }
   .btn-row { gap: 12px !important; margin-top: 12px !important; }
@@ -283,7 +283,7 @@
   .modal-input-item label {
     font-size: 0.78rem !important;
   }
-  .modal-input-item .premium-input {
+  .modal-input-item .field {
     padding: 8px 12px !important;
     font-size: 0.9rem !important;
   }
@@ -312,7 +312,7 @@
     gap: 16px !important;
     margin-bottom: 16px !important;
   }
-  .vault-filter-row .premium-input {
+  .vault-filter-row .field {
     padding: 12px 16px 12px 38px !important;
     font-size: 1.1rem !important;
   }
@@ -396,7 +396,7 @@
   }
 
   /* Word list item action buttons */
-  .table-icon-btn { width: 34px !important; height: 34px !important; border-radius: 8px !important; }
-  .table-icon-btn svg { width: 16px !important; height: 16px !important; }
+  .icon-btn { width: 34px !important; height: 34px !important; border-radius: 8px !important; }
+  .icon-btn svg { width: 16px !important; height: 16px !important; }
   .vault-list-item > div:last-child { gap: 10px !important; margin-left: 14px !important; }
 }

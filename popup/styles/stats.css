@@ -856,12 +856,12 @@ input[type="number"] {
   box-shadow: 0 0 0 3px var(--primary-glow) !important;
 }
 
-#stats-leeches-custom-container .table-icon-btn:hover {
+#stats-leeches-custom-container .icon-btn:hover {
   color: var(--primary-light) !important;
   background: hsla(155, 65%, 48%, 0.1) !important;
 }
 
-#stats-leeches-custom-container .table-icon-btn:active {
+#stats-leeches-custom-container .icon-btn:active {
   transform: scale(0.9);
 }
 

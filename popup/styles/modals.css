@@ -53,7 +53,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.modal-input-item .premium-input {
+.modal-input-item .field {
   padding: 6px 10px;
   font-size: 0.76rem;
 }
@@ -99,14 +99,14 @@
   transform: translateY(-1px) !important;
 }
 
-.primary-save-btn {
+.btn-primary {
   background: var(--primary) !important;
   border: 1px solid var(--primary) !important;
   color: var(--bg-dark) !important;
   box-shadow: 0 2px 8px hsla(155, 65%, 48%, 0.15) !important;
 }
 
-.primary-save-btn:hover {
+.btn-primary:hover {
   background: var(--primary-light) !important;
   border-color: var(--primary-light) !important;
   color: var(--bg-dark) !important;

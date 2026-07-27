@@ -22,7 +22,7 @@ export function initNavigation(onTabChanged) {
         targetPane.classList.add('active');
       }
 
-      // Auto-focus primary input of the active tab for seamless keyboard entry
+      // Auto-focus primary input so the tab is immediately typeable.
       if (target === 'sandbox-tab') {
         document.getElementById('word-input')?.focus();
       } else if (target === 'practice-tab') {

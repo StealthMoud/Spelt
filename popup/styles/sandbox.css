@@ -26,7 +26,7 @@
 }
 
 /* Form Inputs with Custom Glow Outlines */
-.premium-input {
+.field {
   width: 100%;
   padding: 8px 12px;
   background: hsla(155, 20%, 6%, 0.4);
@@ -40,10 +40,10 @@
   caret-color: var(--primary);
   transition: all var(--transition-fast) var(--spring-curve);
 }
-.premium-input::placeholder {
+.field::placeholder {
   color: var(--text-muted-dark);
 }
-.premium-input:focus {
+.field:focus {
   background: hsla(155, 65%, 48%, 0.05);
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow);

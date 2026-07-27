@@ -47,7 +47,7 @@
   max-width: 100%;
 }
 
-.table-icon-btn {
+.icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,23 +61,23 @@
   transition: all var(--transition-fast) var(--spring-curve);
   padding: 0;
 }
-.table-icon-btn svg {
+.icon-btn svg {
   width: 12px;
   height: 12px;
 }
-.table-icon-btn:hover {
+.icon-btn:hover {
   background: hsla(155, 65%, 48%, 0.12);
   border-color: var(--primary);
   color: var(--primary-light);
   transform: scale(1.1);
 }
-.table-icon-btn.delete-btn:hover {
+.icon-btn.delete-btn:hover {
   background: hsla(5, 85%, 15%, 0.4);
   border-color: var(--danger);
   color: var(--danger);
   box-shadow: 0 0 8px var(--danger-glow);
 }
-.table-icon-btn:active {
+.icon-btn:active {
   transform: scale(0.94);
 }
 

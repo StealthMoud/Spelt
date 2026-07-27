@@ -2,6 +2,7 @@ import { getWords, translateWord, enrichWord, getFallbackExample, getStored, isG
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 import { showConfirm } from '../vault/confirm.js';
 import { escapeHtml } from '../../../shared/dom.js';
+import { buildEnrichmentPrompt } from '../../../shared/ai/prompts.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
   const enriched = await enrichWord(word);
@@ -137,7 +138,7 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
 
     document.getElementById('feedback-msg').innerHTML = `
       ${closeBtnHtml}
-      <h4 style="color: var(--success); margin: 0 0 6px;">✅ Correct Spelling!</h4>
+      <h4 style="color: var(--success); margin: 0 0 6px;">Correct Spelling!</h4>
       <p style="margin: 6px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em;">${escapeHtml(word)} <span id="feedback-ipa-display" style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 4px;">${escapeHtml(ipa)}</span></p>
       ${variantHtml}
       ${renderAudioButtons(word)}
@@ -213,35 +214,7 @@ export async function handleAiEnhance(btn, reloadVaultListCallback) {
     else if (targetLang === 'ko') targetLangName = 'Korean';
     else if (targetLang === 'tr') targetLangName = 'Turkish';
 
-    const prompt = `You are a professional lexicographer. Improve, correct, and enrich the vocabulary details for the English word/phrase "${word}".
-Here is the current stored draft:
-{
-  "definition": "${def.replace(/"/g, '\\"')}",
-  "transcription": "${ipa.replace(/"/g, '\\"')}",
-  "partOfSpeech": "${pos.replace(/"/g, '\\"')}",
-  "translation": "${translation.replace(/"/g, '\\"')}",
-  "level": "${level.replace(/"/g, '\\"')}",
-  "example": "${example.replace(/"/g, '\\"')}"
-}
-
-Please:
-1. Enrich the definition to be clean, accurate, and easy to understand in English.
-2. Ensure the UK/US IPA pronunciation transcription is correct and clear (e.g. /iˈnɪɡ.mə/). Show US IPA first, then UK.
-3. Ensure part of speech is correct (noun, verb, phrasal verb, adjective, etc.).
-4. Refine the translation in ${targetLangName}.
-5. Select the single best CEFR level (A1, A2, B1, B2, C1, or C2).
-6. Provide a premium, natural academic/IELTS-style context sentence containing the word.
-7. If the word has US/UK spelling variants (e.g., license/licence, color/colour), include both in the "spellingNote" field.
-
-Respond ONLY with a JSON object matching this schema:
-{
-  "definition": "...",
-  "transcription": "...",
-  "partOfSpeech": "...",
-  "translation": "...",
-  "level": "...",
-  "example": "..."
-}`;
+    const prompt = buildEnrichmentPrompt(word, { definition: def, transcription: ipa, partOfSpeech: pos, translation, level, example }, targetLangName);
 
     const aiData = await askGemini(prompt);
 

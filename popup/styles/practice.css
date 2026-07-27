@@ -203,7 +203,7 @@
   border-top: 1px solid hsla(155, 10%, 25%, 0.15);
 }
 
-.spelling-input-wrapper .premium-input {
+.spelling-input-wrapper .field {
   text-align: center;
   font-weight: 600;
   font-size: 0.92rem;
@@ -407,11 +407,11 @@ align-items: center;
   color: var(--text-muted-dark);
   transition: color var(--transition-fast) ease;
 }
-.vault-filter-row .premium-input {
+.vault-filter-row .field {
   padding: 6px 12px 6px 28px;
   font-size: 0.74rem;
 }
-.vault-filter-row .premium-input:focus + svg {
+.vault-filter-row .field:focus + svg {
   color: var(--primary-light);
 }
 

@@ -38,7 +38,7 @@ export async function acceptSuggestion(suggestion, original, reloadVaultCallback
     feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify([]));
     feedbackMsg.innerHTML = `
       ${closeBtnHtml}
-      <h4 style="color: var(--warning); margin: 0 0 4px;">⚠️ Unrecognized Suggestion</h4>
+      <h4 style="color: var(--warning); margin: 0 0 4px;">Unrecognized Suggestion</h4>
       <p style="font-size: 0.72rem; margin: 8px 0; line-height: 1.4;">"${escapeHtml(suggestion)}" is not recognized in the dictionary. It might be misspelled.</p>
       <div style="display: flex; gap: 6px; margin-top: 8px;">
         <button type="button" class="submit-btn accept-anyway-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
@@ -59,7 +59,7 @@ export async function acceptSuggestion(suggestion, original, reloadVaultCallback
   const exampleText = example ? `<p style="font-size: 0.65rem; color: var(--primary-light); font-style: italic; margin: 4px 0 0;">"${escapeHtml(example)}"</p>` : '';
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
-    <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved</h4>
+    <h4 style="color: var(--success); margin: 0 0 4px;">Correction Saved</h4>
     <p style="font-size: 0.68rem; margin: 4px 0;">${exists ? `Updated existing word <strong>"${escapeHtml(suggestion)}"</strong> in practice queue.` : `Added correct word <strong>"${escapeHtml(suggestion)}"</strong> to practice queue.`}</p>
     ${exampleText}
     <div style="display: flex; justify-content: center; margin-top: 8px;">

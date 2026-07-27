@@ -1,4 +1,4 @@
-// Reusable helper to display a premium, non-intrusive Glassmorphic toast in the tab, falling back to chrome.notifications if injection is blocked.
+// Injects a toast into the active tab; falls back to chrome.notifications when scripting is blocked.
 export async function showToastInTab(tabId, message, isSuccess = true) {
   try {
     await chrome.scripting.executeScript({

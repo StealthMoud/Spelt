@@ -2,7 +2,7 @@
       <section id="vault-tab" class="tab-pane">
         <div class="vault-filter-row">
           <div class="search-box">
-            <input type="text" id="vault-search" class="premium-input" placeholder="Search words...">
+            <input type="text" id="vault-search" class="field" placeholder="Search words...">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon-svg"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
           <button id="add-word-btn" class="submit-btn">
@@ -13,12 +13,12 @@
         <div class="vault-sort-row">
           <!-- Custom Sort Dropdown -->
           <div class="custom-select-wrapper" id="sort-field-custom-select" style="flex: 1; position: relative;">
-            <button type="button" class="premium-input vault-sort-select custom-select-trigger" style="width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left;">
-              <span>A — Z</span>
+            <button type="button" class="field vault-sort-select custom-select-trigger" style="width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left;">
+              <span>A–Z</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron" style="width: 10px; height: 10px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="custom-options" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: hsl(155, 12%, 8%); border: 1px solid var(--border-hover); border-radius: var(--radius-md); z-index: 100; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); padding: 4px; box-sizing: border-box;">
-              <div class="custom-option selected" data-value="alpha" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">A — Z</div>
+              <div class="custom-option selected" data-value="alpha" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">A–Z</div>
               <div class="custom-option" data-value="date" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Date Added</div>
               <div class="custom-option" data-value="review" style="padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease;">Next Review</div>
             </div>
@@ -31,7 +31,7 @@
 
           <!-- Custom Filter Dropdown -->
           <div class="custom-select-wrapper" id="filter-status-custom-select" style="flex: 1; position: relative;">
-            <button type="button" class="premium-input vault-sort-select custom-select-trigger" style="width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left;">
+            <button type="button" class="field vault-sort-select custom-select-trigger" style="width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left;">
               <span>All Words</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron" style="width: 10px; height: 10px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
@@ -64,15 +64,15 @@
             <span>Select All (<span id="vault-selected-count">0</span>)</span>
           </label>
           <div style="display: flex; gap: 6px;">
-            <button id="vault-demaster-selected" class="submit-btn primary-save-btn" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: hsla(155, 65%, 48%, 0.12); border-color: var(--primary); color: var(--primary-light);">
+            <button id="vault-demaster-selected" class="submit-btn btn-primary" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: hsla(155, 65%, 48%, 0.12); border-color: var(--primary); color: var(--primary-light);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
               <span>Re-study Selected</span>
             </button>
-            <button id="vault-enrich-selected" class="submit-btn primary-save-btn" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: hsla(260, 65%, 48%, 0.12); border-color: #a78bfa; color: #c4b5fd;">
+            <button id="vault-enrich-selected" class="submit-btn btn-primary" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: hsla(260, 65%, 48%, 0.12); border-color: #a78bfa; color: #c4b5fd;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span>AI Enrich</span>
             </button>
-            <button id="vault-delete-selected" class="submit-btn erase-btn" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px;">
+            <button id="vault-delete-selected" class="submit-btn btn-danger" style="padding: 4px 8px; font-size: 0.65rem; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               <span>Delete Selected</span>
             </button>

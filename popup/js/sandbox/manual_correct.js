@@ -40,7 +40,7 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
       
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
-        <h4 style="color: var(--success); margin: 0 0 4px;">✅ Correction Saved!</h4>
+        <h4 style="color: var(--success); margin: 0 0 4px;">Correction Saved!</h4>
         <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${escapeHtml(correctWord)}</strong> (${escapeHtml(originalWord)} saved as misspelling).</p>
         <div class="feedback-details">
           <div class="feedback-meta-row">
@@ -87,7 +87,7 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
       feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify(suggestions));
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
-        <h4 style="color: var(--warning); margin: 0 0 4px;">⚠️ Unrecognized Word</h4>
+        <h4 style="color: var(--warning); margin: 0 0 4px;">Unrecognized Word</h4>
         <p style="font-size: 0.72rem; margin: 8px 0; line-height: 1.4;">"${correctWord}" is not recognized in the dictionary. It might be misspelled.</p>
         <div style="display: flex; gap: 6px; margin-top: 8px;">
           <button type="button" class="submit-btn accept-anyway-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
