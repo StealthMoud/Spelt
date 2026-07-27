@@ -96,7 +96,8 @@ export {
   getGeminiModelOptions,
   isSupportedGeminiTextModel,
   sortGeminiModels,
-  invalidateGeminiCache
+  invalidateGeminiCache,
+  collectModelsFromKeyMap
 } from './storage/gemini.js';
 
 export {
