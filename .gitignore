@@ -3,3 +3,4 @@
 *.log
 .agents/
 node_modules/
+dist/

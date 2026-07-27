@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 const srcDir = './src/html';
-const outputHtml = './popup/popup.html';
+const outputHtml = './dist/popup.html';
 
 function loadComponent(fileName) {
   const filePath = path.join(srcDir, fileName);
