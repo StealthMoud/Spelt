@@ -7,7 +7,7 @@ export function renderAudioButtons(word) {
 export function formatLevelDisplay(level, otherLevels = []) {
   const filtered = otherLevels.filter(l => l && l !== level);
   const badge = filtered.length > 0
-    ? ` <span style="font-size: 0.55rem; color: var(--text-muted); font-weight: 400;">(Also: ${filtered.join(', ')})</span>`
+    ? ` <span class="other-levels-badge">(Also: ${filtered.join(', ')})</span>`
     : '';
   return level + badge;
 }

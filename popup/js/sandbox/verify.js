@@ -12,7 +12,7 @@ export async function handleVerify(reloadVaultListCallback) {
   if (!word) return;
   try {
     feedbackMsg.classList.remove('hidden');
-    feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Verifying spelling...</p>';
+    feedbackMsg.innerHTML = '<p class="text-primary-light">Verifying spelling...</p>';
     const lowerWord = word.toLowerCase();
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`);
     if (response.ok) {
@@ -58,5 +58,5 @@ export async function handleVerify(reloadVaultListCallback) {
         }
       }
     }
-  } catch (err) { feedbackMsg.innerHTML = `<p style="color: var(--danger);">Error: ${escapeHtml(err.message)}</p>`; }
+  } catch (err) { feedbackMsg.innerHTML = `<p class="text-danger">Error: ${escapeHtml(err.message)}</p>`; }
 }

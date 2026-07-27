@@ -6,7 +6,7 @@ import { escapeHtml } from '../../../shared/dom.js';
 export async function handleManualCorrection(correctWord, originalWord, wrongAttempt = '', reloadVaultCallback, loadPracticeCallback) {
   const feedbackMsg = document.getElementById('feedback-msg');
   try {
-    feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Verifying spelling...</p>';
+    feedbackMsg.innerHTML = '<p class="text-primary-light">Verifying spelling...</p>';
     
     const words = await getWords();
 
@@ -40,8 +40,8 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
       
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
-        <h4 style="color: var(--success); margin: 0 0 4px;">Correction Saved!</h4>
-        <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${escapeHtml(correctWord)}</strong> (${escapeHtml(originalWord)} saved as misspelling).</p>
+        <h4 class="feedback-title-success">Correction Saved!</h4>
+        <p class="feedback-subtext">Added <strong>${escapeHtml(correctWord)}</strong> (${escapeHtml(originalWord)} saved as misspelling).</p>
         <div class="feedback-details">
           <div class="feedback-meta-row">
             ${partOfSpeech ? `<span class="feedback-badge pos">${escapeHtml(partOfSpeech)}</span>` : ''}
@@ -50,9 +50,9 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
           </div>
           <p class="feedback-definition"><strong>Definition:</strong> ${escapeHtml(def)}</p>
           ${example ? `<div class="feedback-example" data-word="${escapeHtml(correctWord)}">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                <span class="clue-label" style="margin: 0;">Example</span>
-                <div style="display: flex; gap: 4px;">
+              <div class="feedback-flex-row">
+                <span class="clue-label">Example</span>
+                <div class="feedback-flex-row">
                   <button type="button" class="play-example-btn" title="Pronounce Example" data-sentence="${escapeHtml(example)}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                   </button>
@@ -62,15 +62,14 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
                 </div>
               </div>
               <p class="feedback-example-text">"${escapeHtml(example)}"</p>
-              <p class="feedback-example-translation" style="display: none;">${exampleTranslation ? `"${escapeHtml(exampleTranslation)}"` : ''}</p>
+              <p class="feedback-example-translation hidden">${exampleTranslation ? `"${escapeHtml(exampleTranslation)}"` : ''}</p>
             </div>` : ''}
         </div>
         ${renderAudioButtons(correctWord)}
-        <div style="display: flex; justify-content: center; margin-top: 8px;">
-          <button type="button" class="submit-btn sandbox-edit-btn" 
-            data-word="${escapeHtml(correctWord)}"
-            style="width: auto; padding: 4px 10px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+        <div class="feedback-center-row">
+          <button type="button" class="submit-btn sandbox-edit-btn btn-compact-edit" 
+            data-word="${escapeHtml(correctWord)}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-xs"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
             <span>Edit Target/Details</span>
           </button>
         </div>
@@ -87,19 +86,19 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
       feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify(suggestions));
       feedbackMsg.innerHTML = `
         ${closeBtnHtml}
-        <h4 style="color: var(--warning); margin: 0 0 4px;">Unrecognized Word</h4>
-        <p style="font-size: 0.72rem; margin: 8px 0; line-height: 1.4;">"${correctWord}" is not recognized in the dictionary. It might be misspelled.</p>
-        <div style="display: flex; gap: 6px; margin-top: 8px;">
-          <button type="button" class="submit-btn accept-anyway-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><polyline points="20 6 9 17 4 12"/></svg>
+        <h4 class="feedback-title-warning">Unrecognized Word</h4>
+        <p class="feedback-desc-text">"${correctWord}" is not recognized in the dictionary. It might be misspelled.</p>
+        <div class="feedback-btn-row">
+          <button type="button" class="submit-btn accept-anyway-btn btn-compact-auto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-xs"><polyline points="20 6 9 17 4 12"/></svg>
             <span>Save Anyway</span>
           </button>
-          <button type="button" class="submit-btn edit-correction-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem; background: hsla(5, 80%, 15%, 0.3); border-color: var(--danger); color: var(--danger);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <button type="button" class="submit-btn edit-correction-btn btn-compact-auto btn-danger-soft">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-xs"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             <span>Edit Spelling</span>
           </button>
         </div>
       `;
     }
-  } catch (err) { feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${escapeHtml(err.message)}</p>`; }
+  } catch (err) { feedbackMsg.innerHTML = `${closeBtnHtml}<p class="text-danger">Error: ${escapeHtml(err.message)}</p>`; }
 }

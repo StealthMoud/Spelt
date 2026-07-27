@@ -4,6 +4,40 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+.other-levels-badge {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.ai-hint-line {
+  margin-bottom: 4px;
+}
+.btn-summary-center {
+  margin: 4px auto;
+}
+.variant-tag {
+  color: var(--primary-light);
+}
+.variant-word {
+  font-weight: 600;
+}
+.variant-sep {
+  color: var(--text-muted);
+  margin: 0 4px;
+}
+.ai-coach-trigger-btn {
+  background: hsla(260, 60%, 50%, 0.15);
+  border: 1px solid hsla(260, 60%, 65%, 0.35);
+  color: #c4b5fd;
+  padding: 4px 10px;
+  font-size: 0.68rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
 
 .stat-card {
   background: var(--bg-card);

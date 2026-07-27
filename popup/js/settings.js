@@ -196,7 +196,7 @@ export function initSettings(onDbRestored) {
     listContainer.innerHTML = '';
     
     if (keys.length === 0) {
-      listContainer.innerHTML = '<p style="font-size: 0.65rem; color: var(--text-muted); margin: 4px 0;">No API keys added yet.</p>';
+      listContainer.innerHTML = '<p class="empty-keys-note">No API keys added yet.</p>';
       return;
     }
 

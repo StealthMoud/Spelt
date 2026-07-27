@@ -100,17 +100,17 @@ export function renderPastErrorsList() {
         const count = counts[err];
         const dist = correctWord ? getDistance(err, correctWord) : 0;
         const distText = dist > 0 ? `${dist} ${dist === 1 ? 'edit' : 'edits'} away` : '';
-        const countBadge = count > 1 ? `<span style="font-size: 0.58rem; background: hsla(5, 85%, 55%, 0.18); color: var(--danger); padding: 1px 4px; border-radius: 3px; font-weight: 700; margin-left: 4px;">${count}x</span>` : '';
+        const countBadge = count > 1 ? `<span class="error-chip-badge">${count}x</span>` : '';
         const badgeText = distText || countBadge ? `(${distText}${distText && countBadge ? ', ' : ''}${countBadge})` : '';
 
         return `
-          <div class="error-trash-chip" data-error="${err}" style="display: flex; align-items: center; justify-content: space-between; width: 100%; box-sizing: border-box; background: hsla(5, 80%, 15%, 0.12); border: 1px solid hsla(5, 80%, 35%, 0.2); padding: 5px 8px; font-size: 0.72rem; color: var(--text-main); border-radius: var(--radius-sm); cursor: default; transition: all var(--transition-fast) ease;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-weight: 600; color: var(--danger);">${err}</span>
-              ${badgeText ? `<span style="font-size: 0.62rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 2px;">${distText} ${countBadge}</span>` : ''}
+          <div class="error-trash-chip" data-error="${err}">
+            <div class="error-chip-label-wrap">
+              <span class="error-chip-word">${err}</span>
+              ${badgeText ? `<span class="error-chip-dist">${distText} ${countBadge}</span>` : ''}
             </div>
             <button type="button" class="delete-error-x" title="Remove error from log">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 8px; height: 8px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
         `;

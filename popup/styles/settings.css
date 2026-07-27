@@ -5,6 +5,11 @@
   gap: 12px;
   font-size: 0.72rem;
 }
+.empty-keys-note {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin: 4px 0;
+}
 
 .settings-block {
   background: var(--bg-card);

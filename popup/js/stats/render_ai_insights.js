@@ -107,9 +107,9 @@ function showGeneratePlaceholder() {
   const contentEl = document.getElementById('stats-ai-insights-content');
   if (contentEl) {
     contentEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0;">
-        <p style="margin: 0; font-size: 0.68rem; color: var(--text-muted);">Get personalized coaching tips and subtab analysis powered by Gemini AI.</p>
-        <button type="button" id="stats-ai-generate-btn" class="submit-btn" style="width: auto; font-size: 0.68rem; padding: 5px 12px; border-radius: var(--radius-md); background: hsla(260, 60%, 50%, 0.2); border: 1px solid hsla(260, 60%, 65%, 0.4); color: #c4b5fd; cursor: pointer;">
+      <div class="ai-insights-placeholder">
+        <p class="ai-insights-desc">Get personalized coaching tips and subtab analysis powered by Gemini AI.</p>
+        <button type="button" id="stats-ai-generate-btn" class="submit-btn ai-insights-btn">
           Generate AI Insights
         </button>
       </div>
@@ -242,9 +242,9 @@ Return ONLY the raw JSON object. Do not wrap it in markdown formatting or code b
   } catch (err) {
     console.error('[Spelt AI] Failed to load insights:', err);
     contentEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0;">
-        <span style="color: var(--danger); font-size: 0.68rem;">${err.message}</span>
-        <button type="button" id="stats-ai-generate-btn" class="submit-btn" style="width: auto; font-size: 0.68rem; padding: 5px 12px; border-radius: var(--radius-md); background: hsla(260, 60%, 50%, 0.2); border: 1px solid hsla(260, 60%, 65%, 0.4); color: #c4b5fd; cursor: pointer;">
+      <div class="ai-insights-placeholder">
+        <span class="ai-insights-error">${err.message}</span>
+        <button type="button" id="stats-ai-generate-btn" class="submit-btn ai-insights-btn">
           🔄 Try Again
         </button>
       </div>

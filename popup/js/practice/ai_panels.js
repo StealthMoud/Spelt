@@ -55,7 +55,7 @@ async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defau
         } catch {}
       }
       const hint = await generateHint(currentCard);
-      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" style="margin-bottom: 4px;">${escapeHtml(l)}</div>`).join('');
+      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" class="ai-hint-line">${escapeHtml(l)}</div>`).join('');
     } catch (err) {
       hintText.textContent = `Could not generate hint: ${err.message}`;
     }
@@ -122,7 +122,7 @@ export async function triggerSessionSummary() {
   if (stats.totalReviewed === 0) return;
 
   container.classList.remove('hidden');
-  textEl.innerHTML = `<button type="button" id="ai-session-summary-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 5px 12px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease; margin: 4px auto;"><span>Generate AI Summary</span></button>`;
+  textEl.innerHTML = `<button type="button" id="ai-session-summary-btn" class="ai-coach-trigger-btn btn-summary-center"><span>Generate AI Summary</span></button>`;
   textEl.querySelector('#ai-session-summary-btn')?.addEventListener('click', async (ev) => {
     const btn = ev.currentTarget;
     btn.disabled = true;

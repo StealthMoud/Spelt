@@ -154,6 +154,51 @@ dialog.modal-overlay[open]:not(.hidden) .modal-card {
 
 
 
+.error-trash-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  background: hsla(5, 80%, 15%, 0.12);
+  border: 1px solid hsla(5, 80%, 35%, 0.2);
+  padding: 5px 8px;
+  font-size: 0.72rem;
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  cursor: default;
+  transition: all var(--transition-fast) ease;
+}
+.error-chip-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.error-chip-word {
+  font-weight: 600;
+  color: var(--danger);
+}
+.error-chip-dist {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.error-chip-badge {
+  font-size: 0.58rem;
+  background: hsla(5, 85%, 55%, 0.18);
+  color: var(--danger);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.error-trash-chip .delete-error-x svg {
+  width: 8px;
+  height: 8px;
+}
+
 /* Spelling Error Log delete button styles */
 .error-trash-chip .delete-error-x {
   background: hsla(0, 0%, 100%, 0.04);
@@ -179,6 +224,12 @@ dialog.modal-overlay[open]:not(.hidden) .modal-card {
 }
 .error-trash-chip .delete-error-x:active {
   transform: scale(0.92);
+}
+
+.audio-btn-row {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 4px;
 }
 
 /* Micro Elements interaction */

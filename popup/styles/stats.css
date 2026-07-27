@@ -622,6 +622,17 @@ padding: 0;
   font-weight: 600;
 }
 
+.leech-header-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.leech-coach-btn-style { color: #a78bfa; padding: 2px 6px; align-items: center; gap: 3px; }
+.leech-coach-label { font-size: 0.65rem; }
+.leech-typos-mt { margin-top: 3px; }
+.leech-coach-bubble { background: hsla(260, 50%, 30%, 0.12); border: 1px solid hsla(260, 50%, 60%, 0.25); border-radius: var(--radius-sm); padding: 6px 8px; margin-top: 6px; font-size: 0.68rem; color: #c4b5fd; line-height: 1.45; text-align: left; word-break: break-word; }
+
+/* AI Insights panel */
+.ai-insights-placeholder { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0; }
+.ai-insights-desc { margin: 0; font-size: 0.68rem; color: var(--text-muted); }
+.ai-insights-error { color: var(--danger); font-size: 0.68rem; }
+.ai-insights-btn { width: auto; font-size: 0.68rem; padding: 5px 12px; border-radius: var(--radius-md); background: hsla(260, 60%, 50%, 0.2); border: 1px solid hsla(260, 60%, 65%, 0.4); color: #c4b5fd; cursor: pointer; }
 /* Custom Date Pickers Range styling */
 .stats-custom-range {
   display: flex;

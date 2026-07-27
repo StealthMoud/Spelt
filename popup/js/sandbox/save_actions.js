@@ -56,14 +56,13 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
     const actionContainer = document.getElementById('sandbox-action-container');
     if (actionContainer) {
       actionContainer.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px;">
-          <button type="button" class="submit-btn sandbox-edit-btn" 
-            data-word="${word.replace(/"/g, '&quot;')}"
-            style="width: auto; padding: 4px 10px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+        <div class="sandbox-action-wrap sandbox-action-wrap-col">
+          <button type="button" class="submit-btn sandbox-edit-btn btn-compact-edit" 
+            data-word="${word.replace(/"/g, '&quot;')}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
             <span>Edit Target/Details</span>
           </button>
-          <p style="font-size: 0.68rem; color: var(--text-muted); margin: 0;">Correct spelling! (Already in vault)</p>
+          <p class="sandbox-status-note sandbox-status-note-inline">Correct spelling! (Already in vault)</p>
         </div>
       `;
     }
@@ -84,7 +83,7 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
 
 export async function saveManualAnyway(correctWord, originalWord, wrongAttempt = '', reloadVaultCallback, loadPracticeCallback) {
   const feedbackMsg = document.getElementById('feedback-msg');
-  feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
+  feedbackMsg.innerHTML = '<p class="text-primary-light">Saving...</p>';
   try {
     const def = 'Custom word entry';
     const partOfSpeech = '';
@@ -100,8 +99,8 @@ export async function saveManualAnyway(correctWord, originalWord, wrongAttempt =
 
     feedbackMsg.innerHTML = `
       ${closeBtnHtml}
-      <h4 style="color: var(--success); margin: 0 0 4px;">Correction Saved!</h4>
-      <p style="margin: 4px 0; font-size: 0.72rem;">Added <strong>${escapeHtml(correctWord)}</strong> (${escapeHtml(originalWord)} saved as misspelling).</p>
+      <h4 class="feedback-title-success">Correction Saved!</h4>
+      <p class="feedback-subtext">Added <strong>${escapeHtml(correctWord)}</strong> (${escapeHtml(originalWord)} saved as misspelling).</p>
       
       <div class="feedback-details">
         <div class="feedback-meta-row">
@@ -116,6 +115,6 @@ export async function saveManualAnyway(correctWord, originalWord, wrongAttempt =
     if (reloadVaultCallback) await reloadVaultCallback();
     if (loadPracticeCallback) await loadPracticeCallback();
   } catch (err) {
-    feedbackMsg.innerHTML = `${closeBtnHtml}<p style="color: var(--danger);">Error: ${escapeHtml(err.message)}</p>`;
+    feedbackMsg.innerHTML = `${closeBtnHtml}<p class="text-danger">Error: ${escapeHtml(err.message)}</p>`;
   }
 }

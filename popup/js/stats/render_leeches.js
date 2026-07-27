@@ -49,20 +49,20 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
       item.style.flexDirection = 'column';
       item.style.alignItems = 'stretch';
       item.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div class="leech-header-row">
           <div class="leech-word-info">
             <span class="leech-word-text">${w.word}</span>
             <span class="leech-count-badge">${lifetimeErrors} lifetime error${lifetimeErrors > 1 ? 's' : ''}${streak > 0 ? ` · ${streak}✓ streak` : ''}</span>
           </div>
-          <button type="button" class="icon-btn leech-coach-btn hidden" title="AI Coach Mnemonic" style="color: #a78bfa; padding: 2px 6px; align-items: center; gap: 3px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <span style="font-size: 0.65rem;">Coach</span>
+          <button type="button" class="icon-btn leech-coach-btn hidden leech-coach-btn-style" title="AI Coach Mnemonic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="leech-coach-label">Coach</span>
           </button>
         </div>
-        <div class="leech-typos" style="margin-top: 3px;">
+        <div class="leech-typos leech-typos-mt">
           Common typos: <span class="leech-typos-list">${uniqueTypos.slice(0, 3).join(', ') || 'none'}</span>
         </div>
-        <div class="leech-coach-bubble hidden" style="background: hsla(260, 50%, 30%, 0.12); border: 1px solid hsla(260, 50%, 60%, 0.25); border-radius: var(--radius-sm); padding: 6px 8px; margin-top: 6px; font-size: 0.68rem; color: #c4b5fd; line-height: 1.45; text-align: left; word-break: break-word;">
+        <div class="leech-coach-bubble hidden">
           Loading coaching tips...
         </div>
       `;

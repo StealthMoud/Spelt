@@ -4,7 +4,7 @@ import { escapeHtml } from '../../../shared/dom.js';
 
 export async function acceptSuggestion(suggestion, original, reloadVaultCallback, loadPracticeCallback) {
   const feedbackMsg = document.getElementById('feedback-msg');
-  feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Saving...</p>';
+  feedbackMsg.innerHTML = '<p class="text-primary-light">Saving...</p>';
   
   const words = await getWords();
   const exists = words.some(w => w.word.toLowerCase() === suggestion.toLowerCase());
@@ -38,15 +38,15 @@ export async function acceptSuggestion(suggestion, original, reloadVaultCallback
     feedbackMsg.setAttribute('data-suggestions-list', JSON.stringify([]));
     feedbackMsg.innerHTML = `
       ${closeBtnHtml}
-      <h4 style="color: var(--warning); margin: 0 0 4px;">Unrecognized Suggestion</h4>
-      <p style="font-size: 0.72rem; margin: 8px 0; line-height: 1.4;">"${escapeHtml(suggestion)}" is not recognized in the dictionary. It might be misspelled.</p>
-      <div style="display: flex; gap: 6px; margin-top: 8px;">
-        <button type="button" class="submit-btn accept-anyway-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><polyline points="20 6 9 17 4 12"/></svg>
+      <h4 class="feedback-title-warning">Unrecognized Suggestion</h4>
+      <p class="feedback-desc-text">"${escapeHtml(suggestion)}" is not recognized in the dictionary. It might be misspelled.</p>
+      <div class="feedback-btn-row">
+        <button type="button" class="submit-btn accept-anyway-btn btn-compact-auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="20 6 9 17 4 12"/></svg>
           <span>Save Anyway</span>
         </button>
-        <button type="button" class="submit-btn edit-correction-btn" style="width: auto; padding: 4px 8px; font-size: 0.72rem; background: hsla(5, 80%, 15%, 0.3); border-color: var(--danger); color: var(--danger);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; margin-right: 2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <button type="button" class="submit-btn edit-correction-btn btn-compact-auto btn-danger-soft">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           <span>Edit Spelling</span>
         </button>
       </div>
@@ -56,17 +56,16 @@ export async function acceptSuggestion(suggestion, original, reloadVaultCallback
 
   if (!ipa) ipa = '/--/';
   await registerMisspelling(suggestion, original, { definition: def, transcription: ipa, partOfSpeech, example, level });
-  const exampleText = example ? `<p style="font-size: 0.65rem; color: var(--primary-light); font-style: italic; margin: 4px 0 0;">"${escapeHtml(example)}"</p>` : '';
+  const exampleText = example ? `<p class="feedback-example-italic">"${escapeHtml(example)}"</p>` : '';
   feedbackMsg.innerHTML = `
     ${closeBtnHtml}
-    <h4 style="color: var(--success); margin: 0 0 4px;">Correction Saved</h4>
-    <p style="font-size: 0.68rem; margin: 4px 0;">${exists ? `Updated existing word <strong>"${escapeHtml(suggestion)}"</strong> in practice queue.` : `Added correct word <strong>"${escapeHtml(suggestion)}"</strong> to practice queue.`}</p>
+    <h4 class="feedback-title-success">Correction Saved</h4>
+    <p class="feedback-subtext">${exists ? `Updated existing word <strong>"${escapeHtml(suggestion)}"</strong> in practice queue.` : `Added correct word <strong>"${escapeHtml(suggestion)}"</strong> to practice queue.`}</p>
     ${exampleText}
-    <div style="display: flex; justify-content: center; margin-top: 8px;">
-      <button type="button" class="submit-btn sandbox-edit-btn" 
-        data-word="${escapeHtml(suggestion)}"
-        style="width: auto; padding: 4px 10px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+    <div class="feedback-center-row">
+      <button type="button" class="submit-btn sandbox-edit-btn btn-compact-edit" 
+        data-word="${escapeHtml(suggestion)}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
         <span>Edit Target/Details</span>
       </button>
     </div>

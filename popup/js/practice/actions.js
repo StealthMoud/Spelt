@@ -46,7 +46,7 @@ export function populateBackFace(card) {
       ? { us: card.usSpelling, uk: card.ukSpelling }
       : getSpellingVariant(card.word);
     if (variant && variant.us !== variant.uk) {
-      variantRow.innerHTML = `<span style="color: var(--primary-light);">US:</span> <span style="font-weight: 600;">${escapeHtml(variant.us)}</span> <span style="color: var(--text-muted); margin: 0 4px;">·</span> <span style="color: var(--primary-light);">UK:</span> <span style="font-weight: 600;">${escapeHtml(variant.uk)}</span>`;
+      variantRow.innerHTML = `<span class="variant-tag">US:</span> <span class="variant-word">${escapeHtml(variant.us)}</span> <span class="variant-sep">·</span> <span class="variant-tag">UK:</span> <span class="variant-word">${escapeHtml(variant.uk)}</span>`;
       variantRow.classList.remove('hidden');
     } else {
       variantRow.classList.add('hidden');
@@ -168,7 +168,7 @@ export function checkSpelling() {
           });
 
           fbRow.classList.remove('hidden');
-          fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn" style="background: hsla(260, 60%, 50%, 0.15); border: 1px solid hsla(260, 60%, 65%, 0.35); color: #c4b5fd; padding: 4px 10px; font-size: 0.68rem; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;"><span>AI Coach</span></button>`;
+          fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn"><span>AI Coach</span></button>`;
           fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', (ev) => {
             const btn = ev.currentTarget;
             btn.disabled = true;
