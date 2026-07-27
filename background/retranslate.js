@@ -1,4 +1,4 @@
-import { getWords, saveWords, askGemini, atomicUpdate } from '../shared/storage.js';
+import { getWords, askGemini, atomicUpdate } from '../shared/storage.js';
 import { getLanguageName } from '../src/core/languages.js';
 
 async function updateWordTranslation(wordId, targetLang) {
@@ -11,7 +11,7 @@ async function updateWordTranslation(wordId, targetLang) {
 
   const hasExistingData = card.definition || card.translation || card.example;
   
-  let prompt = '';
+  let prompt;
   if (hasExistingData) {
     prompt = `You are a lexicographer helping a language student. Review and improve/clean the existing dictionary data for the word or phrase "${wordStr}".
 Here is the current stored data:

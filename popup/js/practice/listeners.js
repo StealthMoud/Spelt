@@ -66,7 +66,7 @@ export function registerPracticeListeners() {
     if (!trans) {
       const targetLang = await getStored('spelt_target_lang');
       if (!targetLang || targetLang === 'none') {
-        alert('Please configure a preferred language in Settings first.'); return;
+        showConfirm('Preferred Language Required', 'Please configure a preferred language in Settings first.', null, false); return;
       }
       transEl.textContent = 'Translating...';
       displayEl.style.display = 'block';

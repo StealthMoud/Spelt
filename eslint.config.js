@@ -15,6 +15,7 @@ export default [
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
       'no-self-assign': 'error',
       'no-constant-binary-expression': 'error',
       'no-restricted-globals': [

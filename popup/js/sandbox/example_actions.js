@@ -1,4 +1,5 @@
-import { playTextAudio, getStored, fetchTranslation, getWords, saveWords, atomicUpdate } from '../../../shared/storage.js';
+import { playTextAudio, getStored, fetchTranslation, atomicUpdate } from '../../../shared/storage.js';
+import { showConfirm } from '../vault/confirm.js';
 
 export async function handleExampleActions(e) {
   const playExBtn = e.target.closest('.play-example-btn');
@@ -22,7 +23,7 @@ export async function handleExampleActions(e) {
           if (!trans) {
             const targetLang = await getStored('spelt_target_lang');
             if (!targetLang || targetLang === 'none') {
-              alert('Please configure a preferred language in Settings first.'); return;
+              showConfirm('Preferred Language Required', 'Please configure a preferred language in Settings first.', null, false); return;
             }
             const rawExample = textEl.textContent.trim().replace(/^"|"$/g, '');
             transEl.textContent = 'Translating...'; transEl.style.display = 'block';

@@ -7,7 +7,7 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
 
   leechesList.innerHTML = '';
   
-  let limit = 10;
+  let limit;
   if (currentLeechesLimit === 'custom') {
     limit = currentLeechesCustomVal;
   } else if (currentLeechesLimit === 'all') {

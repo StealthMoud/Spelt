@@ -126,7 +126,7 @@ export function renderPastErrorsList() {
   }
 }
 
-function updateFormLabels(practiceType) {
+function updateFormLabels(_practiceType) {
   const wordLabel = document.querySelector('label[for="form-word"]') || document.querySelector('#form-word').parentElement.previousElementSibling;
   const defLabel = document.querySelector('label[for="form-definition"]') || document.querySelector('#form-definition').previousElementSibling;
   const exLabel = document.querySelector('label[for="form-example"]') || document.querySelector('#form-example').previousElementSibling;

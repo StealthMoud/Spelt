@@ -383,7 +383,7 @@ function parseRetryDelay(errorMessage) {
 /**
  * Check if an error indicates a rate limit / quota exhaustion.
  */
-function isRateLimitError(status, errorMessage) {
+export function isRateLimitError(status, errorMessage) {
   if (status === 429) return true;
   const msg = (errorMessage || '').toLowerCase();
   return msg.includes('quota') || msg.includes('rate limit') || msg.includes('resource_exhausted');
@@ -583,8 +583,9 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
           const fallbackPayload = { ...bodyPayload };
           // Strip responseMimeType from generationConfig
           if (fallbackPayload.generationConfig) {
-            const { responseMimeType, ...rest } = fallbackPayload.generationConfig;
-            fallbackPayload.generationConfig = Object.keys(rest).length > 0 ? rest : undefined;
+            const copy = { ...fallbackPayload.generationConfig };
+            delete copy.responseMimeType;
+            fallbackPayload.generationConfig = Object.keys(copy).length > 0 ? copy : undefined;
           }
           // Append JSON instruction to the prompt text
           if (fallbackPayload.contents?.[0]?.parts?.[0]?.text) {
@@ -722,7 +723,7 @@ export async function askGemini(prompt, options = {}) {
       return JSON.parse(text);
     } catch (err) {
       console.error('Failed to parse Gemini response as JSON:', text);
-      throw new Error('Gemini response was not valid JSON. Please try again.');
+      throw new Error('Gemini response was not valid JSON. Please try again.', { cause: err });
     }
   });
 }

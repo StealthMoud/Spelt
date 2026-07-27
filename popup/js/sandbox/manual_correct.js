@@ -8,7 +8,6 @@ export async function handleManualCorrection(correctWord, originalWord, wrongAtt
     feedbackMsg.innerHTML = '<p style="color: var(--primary-light);">Verifying spelling...</p>';
     
     const words = await getWords();
-    const exists = words.some(w => w.word.toLowerCase() === correctWord.toLowerCase());
 
     let ipa = '', level = '';
     try {

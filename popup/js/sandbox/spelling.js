@@ -1,4 +1,4 @@
-import { getWords, fetchCambridgePronunciation, fetchDynamicDefinition, getSpellingVariant } from '../../../shared/storage.js';
+import { getWords, fetchCambridgePronunciation, getSpellingVariant } from '../../../shared/storage.js';
 import { getLevenshtein, isValidSuggestion } from '../../../src/core/spelling.js';
 
 export { getLevenshtein, isValidSuggestion };

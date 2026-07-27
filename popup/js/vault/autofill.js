@@ -1,14 +1,12 @@
 import { 
   translateWord, 
-  fetchCambridgePronunciation, 
-  fetchDynamicDefinition, 
-  fetchDynamicExample, 
   getFallbackExample,
   askGemini,
   getStored,
   parseCambridgePage,
   parseOxfordPage
 } from '../../../shared/storage.js';
+import { showConfirm } from './confirm.js';
 
 function getBaseLemmas(word) {
   const lemmas = [];
@@ -52,7 +50,7 @@ function extractCambridgeExamples(html, cleanWord) {
   const regex = /<(div|span)\s+class="examp[^>]*>([\s\S]*?)<\/\1>/g;
   let match;
   const sentences = [];
-  while (match = regex.exec(html)) {
+  while ((match = regex.exec(html)) !== null) {
     let text = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     if (text && text.toLowerCase().includes(cleanWord)) {
       text = text.replace(/^\[[^\]]+\]\s*/, '').trim();
@@ -70,7 +68,7 @@ function extractOxfordExamples(html, cleanWord) {
   const regex = /<span\s+class="x"[^>]*>([\s\S]*?)<\/span>/g;
   let match;
   const sentences = [];
-  while (match = regex.exec(html)) {
+  while ((match = regex.exec(html)) !== null) {
     const text = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     if (text && text.toLowerCase().includes(cleanWord)) {
       sentences.push(text);
@@ -85,7 +83,7 @@ function extractOxfordExamples(html, cleanWord) {
 function pickBest(list) {
   const filtered = list.filter(s => {
     if (s.length < 20 || s.length > 150) return false;
-    if (/[\[\]\(\)\/=\|]/.test(s)) return false;
+    if (/[[\]()/=|]/.test(s)) return false;
     return true;
   });
   const target = filtered.length > 0 ? filtered : list;
@@ -276,7 +274,7 @@ JSON only. No markdown.`;
       if (aiData.example) document.getElementById('form-example').value = aiData.example;
 
     } catch (err) {
-      alert(err.message || 'AI Autofill failed. Please check your Gemini API key in Settings.');
+      showConfirm('Autofill Failed', err.message || 'AI Autofill failed. Please check your Gemini API key in Settings.', null, false);
     } finally {
       btn.disabled = false; btn.style.opacity = '1';
       if (span) span.textContent = originalText;
@@ -292,7 +290,7 @@ JSON only. No markdown.`;
     try {
       document.getElementById('form-translation').value = await translateWord(word);
     } catch (err) {
-      alert(err.message || 'Translation failed');
+      showConfirm('Translation Failed', err.message || 'Translation failed.', null, false);
     } finally {
       btn.disabled = false; btn.style.opacity = '1';
     }

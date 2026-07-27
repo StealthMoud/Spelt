@@ -1,4 +1,4 @@
-import { playWordAudio, getWords, saveWords } from '../../../shared/storage.js';
+import { playWordAudio, getWords } from '../../../shared/storage.js';
 import { handleManualCorrection } from './manual_correct.js';
 import { showManualCorrectionForm } from './manual_form.js';
 import { acceptSuggestion } from './accept.js';

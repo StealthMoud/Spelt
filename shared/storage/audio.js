@@ -1,4 +1,4 @@
-import { getStored, triggerNetworkSuccess, triggerNetworkError } from './core.js';
+import { triggerNetworkSuccess, triggerNetworkError } from './core.js';
 import { fetchCambridgePronunciation } from './cambridge.js';
 
 // Play high-quality human audio pronunciation with fallback

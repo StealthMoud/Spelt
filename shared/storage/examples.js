@@ -8,7 +8,7 @@ export async function fetchDynamicExample(word) {
   const pickBest = (list) => {
     const filtered = list.filter(s => {
       if (s.length < 20 || s.length > 150) return false;
-      if (/[\[\]\(\)\/=\|]/.test(s)) return false;
+      if (/[[\]()/=|]/.test(s)) return false;
       return true;
     });
     const target = filtered.length > 0 ? filtered : list;

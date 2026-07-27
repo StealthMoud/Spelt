@@ -1,5 +1,5 @@
-import { getWords, registerMisspelling, fetchCambridgePronunciation, fetchDynamicDefinition, getFallbackExample } from '../../../shared/storage.js';
-import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
+import { getWords, registerMisspelling, fetchCambridgePronunciation, fetchDynamicDefinition } from '../../../shared/storage.js';
+import { closeBtnHtml, extractExample } from './helpers.js';
 
 export async function acceptSuggestion(suggestion, original, reloadVaultCallback, loadPracticeCallback) {
   const feedbackMsg = document.getElementById('feedback-msg');

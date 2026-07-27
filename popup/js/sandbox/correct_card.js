@@ -1,5 +1,6 @@
-import { getWords, saveWords, translateWord, enrichWord, getFallbackExample, getStored, isGeminiConfigured, askGemini, atomicUpdate, getSpellingVariant } from '../../../shared/storage.js';
+import { getWords, translateWord, enrichWord, getFallbackExample, getStored, isGeminiConfigured, askGemini, atomicUpdate, getSpellingVariant } from '../../../shared/storage.js';
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
+import { showConfirm } from '../vault/confirm.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
   const enriched = await enrichWord(word);
@@ -308,6 +309,6 @@ Respond ONLY with a JSON object matching this schema:
   } catch (err) {
     btn.innerHTML = originalHtml;
     btn.disabled = false;
-    alert(`AI Enhancement failed: ${err.message}`);
+    showConfirm('AI Enhancement Failed', err.message, null, false);
   }
 }

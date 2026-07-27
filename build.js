@@ -14,7 +14,7 @@ function loadComponent(fileName) {
 
 function compileHtml(fileName) {
   let content = loadComponent(fileName);
-  const regex = /<!-- INCLUDE ([\w\.-]+) -->/g;
+  const regex = /<!-- INCLUDE ([\w.-]+) -->/g;
   
   // Replace all INCLUDE tags recursively
   while (content.match(regex)) {

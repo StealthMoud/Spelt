@@ -1,5 +1,5 @@
 import { atomicUpdate, getNextReviewDate } from '../../../shared/storage.js';
-import { getDueCards, peekCard, advanceDeck, requeueCard, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, markReviewedWord, getPracticeMode, trackReview, getLastSpellingResult } from './state.js';
+import { peekCard, advanceDeck, requeueCard, getCardShownAt, getOnDeckUpdated, getIsSubmitting, setIsSubmitting, markReviewedWord, getPracticeMode, trackReview, getLastSpellingResult } from './state.js';
 import { showPracticeCard } from './card.js';
 import { trackSession } from './session.js';
 

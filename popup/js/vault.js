@@ -95,7 +95,7 @@ export async function initVault(onVaultUpdated) {
     
     const isConfigured = await isGeminiConfigured();
     if (!isConfigured) {
-      alert('Please configure your Gemini API Key in the Settings tab.');
+      showConfirm('API Key Required', 'Please configure your Gemini API Key in the Settings tab.', null, false);
       return;
     }
 

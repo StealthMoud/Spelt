@@ -1,22 +1,12 @@
 import { getWords, censorWordInExample, getFallbackExample, fetchCambridgePronunciation, isGeminiConfigured, atomicUpdate } from '../../../shared/storage.js';
 import { selectDueCards, isDueInMode } from '../../../src/core/selectors.js';
 import { escapeHtml } from '../../../shared/dom.js';
-import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, getIsSubmitting, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
+import { peekCard, getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getSessionStats, resetSessionStats } from './state.js';
 import { renderAudioButtons, formatLevelDisplay } from './helpers.js';
 import { generateHint, generateSessionSummary, verifyPracticeWriting } from './ai_helpers.js';
 import { populateBackFace } from './actions.js';
 
 let writingFeedbackTimeoutId = null;
-let aiHintTimeoutId = null;
-
-function shuffleArray(array) {
-  const copy = [...array];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 
 
@@ -233,7 +223,7 @@ export async function syncPracticeDeck() {
     return isDueInMode(w, mode, now) && !ids.has(w.id) && !hasReviewedWord(w.id, mode);
   }));
   setDueCards(due); getOnDeckUpdated()?.();
-  const newActiveId = getDueCards()[0]?.id, isFlipped = document.getElementById('popup-deck-card')?.classList.contains('flipped');
+  const newActiveId = getDueCards()[0]?.id;
   if (oldActiveId !== newActiveId) {
     showPracticeCard();
   } else if (newActiveId) {

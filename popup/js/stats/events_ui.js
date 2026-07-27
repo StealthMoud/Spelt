@@ -1,4 +1,4 @@
-import { setTimeframe, setLeechesLimit, setLeechesCustomVal, currentStatsTimeframe, currentLeechesLimit, currentLeechesCustomVal } from './state.js';
+import { setTimeframe, setLeechesLimit, setLeechesCustomVal, currentStatsTimeframe } from './state.js';
 
 export function bindUiEvents(renderStats) {
   document.querySelectorAll('.stats-subtab-btn').forEach(btn => {
