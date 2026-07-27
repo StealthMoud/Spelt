@@ -26,7 +26,20 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
     if (!feedbackMsg.querySelector('.sandbox-success-banner')) {
       const banner = document.createElement('div');
       banner.className = 'sandbox-success-banner';
-      banner.style.cssText = 'background: hsla(155, 65%, 48%, 0.12); border: 1px solid var(--success); color: var(--primary-light); padding: 8px; border-radius: var(--radius-md); margin-bottom: 12px; font-size: 0.72rem; text-align: center; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1; max-height: 40px; overflow: hidden;';
+      Object.assign(banner.style, {
+        background: 'hsla(155, 65%, 48%, 0.12)',
+        border: '1px solid var(--success)',
+        color: 'var(--primary-light)',
+        padding: '8px',
+        borderRadius: 'var(--radius-md)',
+        marginBottom: '12px',
+        fontSize: '0.72rem',
+        textAlign: 'center',
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        opacity: '1',
+        maxHeight: '40px',
+        overflow: 'hidden'
+      });
       
       let typeLabel = 'Spelling';
       if (practiceType === 'recall') typeLabel = 'Recall';
@@ -74,7 +87,12 @@ export async function handleAddToVault(btn, reloadVaultCallback, loadPracticeCal
     btn.disabled = false;
     
     const errContainer = document.createElement('div');
-    errContainer.style.cssText = 'color: var(--danger); font-size: 0.68rem; margin-top: 6px; text-align: center;';
+    Object.assign(errContainer.style, {
+      color: 'var(--danger)',
+      fontSize: '0.68rem',
+      marginTop: '6px',
+      textAlign: 'center'
+    });
     errContainer.textContent = `Error: ${err.message}`;
     btn.parentNode.after(errContainer);
     setTimeout(() => errContainer.remove(), 4000);

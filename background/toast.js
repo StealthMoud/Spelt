@@ -8,47 +8,47 @@ export async function showToastInTab(tabId, message, isSuccess = true) {
         if (!container) {
           container = document.createElement('div');
           container.id = 'spelt-toast-container';
-          container.style.cssText = `
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 2147483647;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          `;
+          Object.assign(container.style, {
+            position: 'fixed',
+            top: '24px',
+            right: '24px',
+            zIndex: '2147483647',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            pointerEvents: 'none',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          });
           document.body.appendChild(container);
         }
 
         const toast = document.createElement('div');
-        toast.style.cssText = `
-          background: rgba(16, 20, 24, 0.94);
-          border: 1px solid ${success ? 'rgba(16, 185, 129, 0.45)' : 'rgba(239, 68, 68, 0.45)'};
-          color: #ffffff;
-          padding: 12px 18px;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 500;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 1px ${success ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'};
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transform: translateY(-20px);
-          opacity: 0;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          pointer-events: auto;
-        `;
+        Object.assign(toast.style, {
+          background: 'rgba(16, 20, 24, 0.94)',
+          border: `1px solid ${success ? 'rgba(16, 185, 129, 0.45)' : 'rgba(239, 68, 68, 0.45)'}`,
+          color: '#ffffff',
+          padding: '12px 18px',
+          borderRadius: '12px',
+          fontSize: '14px',
+          fontWeight: '500',
+          boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 1px ${success ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
+          backdropFilter: 'blur(8px)',
+          webkitBackdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          transform: 'translateY(-20px)',
+          opacity: '0',
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          pointerEvents: 'auto'
+        });
 
         const iconWrapper = document.createElement('div');
         iconWrapper.style.display = 'inline-flex';
         iconWrapper.style.alignItems = 'center';
         iconWrapper.innerHTML = success 
-          ? `<svg viewBox="0 0 24 24" fill="none" stroke="var(--success, #10b981)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="20 6 9 17 4 12"/></svg>`
-          : `<svg viewBox="0 0 24 24" fill="none" stroke="var(--danger, #ef4444)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+          ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--success, #10b981)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+          : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--danger, #ef4444)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
 
         const textSpan = document.createElement('span');
         textSpan.style.fontFamily = 'inherit';

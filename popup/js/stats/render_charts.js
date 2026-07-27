@@ -14,16 +14,32 @@ export function renderReviewChart(chartBuckets, barWidth) {
     col.className = 'bar-column';
     col.innerHTML = `
       <div class="bar-hover-val">${bucket.total} ${bucket.total === 1 ? 'review' : 'reviews'}</div>
-      <div class="bar-track" style="width: ${barWidth}px;">
+      <div class="bar-track">
         ${bucket.total > 0 ? `
-          <div class="bar-fill" style="height: ${heightPercent}%;">
-            <div class="bar-segment correct" style="height: ${correctPct}%;" title="${bucket.correct} Correct ${bucket.type === 'day' ? 'on' : 'during'} ${bucket.fullDateLabel}"></div>
-            <div class="bar-segment incorrect" style="height: ${incorrectPct}%;" title="${bucket.incorrect} Incorrect ${bucket.type === 'day' ? 'on' : 'during'} ${bucket.fullDateLabel}"></div>
+          <div class="bar-fill">
+            <div class="bar-segment correct" title="${bucket.correct} Correct ${bucket.type === 'day' ? 'on' : 'during'} ${bucket.fullDateLabel}"></div>
+            <div class="bar-segment incorrect" title="${bucket.incorrect} Incorrect ${bucket.type === 'day' ? 'on' : 'during'} ${bucket.fullDateLabel}"></div>
           </div>
-        ` : `<div class="bar-fill empty" style="height: 4px;"></div>`}
+        ` : `<div class="bar-fill empty"></div>`}
       </div>
       <span class="bar-label">${bucket.label}</span>
     `;
+
+    const track = col.querySelector('.bar-track');
+    if (track) track.style.width = `${barWidth}px`;
+
+    if (bucket.total > 0) {
+      const fill = col.querySelector('.bar-fill');
+      if (fill) fill.style.height = `${heightPercent}%`;
+      const correct = col.querySelector('.bar-segment.correct');
+      if (correct) correct.style.height = `${correctPct}%`;
+      const incorrect = col.querySelector('.bar-segment.incorrect');
+      if (incorrect) incorrect.style.height = `${incorrectPct}%`;
+    } else {
+      const emptyFill = col.querySelector('.bar-fill.empty');
+      if (emptyFill) emptyFill.style.height = '4px';
+    }
+
     chartContainer.appendChild(col);
   });
 }
@@ -51,9 +67,13 @@ export function renderButtonDistribution(buttonCounts) {
         <span class="btn-dist-count">${btn.count} <small class="text-muted">(${pct}%)</small></span>
       </div>
       <div class="btn-dist-progress-track">
-        <div class="btn-dist-progress-fill ${btn.cssClass}" style="width: ${pct}%;"></div>
+        <div class="btn-dist-progress-fill ${btn.cssClass}"></div>
       </div>
     `;
+
+    const fill = row.querySelector('.btn-dist-progress-fill');
+    if (fill) fill.style.width = `${pct}%`;
+
     btnContainer.appendChild(row);
   });
 }
@@ -79,9 +99,13 @@ export function renderCEFRDistribution(words) {
     row.className = 'cefr-row';
     row.innerHTML = `
       <span class="cefr-label-badge">${lvl === 'Unknown' ? '?' : lvl}</span>
-      <div class="cefr-bar-wrapper"><div class="cefr-bar-fill" style="width: ${pct}%;"></div></div>
+      <div class="cefr-bar-wrapper"><div class="cefr-bar-fill"></div></div>
       <span class="cefr-count-label">${count} (${pct}%)</span>
     `;
+
+    const barFill = row.querySelector('.cefr-bar-fill');
+    if (barFill) barFill.style.width = `${pct}%`;
+
     cefrContainer.appendChild(row);
   });
 }
