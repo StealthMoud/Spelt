@@ -5,11 +5,10 @@
   gap: 12px;
   font-size: 0.72rem;
 }
-.empty-keys-note {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  margin: 4px 0;
-}
+.settings-group-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-light); margin: 8px 0 2px; padding-bottom: 2px; border-bottom: 1px solid hsla(155, 10%, 25%, 0.2); }
+.danger-title { color: var(--danger); border-color: hsla(5, 80%, 55%, 0.2); }
+.danger-block { border-color: hsla(5, 80%, 55%, 0.3); background: hsla(5, 80%, 55%, 0.04); }
+.danger-block strong { color: var(--danger); }
 
 .settings-block {
   background: var(--bg-card);

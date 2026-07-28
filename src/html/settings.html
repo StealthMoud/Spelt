@@ -1,6 +1,8 @@
-      <!-- TAB 5: SETTINGS -->
+<!-- TAB 5: SETTINGS -->
       <section id="settings-tab" class="tab-pane">
         <div class="settings-content-wrapper">
+          <!-- Section 1: Study Settings -->
+          <div class="settings-group-title">Study Settings</div>
           <div class="settings-block">
             <strong>Auto-Translation Language</strong>
             <p>Automatically fetch translations for new words in Sandbox or Vault.</p>
@@ -10,7 +12,7 @@
               <option value="fr">French (Français)</option>
               <option value="de">German (Deutsch)</option>
               <option value="it">Italian (Italiano)</option>
-              <option value="pt">Portuguese (Português)</option>
+              <option value="pt">Português</option>
               <option value="ru">Russian (Русский)</option>
               <option value="ar">Arabic (العربية)</option>
               <option value="fa">Farsi / Persian (فارسی)</option>
@@ -21,27 +23,39 @@
             </select>
           </div>
           <div class="settings-block">
-            <strong>Display & Font Scaling</strong>
-            <p>Adjust text scaling for all interface text.</p>
-            <div class="font-resizer-controls">
-              <button id="font-decrease-btn" class="icon-btn font-btn font-btn-sm" title="Decrease text size" aria-label="Decrease text size">A-</button>
-              <span id="font-scale-display" class="font-scale-display">100%</span>
-              <button id="font-increase-btn" class="icon-btn font-btn font-btn-lg" title="Increase text size" aria-label="Increase text size">A+</button>
+            <strong>Text Selection Lookup</strong>
+            <p>Show a quick-lookup button when selecting text within the popup.</p>
+            <div class="setting-checkbox-row">
+              <input type="checkbox" id="setting-selection-lookup" class="setting-checkbox">
+              <label for="setting-selection-lookup" class="setting-checkbox-label">Enable selection lookup button</label>
             </div>
           </div>
+
+          <!-- Section 2: Display & Font Scaling -->
+          <div class="settings-group-title">Display & Scaling</div>
           <div class="settings-block">
-            <strong>Gemini AI Keys Manager (Free Tier)</strong>
-            <p>Connect multiple API keys. Spelt scans the strongest available text model first, then falls back by model and key when a pair is cooling down. Keys from the same Google project can still share quota. Get keys from <a href="https://aistudio.google.com/" target="_blank" class="link-primary">Google AI Studio</a>.</p>
+            <strong>Font Scaling</strong>
+            <p>Adjust text scaling for all interface text.</p>
+            <div class="font-resizer-controls">
+              <button type="button" id="font-decrease-btn" class="icon-btn font-btn font-btn-sm" title="Decrease text size" aria-label="Decrease text size">A-</button>
+              <span id="font-scale-display" class="font-scale-display">100%</span>
+              <button type="button" id="font-increase-btn" class="icon-btn font-btn font-btn-lg" title="Increase text size" aria-label="Increase text size">A+</button>
+            </div>
+          </div>
+
+          <!-- Section 3: AI Configuration -->
+          <div class="settings-group-title">AI Configuration</div>
+          <div class="settings-block">
+            <strong>Gemini API Keys Manager (Free Tier)</strong>
+            <p>Connect Gemini API keys starting with <code>AIza...</code>. Get free keys at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="link-primary">Google AI Studio</a>.</p>
             
-            <!-- List of keys -->
             <div id="gemini-keys-list-container" class="gemini-keys-list">
               <!-- Dynamically populated keys -->
             </div>
 
-            <!-- Add new key -->
             <div class="gemini-key-add-row">
-              <input type="password" id="setting-gemini-key-input" class="field gemini-key-input" placeholder="Add Gemini API Key..." aria-label="Gemini API Key">
-              <button id="add-gemini-key-btn" class="submit-btn gemini-key-add-btn" aria-label="Add Gemini Key">Add Key</button>
+              <input type="password" id="setting-gemini-key-input" class="field gemini-key-input" placeholder="AIzaSy..." aria-label="Gemini API Key">
+              <button type="button" id="add-gemini-key-btn" class="submit-btn gemini-key-add-btn" aria-label="Add Gemini Key">Add Key</button>
             </div>
             
             <div id="gemini-model-container" class="gemini-model-row hidden">
@@ -49,13 +63,9 @@
                 <label for="setting-gemini-model" class="gemini-model-label">Model Strategy:</label>
                 <select id="setting-gemini-model" class="field select-input gemini-model-select" aria-label="Model Strategy"></select>
               </div>
-              <p class="setting-sub-text">
-                Auto uses the strongest verified text model first. Manual choices still fall back through weaker verified models when needed.
-              </p>
             </div>
             <p id="gemini-test-status" class="status-text-msg hidden"></p>
             
-            <!-- AI Model Status & Fallback Monitor Panel -->
             <div id="ai-status-monitor-block" class="ai-status-monitor-block">
               <div class="ai-status-monitor-head">
                 <strong class="ai-status-monitor-title">
@@ -70,76 +80,65 @@
             </div>
           </div>
           <div class="settings-block">
-            <strong>Text Selection Lookup</strong>
-            <p>Show a quick-lookup button when selecting text within the popup.</p>
-            <div class="setting-checkbox-row">
-              <input type="checkbox" id="setting-selection-lookup" class="setting-checkbox">
-              <label for="setting-selection-lookup" class="setting-checkbox-label">Enable selection lookup button</label>
-            </div>
-          </div>
-          <div class="settings-block">
             <strong>Background AI Processing</strong>
-            <p>Allow Spelt to run AI tasks in the background (such as bulk translation refresh). Disabling this prevents background AI usage to avoid rate limits.</p>
+            <p>Allow Spelt to run AI tasks in the background.</p>
             <div class="setting-checkbox-row">
               <input type="checkbox" id="setting-allow-background-ai" class="setting-checkbox">
               <label for="setting-allow-background-ai" class="setting-checkbox-label">Allow background AI tasks</label>
             </div>
           </div>
+
+          <!-- Section 4: Keyboard Shortcuts -->
+          <div class="settings-group-title">Shortcuts</div>
           <div class="settings-block">
-            <strong>Keyboard Shortcuts</strong>
-            <p>Study efficiently without moving your hands to the mouse:</p>
             <div class="shortcut-list">
               <div class="shortcut-row">
                 <span>Launch Spelt</span>
                 <kbd>Cmd+Shift+S</kbd>
               </div>
               <div class="shortcut-row">
-                <span>Play Audio (Sandbox / practice)</span>
+                <span>Play Audio</span>
                 <kbd>Space</kbd>
               </div>
               <div class="shortcut-row">
-                <span>Translate Example</span>
-                <kbd>T</kbd>
-              </div>
-              <div class="shortcut-row">
-                <span>Verify / Accept suggestion / Refocus</span>
+                <span>Verify / Check</span>
                 <kbd>Enter</kbd>
               </div>
               <div class="shortcut-row">
-                <span>Reject suggestion / Close card</span>
-                <kbd>Esc</kbd>
-              </div>
-              <div class="shortcut-row">
-                <span>Rate practice cards (Again / Easy)</span>
-                <kbd>1–4</kbd>
+                <span>Rate Cards</span>
+                <kbd>1–5</kbd>
               </div>
             </div>
           </div>
 
+          <!-- Section 5: Data & Backups -->
+          <div class="settings-group-title">Data & Backups</div>
           <div class="settings-block">
-            <strong>Database Operations</strong>
             <div class="btn-row">
-              <button id="export-db-btn" class="submit-btn" aria-label="Export database">
+              <button type="button" id="export-db-btn" class="submit-btn" aria-label="Export database">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span>Export</span>
+                <span>Export JSON</span>
               </button>
               <input type="file" id="import-db-file" class="hidden" accept=".json" aria-label="Import database JSON file">
-              <button id="import-db-trigger-btn" class="submit-btn btn-import-flex" aria-label="Import database">
+              <button type="button" id="import-db-trigger-btn" class="submit-btn btn-import-flex" aria-label="Import database">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <span>Import</span>
+                <span>Import JSON</span>
               </button>
             </div>
-            <button id="retranslate-all-btn" class="submit-btn btn-retranslate" aria-label="Refresh All Translations & Details">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              <span>Refresh All Translations & Details</span>
-            </button>
-            <button id="integrity-check-btn" class="submit-btn btn-integrity" aria-label="Run Integrity Check & Repair">
+            <button type="button" id="integrity-check-btn" class="submit-btn btn-integrity" aria-label="Run Integrity Check & Repair">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/></svg>
-              <span>Run Integrity Check & Repair</span>
+              <span>Integrity Repair</span>
             </button>
-            <button id="wipe-db-btn" class="submit-btn btn-danger" aria-label="Erase Database">
+          </div>
+
+          <!-- Section 6: Danger Zone -->
+          <div class="settings-group-title danger-title">Danger Zone</div>
+          <div class="settings-block danger-block">
+            <strong>Wipe Database</strong>
+            <p>Permanently delete all words, streaks, and history data. Type <code>DELETE</code> to confirm.</p>
+            <button type="button" id="wipe-db-btn" class="submit-btn btn-danger" aria-label="Erase Database">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              <span>Erase Database</span>
+              <span>Erase All Data</span>
             </button>
           </div>
         </div>

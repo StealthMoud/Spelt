@@ -74,6 +74,13 @@ export function initSettings(onDbRestored) {
       return;
     }
 
+    if (!key.startsWith('AIza')) {
+      statusEl.classList.remove('hidden');
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = 'Invalid key format. Gemini API keys must start with "AIza".';
+      return;
+    }
+
     statusEl.classList.remove('hidden');
     statusEl.style.color = 'var(--primary-light)';
     statusEl.textContent = 'Verifying API key...';

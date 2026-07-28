@@ -242,10 +242,9 @@ export async function importDb(e, onDbRestoredCallback) {
 }
 
 export async function wipeDb(onDbRestoredCallback) {
-  const captcha = Math.random().toString(36).substring(2, 8).toUpperCase();
   showConfirm(
     'Wipe Database',
-    'Are you sure you want to delete all words and activity data? This action cannot be undone.',
+    'Are you sure you want to delete all words and activity data? Type DELETE to confirm. This action cannot be undone.',
     async () => {
       await resetDb();
       showConfirm('Purged', 'Database purged successfully!', null, false);
@@ -254,6 +253,6 @@ export async function wipeDb(onDbRestoredCallback) {
       }
     },
     true,
-    captcha
+    'DELETE'
   );
 }
