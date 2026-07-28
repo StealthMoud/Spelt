@@ -49,39 +49,22 @@
               <div id="past-misspellings-container" class="hidden">
                 <p><strong>Past errors:</strong> <span id="back-misspellings-display" class="text-danger-weight"></span></p>
               </div>
+              <div class="back-card-metrics text-muted-xs">
+                <span>Ease Factor: <strong id="back-card-ef">2.50</strong></span>
+                <span class="metric-sep">·</span>
+                <span>Lapses: <strong id="back-card-lapses">0</strong></span>
+              </div>
             </div>
 
-            <!-- AI Hint Bubble (Back Face) -->
-            <div id="back-ai-hint-bubble" class="back-ai-bubble-box hidden">
-              <!-- Drag Handle Bar -->
-              <div class="ai-bubble-drag-handle ai-drag-handle-bar">
-                <div class="ai-drag-pill"></div>
-              </div>
-              <span id="back-ai-hint-text" class="ai-hint-text-wrap"></span>
-              <div class="ai-hint-btn-group">
-                <button id="back-ai-hint-regen" class="ai-bubble-btn" title="Regenerate hint" aria-label="Regenerate hint">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                </button>
-                <button id="back-ai-hint-close" class="ai-bubble-btn" title="Close hint" aria-label="Close hint">
+            <!-- Single Consolidated Bottom Sheet for AI Hint & Feedback -->
+            <div id="practice-bottom-sheet" class="practice-bottom-sheet hidden" aria-live="polite">
+              <div class="sheet-header">
+                <strong id="sheet-title" class="sheet-title">AI Assistant</strong>
+                <button type="button" id="sheet-close-btn" class="icon-btn sheet-close" title="Close assistant" aria-label="Close assistant">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="icon-svg-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
-            </div>
-
-            <!-- AI Feedback Popup -->
-            <div id="ai-feedback-row" class="ai-feedback-box hidden">
-              <!-- Drag Handle Bar -->
-              <div class="ai-bubble-drag-handle ai-feedback-handle-bar">
-                <div class="ai-drag-pill"></div>
-              </div>
-              <div class="ai-feedback-header">
-                <svg class="ai-feedback-header-icon ai-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <strong class="ai-feedback-header-title ai-feedback-title">AI Coach</strong>
-              </div>
-              <span id="ai-feedback-text" class="ai-feedback-text-wrap"></span>
-              <button type="button" id="ai-feedback-close" class="ai-bubble-btn ai-feedback-close-btn" title="Close feedback" aria-label="Close feedback">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="icon-svg-xs"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+              <div id="sheet-content" class="sheet-content"></div>
             </div>
 
             <!-- SRS Buttons -->
@@ -116,5 +99,11 @@
                 <span>Mastered</span>
                 <small class="srs-hint">Archive</small>
               </button>
+            </div>
+            <div class="keyboard-hint-strip" aria-label="Keyboard Shortcuts Hint">
+              <span><kbd>1–5</kbd> Rate</span>
+              <span><kbd>Space</kbd> Answer/Audio</span>
+              <span><kbd>Enter</kbd> Check</span>
+              <span><kbd>Esc</kbd> Reset</span>
             </div>
           </div>

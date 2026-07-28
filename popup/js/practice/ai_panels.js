@@ -2,32 +2,34 @@ import { peekCard, getPracticeMode, getSessionStats, resetSessionStats } from '.
 import { generateHint, generateSessionSummary, verifyPracticeWriting } from './ai_helpers.js';
 import { escapeHtml } from '../../../shared/dom.js';
 import { isGeminiConfigured, atomicUpdate } from '../../../shared/storage.js';
-import { makeElementDraggable } from '../components/draggable.js';
 
 let writingFeedbackTimeoutId = null;
 let cardScope = null;
 
 /** Abort the previous card's scoped listeners and create a fresh scope. */
-function resetCardScope() {
+export function resetCardScope() {
   cardScope?.abort();
   cardScope = new AbortController();
   return cardScope.signal;
 }
 
-async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defaultBottom }, card, signal) {
+function openBottomSheet(title, htmlContent) {
+  const sheet = document.getElementById('practice-bottom-sheet');
+  const titleEl = document.getElementById('sheet-title');
+  const contentEl = document.getElementById('sheet-content');
+  const closeBtn = document.getElementById('sheet-close-btn');
+
+  if (!sheet || !titleEl || !contentEl) return;
+  titleEl.textContent = title;
+  contentEl.innerHTML = htmlContent;
+  sheet.classList.remove('hidden');
+
+  if (closeBtn) closeBtn.onclick = () => sheet.classList.add('hidden');
+}
+
+async function mountHintPanel({ btnId }, card, signal) {
   const hintBtn = document.getElementById(btnId);
-  const hintBubble = document.getElementById(bubbleId);
-  const hintText = document.getElementById(textId);
-  const regenBtn = document.getElementById(regenId);
-  const closeBtn = document.getElementById(closeId);
-  if (!hintBtn || !hintBubble || !hintText) return;
-
-  hintBubble.style.top = 'auto';
-  hintBubble.style.right = '14px';
-  hintBubble.style.bottom = defaultBottom;
-  hintBubble.style.left = '14px';
-
-  makeElementDraggable(hintBubble);
+  if (!hintBtn) return;
 
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured) {
@@ -36,14 +38,11 @@ async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defau
   }
 
   hintBtn.classList.remove('hidden');
-  hintBubble.classList.add('hidden');
-  hintText.textContent = '';
 
   const handleHintRequest = async (forceRegen = false) => {
     const currentCard = card || peekCard();
     if (!currentCard) return;
-    hintText.textContent = forceRegen ? 'Regenerating...' : 'Asking AI Coach...';
-    hintBubble.classList.remove('hidden');
+    openBottomSheet('AI Memory Hint', `<p class="text-primary-light">${forceRegen ? 'Regenerating...' : 'Asking AI Coach...'}</p>`);
     try {
       if (forceRegen) {
         currentCard.aiHint = null;
@@ -55,56 +54,31 @@ async function mountHintPanel({ btnId, bubbleId, textId, regenId, closeId, defau
         } catch {}
       }
       const hint = await generateHint(currentCard);
-      hintText.innerHTML = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" class="ai-hint-line">${escapeHtml(l)}</div>`).join('');
+      const formattedHint = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" class="ai-hint-line">${escapeHtml(l)}</div>`).join('');
+      openBottomSheet('AI Memory Hint', `
+        <div class="ai-sheet-body">
+          ${formattedHint}
+          <button type="button" id="ai-sheet-regen-btn" class="submit-btn btn-compact-auto text-mt-xs">Regenerate Hint</button>
+        </div>
+      `);
+      document.getElementById('ai-sheet-regen-btn')?.addEventListener('click', () => handleHintRequest(true));
     } catch (err) {
-      hintText.textContent = `Could not generate hint: ${err.message}`;
+      openBottomSheet('AI Memory Hint', `<p class="text-danger">Could not generate hint: ${escapeHtml(err.message)}</p>`);
     }
   };
 
   hintBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (!hintBubble.classList.contains('hidden')) {
-      hintBubble.classList.add('hidden');
-    } else {
-      handleHintRequest(false);
-    }
+    handleHintRequest(false);
   }, { signal });
-
-  if (regenBtn) {
-    regenBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleHintRequest(true);
-    }, { signal });
-  }
-
-  if (closeBtn) {
-    closeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hintBubble.classList.add('hidden');
-    }, { signal });
-  }
 }
 
 export function setupAIHintButton(card, signal) {
-  return mountHintPanel({
-    btnId: 'ai-hint-btn',
-    bubbleId: 'ai-hint-bubble',
-    textId: 'ai-hint-text',
-    regenId: 'ai-hint-regen',
-    closeId: 'ai-hint-close',
-    defaultBottom: '62px'
-  }, card, signal);
+  return mountHintPanel({ btnId: 'ai-hint-btn' }, card, signal);
 }
 
 export function setupBackAIHintButton(card, signal) {
-  return mountHintPanel({
-    btnId: 'back-ai-hint-btn',
-    bubbleId: 'back-ai-hint-bubble',
-    textId: 'back-ai-hint-text',
-    regenId: 'back-ai-hint-regen',
-    closeId: 'back-ai-hint-close',
-    defaultBottom: '74px'
-  }, card, signal);
+  return mountHintPanel({ btnId: 'back-ai-hint-btn' }, card, signal);
 }
 
 export async function triggerSessionSummary() {
@@ -155,13 +129,6 @@ export async function setupAIWritingPractice(card, signal) {
 
   if (!practicePanel || !inputEl || !verifyBtn || !feedbackEl || !headerEl || !bodyEl) return;
 
-  feedbackEl.style.top = 'auto';
-  feedbackEl.style.right = '14px';
-  feedbackEl.style.bottom = '74px';
-  feedbackEl.style.left = '14px';
-
-  makeElementDraggable(feedbackEl);
-
   inputEl.value = '';
   feedbackEl.classList.add('hidden');
   bodyEl.classList.add('hidden');
@@ -187,7 +154,7 @@ export async function setupAIWritingPractice(card, signal) {
   const toggleIcon = document.getElementById('ai-writing-practice-toggle-icon');
 
   if (toggleText) toggleText.textContent = 'Start Practice';
-  if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+  if (toggleIcon) toggleIcon.classList.remove('rotate-180');
 
   headerEl.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -197,12 +164,12 @@ export async function setupAIWritingPractice(card, signal) {
     if (bodyEl.classList.contains('hidden')) {
       bodyEl.classList.remove('hidden');
       if (freshToggleText) freshToggleText.textContent = 'Collapse';
-      if (freshToggleIcon) freshToggleIcon.style.transform = 'rotate(180deg)';
+      if (freshToggleIcon) freshToggleIcon.classList.add('rotate-180');
       inputEl.focus();
     } else {
       bodyEl.classList.add('hidden');
       if (freshToggleText) freshToggleText.textContent = 'Start Practice';
-      if (freshToggleIcon) freshToggleIcon.style.transform = 'rotate(0deg)';
+      if (freshToggleIcon) freshToggleIcon.classList.remove('rotate-180');
     }
   }, { signal });
 
@@ -216,20 +183,19 @@ export async function setupAIWritingPractice(card, signal) {
 
     if (typeof content === 'string') {
       const span = document.createElement('span');
-      span.style.fontSize = '0.65rem';
+      span.className = 'text-muted-xs';
       span.textContent = content;
       targetEl.appendChild(span);
     } else if (content && typeof content === 'object') {
       const isOk = content.verdict === 'correct';
       const badge = document.createElement('span');
-      badge.style.color = isOk ? 'var(--success)' : 'var(--danger)';
-      badge.style.fontWeight = '700';
+      badge.className = isOk ? 'badge badge-success' : 'badge badge-danger';
       badge.textContent = isOk ? '✓ Correct Usage' : '✗ Incorrect';
       targetEl.appendChild(badge);
 
       if (content.correction) {
         const corrDiv = document.createElement('div');
-        corrDiv.style.marginTop = '4px';
+        corrDiv.className = 'text-mt-xs';
         const strong = document.createElement('strong');
         strong.textContent = 'Correction: ';
         corrDiv.appendChild(strong);
@@ -239,7 +205,7 @@ export async function setupAIWritingPractice(card, signal) {
 
       if (content.feedback) {
         const fbDiv = document.createElement('div');
-        fbDiv.style.marginTop = '4px';
+        fbDiv.className = 'text-mt-xs';
         const strong = document.createElement('strong');
         strong.textContent = 'Coach Feedback: ';
         fbDiv.appendChild(strong);
@@ -300,8 +266,6 @@ export function setupAISpellingFeedback(signal) {
   const closeBtn = document.getElementById('ai-feedback-close');
   if (!fbRow) return;
 
-  makeElementDraggable(fbRow);
-
   if (closeBtn) {
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -310,4 +274,3 @@ export function setupAISpellingFeedback(signal) {
   }
 }
 
-export { resetCardScope };

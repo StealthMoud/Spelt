@@ -11,6 +11,11 @@ export function populateBackFace(card) {
   document.getElementById('back-word-display').textContent = card.word;
   document.getElementById('back-definition-display').textContent = card.definition || '';
   
+  const efEl = document.getElementById('back-card-ef');
+  if (efEl) efEl.textContent = card.ef ? Number(card.ef).toFixed(2) : '2.50';
+  const lapsesEl = document.getElementById('back-card-lapses');
+  if (lapsesEl) lapsesEl.textContent = card.totalErrors || 0;
+  
   const posDisplay = document.getElementById('back-part-of-speech-display');
   if (posDisplay) {
     posDisplay.textContent = card.partOfSpeech || 'unknown';

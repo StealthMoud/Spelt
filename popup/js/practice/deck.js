@@ -5,12 +5,16 @@ import { populateBackFace } from './actions.js';
 import { populateFrontFace } from './front_face.js';
 import { setupAIHintButton, setupBackAIHintButton, setupAIWritingPractice, setupAISpellingFeedback, triggerSessionSummary, resetCardScope } from './ai_panels.js';
 
+let initialTotalDue = 0;
+
 export async function loadPracticeDeck() {
   refreshReviewedWordDay();
   const words = await getWords();
   const mode = getPracticeMode();
   const reviewedSet = new Set(words.filter(w => hasReviewedWord(w.id, mode)).map(w => w.id));
-  setDueCards(selectDueCards(words, mode, { excludeIds: reviewedSet }));
+  const due = selectDueCards(words, mode, { excludeIds: reviewedSet });
+  setDueCards(due);
+  initialTotalDue = due.length;
   getOnDeckUpdated()?.(); showPracticeCard();
 }
 
@@ -19,9 +23,47 @@ export function showPracticeCard() {
   const emptyEl = document.getElementById('popup-deck-empty-state');
   const spellInput = document.getElementById('spelling-input');
   const dueCards = getDueCards();
+  const mode = getPracticeMode();
+
+  // Update mode description
+  const descEl = document.getElementById('practice-mode-description');
+  if (descEl) {
+    descEl.textContent = mode === 'recall'
+      ? 'Recall: View word, test memory, then reveal answer.'
+      : 'Spelling: Hear audio clues and type the exact spelling.';
+  }
+
+  // Update session progress bar
+  const fillEl = document.getElementById('practice-progress-fill');
+  if (fillEl) {
+    const reviewed = initialTotalDue > 0 ? Math.max(0, initialTotalDue - dueCards.length) : 0;
+    const pct = initialTotalDue > 0 ? Math.min(100, Math.round((reviewed / initialTotalDue) * 100)) : 100;
+    fillEl.style.width = `${pct}%`;
+  }
 
   if (dueCards.length === 0) {
     cardEl.classList.add('hidden'); emptyEl.classList.remove('hidden');
+    
+    // 3-state empty state differentiation
+    getWords().then(words => {
+      const titleEl = document.getElementById('empty-state-title');
+      const msgEl = document.getElementById('empty-state-message');
+      if (!titleEl || !msgEl) return;
+      if (words.length === 0) {
+        titleEl.textContent = 'Vault Empty!';
+        msgEl.textContent = 'Add words in Sandbox to start practicing.';
+      } else {
+        const hasModeWords = words.some(w => (w.practiceType || 'spelling') === mode || (w.practiceType || 'spelling') === 'both');
+        if (!hasModeWords) {
+          titleEl.textContent = 'No Cards for This Mode!';
+          msgEl.textContent = 'No words saved for this practice mode yet. Add words or switch mode.';
+        } else {
+          titleEl.textContent = 'Deck Fully Reviewed!';
+          msgEl.textContent = 'You cleared all scheduled reviews for today!';
+        }
+      }
+    });
+
     triggerSessionSummary();
     return;
   }
@@ -33,25 +75,9 @@ export function showPracticeCard() {
   // Abort previous card's scoped listeners and create fresh scope
   const signal = resetCardScope();
 
-  // Reset AI hint and feedback bubbles
-  const hintBubble = document.getElementById('ai-hint-bubble');
-  if (hintBubble) hintBubble.classList.add('hidden');
-  const backHintBubble = document.getElementById('back-ai-hint-bubble');
-  if (backHintBubble) {
-    backHintBubble.classList.add('hidden');
-    backHintBubble.style.top = 'auto';
-    backHintBubble.style.right = '14px';
-    backHintBubble.style.bottom = '74px';
-    backHintBubble.style.left = '14px';
-  }
-  const fbBubble = document.getElementById('ai-feedback-row');
-  if (fbBubble) {
-    fbBubble.classList.add('hidden');
-    fbBubble.style.top = 'auto';
-    fbBubble.style.right = '14px';
-    fbBubble.style.bottom = '74px';
-    fbBubble.style.left = '14px';
-  }
+  // Reset bottom sheet
+  const bottomSheet = document.getElementById('practice-bottom-sheet');
+  if (bottomSheet) bottomSheet.classList.add('hidden');
 
   const card = dueCards[0];
 
