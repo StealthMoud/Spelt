@@ -21,6 +21,15 @@
             </select>
           </div>
           <div class="settings-block">
+            <strong>Display & Font Scaling</strong>
+            <p>Adjust text scaling for all interface text.</p>
+            <div class="font-resizer-controls">
+              <button id="font-decrease-btn" class="icon-btn font-btn font-btn-sm" title="Decrease text size" aria-label="Decrease text size">A-</button>
+              <span id="font-scale-display" class="font-scale-display">100%</span>
+              <button id="font-increase-btn" class="icon-btn font-btn font-btn-lg" title="Increase text size" aria-label="Increase text size">A+</button>
+            </div>
+          </div>
+          <div class="settings-block">
             <strong>Gemini AI Keys Manager (Free Tier)</strong>
             <p>Connect multiple API keys. Spelt scans the strongest available text model first, then falls back by model and key when a pair is cooling down. Keys from the same Google project can still share quota. Get keys from <a href="https://aistudio.google.com/" target="_blank" class="link-primary">Google AI Studio</a>.</p>
             

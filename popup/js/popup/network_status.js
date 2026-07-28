@@ -1,6 +1,5 @@
 export function initNetworkStatus() {
   const statusDot = document.querySelector('.user-status-dot');
-  const userLabel = document.querySelector('.user-label');
   const sessionInfo = document.querySelector('.session-info');
   const offlineBanner = document.getElementById('offline-banner');
   const offlineBannerText = offlineBanner ? offlineBanner.querySelector('span') : null;
@@ -9,33 +8,33 @@ export function initNetworkStatus() {
 
   function updateNetworkStatus() {
     const isOnline = navigator.onLine;
-    if (statusDot && userLabel && sessionInfo) {
+    if (statusDot && sessionInfo) {
       statusDot.classList.remove('active', 'offline', 'connection-error');
       sessionInfo.classList.remove('offline', 'connection-error');
       if (offlineBanner) offlineBanner.classList.remove('connection-error', 'visible');
 
       if (!isOnline) {
         statusDot.classList.add('offline');
+        statusDot.title = 'Offline';
+        statusDot.setAttribute('aria-label', 'Offline');
         sessionInfo.classList.add('offline');
-        userLabel.textContent = 'Offline';
-        userLabel.style.color = 'var(--danger)';
         if (offlineBanner && offlineBannerText) {
           offlineBannerText.textContent = 'Offline mode. Dict lookup and translation unavailable.';
           offlineBanner.classList.add('visible');
         }
       } else if (hasConnectionError) {
         statusDot.classList.add('connection-error');
+        statusDot.title = 'Connection Error';
+        statusDot.setAttribute('aria-label', 'Connection Error');
         sessionInfo.classList.add('connection-error');
-        userLabel.textContent = 'Connection Error';
-        userLabel.style.color = 'var(--warning)';
         if (offlineBanner && offlineBannerText) {
           offlineBannerText.textContent = 'API fetch failed. Check your internet connection.';
           offlineBanner.classList.add('connection-error', 'visible');
         }
       } else {
         statusDot.classList.add('active');
-        userLabel.textContent = 'Local Profile';
-        userLabel.style.color = '';
+        statusDot.title = 'Online';
+        statusDot.setAttribute('aria-label', 'Online');
       }
     }
   }

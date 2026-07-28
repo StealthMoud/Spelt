@@ -11,7 +11,7 @@ export function initMoveable() {
       popoutBtn.addEventListener('click', () => {
         chrome.storage?.local.get(['spelt_popup_width', 'spelt_popup_height'], (res) => {
           const width = res.spelt_popup_width || 360;
-          const height = res.spelt_popup_height || 530;
+          const height = res.spelt_popup_height || 600;
           chrome.windows.create({
             url: chrome.runtime.getURL('dist/popup.html'),
             type: 'popup',
@@ -39,16 +39,21 @@ export function initMoveable() {
       const startLeft = win.left;
       const startTop = win.top;
 
+      let rafId = null;
       function onMouseMove(moveEvent) {
         const dx = moveEvent.screenX - startScreenX;
         const dy = moveEvent.screenY - startScreenY;
-        chrome.windows.update(win.id, {
-          left: startLeft + dx,
-          top: startTop + dy
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          chrome.windows.update(win.id, {
+            left: startLeft + dx,
+            top: startTop + dy
+          });
         });
       }
 
       function onMouseUp() {
+        if (rafId) cancelAnimationFrame(rafId);
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
       }

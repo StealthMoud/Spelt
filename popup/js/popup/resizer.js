@@ -18,21 +18,13 @@ export function initResizer() {
     const savedH = res.spelt_popup_height;
 
     chrome.windows?.getCurrent((win) => {
-      const isDetached = win && win.type === 'popup';
+      const isStandalonePopup = win && win.type === 'popup';
 
-      if (!isDetached) {
-        // Standard dropdown popup
-        // Show all 8 resizer handles (edges and corners)
-        handles.forEach(h => {
-          h.classList.remove('hidden');
-        });
+      if (isStandalonePopup) {
+        // Standalone popup window — show handles for custom resizing
+        handles.forEach(h => h.classList.remove('hidden'));
 
-        // Apply saved or default dimensions
-        const initW = savedW ? Math.max(360, Math.min(800, savedW)) : 360;
-        const initH = savedH ? Math.max(400, Math.min(600, savedH)) : 530;
-        setStyles(`${initW}px`, `${initH}px`, '800px', '600px');
-
-        // Setup drag-to-resize handlers for standard popup
+        // Setup drag-to-resize handlers
         handles.forEach(h => {
           h.addEventListener('mousedown', (e) => {
             e.preventDefault();
@@ -40,17 +32,18 @@ export function initResizer() {
             startX = e.clientX;
             startY = e.clientY;
             startW = document.documentElement.offsetWidth || 360;
-            startH = document.documentElement.offsetHeight || 530;
+            startH = document.documentElement.offsetHeight || 600;
             h.classList.add('dragging');
             document.addEventListener('mousemove', dragDropdown);
             document.addEventListener('mouseup', stopDropdown);
           });
         });
       } else {
-        // Detached standalone window
-        // OS handles native window resizing, so we hide our custom resizer handles
+        // Browser action dropdown popup — Chrome auto-sizes from content and ignores custom drag handles
         handles.forEach(h => h.classList.add('hidden'));
-        setStyles('100%', '100%', 'none', 'none');
+        const initW = savedW ? Math.max(360, Math.min(800, savedW)) : 360;
+        const initH = savedH ? Math.max(400, Math.min(600, savedH)) : 600;
+        setStyles(`${initW}px`, `${initH}px`, '800px', '600px');
       }
     });
   });
