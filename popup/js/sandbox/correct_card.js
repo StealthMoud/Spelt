@@ -2,6 +2,7 @@ import { getWords, translateWord, enrichWord, getFallbackExample, getStored, isG
 import { closeBtnHtml, renderAudioButtons, extractExample } from './helpers.js';
 import { showConfirm } from '../vault/confirm.js';
 import { escapeHtml } from '../../../shared/dom.js';
+import { getLanguageName } from '../../../src/core/languages.js';
 import { buildEnrichmentPrompt } from '../../../shared/ai/prompts.js';
 
 export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
@@ -177,19 +178,7 @@ export async function handleAiEnhance(btn, reloadVaultListCallback) {
 
   try {
     const targetLang = await getStored('spelt_target_lang') || 'fa';
-    let targetLangName = 'Farsi (Persian)';
-    if (targetLang === 'es') targetLangName = 'Spanish';
-    else if (targetLang === 'fr') targetLangName = 'French';
-    else if (targetLang === 'de') targetLangName = 'German';
-    else if (targetLang === 'it') targetLangName = 'Italian';
-    else if (targetLang === 'pt') targetLangName = 'Portuguese';
-    else if (targetLang === 'ru') targetLangName = 'Russian';
-    else if (targetLang === 'ar') targetLangName = 'Arabic';
-    else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
-    else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
-    else if (targetLang === 'ja') targetLangName = 'Japanese';
-    else if (targetLang === 'ko') targetLangName = 'Korean';
-    else if (targetLang === 'tr') targetLangName = 'Turkish';
+    const targetLangName = getLanguageName(targetLang);
 
     const prompt = buildEnrichmentPrompt(word, { definition: def, transcription: ipa, partOfSpeech: pos, translation, level, example }, targetLangName);
 

@@ -44,18 +44,24 @@ if (!fs.existsSync(docsPath)) {
   await page.route('**/generativelanguage.googleapis.com/**', async (route) => {
     const url = route.request().url();
     console.log(`[Mock API] Intercepted Gemini: ${url}`);
-    if (url.includes(':generateContent')) {
+    const MOCK_HINT = 'Visual Mnemonic: Cereal is eaten from a bowl (which has a C shape). Connect the C in Cereal to the shape of the bowl.';
+
+    if (url.includes(':streamGenerateContent')) {
+      // Server-sent events, matching the shape askGeminiTextStream parses.
+      const frame = (text) => `data: ${JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] })}\n\n`;
+      const words = MOCK_HINT.split(' ');
+      const mid = Math.ceil(words.length / 2);
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: frame(words.slice(0, mid).join(' ') + ' ') + frame(words.slice(mid).join(' '))
+      });
+    } else if (url.includes(':generateContent')) {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          candidates: [{
-            content: {
-              parts: [{
-                text: 'Visual Mnemonic: Cereal is eaten from a bowl (which has a C shape). Connect the C in Cereal to the shape of the bowl.'
-              }]
-            }
-          }]
+          candidates: [{ content: { parts: [{ text: MOCK_HINT }] } }]
         })
       });
     } else {

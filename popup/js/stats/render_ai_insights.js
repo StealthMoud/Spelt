@@ -1,4 +1,5 @@
 import { isGeminiConfigured, askGemini } from '../../../shared/storage.js';
+import { buildStatsInsightsPrompt } from '../../../shared/ai/prompts.js';
 import { buildStatsHash } from '../../../src/core/stats_hash.js';
 
 const CACHE_KEY = 'spelt_stats_ai_insights';
@@ -221,22 +222,7 @@ async function triggerInsightsGeneration(words, streak, summary, cardStates, ses
 - Total Study Time: ${studyTimeMin} minutes
     `;
 
-    const prompt = `You are an expert language learning coach analyzing a student's spelling and vocabulary practice stats.
-Here are their performance statistics:
-${statsSummary}
-
-Generate a JSON object containing personalized, highly actionable coaching tips.
-The JSON object must have exactly these keys:
-{
-  "overview": "An HTML unordered list (<ul>) with 3-4 <li> elements containing high-impact bullet points of coaching insights. Focus on major themes. Keep the bullet points clean and use inline tags like <strong> and <em> for emphasis.",
-  "vocabulary": "A 1-2 sentence recommendation/insight for the student's vocabulary growth (analyzing CEFR distribution, learning velocity, and leeches). You can use <strong> and <em> for styling.",
-  "activity": "A 1-2 sentence recommendation/insight for building review consistency and routine (analyzing their streak, activity, and sessions). You can use <strong> and <em> for styling.",
-  "performance": "A 1-2 sentence recommendation/insight for improving speed and accuracy (analyzing response times and study metrics). You can use <strong> and <em> for styling."
-}
-
-Return ONLY the raw JSON object. Do not wrap it in markdown formatting or code blocks.`;
-
-    const dataObj = await askGemini(prompt);
+    const dataObj = await askGemini(buildStatsInsightsPrompt(statsSummary));
     
     // Distribute results to subtab panels
     distributeInsights(dataObj);
@@ -277,45 +263,54 @@ Return ONLY the raw JSON object. Do not wrap it in markdown formatting or code b
   }
 }
 
+/** Render a bullet list, or a paragraph, from model-supplied plain text. */
+function renderInsight(el, value) {
+  el.textContent = '';
+
+  const items = Array.isArray(value)
+    ? value.filter(v => typeof v === 'string' && v.trim())
+    : null;
+
+  if (items && items.length > 0) {
+    const ul = document.createElement('ul');
+    ul.className = 'ai-insight-list';
+    for (const item of items) {
+      const li = document.createElement('li');
+      li.textContent = item.trim();
+      ul.appendChild(li);
+    }
+    el.appendChild(ul);
+    return;
+  }
+
+  const p = document.createElement('p');
+  p.textContent = typeof value === 'string' ? value.trim() : String(value ?? '');
+  el.appendChild(p);
+}
+
+// The model's reply is untrusted text, so it is written with textContent and
+// the surrounding markup is built here. Never innerHTML a model response.
 function distributeInsights(dataObj) {
   if (!dataObj) return;
 
-  // Overview
-  if (dataObj.overview) {
-    const el = document.getElementById('stats-ai-insights-content');
-    if (el) el.innerHTML = dataObj.overview;
-    const panel = document.getElementById('stats-ai-insights-panel');
-    if (panel) panel.classList.remove('hidden');
-  }
+  const sections = [
+    { value: dataObj.overview, contentId: 'stats-ai-insights-content', panelId: 'stats-ai-insights-panel' },
+    { value: dataObj.vocabulary, contentId: 'stats-ai-vocab-content', panelId: 'stats-ai-vocab-panel' },
+    { value: dataObj.activity, contentId: 'stats-ai-activity-content', panelId: 'stats-ai-activity-panel' },
+    { value: dataObj.performance, contentId: 'stats-ai-perf-content', panelId: 'stats-ai-perf-panel' }
+  ];
 
-  // Vocabulary
-  const vocabPanel = document.getElementById('stats-ai-vocab-panel');
-  const vocabContent = document.getElementById('stats-ai-vocab-content');
-  if (vocabPanel && vocabContent && dataObj.vocabulary) {
-    vocabContent.innerHTML = dataObj.vocabulary;
-    vocabPanel.classList.remove('hidden');
-  } else if (vocabPanel) {
-    vocabPanel.classList.add('hidden');
-  }
+  for (const { value, contentId, panelId } of sections) {
+    const content = document.getElementById(contentId);
+    const panel = document.getElementById(panelId);
+    const hasValue = Array.isArray(value) ? value.length > 0 : Boolean(value);
 
-  // Activity
-  const actPanel = document.getElementById('stats-ai-activity-panel');
-  const actContent = document.getElementById('stats-ai-activity-content');
-  if (actPanel && actContent && dataObj.activity) {
-    actContent.innerHTML = dataObj.activity;
-    actPanel.classList.remove('hidden');
-  } else if (actPanel) {
-    actPanel.classList.add('hidden');
-  }
-
-  // Performance
-  const perfPanel = document.getElementById('stats-ai-perf-panel');
-  const perfContent = document.getElementById('stats-ai-perf-content');
-  if (perfPanel && perfContent && dataObj.performance) {
-    perfContent.innerHTML = dataObj.performance;
-    perfPanel.classList.remove('hidden');
-  } else if (perfPanel) {
-    perfPanel.classList.add('hidden');
+    if (content && hasValue) {
+      renderInsight(content, value);
+      panel?.classList.remove('hidden');
+    } else {
+      panel?.classList.add('hidden');
+    }
   }
 }
 

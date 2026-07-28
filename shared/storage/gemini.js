@@ -663,6 +663,23 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
   }
 }
 
+/**
+ * Build generationConfig from caller options.
+ *
+ * Gemini 2.5+ models reason before answering by default. For the short,
+ * well-specified prompts this extension sends (a mnemonic, a one-line
+ * correction) that thinking pass adds latency and burns output tokens without
+ * improving the answer, so callers can opt out with `thinking: false`.
+ * Models that predate thinking ignore the field.
+ */
+function buildGenerationConfig(options = {}) {
+  const config = {};
+  if (options.maxOutputTokens) config.maxOutputTokens = options.maxOutputTokens;
+  if (options.temperature !== undefined) config.temperature = options.temperature;
+  if (options.thinking === false) config.thinkingConfig = { thinkingBudget: 0 };
+  return Object.keys(config).length > 0 ? config : undefined;
+}
+
 function extractCandidateText(candidate) {
   if (!candidate || !candidate.content || !Array.isArray(candidate.content.parts)) {
     return '';
@@ -688,14 +705,10 @@ export async function askGemini(prompt, options = {}) {
     const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
     const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
 
+    const generationConfig = buildGenerationConfig(options);
     const result = await fetchWithFallback(keys, {
       contents: [{ parts: [{ text: prompt }] }],
-      ...(options.maxOutputTokens || options.temperature !== undefined ? {
-        generationConfig: {
-          ...(options.maxOutputTokens ? { maxOutputTokens: options.maxOutputTokens } : {}),
-          ...(options.temperature !== undefined ? { temperature: options.temperature } : {})
-        }
-      } : {})
+      ...(generationConfig ? { generationConfig } : {})
     }, modelTiers, true /* wantJson */);
 
     const data = await result.response.json();
@@ -744,15 +757,9 @@ export async function askGeminiText(prompt, options = {}) {
     const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
     const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
 
-    // Build body with optional generationConfig (maxOutputTokens, temperature, etc.)
-    const body = {
-      contents: [{ parts: [{ text: prompt }] }]
-    };
-    if (options.maxOutputTokens || options.temperature !== undefined) {
-      body.generationConfig = {};
-      if (options.maxOutputTokens) body.generationConfig.maxOutputTokens = options.maxOutputTokens;
-      if (options.temperature !== undefined) body.generationConfig.temperature = options.temperature;
-    }
+    const body = { contents: [{ parts: [{ text: prompt }] }] };
+    const generationConfig = buildGenerationConfig(options);
+    if (generationConfig) body.generationConfig = generationConfig;
 
     const result = await fetchWithFallback(keys, body, modelTiers, false /* wantJson */);
 
@@ -780,11 +787,8 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
   const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
 
   const body = { contents: [{ parts: [{ text: prompt }] }] };
-  if (options.maxOutputTokens || options.temperature !== undefined) {
-    body.generationConfig = {};
-    if (options.maxOutputTokens) body.generationConfig.maxOutputTokens = options.maxOutputTokens;
-    if (options.temperature !== undefined) body.generationConfig.temperature = options.temperature;
-  }
+  const generationConfig = buildGenerationConfig(options);
+  if (generationConfig) body.generationConfig = generationConfig;
 
   const badModels = await getBadModels();
   const cooldowns = await getCooldowns();
@@ -873,8 +877,16 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
         }
       }
 
+      const streamed = fullText.trim();
+      if (!streamed) {
+        // A 200 that yielded no usable chunk is a failed trial, not an answer.
+        // Throwing lets the loop try the next model and, failing that, lets the
+        // caller fall back to a non-streaming request instead of rendering ''.
+        throw new Error('Stream returned no content.');
+      }
+
       chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
-      return fullText.trim();
+      return streamed;
     } catch (err) {
       const status = err.status;
       const errMsg = err.apiMessage || err.message;

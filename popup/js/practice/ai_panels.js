@@ -39,6 +39,12 @@ async function mountHintPanel({ btnId }, card, signal) {
 
   hintBtn.classList.remove('hidden');
 
+  const renderHintLines = (text) => text
+    .split('\n')
+    .filter(l => l.trim())
+    .map(l => `<div dir="auto" class="ai-hint-line">${escapeHtml(l)}</div>`)
+    .join('');
+
   const handleHintRequest = async (forceRegen = false) => {
     const currentCard = card || peekCard();
     if (!currentCard) return;
@@ -51,17 +57,29 @@ async function mountHintPanel({ btnId }, card, signal) {
             const w = words.find(x => x.id === currentCard.id);
             if (w) delete w.aiHint;
           });
-        } catch {}
+        } catch { /* the in-memory reset above is enough to force a refetch */ }
       }
-      const hint = await generateHint(currentCard);
-      const formattedHint = hint.split('\n').filter(l => l.trim()).map(l => `<div dir="auto" class="ai-hint-line">${escapeHtml(l)}</div>`).join('');
-      openBottomSheet('AI Memory Hint', `
-        <div class="ai-sheet-body">
-          ${formattedHint}
-          <button type="button" id="ai-sheet-regen-btn" class="submit-btn btn-compact-auto text-mt-xs">Regenerate Hint</button>
-        </div>
-      `);
-      document.getElementById('ai-sheet-regen-btn')?.addEventListener('click', () => handleHintRequest(true));
+
+      // Paint each chunk as it arrives so the first words show immediately
+      // instead of waiting for the whole response.
+      const sheetContent = document.getElementById('sheet-content');
+      const hint = await generateHint(currentCard, (text) => {
+        if (sheetContent) sheetContent.innerHTML = renderHintLines(text);
+      });
+
+      // Always render the resolved text: a non-streaming fallback never fires
+      // the chunk callback, and without this the placeholder would remain.
+      if (sheetContent) sheetContent.innerHTML = renderHintLines(hint);
+
+      if (sheetContent) {
+        const regen = document.createElement('button');
+        regen.type = 'button';
+        regen.id = 'ai-sheet-regen-btn';
+        regen.className = 'submit-btn btn-compact-auto text-mt-xs';
+        regen.textContent = 'Regenerate Hint';
+        regen.addEventListener('click', () => handleHintRequest(true));
+        sheetContent.appendChild(regen);
+      }
     } catch (err) {
       openBottomSheet('AI Memory Hint', `<p class="text-danger">Could not generate hint: ${escapeHtml(err.message)}</p>`);
     }

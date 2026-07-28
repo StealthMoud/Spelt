@@ -1,4 +1,4 @@
-import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants } from '../../../shared/storage.js';
+import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants, getStored } from '../../../shared/storage.js';
 import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt, setLastSpellingResult } from './state.js';
 import { isAnswerCorrect } from './answer.js';
 import { renderAudioButtons } from './helpers.js';
@@ -6,6 +6,73 @@ import { isGeminiConfigured, generateMisspellingFeedbackStream } from './ai_help
 import { escapeHtml } from '../../../shared/dom.js';
 
 // ── Shared helpers ──────────────────────────────────────────────────
+
+/**
+ * Show the "AI Coach" button for a misspelling and wire it to stream feedback.
+ *
+ * When background AI is allowed, the request is prefired so the text is ready
+ * before the click. Otherwise it starts on click. Either way the button binds
+ * to the same streaming call, so the two paths differ only in start time.
+ */
+async function mountCoachButton(fbRow, fbText, card, typed) {
+  if (!(await isGeminiConfigured())) {
+    fbRow.classList.add('hidden');
+    return;
+  }
+
+  let text = '';
+  let failure = null;
+  let settled = false;
+  let onUpdate = null;
+  let request = null;
+
+  const start = () => generateMisspellingFeedbackStream(card, typed, (chunk) => {
+    text = chunk;
+    onUpdate?.(chunk);
+  }).then((final) => {
+    text = final;
+    settled = true;
+    return final;
+  }).catch((err) => {
+    failure = err;
+    settled = true;
+  });
+
+  const prefireAllowed = await getStored('spelt_allow_background_ai');
+  if (prefireAllowed) request = start();
+
+  fbRow.classList.remove('hidden');
+  fbText.textContent = '';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'ai-coach-trigger-btn';
+  const label = document.createElement('span');
+  label.textContent = 'AI Coach';
+  btn.appendChild(label);
+  fbText.appendChild(btn);
+
+  btn.addEventListener('click', () => {
+    btn.disabled = true;
+
+    if (failure) {
+      fbText.textContent = `Could not load feedback: ${failure.message}`;
+      return;
+    }
+    if (text) {
+      fbText.textContent = text;
+      if (!settled) onUpdate = (chunk) => { fbText.textContent = chunk; };
+      return;
+    }
+
+    label.textContent = 'Analysing...';
+    onUpdate = (chunk) => { fbText.textContent = chunk; };
+    (request || (request = start())).then(() => {
+      if (failure) fbText.textContent = `Could not load feedback: ${failure.message}`;
+      else if (text) fbText.textContent = text;
+    });
+  });
+}
 
 export function populateBackFace(card) {
   document.getElementById('back-word-display').textContent = card.word;
@@ -149,59 +216,20 @@ export function checkSpelling() {
   // Populate shared back face
   populateBackFace(card);
 
-  // Handle AI feedback — PREFIRE: start API call immediately on wrong answer,
-  // so response is ready by the time user clicks the button
+  // AI coaching for a wrong answer.
+  //
+  // Prefiring the request the moment the answer is wrong makes the button feel
+  // instant, but spends quota on every miss even when the user never asks for
+  // feedback. So it is gated on the same "allow background AI" setting that
+  // governs the other non-interactive calls. With prefire off, the request
+  // starts on click and streams, so the first words still arrive quickly.
   const fbRow = document.getElementById('ai-feedback-row');
   const fbText = document.getElementById('ai-feedback-text');
   if (fbRow && fbText) {
-    if (!isOk) {
-      isGeminiConfigured().then(configured => {
-        if (configured) {
-          // ── Prefire: start streaming NOW, before user clicks ──
-          let prefiredText = '';
-          let prefiredDone = false;
-          let prefiredError = null;
-          let liveCallback = null;
-
-          generateMisspellingFeedbackStream(card, typed, (text) => {
-            prefiredText = text;
-            if (liveCallback) liveCallback(text);
-          }).then(() => {
-            prefiredDone = true;
-          }).catch(err => {
-            prefiredError = err;
-          });
-
-          fbRow.classList.remove('hidden');
-          fbText.innerHTML = `<button type="button" class="ai-coach-trigger-btn"><span>AI Coach</span></button>`;
-          fbText.querySelector('.ai-coach-trigger-btn')?.addEventListener('click', (ev) => {
-            const btn = ev.currentTarget;
-            btn.disabled = true;
-
-            if (prefiredError) {
-              fbText.textContent = `Could not load feedback: ${prefiredError.message}`;
-              return;
-            }
-
-            if (prefiredText) {
-              // Already have text — show instantly
-              fbText.textContent = prefiredText;
-              if (!prefiredDone) {
-                liveCallback = (text) => { fbText.textContent = text; };
-              }
-            } else {
-              // API hasn't returned anything yet — show loading + wire live updates
-              btn.querySelector('span').textContent = 'Analyzing...';
-              btn.style.opacity = '0.6';
-              liveCallback = (text) => { fbText.textContent = text; };
-            }
-          });
-        } else {
-          fbRow.classList.add('hidden');
-        }
-      });
-    } else {
+    if (isOk) {
       fbRow.classList.add('hidden');
+    } else {
+      mountCoachButton(fbRow, fbText, card, typed);
     }
   }
 

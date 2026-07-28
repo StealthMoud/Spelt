@@ -1,3 +1,5 @@
+import { getLanguageName } from '../../../src/core/languages.js';
+import { buildEnrichmentPrompt } from '../../../shared/ai/prompts.js';
 import { 
   translateWord, 
   getFallbackExample,
@@ -246,23 +248,9 @@ export function registerAutofillListeners() {
 
     try {
       const targetLang = await getStored('spelt_target_lang');
-      let targetLangName = 'Farsi (Persian)';
-      if (targetLang === 'es') targetLangName = 'Spanish';
-      else if (targetLang === 'fr') targetLangName = 'French';
-      else if (targetLang === 'de') targetLangName = 'German';
-      else if (targetLang === 'it') targetLangName = 'Italian';
-      else if (targetLang === 'pt') targetLangName = 'Portuguese';
-      else if (targetLang === 'ru') targetLangName = 'Russian';
-      else if (targetLang === 'ar') targetLangName = 'Arabic';
-      else if (targetLang === 'fa') targetLangName = 'Farsi (Persian)';
-      else if (targetLang === 'zh') targetLangName = 'Chinese Simplified';
-      else if (targetLang === 'ja') targetLangName = 'Japanese';
-      else if (targetLang === 'ko') targetLangName = 'Korean';
-      else if (targetLang === 'tr') targetLangName = 'Turkish';
+      const targetLangName = getLanguageName(targetLang);
 
-      const prompt = `Word: "${word}". Provide JSON:
-{"definition":"English definition","transcription":"US / UK IPA (US first, e.g. /lɑːrdʒ/ (US) / /lɑːdʒ/ (UK))","partOfSpeech":"noun/verb/adjective/etc","translation":"${targetLangName} translation","level":"CEFR: A1/A2/B1/B2/C1/C2 or blank","example":"IELTS-level example sentence"}
-JSON only. No markdown.`;
+      const prompt = buildEnrichmentPrompt(word, {}, targetLangName);
 
       const aiData = await askGemini(prompt, { maxOutputTokens: 1024, temperature: 0.3 });
 

@@ -1,5 +1,6 @@
 import { getWords, askGemini, atomicUpdate } from '../shared/storage.js';
 import { getLanguageName } from '../src/core/languages.js';
+import { buildEnrichmentPrompt } from '../shared/ai/prompts.js';
 
 async function updateWordTranslation(wordId, targetLang) {
   const initialList = await getWords();
@@ -9,51 +10,7 @@ async function updateWordTranslation(wordId, targetLang) {
   const wordStr = card.word;
   const targetLangName = getLanguageName(targetLang);
 
-  const hasExistingData = card.definition || card.translation || card.example;
-  
-  let prompt;
-  if (hasExistingData) {
-    prompt = `You are a lexicographer helping a language student. Review and improve/clean the existing dictionary data for the word or phrase "${wordStr}".
-Here is the current stored data:
-{
-  "definition": "${(card.definition || '').replace(/"/g, '\\"')}",
-  "transcription": "${(card.transcription || '').replace(/"/g, '\\"')}",
-  "partOfSpeech": "${(card.partOfSpeech || '').replace(/"/g, '\\"')}",
-  "translation": "${(card.translation || '').replace(/"/g, '\\"')}",
-  "level": "${(card.level || '').replace(/"/g, '\\"')}",
-  "example": "${(card.example || '').replace(/"/g, '\\"')}"
-}
-
-Your task:
-1. Make the definition clean, concise, and easy to understand in English.
-2. Standardize transcription to clear UK/US IPA format (e.g. /iˈnɪɡ.mə/).
-3. Clean up the translation in ${targetLangName} (ensure it is contextual and accurate).
-4. Verify part of speech (noun, verb, phrasal verb, adjective, etc.).
-5. Assign or verify the correct CEFR level (A1, A2, B1, B2, C1, or C2).
-6. Improve the example sentence so it is a premium, natural academic/IELTS-style context sentence using the word.
-
-Respond ONLY with a JSON object matching this schema:
-{
-  "definition": "...",
-  "transcription": "...",
-  "partOfSpeech": "...",
-  "translation": "...",
-  "level": "...",
-  "example": "..."
-}`;
-  } else {
-    prompt = `You are a lexicographer helping a language student study the word/phrase: "${wordStr}".
-Provide the following details in a clean JSON format matching the schema:
-{
-  "definition": "definition of the word or phrase in English",
-  "transcription": "UK / US IPA transcription, e.g. /iˈnɪɡ.mə/",
-  "partOfSpeech": "e.g. noun, verb, adjective, adverb, phrasal verb, idiom",
-  "translation": "accurate context-aware translation in ${targetLangName}",
-  "level": "CEFR level: choose carefully from: A1, A2, B1, B2, C1, C2. Leave blank if none exists",
-  "example": "A high-quality IELTS study example sentence containing the word/phrase in context"
-}
-Respond ONLY with the JSON object. Do not include markdown code block ticks (\`\`\`json).`;
-  }
+  const prompt = buildEnrichmentPrompt(wordStr, card, targetLangName);
 
   const aiData = await askGemini(prompt);
 
