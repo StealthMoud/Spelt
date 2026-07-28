@@ -171,27 +171,30 @@
 
 /* Premium Pill Buttons (AI & Action Toggles) */
 .ai-sparkle-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 4px !important;
-  font-family: inherit !important;
-  font-size: 0.65rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.03em !important;
-  color: #c4b5fd !important;
-  background: linear-gradient(135deg, hsla(260, 60%, 55%, 0.15), hsla(260, 60%, 35%, 0.06)) !important;
-  border: 1px solid hsla(260, 50%, 65%, 0.3) !important;
-  border-radius: var(--radius-xl) !important;
-  padding: 3px 10px !important;
-  height: 22px !important;
-  box-sizing: border-box !important;
-  cursor: pointer !important;
-  transition: all var(--transition-fast) ease !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 hsla(260, 100%, 80%, 0.08) !important;
-  line-height: 1 !important;
-  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #c4b5fd;
+  background: linear-gradient(135deg, hsla(260, 60%, 55%, 0.15), hsla(260, 60%, 35%, 0.06));
+  border: 1px solid hsla(260, 50%, 65%, 0.3);
+  border-radius: var(--radius-xl);
+  padding: 3px 10px;
+  height: 22px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 hsla(260, 100%, 80%, 0.08);
+  line-height: 1;
+  margin: 0;
+}
+.ai-sparkle-btn.hidden {
+  display: none !important;
 }
 
 .ai-sparkle-btn:hover {

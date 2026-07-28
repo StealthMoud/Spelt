@@ -263,9 +263,9 @@ async function triggerInsightsGeneration(words, streak, summary, cardStates, ses
   }
 }
 
-/** Render a bullet list, or a paragraph, from model-supplied plain text. */
+/** Render styled insights safely, parsing allowable inline HTML markup (ul, li, strong, em). */
 function renderInsight(el, value) {
-  el.textContent = '';
+  el.replaceChildren();
 
   const items = Array.isArray(value)
     ? value.filter(v => typeof v === 'string' && v.trim())
@@ -276,16 +276,48 @@ function renderInsight(el, value) {
     ul.className = 'ai-insight-list';
     for (const item of items) {
       const li = document.createElement('li');
-      li.textContent = item.trim();
+      renderSafeHtml(li, item.trim());
       ul.appendChild(li);
     }
     el.appendChild(ul);
     return;
   }
 
-  const p = document.createElement('p');
-  p.textContent = typeof value === 'string' ? value.trim() : String(value ?? '');
-  el.appendChild(p);
+  const str = typeof value === 'string' ? value.trim() : String(value ?? '');
+  if (!str) return;
+
+  renderSafeHtml(el, str);
+}
+
+function renderSafeHtml(targetEl, htmlStr) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlStr, 'text/html');
+  const allowedTags = new Set(['UL', 'OL', 'LI', 'P', 'SPAN', 'STRONG', 'EM', 'B', 'I', 'BR', 'DIV']);
+
+  function sanitize(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return document.createTextNode(node.textContent);
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = node.tagName.toUpperCase();
+      if (!allowedTags.has(tag)) {
+        return document.createTextNode(node.textContent);
+      }
+      const newEl = document.createElement(tag.toLowerCase());
+      if (tag === 'UL') newEl.className = 'ai-insight-list';
+      for (const child of node.childNodes) {
+        const cleanChild = sanitize(child);
+        if (cleanChild) newEl.appendChild(cleanChild);
+      }
+      return newEl;
+    }
+    return null;
+  }
+
+  for (const child of doc.body.childNodes) {
+    const clean = sanitize(child);
+    if (clean) targetEl.appendChild(clean);
+  }
 }
 
 // The model's reply is untrusted text, so it is written with textContent and

@@ -34,10 +34,9 @@ async function mountHintPanel({ btnId }, card, signal) {
   const isConfigured = await isGeminiConfigured();
   if (!isConfigured) {
     hintBtn.classList.add('hidden');
-    return;
+  } else {
+    hintBtn.classList.remove('hidden');
   }
-
-  hintBtn.classList.remove('hidden');
 
   const renderHintLines = (text) => text
     .split('\n')
@@ -46,6 +45,20 @@ async function mountHintPanel({ btnId }, card, signal) {
     .join('');
 
   const handleHintRequest = async (forceRegen = false) => {
+    const freshConfigured = await isGeminiConfigured();
+    if (!freshConfigured) {
+      openBottomSheet('AI Memory Hint', `
+        <p class="text-warning font-weight-600">Gemini API Key Required</p>
+        <p class="text-muted-xs text-mt-xs">Please add your Gemini API Key in Settings to use AI Memory Hints.</p>
+        <button type="button" id="hint-go-settings-btn" class="submit-btn btn-compact-auto text-mt-xs">Open Settings</button>
+      `);
+      document.getElementById('hint-go-settings-btn')?.addEventListener('click', () => {
+        document.getElementById('practice-bottom-sheet')?.classList.add('hidden');
+        document.querySelector('.tab-btn[data-tab="settings-tab"]')?.click();
+      });
+      return;
+    }
+
     const currentCard = card || peekCard();
     if (!currentCard) return;
     openBottomSheet('AI Memory Hint', `<p class="text-primary-light">${forceRegen ? 'Regenerating...' : 'Asking AI Coach...'}</p>`);
