@@ -5,14 +5,53 @@ import { renderMisspellingCard } from './misspell_card.js';
 import { showManualCorrectionForm } from './manual_form.js';
 import { escapeHtml } from '../../../shared/dom.js';
 
+const historyList = [];
+
+export function pushSandboxHistory(word) {
+  if (!word) return;
+  const clean = word.trim();
+  const idx = historyList.indexOf(clean);
+  if (idx !== -1) historyList.splice(idx, 1);
+  historyList.unshift(clean);
+  if (historyList.length > 10) historyList.pop();
+
+  const container = document.getElementById('sandbox-history-container');
+  if (container) {
+    if (historyList.length > 0) {
+      container.classList.remove('hidden');
+      container.innerHTML = historyList.map(w =>
+        `<button type="button" class="sandbox-history-chip" data-word="${escapeHtml(w)}">${escapeHtml(w)}</button>`
+      ).join('');
+    } else {
+      container.classList.add('hidden');
+    }
+  }
+}
+
+function renderLoadingSkeleton(stepText) {
+  const feedbackMsg = document.getElementById('feedback-msg');
+  if (!feedbackMsg) return;
+  feedbackMsg.classList.remove('hidden');
+  feedbackMsg.innerHTML = `
+    <div class="sandbox-result-card">
+      <p class="text-primary-light" style="font-size: 0.72rem; margin: 0 0 6px;">${escapeHtml(stepText)}</p>
+      <div class="sandbox-skeleton-line" style="width: 60%;"></div>
+      <div class="sandbox-skeleton-line" style="width: 90%;"></div>
+      <div class="sandbox-skeleton-line" style="width: 40%;"></div>
+    </div>
+  `;
+}
+
 export async function handleVerify(reloadVaultListCallback) {
   const wordInput = document.getElementById('word-input');
   const feedbackMsg = document.getElementById('feedback-msg');
   const word = wordInput?.value.trim();
   if (!word) return;
+  
+  pushSandboxHistory(word);
+
   try {
-    feedbackMsg.classList.remove('hidden');
-    feedbackMsg.innerHTML = '<p class="text-primary-light">Verifying spelling...</p>';
+    renderLoadingSkeleton('Checking primary dictionary…');
     const lowerWord = word.toLowerCase();
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`);
     if (response.ok) {
@@ -20,6 +59,7 @@ export async function handleVerify(reloadVaultListCallback) {
       logSandboxActivity('correct').catch(() => {});
       await handleCorrectSpelling(data[0], word, reloadVaultListCallback);
     } else {
+      renderLoadingSkeleton('Checking secondary sources & pronunciations…');
       let isWordValid = false;
       let cambridgeData = null;
       try {
@@ -45,6 +85,7 @@ export async function handleVerify(reloadVaultListCallback) {
         logSandboxActivity('correct').catch(() => {});
         await handleCorrectSpelling(mockApiData, word, reloadVaultListCallback);
       } else {
+        renderLoadingSkeleton('Finding spelling suggestions…');
         const suggestions = await findSuggestions(lowerWord);
         if (suggestions.length > 0) {
           logSandboxActivity('misspelled').catch(() => {});

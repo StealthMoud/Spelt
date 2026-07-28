@@ -10,6 +10,18 @@ export function registerSandboxListeners(reloadVaultList, loadPracticeDeck) {
     e.preventDefault(); await handleVerify(reloadVaultList);
   });
 
+  document.getElementById('sandbox-history-container')?.addEventListener('click', async (e) => {
+    const chip = e.target.closest('.sandbox-history-chip');
+    if (chip) {
+      const word = chip.getAttribute('data-word');
+      const input = document.getElementById('word-input');
+      if (input && word) {
+        input.value = word;
+        await handleVerify(reloadVaultList);
+      }
+    }
+  });
+
   document.getElementById('word-input')?.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
       const inputVal = e.target.value.trim();

@@ -2,11 +2,27 @@
       <section id="sandbox-tab" class="tab-pane active">
         <div class="quick-add-section">
           <h3>Spellcheck Sandbox</h3>
+          <p id="sandbox-empty-hint" class="sandbox-empty-hint">Type any word to verify spelling, definitions, and IPA pronunciation, or select text on web pages and press <kbd>Alt+S</kbd>.</p>
+          <div id="sandbox-history-container" class="sandbox-history-container hidden" aria-label="Recent checks history"></div>
           <form id="quick-add-form">
             <div class="input-wrapper">
               <input type="text" id="word-input" class="field text-center-bold" placeholder="Type word & press Enter to verify..." autocomplete="off" required autofocus aria-label="Word to verify">
             </div>
           </form>
-          <div id="feedback-msg" class="feedback-text hidden"></div>
+          <div id="feedback-msg" class="feedback-text hidden" aria-live="polite"></div>
         </div>
+
+        <template id="sandbox-result-template">
+          <div class="sandbox-result-card">
+            <button type="button" class="feedback-close-btn" aria-label="Close result">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="sandbox-result-header">
+              <h4 class="sandbox-result-title"></h4>
+              <p class="sandbox-result-word"></p>
+            </div>
+            <div class="sandbox-result-body"></div>
+            <div class="sandbox-result-actions"></div>
+          </div>
+        </template>
       </section>

@@ -58,42 +58,26 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
     } else {
       subtext = `
         <div class="sandbox-action-wrap">
-          <button type="button" class="submit-btn add-to-vault-btn spelling-add-btn btn-compact-ai btn-add-green" 
-            data-word="${word.replace(/"/g, '&quot;')}" 
-            data-definition="${def.replace(/"/g, '&quot;')}" 
-            data-transcription="${ipa.replace(/"/g, '&quot;')}" 
-            data-part-of-speech="${partOfSpeech.replace(/"/g, '&quot;')}" 
-            data-example="${example.replace(/"/g, '&quot;')}" 
-            data-translation="${translation.replace(/"/g, '&quot;')}"
-            data-level="${wordLevel.replace(/"/g, '&quot;')}"
-            data-practice-type="spelling">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>+ Spelling</span>
-          </button>
-          <button type="button" class="submit-btn add-to-vault-btn recall-add-btn btn-compact-ai btn-add-blue" 
-            data-word="${word.replace(/"/g, '&quot;')}" 
-            data-definition="${def.replace(/"/g, '&quot;')}" 
-            data-transcription="${ipa.replace(/"/g, '&quot;')}" 
-            data-part-of-speech="${partOfSpeech.replace(/"/g, '&quot;')}" 
-            data-example="${example.replace(/"/g, '&quot;')}" 
-            data-translation="${translation.replace(/"/g, '&quot;')}"
-            data-level="${wordLevel.replace(/"/g, '&quot;')}"
-            data-practice-type="recall">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>+ Recall</span>
-          </button>
-          <button type="button" class="submit-btn add-to-vault-btn both-add-btn btn-compact-ai btn-add-purple" 
-            data-word="${word.replace(/"/g, '&quot;')}" 
-            data-definition="${def.replace(/"/g, '&quot;')}" 
-            data-transcription="${ipa.replace(/"/g, '&quot;')}" 
-            data-part-of-speech="${partOfSpeech.replace(/"/g, '&quot;')}" 
-            data-example="${example.replace(/"/g, '&quot;')}" 
-            data-translation="${translation.replace(/"/g, '&quot;')}"
-            data-level="${wordLevel.replace(/"/g, '&quot;')}"
-            data-practice-type="both">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>+ Both</span>
-          </button>
+          <div class="sandbox-add-group">
+            <select class="field select-input sandbox-add-select" id="sandbox-add-type-select" aria-label="Select Practice Mode">
+              <option value="spelling">+ Spelling</option>
+              <option value="recall">+ Recall</option>
+              <option value="both">+ Both</option>
+            </select>
+            <button type="button" class="submit-btn add-to-vault-btn spelling-add-btn btn-compact-ai btn-add-green" 
+              id="sandbox-primary-add-btn"
+              data-word="${word.replace(/"/g, '&quot;')}" 
+              data-definition="${def.replace(/"/g, '&quot;')}" 
+              data-transcription="${ipa.replace(/"/g, '&quot;')}" 
+              data-part-of-speech="${partOfSpeech.replace(/"/g, '&quot;')}" 
+              data-example="${example.replace(/"/g, '&quot;')}" 
+              data-translation="${translation.replace(/"/g, '&quot;')}"
+              data-level="${wordLevel.replace(/"/g, '&quot;')}"
+              data-practice-type="spelling">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add</span>
+            </button>
+          </div>
           ${isAiConfigured ? `
             <button type="button" class="submit-btn sandbox-ai-enhance-btn btn-compact-ai btn-ai-purple" 
               data-word="${word.replace(/"/g, '&quot;')}" 

@@ -107,6 +107,10 @@ export async function handleFeedbackClick(e, reloadVaultList, loadPracticeDeck) 
 
   const addToVaultBtn = e.target.closest('.add-to-vault-btn');
   if (addToVaultBtn) {
+    const typeSelect = document.getElementById('sandbox-add-type-select');
+    if (typeSelect) {
+      addToVaultBtn.setAttribute('data-practice-type', typeSelect.value);
+    }
     await handleAddToVault(addToVaultBtn, reloadVaultList, loadPracticeDeck); return;
   }
 
