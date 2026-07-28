@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const extensionPath = path.resolve(__dirname);
-const docsPath = path.resolve(__dirname, 'docs');
+const extensionPath = path.resolve(__dirname, '..');
+const docsPath = path.resolve(__dirname, '..', 'docs');
 
 if (!fs.existsSync(docsPath)) {
   fs.mkdirSync(docsPath, { recursive: true });
@@ -41,20 +41,34 @@ if (!fs.existsSync(docsPath)) {
 
   // Mock Gemini API responses (Mnemonic hint generation)
   await page.route('**/generativelanguage.googleapis.com/**', async (route) => {
-    console.log(`[Mock API] Intercepted Gemini: ${route.request().url()}`);
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        candidates: [{
-          content: {
-            parts: [{
-              text: 'Visual Mnemonic: Cereal is eaten from a bowl (which has a C shape). Connect the C in Cereal to the shape of the bowl.'
-            }]
-          }
-        }]
-      })
-    });
+    const url = route.request().url();
+    console.log(`[Mock API] Intercepted Gemini: ${url}`);
+    if (url.includes(':generateContent')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          candidates: [{
+            content: {
+              parts: [{
+                text: 'Visual Mnemonic: Cereal is eaten from a bowl (which has a C shape). Connect the C in Cereal to the shape of the bowl.'
+              }]
+            }
+          }]
+        })
+      });
+    } else {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          models: [
+            { name: 'models/gemini-2.5-flash', supportedGenerationMethods: ['generateContent'] },
+            { name: 'models/gemini-1.5-flash', supportedGenerationMethods: ['generateContent'] }
+          ]
+        })
+      });
+    }
   });
 
   // Mock Dictionary API - "cereal"
@@ -136,7 +150,8 @@ if (!fs.existsSync(docsPath)) {
   await page.evaluate(() => {
     return new Promise((resolve) => {
       chrome.storage.local.set({
-        spelt_gemini_key: 'test-key',
+        spelt_gemini_key: 'AIzaSyTestKeyForScreenshots',
+        spelt_gemini_keys: ['AIzaSyTestKeyForScreenshots'],
         spelt_gemini_model: 'models/gemini-2.5-flash',
         spelt_gemini_models_list: ['models/gemini-2.5-flash'],
         spelt_target_lang: 'es',
@@ -309,17 +324,15 @@ if (!fs.existsSync(docsPath)) {
   console.log('Opening back face AI Mnemonic Hint...');
   await page.click('#back-ai-hint-btn');
   
-  // Wait for Gemini mock response to load and show up in the hint bubble
   await page.waitForFunction(() => {
-    const el = document.getElementById('back-ai-hint-bubble');
-    const txt = document.getElementById('back-ai-hint-text');
-    return el && window.getComputedStyle(el).display === 'block' && txt && txt.textContent !== '' && !txt.textContent.includes('Asking AI Coach');
+    const el = document.getElementById('practice-bottom-sheet');
+    return el && !el.classList.contains('hidden');
   }, { timeout: 10000 });
 
   console.log('Capturing practice back card with AI Mnemonic hint...');
   await adjustViewport();
   await page.screenshot({ path: path.join(docsPath, 'screenshot-practice-result.png') });
-  await page.click('#back-ai-hint-close'); // Hide hint bubble
+  await page.click('#sheet-close-btn'); // Hide bottom sheet
 
   // 6. Word Vault Screen
   console.log('Capturing word vault list...');

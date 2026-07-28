@@ -70,6 +70,7 @@
 .translate-example-btn.active, .play-example-btn.active {
   border-color: var(--primary);
   color: var(--primary-light);
+  background: hsla(155, 65%, 48%, 0.1);
 }
 
 .field option {
@@ -332,9 +333,6 @@
   }
 }
 
-
-background: hsla(155, 65%, 48%, 0.1);
-}
 .translate-example-btn svg, .play-example-btn svg {
   width: 12px;
   height: 12px;

@@ -119,6 +119,12 @@ export async function syncPracticeDeck() {
     const signal = resetCardScope();
     const freshCard = fresh.find(w => w.id === newActiveId);
     if (freshCard) {
+      // resetCardScope aborted the AI panel listeners, so re-mount them here
+      // too — otherwise the hint/writing buttons go dead after any sync.
+      setupAIHintButton(freshCard, signal);
+      setupBackAIHintButton(freshCard, signal);
+      setupAIWritingPractice(freshCard, signal);
+      setupAISpellingFeedback(signal);
       populateFrontFace(freshCard, signal);
       populateBackFace(freshCard);
     }

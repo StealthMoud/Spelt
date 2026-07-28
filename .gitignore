@@ -4,3 +4,4 @@
 .agents/
 node_modules/
 dist/
+scripts/.chrome-profile*/
