@@ -13,7 +13,8 @@ export function initMoveable() {
           url: chrome.runtime.getURL('dist/popup.html#popout'),
           type: 'popup',
           width: 580,
-          height: 680
+          height: 680,
+          state: 'normal'
         });
         window.close();
       });

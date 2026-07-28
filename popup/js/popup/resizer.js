@@ -10,11 +10,27 @@ export function initResizer() {
   if (isStandalone) {
     document.documentElement.classList.add('standalone');
     document.body.classList.add('standalone');
-    chrome.windows?.getCurrent((win) => {
-      if (win && win.type === 'popup') {
-        chrome.windows.update(win.id, { width: 580, height: 680 });
-      }
-    });
+
+    const enforceCompactWindow = () => {
+      chrome.windows?.getCurrent((win) => {
+        if (!win || win.type !== 'popup') return;
+        if (win.state === 'fullscreen' || win.state === 'maximized') {
+          chrome.windows.update(win.id, { state: 'normal', width: 580, height: 680 });
+        } else if (win.width > 620 || win.height > 720) {
+          chrome.windows.update(win.id, { width: 580, height: 680 });
+        }
+      });
+    };
+
+    enforceCompactWindow();
+
+    if (chrome.windows?.onBoundsChanged) {
+      chrome.windows.onBoundsChanged.addListener((win) => {
+        if (win && win.type === 'popup') enforceCompactWindow();
+      });
+    }
+
+    window.addEventListener('resize', enforceCompactWindow);
   }
   handles.forEach(h => h.classList.add('hidden'));
 }
