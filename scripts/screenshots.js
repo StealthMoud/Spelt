@@ -20,6 +20,7 @@ if (!fs.existsSync(docsPath)) {
   const context = await chromium.launchPersistentContext(userDataDir, {
     headless: false,
     viewport: { width: 360, height: 530 },
+    deviceScaleFactor: 2,
     args: [
       `--disable-extensions-except=${extensionPath}`,
       `--load-extension=${extensionPath}`,
@@ -245,7 +246,8 @@ if (!fs.existsSync(docsPath)) {
 
   // Helper to override HTML width/height constraints and resize viewport to fit content without scrolling
   const adjustViewport = async () => {
-    await page.waitForTimeout(300); // Allow transitions to finish
+    await page.evaluate(() => document.fonts?.ready);
+    await page.waitForTimeout(600); // Allow all CSS spring transitions and animations to finish
     const bodyHeight = await page.evaluate(() => {
       // Temporarily expand body height styles for taking a full-size clean screenshot
       document.documentElement.style.height = 'auto';
@@ -262,7 +264,7 @@ if (!fs.existsSync(docsPath)) {
     });
     console.log(`Resizing viewport to 360x${Math.max(530, bodyHeight)}`);
     await page.setViewportSize({ width: 360, height: Math.max(530, bodyHeight) });
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(300);
   };
 
   // 1. Default Sandbox Screen
