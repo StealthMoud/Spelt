@@ -1,5 +1,6 @@
 /* Header detailing and separator styling */
 .popup-header {
+  flex-shrink: 0;
   padding: 12px 16px 8px;
   background: linear-gradient(180deg, hsla(155, 12%, 8%, 0.8) 0%, hsla(155, 12%, 4%, 0.95) 100%);
   backdrop-filter: blur(20px);
