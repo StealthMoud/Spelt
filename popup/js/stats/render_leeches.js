@@ -1,4 +1,5 @@
 import { isGeminiConfigured, askGeminiText } from '../../../shared/storage.js';
+import { buildHintPrompt } from '../../../shared/ai/prompts.js';
 
 export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVal) {
   const leechesList = document.getElementById('stats-leeches-list');
@@ -82,8 +83,8 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
                 coachBubble.classList.remove('hidden');
                 if (coachBubble.textContent.trim() === 'Loading coaching tips...') {
                   try {
-                    const prompt = `Word: "${w.word}". Common typos: "${uniqueTypos.join(', ') || 'none'}". Give a memorable spelling mnemonic or trick. 1-2 sentences. Plain text only.`;
-                    const tips = await askGeminiText(prompt, { maxOutputTokens: 150, temperature: 0.3 });
+                    const prompt = buildHintPrompt({ ...w, misspellings: uniqueTypos });
+                    const tips = await askGeminiText(prompt, { maxOutputTokens: 350, temperature: 0.3, thinking: false });
                     coachBubble.textContent = tips;
                   } catch (err) {
                     coachBubble.textContent = `Could not load coaching tips: ${err.message}`;
