@@ -1,24 +1,23 @@
 html.standalone, body.standalone {
   width: 100% !important;
   height: 100% !important;
+  max-width: 580px !important;
+  max-height: 680px !important;
+  margin: 0 auto !important;
 }
 
 .standalone .spelt-popup {
   width: 100% !important;
   height: 100% !important;
-  max-width: 640px !important;
-  max-height: 780px !important;
+  max-width: 580px !important;
+  max-height: 680px !important;
   margin: 0 auto !important;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 580px) {
   html, body {
-    width: 100% !important;
-    height: 100% !important;
-  }
-  .spelt-popup {
-    max-width: 640px !important;
-    max-height: 780px !important;
+    max-width: 580px !important;
+    max-height: 680px !important;
     margin: 0 auto !important;
   }
 
