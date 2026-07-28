@@ -487,14 +487,21 @@ const SCOPE_TRIAL = 'trial'; // just this pairing
 function classifyFailure(status, errorMessage) {
   const msg = (errorMessage || '').toLowerCase();
 
+  // Quota is billed per key, so the other keys are still worth trying.
   if (status === 429 || msg.includes('quota') || msg.includes('rate limit') || msg.includes('resource_exhausted')) {
     return { scope: SCOPE_KEY, transient: true };
   }
   if (status === 401 || status === 403) {
     return { scope: SCOPE_KEY, transient: false };
   }
-  if (!status || status >= 500 ||
-      msg.includes('high demand') || msg.includes('overloaded') || msg.includes('temporary')) {
+
+  // Serving capacity, unlike quota, is a property of the model — every key
+  // queues at the same door. Retrying the same overloaded model on the next key
+  // just buys the same 503 a second time, so drop a tier instead.
+  if (status === 503 || msg.includes('high demand') || msg.includes('overloaded')) {
+    return { scope: SCOPE_MODEL, transient: true };
+  }
+  if (!status || status >= 500 || msg.includes('temporary')) {
     return { scope: SCOPE_TRIAL, transient: true };
   }
   if (status === 404 || msg.includes('is not found') || msg.includes('not supported')) {
@@ -504,7 +511,7 @@ function classifyFailure(status, errorMessage) {
 }
 
 /** Record a failed trial so neither this request nor the next one repeats it. */
-function recordFailure(trial, error, deadModels, deadKeys) {
+function recordFailure(trial, error, { trials, deadModels, deadKeys }) {
   const status = error.status;
   const message = error.apiMessage || error.message;
   const { scope, transient } = classifyFailure(status, message);
@@ -515,7 +522,12 @@ function recordFailure(trial, error, deadModels, deadKeys) {
 
   if (transient) {
     const delay = status === 429 ? parseRetryDelay(message) : (status >= 500 ? 5000 : 10000);
-    runtime.cooldowns[trial.trialId] = Date.now() + delay;
+    const until = Date.now() + delay;
+    // A model-wide outage benches the model on every key, not just this one.
+    const affected = scope === SCOPE_MODEL
+      ? trials.filter(t => t.model === trial.model)
+      : [trial];
+    for (const t of affected) runtime.cooldowns[t.trialId] = until;
   } else {
     runtime.badModels.add(trial.trialId);
   }
@@ -786,7 +798,7 @@ async function runTrials(trials, execute, { claimed } = {}) {
       // A trial that lost the race or was cancelled says nothing about the
       // model or the key, so it must not leave a cooldown behind.
       if (error?.superseded || signal.aborted) throw error;
-      recordFailure(trial, error, deadModels, deadKeys);
+      recordFailure(trial, error, { trials, deadModels, deadKeys });
       failures.push(error);
       throw error;
     }

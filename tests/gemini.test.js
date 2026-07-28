@@ -147,6 +147,17 @@ test('a model the account cannot serve is not retried on every key', async () =>
   assert.equal(wasted.length, 1, `dead model was tried ${wasted.length} times`);
 });
 
+test('an overloaded model drops a tier instead of queueing on every key', async () => {
+  const gemini = await freshEngine();
+  plan = (record) => record.model === 'gemini-3.5-flash'
+    ? { status: 503, message: 'This model is currently experiencing high demand.' }
+    : { status: 200, text: 'next tier' };
+
+  assert.equal(await gemini.askGeminiText('hi'), 'next tier');
+  const queued = calls.filter(c => c.model === 'gemini-3.5-flash');
+  assert.equal(queued.length, 1, `hit the overloaded model ${queued.length} times`);
+});
+
 test('an exhausted key falls through to the next key on the same model', async () => {
   const gemini = await freshEngine();
   plan = (record) => record.key === '1111'

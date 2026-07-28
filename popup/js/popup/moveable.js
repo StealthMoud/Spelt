@@ -9,17 +9,13 @@ export function initMoveable() {
     } else if (popoutBtn) {
       popoutBtn.classList.remove('hidden');
       popoutBtn.addEventListener('click', () => {
-        chrome.storage?.local.get(['spelt_popup_width', 'spelt_popup_height'], (res) => {
-          const width = res.spelt_popup_width || 360;
-          const height = res.spelt_popup_height || 600;
-          chrome.windows.create({
-            url: chrome.runtime.getURL('dist/popup.html'),
-            type: 'popup',
-            width: width,
-            height: height
-          });
-          window.close();
+        chrome.windows?.create({
+          url: chrome.runtime.getURL('dist/popup.html#popout'),
+          type: 'popup',
+          width: 580,
+          height: 680
         });
+        window.close();
       });
     }
   });
