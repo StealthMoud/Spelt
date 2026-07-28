@@ -2,7 +2,7 @@ html.standalone, body.standalone {
   width: 100% !important;
   height: 100% !important;
   max-width: 580px !important;
-  max-height: 680px !important;
+  max-height: none !important;
   margin: 0 auto !important;
 }
 
@@ -10,14 +10,14 @@ html.standalone, body.standalone {
   width: 100% !important;
   height: 100% !important;
   max-width: 580px !important;
-  max-height: 680px !important;
+  max-height: none !important;
   margin: 0 auto !important;
 }
 
 @media (min-width: 580px) {
   html, body {
     max-width: 580px !important;
-    max-height: 680px !important;
+    max-height: none !important;
     margin: 0 auto !important;
   }
 

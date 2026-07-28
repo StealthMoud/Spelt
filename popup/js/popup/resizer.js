@@ -11,26 +11,26 @@ export function initResizer() {
     document.documentElement.classList.add('standalone');
     document.body.classList.add('standalone');
 
-    const enforceCompactWindow = () => {
+    const enforceCompactWidth = () => {
       chrome.windows?.getCurrent((win) => {
         if (!win || win.type !== 'popup') return;
-        if (win.state === 'fullscreen' || win.state === 'maximized') {
-          chrome.windows.update(win.id, { state: 'normal', width: 580, height: 680 });
-        } else if (win.width > 620 || win.height > 720) {
-          chrome.windows.update(win.id, { width: 580, height: 680 });
+        if (win.state === 'fullscreen') {
+          chrome.windows.update(win.id, { state: 'normal', width: 580, height: win.height || 680 });
+        } else if (win.width > 620) {
+          chrome.windows.update(win.id, { width: 580, height: win.height });
         }
       });
     };
 
-    enforceCompactWindow();
+    enforceCompactWidth();
 
     if (chrome.windows?.onBoundsChanged) {
       chrome.windows.onBoundsChanged.addListener((win) => {
-        if (win && win.type === 'popup') enforceCompactWindow();
+        if (win && win.type === 'popup') enforceCompactWidth();
       });
     }
 
-    window.addEventListener('resize', enforceCompactWindow);
+    window.addEventListener('resize', enforceCompactWidth);
   }
   handles.forEach(h => h.classList.add('hidden'));
 }
