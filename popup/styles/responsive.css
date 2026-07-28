@@ -1,5 +1,5 @@
-@media (min-width: 640px) {
-  body, .spelt-popup {
+@media (min-width: 560px) {
+  html, body, .spelt-popup {
     width: 100% !important;
     height: 100% !important;
     max-width: none !important;

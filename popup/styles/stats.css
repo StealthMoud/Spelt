@@ -2,8 +2,8 @@
 .stats-popout-btn { flex-shrink: 0; }
 .chart-empty-state { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.68rem; color: var(--text-muted); font-style: italic; }
 @media (min-width: 560px) {
-  #stats-tab { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .stats-header-bar { grid-column: 1 / -1; }
+  #stats-tab.active { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stats-header-bar, .stats-subtab-content { grid-column: 1 / -1; }
 }
 .stats-overview-row {
   display: grid;
