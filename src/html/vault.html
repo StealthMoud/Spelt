@@ -11,39 +11,16 @@
           </button>
         </div>
         <div class="vault-sort-row">
-          <!-- Custom Sort Dropdown -->
-          <div class="custom-select-wrapper select-wrapper flex-1" id="sort-field-custom-select">
-            <button type="button" class="field vault-sort-select custom-select-trigger select-trigger">
-              <span>A–Z</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron icon-svg-sm"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="custom-options select-options-box">
-              <div class="custom-option select-option-item selected" data-value="alpha">A–Z</div>
-              <div class="custom-option select-option-item" data-value="date">Date Added</div>
-              <div class="custom-option select-option-item" data-value="review">Next Review</div>
-            </div>
-            <select id="vault-sort-field" class="hidden" aria-label="Sort field">
+          <div class="flex-1">
+            <select id="vault-sort-field" class="field select-input" aria-label="Sort field">
               <option value="alpha">A — Z</option>
               <option value="date">Date Added</option>
               <option value="review">Next Review</option>
             </select>
           </div>
 
-          <!-- Custom Filter Dropdown -->
-          <div class="custom-select-wrapper select-wrapper flex-1" id="filter-status-custom-select">
-            <button type="button" class="field vault-sort-select custom-select-trigger select-trigger">
-              <span>All Words</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron icon-svg-sm"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="custom-options select-options-box">
-              <div class="custom-option select-option-item selected" data-value="all">All Words</div>
-              <div class="custom-option select-option-item" data-value="learning">Active</div>
-              <div class="custom-option select-option-item" data-value="mastered">Mastered</div>
-              <div class="custom-option select-option-item" data-value="due">Due Now</div>
-              <div class="custom-option select-option-item" data-value="spelling">Spelling Words</div>
-              <div class="custom-option select-option-item" data-value="recall">Recall Phrases</div>
-            </div>
-            <select id="vault-filter-status" class="hidden" aria-label="Filter status">
+          <div class="flex-1">
+            <select id="vault-filter-status" class="field select-input" aria-label="Filter status">
               <option value="all">All Words</option>
               <option value="learning">Active</option>
               <option value="mastered">Mastered</option>

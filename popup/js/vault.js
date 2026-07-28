@@ -8,15 +8,14 @@ import { renderList, updateBulkUIState } from './vault/list.js';
 import { getFilteredWords } from './vault/filter.js';
 import { registerAutofillListeners } from './vault/autofill.js';
 import { registerAudioListeners } from './vault/audio_listeners.js';
-import { initCustomSelects } from './vault/dropdowns.js';
 let wordsList = [];
 let onVaultUpdatedCallback = null;
 let selectedWordIds = new Set();
+let isEnrichCancelled = false;
 export { showConfirm, openModal, showImportOptionsModal };
 
 export async function initVault(onVaultUpdated) {
   onVaultUpdatedCallback = onVaultUpdated;
-  initCustomSelects();
 
   document.getElementById('add-word-btn').addEventListener('click', () => openModal());
   document.getElementById('form-cancel-btn').addEventListener('click', (e) => {
@@ -107,21 +106,24 @@ export async function initVault(onVaultUpdated) {
       return;
     }
 
-    showConfirm('AI Enrich Selected', `This will query Gemini AI to enrich definitions, translations, parts of speech, and IELTS examples for the selected ${selectedWordIds.size} words. This will run sequentially to respect free rate limits. Proceed?`, async () => {
+    showConfirm('AI Enrich Selected', `This will query Gemini AI to enrich definitions, translations, parts of speech, and IELTS examples for the selected ${selectedWordIds.size} words. Proceed?`, async () => {
       const idsToEnrich = Array.from(selectedWordIds);
       const total = idsToEnrich.length;
       selectedWordIds.clear();
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();
 
-      // Show non-cancelable progress indicator
-      showConfirm('AI Enrich Progress', `Enriched 0 of ${total} words...`, null, false);
+      isEnrichCancelled = false;
+      showConfirm('AI Enrich Progress', `Enriched 0 of ${total} words...`, () => {
+        isEnrichCancelled = true;
+      }, true);
 
       const targetLang = await getStored('spelt_target_lang') || 'fa';
       const targetLangName = getLanguageName(targetLang);
 
       let done = 0;
       for (const id of idsToEnrich) {
+        if (isEnrichCancelled) break;
         try {
           const list = await getWords();
           const w = list.find(x => x.id === id);
@@ -129,7 +131,6 @@ export async function initVault(onVaultUpdated) {
             const prompt = buildEnrichmentPrompt(w.word, w, targetLangName);
             const aiData = await askGemini(prompt);
             
-            // Use atomicUpdate to prevent concurrent editing issues
             await atomicUpdate(async (freshList) => {
               const targetWord = freshList.find(x => x.id === id);
               if (targetWord) {
@@ -153,15 +154,16 @@ export async function initVault(onVaultUpdated) {
         if (progressMsgEl) {
           progressMsgEl.textContent = `Enriched ${done} of ${total} words...`;
         }
-        // Rate limit: 3.5s delay to stay under the 15 RPM free tier limit
-        if (done < total) {
+        if (done < total && !isEnrichCancelled) {
           await new Promise(resolve => setTimeout(resolve, 3500));
         }
       }
 
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();
-      showConfirm('AI Enrichment Complete', `Successfully enriched all ${total} words!`, null, false);
+      if (!isEnrichCancelled) {
+        showConfirm('AI Enrichment Complete', `Successfully enriched ${done} words!`, null, false);
+      }
     });
   });
 
