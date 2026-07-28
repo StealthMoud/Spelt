@@ -216,10 +216,6 @@ function getKeyIdentifier(key) {
   return getGeminiKeyFingerprint(key);
 }
 
-async function getStoredKeyModelsMap() {
-  return await getStored('spelt_gemini_key_models') || {};
-}
-
 function getModelsForKey(key, globalModelTiers, keyModelsMap) {
   const keyModels = keyModelsMap[getGeminiKeyFingerprint(key)];
   if (!Array.isArray(keyModels) || keyModels.length === 0) return globalModelTiers;
@@ -227,57 +223,122 @@ function getModelsForKey(key, globalModelTiers, keyModelsMap) {
   return globalModelTiers.filter(model => keyModelSet.has(model));
 }
 
-// Persistent storage-backed rate limit cooldowns and blacklisted models
-const memoryCooldowns = {};
-const memoryBadModels = new Set();
-
-async function getCooldowns() {
-  if (chrome.storage?.local) {
-    const res = await new Promise(r => chrome.storage.local.get('spelt_rate_limit_cooldowns', r)) || {};
-    const data = res.spelt_rate_limit_cooldowns || {};
-    const now = Date.now();
-    const cleaned = {};
-    for (const [model, expiresAt] of Object.entries(data)) {
-      if (expiresAt > now) {
-        cleaned[model] = expiresAt;
-      }
-    }
-    return cleaned;
-  }
-  return { ...memoryCooldowns };
+function readLocal(fields) {
+  if (!chrome.storage?.local) return Promise.resolve({});
+  return new Promise(resolve => chrome.storage.local.get(fields, res => resolve(res || {})));
 }
 
-async function saveCooldowns(cooldowns) {
-  if (chrome.storage?.local) {
-    await new Promise(r => chrome.storage.local.set({ spelt_rate_limit_cooldowns: cooldowns }, r));
-  } else {
-    Object.assign(memoryCooldowns, cooldowns);
-  }
+function writeLocal(values) {
+  chrome.storage?.local?.set(values);
 }
 
-async function getBadModels() {
-  if (chrome.storage?.local) {
-    const res = await new Promise(r => chrome.storage.local.get('spelt_bad_models', r)) || {};
-    return new Set(res.spelt_bad_models || []);
+function pruneCooldowns(cooldowns) {
+  const now = Date.now();
+  const live = {};
+  for (const [trialId, expiresAt] of Object.entries(cooldowns)) {
+    if (expiresAt > now) live[trialId] = expiresAt;
   }
-  return new Set(memoryBadModels);
-}
-
-async function saveBadModels(badModelsSet) {
-  if (chrome.storage?.local) {
-    await new Promise(r => chrome.storage.local.set({ spelt_bad_models: [...badModelsSet] }, r));
-  } else {
-    memoryBadModels.clear();
-    for (const m of badModelsSet) memoryBadModels.add(m);
-  }
+  return live;
 }
 
 /**
- * In-memory set of models that do NOT support responseMimeType.
- * When a model fails with a responseMimeType error, we remember it so subsequent
- * calls skip the field for that model immediately instead of wasting a request.
+ * Cooldowns, blacklisted trials, and the per-key model map, held in memory.
+ *
+ * Every one of these is read on the hot path of a request. Reading them from
+ * chrome.storage each time cost six round trips per request — plus two more on
+ * success to clear a cooldown that was usually not set — and none of that
+ * latency bought anything, since this is the only writer. Storage is now a
+ * mirror: reads come from memory, writes are debounced in the background.
  */
-const noMimeTypeSupport = new Set();
+const runtime = {
+  cooldowns: {},
+  badModels: new Set(),
+  keyModels: {},
+  ready: null
+};
+
+/**
+ * Bumped when failure handling changes. The old code blacklisted a trial for any
+ * 400, including ones caused by a request field the model simply did not accept,
+ * so a perfectly good fast model could be struck off permanently and every later
+ * request would start further down the tier list. Those verdicts are no longer
+ * trustworthy, so they are dropped once and relearned.
+ */
+const BLACKLIST_EPOCH = 2;
+
+function loadRuntime() {
+  if (!runtime.ready) {
+    runtime.ready = readLocal(['spelt_rate_limit_cooldowns', 'spelt_bad_models', 'spelt_gemini_key_models', 'spelt_bad_models_epoch'])
+      .then(res => {
+        runtime.cooldowns = pruneCooldowns(res.spelt_rate_limit_cooldowns || {});
+        runtime.keyModels = res.spelt_gemini_key_models || {};
+
+        if (res.spelt_bad_models_epoch === BLACKLIST_EPOCH) {
+          runtime.badModels = new Set(res.spelt_bad_models || []);
+        } else {
+          runtime.badModels = new Set();
+          writeLocal({ spelt_bad_models: [], spelt_bad_models_epoch: BLACKLIST_EPOCH });
+        }
+      })
+      .catch(() => { /* no storage yet — the defaults above are correct */ });
+  }
+  return runtime.ready;
+}
+
+let persistTimer = null;
+function persistRuntimeSoon() {
+  if (persistTimer) return;
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    runtime.cooldowns = pruneCooldowns(runtime.cooldowns);
+    writeLocal({
+      spelt_rate_limit_cooldowns: runtime.cooldowns,
+      spelt_bad_models: [...runtime.badModels]
+    });
+  }, 250);
+}
+
+async function getCooldowns() {
+  await loadRuntime();
+  return pruneCooldowns(runtime.cooldowns);
+}
+
+async function getBadModels() {
+  await loadRuntime();
+  return new Set(runtime.badModels);
+}
+
+async function getStoredKeyModelsMap() {
+  await loadRuntime();
+  return runtime.keyModels;
+}
+
+/**
+ * Fields that a given model rejects. Newer models accept `responseMimeType` and
+ * `thinkingConfig`; older ones 400 on them. Remembering the rejection lets the
+ * next request skip the field instead of burning a round trip to rediscover it.
+ */
+const unsupportedFields = new Map();
+
+function isUnsupported(model, field) {
+  return unsupportedFields.get(model)?.has(field) === true;
+}
+
+function markUnsupported(model, field) {
+  if (!unsupportedFields.has(model)) unsupportedFields.set(model, new Set());
+  unsupportedFields.get(model).add(field);
+}
+
+function unsupportedFieldFrom(message) {
+  const msg = (message || '').toLowerCase();
+  if (msg.includes('responsemimetype') || msg.includes('response_mime_type') || msg.includes('responsemime')) {
+    return 'responseMimeType';
+  }
+  if (msg.includes('thinkingconfig') || msg.includes('thinking_config') || msg.includes('thinking budget')) {
+    return 'thinkingConfig';
+  }
+  return null;
+}
 
 /**
  * In-memory config cache — avoids 6+ chrome.storage.local.get calls per request.
@@ -296,35 +357,52 @@ export function invalidateGeminiCache() {
   _cache.keys = null; _cache.model = null; _cache.modelsList = null; _cache.keyModels = null;
 }
 
-/**
- * Sequential request queue to prevent concurrent requests from cascading
- * through all model tiers simultaneously (which burns quota on every tier).
- * Requests are processed one at a time with minimum spacing.
- */
-let requestQueue = Promise.resolve();
-const MIN_REQUEST_SPACING_MS = 300; // 300ms between requests (was 1s — too slow for UX)
-let lastRequestTime = 0;
+// Settings writes keys and models from another script/context. Without this the
+// caches above stayed stale for up to 30s after adding a key.
+globalThis.chrome?.storage?.onChanged?.addListener((changes, area) => {
+  if (area !== 'local') return;
+  if (changes.spelt_gemini_key_models) {
+    runtime.keyModels = changes.spelt_gemini_key_models.newValue || {};
+  }
+  if (changes.spelt_gemini_keys || changes.spelt_gemini_key ||
+      changes.spelt_gemini_model || changes.spelt_gemini_models_list) {
+    invalidateGeminiCache();
+  }
+});
 
-async function enqueue(fn) {
-  const task = requestQueue.then(async () => {
-    const now = Date.now();
-    const elapsed = now - lastRequestTime;
-    if (elapsed < MIN_REQUEST_SPACING_MS) {
-      await new Promise(r => setTimeout(r, MIN_REQUEST_SPACING_MS - elapsed));
-    }
-    lastRequestTime = Date.now();
-    return fn();
-  });
-  // Update the queue head — but don't let a rejection break the chain
-  requestQueue = task.catch(() => {});
-  return task;
+/**
+ * Ceiling on simultaneous outbound requests.
+ *
+ * This used to be a strict serial queue with a 300ms gap between requests, so
+ * two panels asking at once meant the second waited out the first end to end.
+ * Dead models and exhausted keys are now recorded in memory the moment they
+ * fail, so parallel requests no longer each rediscover the same dead tier —
+ * the cap is only here to stop a burst from stampeding the API.
+ */
+const MAX_IN_FLIGHT = 4;
+let inFlight = 0;
+const waitingForSlot = [];
+
+async function withSlot(fn) {
+  if (inFlight >= MAX_IN_FLIGHT) {
+    await new Promise(resolve => waitingForSlot.push(resolve));
+  } else {
+    inFlight++;
+  }
+  try {
+    return await fn();
+  } finally {
+    inFlight--;
+    const next = waitingForSlot.shift();
+    if (next) { inFlight++; next(); }
+  }
 }
 
 /**
  * Load all configured API keys from storage, with automatic migration fallback.
  */
 async function _fetchKeys() {
-  const res = await new Promise(r => chrome.storage?.local.get(['spelt_gemini_keys', 'spelt_gemini_key'], r)) || {};
+  const res = await readLocal(['spelt_gemini_keys', 'spelt_gemini_key']);
   let keys = res.spelt_gemini_keys || [];
   if (keys.length === 0 && res.spelt_gemini_key) {
     keys = [res.spelt_gemini_key];
@@ -341,18 +419,22 @@ export async function getStoredKeys() {
 async function getTrialSequence(modelTiers, keys) {
   const sequence = [];
   const keyModelsMap = await getStoredKeyModelsMap();
+  const add = (model, key) => {
+    const keyId = getKeyIdentifier(key);
+    sequence.push({ model, key, keyId, trialId: `${model}::${keyId}` });
+  };
   for (const model of modelTiers) {
     for (const key of keys) {
       const keyModels = getModelsForKey(key, modelTiers, keyModelsMap);
       if (keyModels.includes(model)) {
-        sequence.push({ model, key });
+        add(model, key);
       }
     }
   }
   if (sequence.length === 0 && keys.length > 0) {
     for (const model of modelTiers) {
       for (const key of keys) {
-        sequence.push({ model, key });
+        add(model, key);
       }
     }
   }
@@ -390,37 +472,63 @@ export function isRateLimitError(status, errorMessage) {
 }
 
 /**
- * Check if an error indicates a transient condition (rate limits, 5xx server issues, or temporary overload).
+ * How wide a failure reaches.
+ *
+ * This distinction is what keeps extra API keys from making things slower. A
+ * model the account cannot serve used to be retried once per key before the
+ * next tier was tried, so five keys meant five round trips to learn one fact.
+ * Scoping the failure lets a dead model skip straight to the next tier while an
+ * exhausted key still falls through to the other keys on the same model.
  */
-function isTransientError(status, errorMessage) {
-  if (!status) return true; // Network errors are transient
-  if (status === 429) return true;
-  if (status >= 500 && status <= 599) return true; // 5xx server issues are transient
+const SCOPE_KEY = 'key';     // this key is spent — same model, different key
+const SCOPE_MODEL = 'model'; // no key will serve this model — next tier
+const SCOPE_TRIAL = 'trial'; // just this pairing
+
+function classifyFailure(status, errorMessage) {
   const msg = (errorMessage || '').toLowerCase();
-  return msg.includes('quota') || 
-         msg.includes('rate limit') || 
-         msg.includes('resource_exhausted') || 
-         msg.includes('high demand') || 
-         msg.includes('overloaded') ||
-         msg.includes('temporary');
+
+  if (status === 429 || msg.includes('quota') || msg.includes('rate limit') || msg.includes('resource_exhausted')) {
+    return { scope: SCOPE_KEY, transient: true };
+  }
+  if (status === 401 || status === 403) {
+    return { scope: SCOPE_KEY, transient: false };
+  }
+  if (!status || status >= 500 ||
+      msg.includes('high demand') || msg.includes('overloaded') || msg.includes('temporary')) {
+    return { scope: SCOPE_TRIAL, transient: true };
+  }
+  if (status === 404 || msg.includes('is not found') || msg.includes('not supported')) {
+    return { scope: SCOPE_MODEL, transient: false };
+  }
+  return { scope: SCOPE_TRIAL, transient: false };
 }
 
-/**
- * Apply a cooldown timer to a model/key trial.
- */
-async function applyCooldown(model, delay) {
-  const expiresAt = Date.now() + delay;
-  const cooldowns = await getCooldowns();
-  cooldowns[model] = expiresAt;
-  await saveCooldowns(cooldowns);
+/** Record a failed trial so neither this request nor the next one repeats it. */
+function recordFailure(trial, error, deadModels, deadKeys) {
+  const status = error.status;
+  const message = error.apiMessage || error.message;
+  const { scope, transient } = classifyFailure(status, message);
+
+  // Narrow the rest of *this* request immediately.
+  if (scope === SCOPE_MODEL) deadModels.add(trial.model);
+  if (scope === SCOPE_KEY) deadKeys.add(trial.keyId);
+
+  if (transient) {
+    const delay = status === 429 ? parseRetryDelay(message) : (status >= 500 ? 5000 : 10000);
+    runtime.cooldowns[trial.trialId] = Date.now() + delay;
+  } else {
+    runtime.badModels.add(trial.trialId);
+  }
+  persistRuntimeSoon();
+  console.warn(`[Spelt AI] ${trial.trialId} failed (${status || 'network'}): ${message}`);
 }
 
-/**
- * Check if an error is specifically about responseMimeType not being supported.
- */
-function isResponseMimeTypeError(errorMessage) {
-  const msg = (errorMessage || '').toLowerCase();
-  return msg.includes('responsemimetype') || msg.includes('response_mime_type') || msg.includes('responsemime');
+function noteSuccess(trial) {
+  if (runtime.cooldowns[trial.trialId]) {
+    delete runtime.cooldowns[trial.trialId];
+    persistRuntimeSoon();
+  }
+  writeLocal({ spelt_last_used_model: trial.model, spelt_last_used_trial: trial.trialId });
 }
 
 /**
@@ -468,199 +576,279 @@ function getShortestWait(cooldowns) {
   return shortest === Infinity ? 60 : Math.ceil(shortest / 1000);
 }
 
+const API_ROOT = 'https://generativelanguage.googleapis.com/v1';
+
+/** How long one attempt may go without producing a response before we give up on it. */
+const RESPONSE_TIMEOUT_MS = 20000;
+
 /**
- * Make a single API call to a specific model.
- * Returns the Response object on success, or throws with structured error info.
+ * How long a trial gets to itself before the next key is tried alongside it.
+ *
+ * Requests used to be strictly one at a time, so a key having a slow minute
+ * stalled the whole chain. Hedging turns the spare keys into what the user
+ * expects them to be: the first one to answer wins and the rest are cancelled.
  */
-async function callModel(key, model, bodyPayload) {
+const HEDGE_DELAY_MS = 1800;
+const MAX_HEDGED_ATTEMPTS = 2;
+
+function apiUrl(model, method, query = '') {
   const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
-  const url = `https://generativelanguage.googleapis.com/v1/${cleanModel}:generateContent`;
+  return `${API_ROOT}/${cleanModel}:${method}${query}`;
+}
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify(bodyPayload)
-  });
-
-  if (response.ok) {
-    return response;
-  }
-
-  // Parse error details
+async function toApiError(response) {
   const errData = await response.json().catch(() => ({}));
   const errMsg = errData.error?.message || '';
-
   const error = new Error(errMsg || `API returned status ${response.status}`);
   error.status = response.status;
   error.apiMessage = errMsg;
-  throw error;
+  return error;
+}
+
+/** Mirror an outer abort onto an inner controller; returns the unsubscribe. */
+function linkAbort(outerSignal, controller) {
+  if (outerSignal.aborted) {
+    controller.abort(outerSignal.reason);
+    return () => {};
+  }
+  const forward = () => controller.abort(outerSignal.reason);
+  outerSignal.addEventListener('abort', forward, { once: true });
+  return () => outerSignal.removeEventListener('abort', forward);
 }
 
 /**
- * Wrapper that auto-retries once on 503 (server momentarily overloaded).
- * 503s typically clear in 1-3 seconds — no point cooldowning 30s.
+ * Build the request body for one model, dropping fields it has already rejected
+ * and asking for JSON in whichever way the model supports.
  */
-async function callModelWithRetry(key, model, bodyPayload) {
+function payloadFor(model, body, wantJson) {
+  const generationConfig = { ...(body.generationConfig || {}) };
+  if (isUnsupported(model, 'thinkingConfig')) delete generationConfig.thinkingConfig;
+
+  const mimeTypeUsable = wantJson && !isUnsupported(model, 'responseMimeType');
+  if (mimeTypeUsable) generationConfig.responseMimeType = 'application/json';
+
+  const payload = { ...body };
+  if (Object.keys(generationConfig).length > 0) payload.generationConfig = generationConfig;
+  else delete payload.generationConfig;
+
+  // Without responseMimeType the shape has to be asked for in words instead.
+  if (wantJson && !mimeTypeUsable && body.contents?.[0]?.parts?.[0]?.text) {
+    payload.contents = [
+      {
+        ...body.contents[0],
+        parts: [{ text: `${body.contents[0].parts[0].text}\n\nRespond ONLY with a valid JSON block starting with { and ending with }.` }]
+      },
+      ...body.contents.slice(1)
+    ];
+  }
+  return payload;
+}
+
+/**
+ * POST to Gemini, failing fast if no response arrives. Resolves as soon as the
+ * headers land, so a streaming body is not on the clock.
+ */
+async function postToGemini(url, key, payload, signal) {
+  const controller = new AbortController();
+  const unlink = linkAbort(signal, controller);
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, RESPONSE_TIMEOUT_MS);
+
   try {
-    return await callModel(key, model, bodyPayload);
-  } catch (err) {
-    if (err.status === 503) {
-      await new Promise(r => setTimeout(r, 2000));
-      return await callModel(key, model, bodyPayload);
+    return await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (timedOut && !signal.aborted) {
+      const timeout = new Error(`No response within ${Math.round(RESPONSE_TIMEOUT_MS / 1000)}s.`);
+      timeout.status = 0;
+      throw timeout;
     }
-    throw err;
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    unlink();
   }
 }
 
 /**
- * Core fetch wrapper with automatic model fallback on rate limit.
- * Uses the selected strategy's ordered model/key trials, strongest model first.
- *
- * Key improvements:
- * - If a model fails with a responseMimeType error, retries the SAME model without it
- *   before moving to the next tier (avoids cascading 400 errors across all models).
- * - Models with non-recoverable errors (400 for structural reasons) are blacklisted
- *   for the session, not given a temporary cooldown.
- * - Only genuine rate-limit (429) errors trigger cooldown timers.
- *
- * @param {string[]} keys - API keys
- * @param {object} bodyPayload - The request body (contents, generationConfig, etc.)
- * @param {string[]} modelTiers - Ordered list of model names to try
- * @param {boolean} wantJson - Whether to request JSON output via responseMimeType
- * @returns {{ response: Response, modelUsed: string }}
+ * One attempt against one model/key, retrying in place if the only problem was
+ * a generationConfig field this model does not know about.
  */
-async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false) {
-  let lastError = null;
-  const badModels = await getBadModels();
-  const cooldowns = await getCooldowns();
+async function requestOnce(trial, body, wantJson, signal, { stream = false } = {}) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const url = stream
+      ? apiUrl(trial.model, 'streamGenerateContent', '?alt=sse')
+      : apiUrl(trial.model, 'generateContent');
 
-  const trials = await getTrialSequence(modelTiers, keys);
+    const response = await postToGemini(url, trial.key, payloadFor(trial.model, body, wantJson), signal);
+    if (response.ok) return response;
 
-  for (const trial of trials) {
-    const { model, key } = trial;
-    const keyId = getKeyIdentifier(key);
-    const trialId = `${model}::${keyId}`;
+    const error = await toApiError(response);
+    const field = attempt === 0 ? unsupportedFieldFrom(error.apiMessage) : null;
+    if (!field || isUnsupported(trial.model, field)) throw error;
 
-    // Skip permanently bad model-key pairings
-    if (badModels.has(trialId)) continue;
+    markUnsupported(trial.model, field);
+    console.info(`[Spelt AI] ${trial.model} rejected ${field}; retrying without it.`);
+  }
+  throw new Error('Unreachable');
+}
 
-    // Skip trial currently in rate-limit cooldown
-    const cooldownUntil = cooldowns[trialId] || 0;
-    if (Date.now() < cooldownUntil) continue;
+/**
+ * Run `attempt` over `trials` in order, but hedge: a trial that has not settled
+ * within `hedgeMs` no longer blocks the next one from starting alongside it.
+ * The first success wins and every other attempt in flight is aborted.
+ *
+ * `skip` is consulted lazily so that a failure which rules out a whole model or
+ * a whole key takes the trials it invalidates out of the running immediately.
+ */
+function runHedged(trials, attempt, { skip, hedgeMs, maxAttempts }) {
+  return new Promise((resolve, reject) => {
+    const controllers = new Set();
+    let nextIndex = 0;
+    let running = 0;
+    let settled = false;
+    let hedgeTimer = null;
 
-    // Determine whether to use responseMimeType for this model
-    const useMimeType = wantJson && !noMimeTypeSupport.has(model);
+    const start = () => {
+      if (settled || running >= maxAttempts) return;
 
-    // Build the actual payload
-    const payload = useMimeType
-      ? { ...bodyPayload, generationConfig: { ...(bodyPayload.generationConfig || {}), responseMimeType: 'application/json' } }
-      : bodyPayload;
-
-    try {
-      const response = await callModelWithRetry(key, model, payload);
-      chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
-      
-      // Success! Clear the cooldown for this model-key in storage so it is immediately marked as Ready
-      const currentCooldowns = await getCooldowns();
-      if (currentCooldowns[trialId]) {
-        delete currentCooldowns[trialId];
-        await saveCooldowns(currentCooldowns);
+      let trial = null;
+      while (nextIndex < trials.length) {
+        const candidate = trials[nextIndex++];
+        if (!skip(candidate)) { trial = candidate; break; }
       }
-      
-      return { response, modelUsed: model };
-    } catch (err) {
-      const status = err.status;
-      const errMsg = err.apiMessage || err.message;
+      if (!trial) {
+        if (running === 0 && !settled) { settled = true; clearTimeout(hedgeTimer); reject(null); }
+        return;
+      }
 
-      // Case 1: responseMimeType not supported by this model
-      // → Remember it, retry the SAME model without it immediately
-      if (useMimeType && isResponseMimeTypeError(errMsg)) {
-        noMimeTypeSupport.add(model);
-        console.info(`[Spelt AI] Model ${model} doesn't support responseMimeType. Retrying without it...`);
+      const controller = new AbortController();
+      controllers.add(controller);
+      running++;
 
-        try {
-          // Retry same model without responseMimeType, but add JSON instruction to prompt
-          const fallbackPayload = { ...bodyPayload };
-          // Strip responseMimeType from generationConfig
-          if (fallbackPayload.generationConfig) {
-            const copy = { ...fallbackPayload.generationConfig };
-            delete copy.responseMimeType;
-            fallbackPayload.generationConfig = Object.keys(copy).length > 0 ? copy : undefined;
-          }
-          // Append JSON instruction to the prompt text
-          if (fallbackPayload.contents?.[0]?.parts?.[0]?.text) {
-            fallbackPayload.contents[0] = {
-              ...fallbackPayload.contents[0],
-              parts: [{
-                text: fallbackPayload.contents[0].parts[0].text + '\n\nRespond ONLY with a valid JSON block starting with { and ending with }.'
-              }]
-            };
-          }
+      clearTimeout(hedgeTimer);
+      hedgeTimer = setTimeout(start, hedgeMs);
 
-          const response = await callModelWithRetry(key, model, fallbackPayload);
-          chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
-          
-          // Success! Clear the cooldown for this model-key in storage
-          const currentCooldowns = await getCooldowns();
-          if (currentCooldowns[trialId]) {
-            delete currentCooldowns[trialId];
-            await saveCooldowns(currentCooldowns);
+      attempt(trial, controller.signal).then(
+        value => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(hedgeTimer);
+          for (const other of controllers) {
+            if (other !== controller) other.abort();
           }
-          
-          return { response, modelUsed: model };
-        } catch (retryErr) {
-          // If the retry also fails, handle based on error type
-          const retryStatus = retryErr.status;
-          const retryMsg = retryErr.apiMessage || retryErr.message;
-
-          if (isTransientError(retryStatus, retryMsg)) {
-            const isServerErr = retryStatus >= 500;
-            const delay = retryStatus === 429 ? parseRetryDelay(retryMsg) : (isServerErr ? 5000 : 10000);
-            await applyCooldown(trialId, delay);
-            console.warn(`[Spelt AI] Trial ${trialId} transient failure on retry (status ${retryStatus || 'network'}). Cooldown ${Math.ceil(delay / 1000)}s.`);
-          } else {
-            // Non-recoverable error on retry — blacklist this model
-            badModels.add(trialId);
-            await saveBadModels(badModels);
-            console.warn(`[Spelt AI] Trial ${trialId} failed (status ${retryStatus}). Blacklisted.`);
+          resolve({ value, trial });
+        },
+        () => {
+          controllers.delete(controller);
+          running--;
+          if (settled) return;
+          start(); // a slot just opened — take the next trial now, don't wait out the hedge
+          if (running === 0 && nextIndex >= trials.length && !settled) {
+            settled = true;
+            clearTimeout(hedgeTimer);
+            reject(null);
           }
-          lastError = retryErr;
-          continue;
         }
-      }
+      );
+    };
 
-      // Case 2: Transient failure (rate limit, 5xx server overload, network drop)
-      if (isTransientError(status, errMsg)) {
-        const isServerErr = status >= 500;
-        const delay = status === 429 ? parseRetryDelay(errMsg) : (isServerErr ? 5000 : 10000);
-        await applyCooldown(trialId, delay);
-        console.warn(`[Spelt AI] Trial ${trialId} transient failure (status ${status || 'network'}): ${errMsg}. Cooldown ${Math.ceil(delay / 1000)}s. Trying next...`);
-        lastError = err;
-        continue;
-      }
+    start();
+  });
+}
 
-      // Case 3: Other HTTP errors (400 for bad payload, 404 model not found, etc.)
-      // These are permanent — the model won't start working.
-      badModels.add(trialId);
-      await saveBadModels(badModels);
-      console.warn(`[Spelt AI] Trial ${trialId} failed (status ${status}): ${errMsg}. Blacklisted.`);
-      lastError = err;
+/**
+ * Drive `execute` across the model/key trials, skipping anything already known
+ * to be blacklisted or cooling down, and recording whatever fails on the way.
+ */
+async function runTrials(trials, execute, { claimed } = {}) {
+  await loadRuntime();
+
+  const deadModels = new Set();
+  const deadKeys = new Set();
+  const failures = [];
+
+  const skip = (trial) =>
+    claimed?.() === true || // an attempt is already producing output; don't spend another key
+    deadModels.has(trial.model) ||
+    deadKeys.has(trial.keyId) ||
+    runtime.badModels.has(trial.trialId) ||
+    Date.now() < (runtime.cooldowns[trial.trialId] || 0);
+
+  const attempt = async (trial, signal) => {
+    try {
+      return await execute(trial, signal);
+    } catch (error) {
+      // A trial that lost the race or was cancelled says nothing about the
+      // model or the key, so it must not leave a cooldown behind.
+      if (error?.superseded || signal.aborted) throw error;
+      recordFailure(trial, error, deadModels, deadKeys);
+      failures.push(error);
+      throw error;
     }
+  };
+
+  try {
+    const { value, trial } = await runHedged(trials, attempt, {
+      skip,
+      hedgeMs: HEDGE_DELAY_MS,
+      maxAttempts: MAX_HEDGED_ATTEMPTS
+    });
+    noteSuccess(trial);
+    return value;
+  } catch (_) {
+    throw exhaustedError(trials, failures);
+  }
+}
+
+function exhaustedError(trials, failures) {
+  const now = Date.now();
+  const cooling = {};
+  for (const trial of trials) {
+    const expiresAt = runtime.cooldowns[trial.trialId] || 0;
+    if (expiresAt > now) cooling[trial.trialId] = expiresAt;
   }
 
-  // All models exhausted
-  const cooldownsAfter = await getCooldowns();
-  const trialIds = new Set(trials.map(trial => `${trial.model}::${getKeyIdentifier(trial.key)}`));
-  const relevantCooldowns = Object.fromEntries(Object.entries(cooldownsAfter).filter(([trialId]) => trialIds.has(trialId)));
-  const waitSec = getShortestWait(relevantCooldowns);
-  const hasRateLimited = Object.values(relevantCooldowns).some(t => t > Date.now());
-
-  if (hasRateLimited) {
-    throw new Error(`All available AI models and API keys are rate-limited. Please retry in ~${waitSec}s.`);
-  } else {
-    const errorMsg = lastError ? lastError.message : 'No available AI models or keys.';
-    throw new Error(`AI request failed: ${errorMsg}`);
+  if (Object.keys(cooling).length > 0) {
+    return new Error(`All available AI models and API keys are rate-limited. Please retry in ~${getShortestWait(cooling)}s.`);
   }
+  const last = failures[failures.length - 1];
+  const reason = last ? (last.apiMessage || last.message) : 'No available AI models or keys.';
+  return new Error(`AI request failed: ${reason}`);
+}
+
+/** Resolve the trials to try for a request, cheapest-to-answer first. */
+async function planTrials(options) {
+  const keys = await getStoredKeys();
+  if (keys.length === 0) {
+    throw new Error('No Gemini API keys are configured. Please add an API key in the Settings tab.');
+  }
+  const preferredModel = await cachedGet('model', () => getStored('spelt_gemini_model').then(v => v || GEMINI_AUTO_MODEL));
+  const modelTiers = await getAvailableModelTiers(preferredModel, options.preferFlash !== false);
+  return getTrialSequence(modelTiers, keys);
+}
+
+/**
+ * Send a prompt and return the parsed response text.
+ * Falls through the model/key trials, hedging across keys on the way.
+ */
+async function generate(prompt, options, wantJson) {
+  const trials = await planTrials(options);
+  const body = { contents: [{ parts: [{ text: prompt }] }] };
+  const generationConfig = buildGenerationConfig(options);
+  if (generationConfig) body.generationConfig = generationConfig;
+
+  return withSlot(() => runTrials(trials, async (trial, signal) => {
+    const response = await requestOnce(trial, body, wantJson, signal);
+    const data = await response.json();
+    const text = extractCandidateText(data.candidates?.[0]);
+    if (!text) throw new Error('Invalid empty response from Gemini API.');
+    return text.trim();
+  }));
 }
 
 /**
@@ -674,10 +862,15 @@ async function fetchWithFallback(keys, bodyPayload, modelTiers, wantJson = false
  */
 function buildGenerationConfig(options = {}) {
   const config = {};
-  if (options.maxOutputTokens) config.maxOutputTokens = options.maxOutputTokens;
+  // A ceiling even when the caller gives none: an unbounded reply is one the
+  // user waits on for no reason. Every prompt here wants well under this.
+  config.maxOutputTokens = options.maxOutputTokens || 2048;
   if (options.temperature !== undefined) config.temperature = options.temperature;
-  if (options.thinking === false) config.thinkingConfig = { thinkingBudget: 0 };
-  return Object.keys(config).length > 0 ? config : undefined;
+  // Off unless a caller explicitly asks for it. Every prompt this extension
+  // sends is a short, fully specified task — a dictionary entry, a mnemonic,
+  // a one-line correction — and the thinking pass only delays the answer.
+  if (options.thinking !== true) config.thinkingConfig = { thinkingBudget: 0 };
+  return config;
 }
 
 function extractCandidateText(candidate) {
@@ -695,50 +888,28 @@ function extractCandidateText(candidate) {
  * Automatically falls back through model/key trials on rate limit.
  */
 export async function askGemini(prompt, options = {}) {
-  const preferFlash = options.preferFlash !== false;
-  return enqueue(async () => {
-    const keys = await getStoredKeys();
-    if (keys.length === 0) {
-      throw new Error('No Gemini API keys are configured. Please add an API key in the Settings tab.');
-    }
+  let text = await generate(prompt, options, true /* wantJson */);
 
-    const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
-    const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
-
-    const generationConfig = buildGenerationConfig(options);
-    const result = await fetchWithFallback(keys, {
-      contents: [{ parts: [{ text: prompt }] }],
-      ...(generationConfig ? { generationConfig } : {})
-    }, modelTiers, true /* wantJson */);
-
-    const data = await result.response.json();
-    let text = extractCandidateText(data.candidates?.[0]);
-    if (!text) {
-      throw new Error('Invalid empty response from Gemini API.');
-    }
-
-    // Clean text in case model returned markdown code blocks (e.g. ```json ... ```)
+  // Clean text in case model returned markdown code blocks (e.g. ```json ... ```)
+  if (text.startsWith('```')) {
+    text = text.replace(/^```[a-zA-Z]*\n?/, '');
+    text = text.replace(/\n?```$/, '');
     text = text.trim();
-    if (text.startsWith('```')) {
-      text = text.replace(/^```[a-zA-Z]*\n?/, '');
-      text = text.replace(/\n?```$/, '');
-      text = text.trim();
-    }
+  }
 
-    // Extract first { and last } if there are prefix/suffix texts
-    const startIdx = text.indexOf('{');
-    const endIdx = text.lastIndexOf('}');
-    if (startIdx !== -1 && endIdx !== -1) {
-      text = text.substring(startIdx, endIdx + 1);
-    }
+  // Extract first { and last } if there are prefix/suffix texts
+  const startIdx = text.indexOf('{');
+  const endIdx = text.lastIndexOf('}');
+  if (startIdx !== -1 && endIdx !== -1) {
+    text = text.substring(startIdx, endIdx + 1);
+  }
 
-    try {
-      return JSON.parse(text);
-    } catch (err) {
-      console.error('Failed to parse Gemini response as JSON:', text);
-      throw new Error('Gemini response was not valid JSON. Please try again.', { cause: err });
-    }
-  });
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    console.error('Failed to parse Gemini response as JSON:', text);
+    throw new Error('Gemini response was not valid JSON. Please try again.', { cause: err });
+  }
 }
 
 /**
@@ -747,93 +918,57 @@ export async function askGemini(prompt, options = {}) {
  * Automatically falls back through model/key trials on rate limit.
  */
 export async function askGeminiText(prompt, options = {}) {
-  const preferFlash = options.preferFlash !== false;
-  return enqueue(async () => {
-    const keys = await getStoredKeys();
-    if (keys.length === 0) {
-      throw new Error('No Gemini API keys are configured. Please add an API key in the Settings tab.');
-    }
-
-    const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
-    const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
-
-    const body = { contents: [{ parts: [{ text: prompt }] }] };
-    const generationConfig = buildGenerationConfig(options);
-    if (generationConfig) body.generationConfig = generationConfig;
-
-    const result = await fetchWithFallback(keys, body, modelTiers, false /* wantJson */);
-
-    const data = await result.response.json();
-    let text = extractCandidateText(data.candidates?.[0]);
-    if (!text) {
-      throw new Error('Invalid empty response from Gemini API.');
-    }
-
-    return text.trim();
-  });
+  return generate(prompt, options, false /* wantJson */);
 }
 
 /**
  * Streaming variant — sends text chunks to onChunk(accumulatedText) as they arrive.
- * Bypasses the queue entirely for fastest possible UX.
  * Falls back through model tiers on error, same as askGeminiText.
  */
 export async function askGeminiTextStream(prompt, options = {}, onChunk) {
-  const preferFlash = options.preferFlash !== false;
-  const keys = await getStoredKeys();
-  if (keys.length === 0) throw new Error('No Gemini API keys configured.');
-
-  const preferredModel = await cachedGet('model', () => getStored('spelt_gemini_model').then(v => v || GEMINI_AUTO_MODEL));
-  const modelTiers = await getAvailableModelTiers(preferredModel, preferFlash);
-
+  const trials = await planTrials(options);
   const body = { contents: [{ parts: [{ text: prompt }] }] };
   const generationConfig = buildGenerationConfig(options);
   if (generationConfig) body.generationConfig = generationConfig;
 
-  const badModels = await getBadModels();
-  const cooldowns = await getCooldowns();
-  const trials = await getTrialSequence(modelTiers, keys);
-  let lastError = null;
+  // Hedged attempts stream concurrently, so the first one to produce text claims
+  // the callback. Without this the loser's tokens would interleave into the same
+  // element and the panel would render two answers spliced together.
+  const race = { winner: null };
 
-  for (const trial of trials) {
-    const { model, key } = trial;
-    const keyId = getKeyIdentifier(key);
-    const trialId = `${model}::${keyId}`;
-    if (badModels.has(trialId)) continue;
-    if (Date.now() < (cooldowns[trialId] || 0)) continue;
+  return withSlot(() => runTrials(trials, async (trial, signal) => {
+    const response = await requestOnce(trial, body, false, signal, { stream: true });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    const abortOnLoss = linkAbort(signal, { abort: () => reader.cancel().catch(() => {}) });
+    let fullText = '';
+    let buffer = '';
+
+    const emit = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data: ')) return;
+      const jsonStr = trimmed.slice(6).trim();
+      if (!jsonStr || jsonStr === '[DONE]') return;
+
+      let text;
+      try {
+        text = extractCandidateText(JSON.parse(jsonStr).candidates?.[0]);
+      } catch (_) { return; /* skip malformed chunk */ }
+      if (!text) return;
+
+      if (race.winner === null) race.winner = trial.trialId;
+      if (race.winner !== trial.trialId) {
+        const lost = new Error('Superseded by a faster key.');
+        lost.superseded = true;
+        throw lost;
+      }
+
+      fullText += text;
+      onChunk?.(fullText);
+    };
 
     try {
-      const cleanModel = model.startsWith('models/') ? model : 'models/' + model;
-      const streamUrl = `https://generativelanguage.googleapis.com/v1/${cleanModel}:streamGenerateContent?alt=sse`;
-      const fetchOpts = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify(body)
-      };
-
-      let response = await fetch(streamUrl, fetchOpts);
-
-      // Auto-retry once on 503 (momentary server overload)
-      if (response.status === 503) {
-        await new Promise(r => setTimeout(r, 2000));
-        response = await fetch(streamUrl, fetchOpts);
-      }
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        const errMsg = errData.error?.message || '';
-        const error = new Error(errMsg || `API status ${response.status}`);
-        error.status = response.status;
-        error.apiMessage = errMsg;
-        throw error;
-      }
-
-      // Stream SSE chunks
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      let buffer = '';
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -841,68 +976,25 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const jsonStr = line.slice(6).trim();
-          if (!jsonStr || jsonStr === '[DONE]') continue;
-          try {
-            const chunk = JSON.parse(jsonStr);
-            const text = extractCandidateText(chunk.candidates?.[0]);
-            if (text) {
-              fullText += text;
-              if (onChunk) onChunk(fullText);
-            }
-          } catch (_) { /* skip malformed chunk */ }
-        }
+        for (const line of lines) emit(line);
       }
 
       // Flush remaining stream bytes and buffer lines
       buffer += decoder.decode();
-      if (buffer.trim()) {
-        const lines = buffer.split('\n');
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data: ')) continue;
-          const jsonStr = trimmed.slice(6).trim();
-          if (!jsonStr || jsonStr === '[DONE]') continue;
-          try {
-            const chunk = JSON.parse(jsonStr);
-            const text = extractCandidateText(chunk.candidates?.[0]);
-            if (text) {
-              fullText += text;
-              if (onChunk) onChunk(fullText);
-            }
-          } catch (_) { /* skip malformed chunk */ }
-        }
-      }
-
-      const streamed = fullText.trim();
-      if (!streamed) {
-        // A 200 that yielded no usable chunk is a failed trial, not an answer.
-        // Throwing lets the loop try the next model and, failing that, lets the
-        // caller fall back to a non-streaming request instead of rendering ''.
-        throw new Error('Stream returned no content.');
-      }
-
-      chrome.storage?.local.set({ spelt_last_used_model: model, spelt_last_used_trial: trialId });
-      return streamed;
-    } catch (err) {
-      const status = err.status;
-      const errMsg = err.apiMessage || err.message;
-      if (isTransientError(status, errMsg)) {
-        const delay = status === 429 ? parseRetryDelay(errMsg) : (status >= 500 ? 5000 : 10000);
-        await applyCooldown(trialId, delay);
-      } else {
-        badModels.add(trialId);
-        await saveBadModels(badModels);
-      }
-      lastError = err;
-      continue;
+      for (const line of buffer.split('\n')) emit(line);
+    } finally {
+      abortOnLoss();
     }
-  }
 
-  throw new Error(lastError ? lastError.message : 'All AI models exhausted.');
+    const streamed = fullText.trim();
+    if (!streamed) {
+      // A 200 that yielded no usable chunk is a failed trial, not an answer.
+      // Throwing lets the runner try the next model and, failing that, lets the
+      // caller fall back to a non-streaming request instead of rendering ''.
+      throw new Error('Stream returned no content.');
+    }
+    return streamed;
+  }, { claimed: () => race.winner !== null }));
 }
 
 /**

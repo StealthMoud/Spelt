@@ -7,10 +7,11 @@ import {
   buildWritingCheckPrompt
 } from '../../../shared/ai/prompts.js';
 
-// Interactive buttons: cap output and drop the model's thinking pass. These
-// prompts ask for 1-2 sentences, so thinking only adds latency.
-const FAST_OPTS = { maxOutputTokens: 350, temperature: 0.3, thinking: false };
-// Summaries and grading are short too, but benefit from a little reasoning.
+// Interactive buttons: these prompts ask for 1-2 sentences, so keep the reply
+// short. The thinking pass is off by default for every request the extension
+// makes — see buildGenerationConfig.
+const FAST_OPTS = { maxOutputTokens: 350, temperature: 0.3 };
+// Summaries and grading get a little more room to answer in.
 const MEDIUM_OPTS = { maxOutputTokens: 512, temperature: 0.4 };
 
 // word::typed -> feedback, for this session only.
