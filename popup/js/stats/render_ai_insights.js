@@ -1,4 +1,5 @@
 import { isGeminiConfigured, askGemini } from '../../../shared/storage.js';
+import { buildStatsHash } from '../../../src/core/stats_hash.js';
 
 const CACHE_KEY = 'spelt_stats_ai_insights';
 const CACHE_TIME_KEY = 'spelt_stats_ai_insights_timestamp';
@@ -59,7 +60,22 @@ export async function renderAIInsights(words, streak, summary, cardStates, sessi
   const studyTimeMin = Math.round(totalStudyMs / 1000 / 60);
 
   // Generate data fingerprint hash. If this changes, cache is invalidated.
-  const statsHash = `${words.length}-${cardStates.newCount}-${cardStates.learningCount}-${cardStates.matureCount}-${cardStates.masteredCount}-${summary.totalReviews}-${retentionRate}-${streak.current || 0}-${streak.max || 0}-${leeches.join(',')}-${summary.globalSandboxChecks}-${avgResponseTime}-${totalSessions}-${studyTimeMin}`;
+  const statsHash = buildStatsHash({
+    wordsCount: words.length,
+    newCount: cardStates.newCount,
+    learningCount: cardStates.learningCount,
+    matureCount: cardStates.matureCount,
+    masteredCount: cardStates.masteredCount,
+    totalReviews: summary.totalReviews,
+    retentionRate,
+    currentStreak: streak.current || 0,
+    maxStreak: streak.max || 0,
+    leechesStr: leeches.join(','),
+    sandboxChecks: summary.globalSandboxChecks,
+    avgResponseTime,
+    totalSessions,
+    studyTimeMin
+  });
 
   // Binding listeners for generate and refresh buttons
   bindActionListeners(words, streak, summary, cardStates, sessions, statsHash);

@@ -4,6 +4,13 @@ export function renderReviewChart(chartBuckets, barWidth) {
   chartContainer.innerHTML = '';
   
   const maxBucketReviews = Math.max(...chartBuckets.map(b => b.total), 1);
+  chartContainer.setAttribute('role', 'img');
+  chartContainer.setAttribute('aria-label', `Review activity chart over past ${chartBuckets.length} ${chartBuckets[0]?.type === 'day' ? 'days' : 'weeks'}, max ${maxBucketReviews} reviews`);
+
+  if (chartBuckets.every(b => b.total === 0)) {
+    chartContainer.innerHTML = `<div class="chart-empty-state">No review activity recorded in this period.</div>`;
+    return;
+  }
 
   chartBuckets.forEach(bucket => {
     const heightPercent = Math.max(0, (bucket.total / maxBucketReviews) * 100);
@@ -12,6 +19,7 @@ export function renderReviewChart(chartBuckets, barWidth) {
 
     const col = document.createElement('div');
     col.className = 'bar-column';
+    col.setAttribute('title', `${bucket.fullDateLabel}: ${bucket.total} reviews (${bucket.correct} correct, ${bucket.incorrect} incorrect)`);
     col.innerHTML = `
       <div class="bar-hover-val">${bucket.total} ${bucket.total === 1 ? 'review' : 'reviews'}</div>
       <div class="bar-track">

@@ -37,6 +37,10 @@ export async function initStats() {
   bindCalendarEvents(renderStats);
   bindUiEvents(renderStats);
 
+  document.getElementById('open-stats-page-btn')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('dist/popup.html#stats') });
+  });
+
   chrome.storage?.onChanged.addListener((changes, area) => {
     if (area === 'local') {
       if (changes.spelt_leeches_limit) {
@@ -57,6 +61,10 @@ export async function initStats() {
 }
 
 export async function renderStats() {
+  const statsTab = document.getElementById('stats-tab');
+  if (!statsTab || !statsTab.classList.contains('active')) {
+    return;
+  }
   try {
     const words = await getWords();
     const streak = await getStreak();

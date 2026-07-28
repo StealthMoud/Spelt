@@ -1,11 +1,16 @@
       <!-- TAB 4: STATS -->
       <section id="stats-tab" class="tab-pane">
-        <!-- Sub-tabs Navigation -->
-        <div class="stats-subtabs-nav">
-          <button type="button" class="stats-subtab-btn active" data-subtab="overview">Overview</button>
-          <button type="button" class="stats-subtab-btn" data-subtab="vocabulary">Vocabulary</button>
-          <button type="button" class="stats-subtab-btn" data-subtab="activity">Activity</button>
-          <button type="button" class="stats-subtab-btn" data-subtab="performance">Performance</button>
+        <!-- Sub-tabs Navigation & Full Page Popout -->
+        <div class="stats-header-bar flex-items-center-between">
+          <div class="stats-subtabs-nav flex-1">
+            <button type="button" class="stats-subtab-btn active" data-subtab="overview">Overview</button>
+            <button type="button" class="stats-subtab-btn" data-subtab="vocabulary">Vocabulary</button>
+            <button type="button" class="stats-subtab-btn" data-subtab="activity">Activity</button>
+            <button type="button" class="stats-subtab-btn" data-subtab="performance">Performance</button>
+          </div>
+          <button type="button" id="open-stats-page-btn" class="icon-btn stats-popout-btn" title="Open Stats in full page" aria-label="Open Stats in full page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
         </div>
 
 <!-- INCLUDE stats-overview.html -->
