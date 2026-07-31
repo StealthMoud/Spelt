@@ -105,13 +105,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  /** Pull every view back in line with what is actually in storage. */
+  async function refreshEverything() {
+    await Promise.all([refreshStats(), syncPracticeDeck(), reloadVaultList()]);
+  }
+
   const refreshBtn = document.getElementById('popup-refresh-btn');
   if (refreshBtn) {
+    let refreshing = false;
     refreshBtn.addEventListener('click', async () => {
-      const svg = refreshBtn.querySelector('svg');
-      if (svg) { svg.style.transform = 'rotate(360deg)'; svg.style.transition = 'transform 0.5s ease-in-out'; }
-      await refreshStats(); await syncPracticeDeck(); await reloadVaultList();
-      setTimeout(() => { if (svg) { svg.style.transition = 'none'; svg.style.transform = 'none'; } }, 500);
+      // Without this a second click starts a second refresh over the top of the
+      // first, and both race to write the same counts and lists.
+      if (refreshing) return;
+      refreshing = true;
+      refreshBtn.disabled = true;
+      // Spins for as long as the work actually takes, rather than for a fixed
+      // half second that could end well before the data landed.
+      refreshBtn.classList.add('is-refreshing');
+      try {
+        await refreshEverything();
+      } catch (err) {
+        console.error('Manual refresh failed:', err);
+      } finally {
+        refreshing = false;
+        refreshBtn.disabled = false;
+        refreshBtn.classList.remove('is-refreshing');
+      }
     });
   }
 
@@ -121,17 +140,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSelectionLookup();
   initMoveable();
 
+  // Everything the open views are derived from. Watching only `spelt_words`
+  // left the Stats tab stale whenever a sandbox check or a finished session
+  // updated the activity, streak or session records without touching the word
+  // list — the manual refresh button was the only way back to the truth.
+  const WATCHED_KEYS = [
+    'spelt_words',
+    'spelt_activity',
+    'spelt_streak',
+    'spelt_sessions',
+    'spelt_sandbox_activity'
+  ];
+
   chrome.storage?.onChanged.addListener(async (changes, areaName) => {
-    if (areaName === 'local' && changes.spelt_words) {
-      const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab');
-      await refreshStats();
-      if (activeTab === 'practice-tab') {
-        await syncPracticeDeck();
-      } else if (activeTab === 'vault-tab') {
-        await reloadVaultList();
-      } else if (activeTab === 'stats-tab') {
-        await renderStats();
-      }
+    if (areaName !== 'local') return;
+    if (!WATCHED_KEYS.some(key => key in changes)) return;
+
+    const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab');
+    await refreshStats();
+
+    // Only the word list can change what these two show; the activity records
+    // cannot, so re-rendering them on a session write would be wasted work.
+    if (!changes.spelt_words) return;
+    if (activeTab === 'practice-tab') {
+      await syncPracticeDeck();
+    } else if (activeTab === 'vault-tab') {
+      await reloadVaultList();
     }
   });
 

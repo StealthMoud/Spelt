@@ -86,6 +86,16 @@
 .icon-btn:active {
   transform: scale(0.94);
 }
+.icon-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.icon-btn:disabled:hover {
+  background: hsla(155, 10%, 20%, 0.25);
+  border-color: var(--border);
+  color: var(--text-muted);
+  transform: none;
+}
 
 .vault-sort-dir-btn {
   background: hsla(155, 10%, 15%, 0.35) !important;

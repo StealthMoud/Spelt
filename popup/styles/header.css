@@ -198,6 +198,31 @@
   gap: 6px;
 }
 
+/*
+ * Header controls carry their name, not just a glyph. A bare circular-arrow
+ * icon reads as "reload" to nobody who has not already been told, and the
+ * header has room to spare — the label is the difference between a button a
+ * new user tries and one they ignore.
+ */
+.icon-btn.has-label {
+  width: auto;
+  height: 26px;
+  gap: 5px;
+  padding: 0 9px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.icon-btn.has-label span {
+  line-height: 1;
+}
+/* Held for as long as the work runs, so the icon stops when the data lands. */
+.icon-btn.is-refreshing svg {
+  animation: spin 0.7s linear infinite;
+}
+
 .font-resizer-controls {
   display: flex;
   align-items: center;

@@ -410,8 +410,10 @@ html.standalone, body.standalone {
     font-size: 0.95rem !important;
   }
 
-  /* Word list item action buttons */
-  .icon-btn { width: 34px !important; height: 34px !important; border-radius: 8px !important; }
+  /* Word list item action buttons — icon-only ones only, so the labelled
+     header controls are not squashed back into squares with the text cut off. */
+  .icon-btn:not(.has-label) { width: 34px !important; height: 34px !important; border-radius: 8px !important; }
   .icon-btn svg { width: 16px !important; height: 16px !important; }
+  .icon-btn.has-label { height: 34px !important; padding: 0 14px !important; font-size: 0.85rem !important; }
   .vault-list-item > div:last-child { gap: 10px !important; margin-left: 14px !important; }
 }
