@@ -1223,7 +1223,16 @@ margin-top: 4px;
 .ai-insights-panel { margin-bottom: 12px; background: hsla(260, 50%, 30%, 0.12); border: 1px solid hsla(260, 50%, 60%, 0.25); padding: 12px 14px; }
 .ai-insights-header { border-bottom: none; padding-bottom: 0; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 6px; height: auto; width: 100%; }
 .ai-insights-title-text { color: #a78bfa; font-weight: 700; font-size: 0.76rem; }
-.btn-ai-refresh { color: #a78bfa; background: transparent; border: none; padding: 2px 4px; display: none; cursor: pointer; transition: transform var(--transition-fast) ease; align-items: center; justify-content: center; height: 18px; width: 18px; border-radius: var(--radius-sm); }
+/* `display` is left to the .hidden class the script toggles. Hard-coding
+   `display: none` here outranked `.icon-btn`'s flex and pinned the button shut,
+   so removing .hidden revealed nothing and the insights could never be
+   regenerated once they had been cached. */
+.btn-ai-refresh { color: #a78bfa; background: transparent; border: none; padding: 2px 4px; display: inline-flex; cursor: pointer; transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease; align-items: center; justify-content: center; height: 18px; width: 18px; border-radius: var(--radius-sm); }
+.btn-ai-refresh:hover { color: #c4b5fd; transform: scale(1.15); }
+.btn-ai-refresh:active { transform: scale(0.94); }
+.btn-ai-refresh.is-stale { box-shadow: 0 0 10px hsla(258, 90%, 76%, 0.55); color: #ddd6fe; }
+.btn-ai-refresh.is-loading svg { animation: spin 1.5s linear infinite; }
+.ai-insights-stale-note { margin: 10px 0 0; font-size: 0.64rem; color: hsla(258, 40%, 78%, 0.75); font-style: italic; }
 .ai-insights-body { font-size: 0.72rem; color: #c4b5fd; line-height: 1.5; text-align: left; }
 .ai-insights-empty-box { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0; }
 .ai-insights-empty-text { margin: 0; font-size: 0.68rem; color: var(--text-muted); }

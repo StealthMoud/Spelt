@@ -9,6 +9,81 @@ const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 // Keep track of whether we've initialized the button event listeners in this session
 let listenersBound = false;
 
+/**
+ * The most recent render's numbers.
+ *
+ * The click handler below is bound once and would otherwise close over the
+ * arguments of the *first* render, so pressing refresh after a practice session
+ * regenerated the insights from whatever the stats looked like when the tab
+ * first opened — and stored that stale reading as the cache fingerprint.
+ */
+let latestContext = null;
+
+/**
+ * Every figure the insights are built from.
+ *
+ * Computed in one place because two consumers need to agree exactly: the cache
+ * fingerprint, and the prompt describing the numbers to the model. Derived
+ * separately they can drift, and then a cache entry claims to describe stats it
+ * does not.
+ */
+function computeInsightMetrics(words, streak, summary, cardStates, sessions) {
+  const retentionRate = summary.totalReviews > 0
+    ? Math.round((summary.correctReviews / summary.totalReviews) * 100)
+    : 0;
+
+  const errorsFor = (w) => w.totalErrors || (w.misspellings || []).length;
+  const uniqueLeechesMap = new Map();
+  words
+    .filter(w => !w.mastered && ((w.totalErrors || 0) > 0 || (Array.isArray(w.misspellings) && w.misspellings.length > 0)))
+    .forEach(w => {
+      const key = w.word.toLowerCase();
+      const existing = uniqueLeechesMap.get(key);
+      if (!existing || errorsFor(existing) < errorsFor(w)) uniqueLeechesMap.set(key, w);
+    });
+  const leeches = Array.from(uniqueLeechesMap.values())
+    .sort((a, b) => errorsFor(b) - errorsFor(a))
+    .slice(0, 5)
+    .map(w => `${w.word} (${errorsFor(w)} errors)`);
+
+  const cefrCounts = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0, unknown: 0 };
+  words.forEach(w => {
+    const level = w.level ? w.level.toUpperCase() : 'unknown';
+    if (cefrCounts[level] !== undefined) cefrCounts[level]++;
+    else cefrCounts.unknown++;
+  });
+
+  const avgResponseTime = summary.globalRtCount > 0 ? Math.round(summary.globalRtSum / summary.globalRtCount) : 0;
+  const totalSessions = sessions ? sessions.length : 0;
+  const totalStudyMs = sessions && sessions.length > 0
+    ? sessions.reduce((sum, s) => sum + (s.endTime - s.startTime), 0)
+    : summary.globalRtSum;
+  const studyTimeMin = Math.round(totalStudyMs / 1000 / 60);
+
+  const metrics = {
+    retentionRate, leeches, cefrCounts, avgResponseTime, totalSessions, studyTimeMin
+  };
+
+  metrics.statsHash = buildStatsHash({
+    wordsCount: words.length,
+    newCount: cardStates.newCount,
+    learningCount: cardStates.learningCount,
+    matureCount: cardStates.matureCount,
+    masteredCount: cardStates.masteredCount,
+    totalReviews: summary.totalReviews,
+    retentionRate,
+    currentStreak: streak.current || 0,
+    maxStreak: streak.max || 0,
+    leechesStr: leeches.join(','),
+    sandboxChecks: summary.globalSandboxChecks,
+    avgResponseTime,
+    totalSessions,
+    studyTimeMin
+  });
+
+  return metrics;
+}
+
 export async function renderAIInsights(words, streak, summary, cardStates, sessions) {
   const panel = document.getElementById('stats-ai-insights-panel');
   const contentEl = document.getElementById('stats-ai-insights-content');
@@ -27,90 +102,27 @@ export async function renderAIInsights(words, streak, summary, cardStates, sessi
     return;
   }
 
-  // Pre-calculate stats metrics
-  const retentionRate = summary.totalReviews > 0 ? Math.round((summary.correctReviews / summary.totalReviews) * 100) : 0;
-  
-  // Get leeches
-  const uniqueLeechesMap = new Map();
-  words
-    .filter(w => !w.mastered && ((w.totalErrors || 0) > 0 || (Array.isArray(w.misspellings) && w.misspellings.length > 0)))
-    .forEach(w => {
-      const key = w.word.toLowerCase();
-      const errCount = w.totalErrors || (w.misspellings || []).length;
-      const existing = uniqueLeechesMap.get(key);
-      if (!existing || (existing.totalErrors || (existing.misspellings || []).length) < errCount) {
-        uniqueLeechesMap.set(key, w);
-      }
-    });
-  const leeches = Array.from(uniqueLeechesMap.values())
-    .sort((a, b) => (b.totalErrors || (b.misspellings || []).length) - (a.totalErrors || (a.misspellings || []).length))
-    .slice(0, 5)
-    .map(w => `${w.word} (${w.totalErrors || (w.misspellings || []).length} errors)`);
-
-  // CEFR levels count
-  const cefrCounts = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0, unknown: 0 };
-  words.forEach(w => {
-    const level = w.level ? w.level.toUpperCase() : 'unknown';
-    if (cefrCounts[level] !== undefined) cefrCounts[level]++;
-    else cefrCounts.unknown++;
-  });
-
-  const avgResponseTime = summary.globalRtCount > 0 ? Math.round(summary.globalRtSum / summary.globalRtCount) : 0;
-  const totalSessions = sessions ? sessions.length : 0;
-  const totalStudyMs = sessions && sessions.length > 0 ? sessions.reduce((sum, s) => sum + (s.endTime - s.startTime), 0) : summary.globalRtSum;
-  const studyTimeMin = Math.round(totalStudyMs / 1000 / 60);
-
-  // Generate data fingerprint hash. If this changes, cache is invalidated.
-  const statsHash = buildStatsHash({
-    wordsCount: words.length,
-    newCount: cardStates.newCount,
-    learningCount: cardStates.learningCount,
-    matureCount: cardStates.matureCount,
-    masteredCount: cardStates.masteredCount,
-    totalReviews: summary.totalReviews,
-    retentionRate,
-    currentStreak: streak.current || 0,
-    maxStreak: streak.max || 0,
-    leechesStr: leeches.join(','),
-    sandboxChecks: summary.globalSandboxChecks,
-    avgResponseTime,
-    totalSessions,
-    studyTimeMin
-  });
+  const metrics = computeInsightMetrics(words, streak, summary, cardStates, sessions);
 
   // Binding listeners for generate and refresh buttons
-  bindActionListeners(words, streak, summary, cardStates, sessions, statsHash);
+  bindActionListeners({ words, streak, summary, cardStates, sessions, metrics });
 
   // Check cache first
   try {
     const cachedData = await chrome.storage.local.get([CACHE_KEY, CACHE_TIME_KEY, 'spelt_stats_ai_insights_hash']);
     const cachedTime = cachedData[CACHE_TIME_KEY] || 0;
     const cachedHash = cachedData['spelt_stats_ai_insights_hash'] || '';
-    const cacheAge = Date.now() - cachedTime;
-    const cacheExpired = cacheAge > CACHE_TTL_MS;
-    
-    // We only use the cache if it exists.
-    // If the cache exists and the hash matches, display it immediately and show refresh button.
-    // If the cache exists but the hash does NOT match, we STILL display it immediately (so the UI is not empty),
-    // but we can animate the refresh button or show an active refresh state.
+    const cacheExpired = Date.now() - cachedTime > CACHE_TTL_MS;
+
+    // The cached text is shown even when the numbers have moved on, so the panel
+    // is never empty — but it is an answer the model wrote about older figures,
+    // and that has to be said out loud rather than hinted at with a glow. It is
+    // not regenerated automatically: that is a paid API call, and the stats
+    // change on every single review.
     if (cachedData[CACHE_KEY]) {
       const parsed = typeof cachedData[CACHE_KEY] === 'string' ? JSON.parse(cachedData[CACHE_KEY]) : cachedData[CACHE_KEY];
       distributeInsights(parsed);
-      
-      const refreshBtn = document.getElementById('stats-ai-refresh-btn');
-      if (refreshBtn) {
-        refreshBtn.classList.remove('hidden');
-        if (cachedHash !== statsHash || cacheExpired) {
-          // Visual indicator of stale data (hash mismatch or TTL expiry)
-          refreshBtn.style.boxShadow = '0 0 10px var(--primary-glow)';
-          refreshBtn.title = cacheExpired
-            ? 'AI Insights are older than 6 hours. Click to refresh.'
-            : 'Stats changed since last analysis. Click to update AI Insights!';
-        } else {
-          refreshBtn.style.boxShadow = 'none';
-          refreshBtn.title = 'Refresh AI Coach Insights';
-        }
-      }
+      markStale(cachedHash !== metrics.statsHash || cacheExpired, cacheExpired);
       return;
     }
   } catch (_) {}
@@ -138,26 +150,58 @@ function showGeneratePlaceholder() {
   hideSubtabPanels();
 }
 
-function bindActionListeners(words, streak, summary, cardStates, sessions, statsHash) {
+/**
+ * Show or clear the "these insights describe older numbers" notice, and put the
+ * refresh control in reach.
+ */
+function markStale(isStale, cacheExpired) {
+  const refreshBtn = document.getElementById('stats-ai-refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.classList.remove('hidden');
+    refreshBtn.classList.toggle('is-stale', isStale);
+    refreshBtn.title = isStale
+      ? (cacheExpired
+        ? 'These insights are over 6 hours old. Click to regenerate.'
+        : 'Your stats have changed since these insights were written. Click to regenerate.')
+      : 'Regenerate AI Coach Insights';
+  }
+
+  const content = document.getElementById('stats-ai-insights-content');
+  content?.querySelector('.ai-insights-stale-note')?.remove();
+  if (!isStale || !content) return;
+
+  const note = document.createElement('p');
+  note.className = 'ai-insights-stale-note';
+  note.textContent = cacheExpired
+    ? 'Written over 6 hours ago — click the refresh icon above to rewrite them.'
+    : 'Written from earlier stats — click the refresh icon above to rewrite them.';
+  content.appendChild(note);
+}
+
+function bindActionListeners(context) {
   const panel = document.getElementById('stats-ai-insights-panel');
   if (!panel) return;
+
+  // Refreshed on every render so the handler below always regenerates from the
+  // numbers on screen, not the ones present when it was first bound.
+  latestContext = context;
 
   // We bind once using event delegation
   if (!listenersBound) {
     panel.addEventListener('click', async (e) => {
       const genBtn = e.target.closest('#stats-ai-generate-btn');
       const refBtn = e.target.closest('#stats-ai-refresh-btn');
-      if (genBtn || refBtn) {
+      if ((genBtn || refBtn) && latestContext) {
         e.preventDefault();
         e.stopPropagation();
-        await triggerInsightsGeneration(words, streak, summary, cardStates, sessions, statsHash);
+        await triggerInsightsGeneration(latestContext);
       }
     });
     listenersBound = true;
   }
 }
 
-async function triggerInsightsGeneration(words, streak, summary, cardStates, sessions, statsHash) {
+async function triggerInsightsGeneration({ words, streak, summary, cardStates, metrics }) {
   const panel = document.getElementById('stats-ai-insights-panel');
   const contentEl = document.getElementById('stats-ai-insights-content');
   const refreshBtn = document.getElementById('stats-ai-refresh-btn');
@@ -168,45 +212,12 @@ async function triggerInsightsGeneration(words, streak, summary, cardStates, ses
   if (refreshBtn) {
     refreshBtn.classList.remove('hidden');
     refreshBtn.disabled = true;
-    const svg = refreshBtn.querySelector('svg');
-    if (svg) {
-      svg.style.animation = 'spin 1.5s linear infinite';
-    }
+    refreshBtn.classList.add('is-loading');
   }
   showSubtabLoading();
 
   try {
-    const retentionRate = summary.totalReviews > 0 ? Math.round((summary.correctReviews / summary.totalReviews) * 100) : 0;
-    
-    // Get leeches
-    const uniqueLeechesMap = new Map();
-    words
-      .filter(w => !w.mastered && ((w.totalErrors || 0) > 0 || (Array.isArray(w.misspellings) && w.misspellings.length > 0)))
-      .forEach(w => {
-        const key = w.word.toLowerCase();
-        const errCount = w.totalErrors || (w.misspellings || []).length;
-        const existing = uniqueLeechesMap.get(key);
-        if (!existing || (existing.totalErrors || (existing.misspellings || []).length) < errCount) {
-          uniqueLeechesMap.set(key, w);
-        }
-      });
-    const leeches = Array.from(uniqueLeechesMap.values())
-      .sort((a, b) => (b.totalErrors || (b.misspellings || []).length) - (a.totalErrors || (a.misspellings || []).length))
-      .slice(0, 5)
-      .map(w => `${w.word} (${w.totalErrors || (w.misspellings || []).length} errors)`);
-
-    // CEFR levels count
-    const cefrCounts = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0, unknown: 0 };
-    words.forEach(w => {
-      const level = w.level ? w.level.toUpperCase() : 'unknown';
-      if (cefrCounts[level] !== undefined) cefrCounts[level]++;
-      else cefrCounts.unknown++;
-    });
-
-    const avgResponseTime = summary.globalRtCount > 0 ? Math.round(summary.globalRtSum / summary.globalRtCount) : 0;
-    const totalSessions = sessions ? sessions.length : 0;
-    const totalStudyMs = sessions && sessions.length > 0 ? sessions.reduce((sum, s) => sum + (s.endTime - s.startTime), 0) : summary.globalRtSum;
-    const studyTimeMin = Math.round(totalStudyMs / 1000 / 60);
+    const { retentionRate, leeches, cefrCounts, avgResponseTime, totalSessions, studyTimeMin } = metrics;
 
     const statsSummary = `
 - Total words in library: ${words.length}
@@ -223,22 +234,17 @@ async function triggerInsightsGeneration(words, streak, summary, cardStates, ses
     `;
 
     const dataObj = await askGemini(buildStatsInsightsPrompt(statsSummary));
-    
+
     // Distribute results to subtab panels
     distributeInsights(dataObj);
-
-    if (refreshBtn) {
-      refreshBtn.classList.remove('hidden');
-      refreshBtn.style.boxShadow = 'none';
-      refreshBtn.title = 'Refresh AI Coach Insights';
-    }
+    markStale(false, false);
 
     // Cache the result
     try {
       await chrome.storage.local.set({
         [CACHE_KEY]: dataObj,
         [CACHE_TIME_KEY]: Date.now(),
-        'spelt_stats_ai_insights_hash': statsHash
+        'spelt_stats_ai_insights_hash': metrics.statsHash
       });
     } catch (_) {}
   } catch (err) {
@@ -255,10 +261,7 @@ async function triggerInsightsGeneration(words, streak, summary, cardStates, ses
   } finally {
     if (refreshBtn) {
       refreshBtn.disabled = false;
-      const svg = refreshBtn.querySelector('svg');
-      if (svg) {
-        svg.style.animation = 'none';
-      }
+      refreshBtn.classList.remove('is-loading');
     }
   }
 }
