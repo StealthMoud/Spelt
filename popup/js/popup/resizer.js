@@ -1,3 +1,5 @@
+import { POPOUT_WIDTH, getPopoutSize, clampToWorkArea } from './popout_bounds.js';
+
 export function initResizer() {
   const handles = document.querySelectorAll('.resizer');
 
@@ -11,18 +13,42 @@ export function initResizer() {
     document.documentElement.classList.add('standalone');
     document.body.classList.add('standalone');
 
+    /**
+     * Snap to the full launch size, once, on load.
+     *
+     * The create call already asks for these bounds, but this window also comes
+     * back on its own — Chrome restores it after a restart at whatever size it
+     * last had, and a reload keeps the old frame. Applying the size here is what
+     * makes "always this big" true on every route into the popout, not just the
+     * button.
+     */
+    const applyLaunchSize = () => {
+      chrome.windows?.getCurrent((win) => {
+        if (!win || win.type !== 'popup') return;
+        const size = getPopoutSize();
+        if (win.width === size.width && win.height === size.height) return;
+        const position = clampToWorkArea({ left: win.left, top: win.top }, size);
+        chrome.windows.update(win.id, { state: 'normal', ...size, ...position });
+      });
+    };
+
+    /**
+     * Keep the width in line afterwards, but leave the height alone — the user
+     * is free to shorten the window, and only a width beyond the 580px layout
+     * cap produces dead space worth correcting.
+     */
     const enforceCompactWidth = () => {
       chrome.windows?.getCurrent((win) => {
         if (!win || win.type !== 'popup') return;
-        if (win.state === 'fullscreen') {
-          chrome.windows.update(win.id, { state: 'normal', width: 580, height: win.height || 680 });
-        } else if (win.width > 620) {
-          chrome.windows.update(win.id, { width: 580, height: win.height });
+        if (win.state === 'fullscreen' || win.state === 'maximized') {
+          chrome.windows.update(win.id, { state: 'normal', ...getPopoutSize() });
+        } else if (win.width > POPOUT_WIDTH + 40) {
+          chrome.windows.update(win.id, { width: POPOUT_WIDTH, height: win.height });
         }
       });
     };
 
-    enforceCompactWidth();
+    applyLaunchSize();
 
     if (chrome.windows?.onBoundsChanged) {
       chrome.windows.onBoundsChanged.addListener((win) => {

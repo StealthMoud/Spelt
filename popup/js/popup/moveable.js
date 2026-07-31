@@ -1,3 +1,5 @@
+import { getLaunchBounds, savePosition } from './popout_bounds.js';
+
 export function initMoveable() {
   const header = document.querySelector('.popup-header');
   const popoutBtn = document.getElementById('popup-popout-btn');
@@ -8,13 +10,15 @@ export function initMoveable() {
       header.style.cursor = 'move';
     } else if (popoutBtn) {
       popoutBtn.classList.remove('hidden');
-      popoutBtn.addEventListener('click', () => {
+      popoutBtn.addEventListener('click', async () => {
+        // Sized and placed deliberately rather than left to Chrome, which opens
+        // a small cascaded window offset from the last one.
+        const bounds = await getLaunchBounds();
         chrome.windows?.create({
           url: chrome.runtime.getURL('dist/popup.html#popout'),
           type: 'popup',
-          width: 580,
-          height: 680,
-          state: 'normal'
+          state: 'normal',
+          ...bounds
         });
         window.close();
       });
@@ -37,15 +41,17 @@ export function initMoveable() {
       const startTop = win.top;
 
       let rafId = null;
+      let lastLeft = startLeft;
+      let lastTop = startTop;
+
       function onMouseMove(moveEvent) {
         const dx = moveEvent.screenX - startScreenX;
         const dy = moveEvent.screenY - startScreenY;
+        lastLeft = startLeft + dx;
+        lastTop = startTop + dy;
         if (rafId) cancelAnimationFrame(rafId);
         rafId = requestAnimationFrame(() => {
-          chrome.windows.update(win.id, {
-            left: startLeft + dx,
-            top: startTop + dy
-          });
+          chrome.windows.update(win.id, { left: lastLeft, top: lastTop });
         });
       }
 
@@ -53,6 +59,9 @@ export function initMoveable() {
         if (rafId) cancelAnimationFrame(rafId);
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
+        // Only centred until the user expresses a preference; from here on the
+        // window reopens where they left it.
+        savePosition(lastLeft, lastTop);
       }
 
       document.addEventListener('mousemove', onMouseMove);
