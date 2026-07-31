@@ -9,12 +9,16 @@ import {
   sortGeminiModels,
   getGeminiKeyFingerprint,
   collectModelsFromKeyMap,
-  GEMINI_AUTO_MODEL
+  GEMINI_AUTO_MODEL,
+  GEMINI_API_ROOT
 } from '../../shared/storage.js';
 import { runIntegrityAudit } from '../../src/data/integrity.js';
 
 let onDbRestoredCallback = null;
 let aiStatusIntervalId = null;
+
+/** Bump to force every saved key to re-list its models on the next Settings open. */
+const MODEL_DISCOVERY_EPOCH = 2;
 
 export function initSettings(onDbRestored) {
   onDbRestoredCallback = onDbRestored;
@@ -102,14 +106,19 @@ export function initSettings(onDbRestored) {
         return;
       }
 
-      const testModel = availableModels[0];
+      // Verify against the *cheapest* model the key exposes, not the strongest.
+      // This call only has to prove the key can generate; running it on a Pro
+      // model made adding a key take many seconds and spent quota on the tier
+      // the extension is least likely to use.
+      const testModel = availableModels[availableModels.length - 1];
 
       statusEl.textContent = `Testing content generation with ${getGeminiModelMeta(testModel).label}...`;
-      const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/${testModel}:generateContent`, {
+      const testRes = await fetch(`${GEMINI_API_ROOT}/${testModel}:generateContent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: 'Write the word "connected".' }] }]
+          contents: [{ parts: [{ text: 'Write the word "connected".' }] }],
+          generationConfig: { maxOutputTokens: 16 }
         })
       });
 
@@ -165,19 +174,27 @@ export function initSettings(onDbRestored) {
       await setGeminiStorage({ spelt_gemini_keys: keys, spelt_gemini_key: keys[0] || '' });
     }
 
-    for (const key of keys) {
+    // Lists discovered before the move to v1beta are missing every model that
+    // only v1beta exposes, and nothing else would ever refresh them: the loop
+    // below re-discovers a key only when its list is empty.
+    const staleDiscovery = res.spelt_gemini_discovery_epoch !== MODEL_DISCOVERY_EPOCH;
+
+    // Keys are refreshed together rather than one after another; this runs on
+    // every Settings open and each request is an independent round trip.
+    await Promise.all(keys.map(async (key) => {
       const fingerprint = getGeminiKeyFingerprint(key);
-      if (!Array.isArray(keyModelsMap[fingerprint]) || keyModelsMap[fingerprint].length === 0) {
-        const discovered = await fetchModelsForKey(key).catch(err => {
-          console.warn('Could not refresh Gemini model list for a saved key:', err);
-          return [];
-        });
-        if (discovered.length > 0) {
-          keyModelsMap[fingerprint] = discovered;
-          keyModelsChanged = true;
-        }
+      const missing = !Array.isArray(keyModelsMap[fingerprint]) || keyModelsMap[fingerprint].length === 0;
+      if (!missing && !staleDiscovery) return;
+
+      const discovered = await fetchModelsForKey(key).catch(err => {
+        console.warn('Could not refresh Gemini model list for a saved key:', err);
+        return [];
+      });
+      if (discovered.length > 0) {
+        keyModelsMap[fingerprint] = discovered;
+        keyModelsChanged = true;
       }
-    }
+    }));
 
     pruneKeyModelsMap(keyModelsMap, keys);
     const modelList = collectModelsFromKeyMap(keyModelsMap, keys, res.spelt_gemini_models_list || []);
@@ -189,7 +206,8 @@ export function initSettings(onDbRestored) {
     await setGeminiStorage({
       spelt_gemini_models_list: modelList,
       spelt_gemini_key_models: keyModelsMap,
-      spelt_gemini_model: nextModel
+      spelt_gemini_model: nextModel,
+      spelt_gemini_discovery_epoch: MODEL_DISCOVERY_EPOCH
     });
 
     renderKeysList(keys, keyModelsMap, modelList);
@@ -380,7 +398,8 @@ function getGeminiStorage() {
       'spelt_gemini_key',
       'spelt_gemini_model',
       'spelt_gemini_models_list',
-      'spelt_gemini_key_models'
+      'spelt_gemini_key_models',
+      'spelt_gemini_discovery_epoch'
     ], res => resolve(res || {}));
   });
 }
@@ -392,7 +411,7 @@ function setGeminiStorage(updates) {
 }
 
 async function fetchModelsForKey(key) {
-  const modelsRes = await fetch('https://generativelanguage.googleapis.com/v1/models', {
+  const modelsRes = await fetch(`${GEMINI_API_ROOT}/models?pageSize=200`, {
     headers: { 'x-goog-api-key': key }
   });
   if (!modelsRes.ok) {

@@ -25,6 +25,14 @@ const MODEL_CATALOG = [
     note: 'Newest high-capability Flash preview for text-output tasks.'
   },
   {
+    name: 'models/gemini-3.6-flash',
+    label: 'Gemini 3.6 Flash',
+    family: 'Gemini 3',
+    tier: 'Strong balanced',
+    stability: 'Stable',
+    note: 'Newest stable Flash — the best speed/quality trade for this extension.'
+  },
+  {
     name: 'models/gemini-3.5-flash',
     label: 'Gemini 3.5 Flash',
     family: 'Gemini 3',
@@ -39,6 +47,14 @@ const MODEL_CATALOG = [
     tier: 'Deep reasoning',
     stability: 'Stable',
     note: 'Older but still very capable for complex JSON generation.'
+  },
+  {
+    name: 'models/gemini-3.5-flash-lite',
+    label: 'Gemini 3.5 Flash-Lite',
+    family: 'Gemini 3',
+    tier: 'Efficient',
+    stability: 'Stable',
+    note: 'Fastest tier — thinks minimally by default.'
   },
   {
     name: 'models/gemini-3.1-flash-lite',
@@ -106,6 +122,7 @@ const BLOCKED_MODEL_NAME_PARTS = [
   'antigravity',
   'aqa',
   'gemma',
+  'learnlm',
   'omni'
 ];
 
@@ -254,30 +271,53 @@ const runtime = {
   cooldowns: {},
   badModels: new Set(),
   keyModels: {},
+  unsupported: new Map(), // model -> Set(generationConfig field it 400s on)
+  keyOffset: 0,           // rotates the key order so one key is not the only one spent
+  lastUsed: null,
   ready: null
 };
 
 /**
- * Bumped when failure handling changes. The old code blacklisted a trial for any
- * 400, including ones caused by a request field the model simply did not accept,
- * so a perfectly good fast model could be struck off permanently and every later
- * request would start further down the tier list. Those verdicts are no longer
- * trustworthy, so they are dropped once and relearned.
+ * Bumped when a change invalidates what the engine has already learned.
+ *
+ * v2 dropped verdicts from a version that blacklisted a model for any 400,
+ * including ones caused by a request field the model simply did not accept.
+ * v3 drops verdicts learned against the `v1` endpoint: that version rejects
+ * `thinkingConfig` outright and exposes a narrower model list, so both the
+ * blacklist and the unsupported-field map recorded things that are untrue of
+ * `v1beta`.
  */
-const BLACKLIST_EPOCH = 2;
+const BLACKLIST_EPOCH = 3;
 
 function loadRuntime() {
   if (!runtime.ready) {
-    runtime.ready = readLocal(['spelt_rate_limit_cooldowns', 'spelt_bad_models', 'spelt_gemini_key_models', 'spelt_bad_models_epoch'])
+    const fields = [
+      'spelt_rate_limit_cooldowns',
+      'spelt_bad_models',
+      'spelt_gemini_key_models',
+      'spelt_bad_models_epoch',
+      'spelt_gemini_unsupported_fields',
+      'spelt_gemini_key_offset'
+    ];
+    runtime.ready = readLocal(fields)
       .then(res => {
         runtime.cooldowns = pruneCooldowns(res.spelt_rate_limit_cooldowns || {});
         runtime.keyModels = res.spelt_gemini_key_models || {};
+        runtime.keyOffset = Number(res.spelt_gemini_key_offset) || 0;
 
         if (res.spelt_bad_models_epoch === BLACKLIST_EPOCH) {
           runtime.badModels = new Set(res.spelt_bad_models || []);
+          for (const [model, list] of Object.entries(res.spelt_gemini_unsupported_fields || {})) {
+            runtime.unsupported.set(model, new Set(list));
+          }
         } else {
           runtime.badModels = new Set();
-          writeLocal({ spelt_bad_models: [], spelt_bad_models_epoch: BLACKLIST_EPOCH });
+          runtime.unsupported.clear();
+          writeLocal({
+            spelt_bad_models: [],
+            spelt_gemini_unsupported_fields: {},
+            spelt_bad_models_epoch: BLACKLIST_EPOCH
+          });
         }
       })
       .catch(() => { /* no storage yet — the defaults above are correct */ });
@@ -291,9 +331,17 @@ function persistRuntimeSoon() {
   persistTimer = setTimeout(() => {
     persistTimer = null;
     runtime.cooldowns = pruneCooldowns(runtime.cooldowns);
+    const unsupported = {};
+    for (const [model, set] of runtime.unsupported) unsupported[model] = [...set];
     writeLocal({
       spelt_rate_limit_cooldowns: runtime.cooldowns,
-      spelt_bad_models: [...runtime.badModels]
+      spelt_bad_models: [...runtime.badModels],
+      spelt_gemini_unsupported_fields: unsupported,
+      spelt_gemini_key_offset: runtime.keyOffset,
+      ...(runtime.lastUsed && {
+        spelt_last_used_model: runtime.lastUsed.model,
+        spelt_last_used_trial: runtime.lastUsed.trialId
+      })
     });
   }, 250);
 }
@@ -317,25 +365,40 @@ async function getStoredKeyModelsMap() {
  * Fields that a given model rejects. Newer models accept `responseMimeType` and
  * `thinkingConfig`; older ones 400 on them. Remembering the rejection lets the
  * next request skip the field instead of burning a round trip to rediscover it.
+ *
+ * This lives in `runtime` rather than a module-local Map because the popup is a
+ * fresh JS context every time it opens. Kept in memory only, the map relearned
+ * the same rejections — one wasted round trip per model — on every single open.
  */
-const unsupportedFields = new Map();
-
 function isUnsupported(model, field) {
-  return unsupportedFields.get(model)?.has(field) === true;
+  return runtime.unsupported.get(model)?.has(field) === true;
 }
 
 function markUnsupported(model, field) {
-  if (!unsupportedFields.has(model)) unsupportedFields.set(model, new Set());
-  unsupportedFields.get(model).add(field);
+  if (!runtime.unsupported.has(model)) runtime.unsupported.set(model, new Set());
+  runtime.unsupported.get(model).add(field);
+  persistRuntimeSoon();
 }
 
-function unsupportedFieldFrom(message) {
+/**
+ * Marker for "this model has a floor above the cheapest thinking setting".
+ * Not a field the API knows about — it records a rejected *value* so the next
+ * attempt asks for the next step up instead of giving up on the field and
+ * falling back to the model's (slow) default budget.
+ */
+const THINKING_FLOOR = 'thinkingFloor';
+
+function unsupportedFieldFrom(message, model) {
   const msg = (message || '').toLowerCase();
   if (msg.includes('responsemimetype') || msg.includes('response_mime_type') || msg.includes('responsemime')) {
     return 'responseMimeType';
   }
-  if (msg.includes('thinkingconfig') || msg.includes('thinking_config') || msg.includes('thinking budget')) {
-    return 'thinkingConfig';
+  if (msg.includes('thinkinglevel') || msg.includes('thinking_level') ||
+      msg.includes('thinkingconfig') || msg.includes('thinking_config') || msg.includes('thinking budget')) {
+    // Some models refuse the very lowest setting but accept the one above it
+    // (3 Pro takes low/high but not minimal; 2.5 Pro has a 128-token floor).
+    // Try that once before writing the whole field off.
+    return isUnsupported(model, THINKING_FLOOR) ? 'thinkingConfig' : THINKING_FLOOR;
   }
   return null;
 }
@@ -414,26 +477,53 @@ export async function getStoredKeys() {
 }
 
 /**
+ * Rotate the key order so consecutive requests do not all land on key #1.
+ *
+ * The trial list is walked in order and the first entry almost always answers,
+ * so a fixed order meant one key served every request and hit its per-minute
+ * limit while the other keys sat idle — the extra keys only ever helped *after*
+ * the first one had already 429'd and stalled a request. Rotating spreads the
+ * load, so N keys buy roughly N times the headroom before anything throttles.
+ */
+function rotateKeys(keys) {
+  if (keys.length < 2) return keys;
+  const offset = runtime.keyOffset % keys.length;
+  return [...keys.slice(offset), ...keys.slice(0, offset)];
+}
+
+/**
+ * Advance the rotation. Called once per request, not once per trial.
+ * The counter wraps on a multiple of every plausible key count, so wrapping
+ * never hands the same key two requests in a row.
+ */
+function advanceKeyRotation(keyCount) {
+  if (keyCount < 2) return;
+  runtime.keyOffset = (runtime.keyOffset + 1) % 2520;
+  persistRuntimeSoon();
+}
+
+/**
  * Generate trial sequence: try the strongest model across all keys first.
  */
-async function getTrialSequence(modelTiers, keys) {
+async function getTrialSequence(modelTiers, keys, { rotate = false } = {}) {
   const sequence = [];
   const keyModelsMap = await getStoredKeyModelsMap();
+  const ordered = rotate ? rotateKeys(keys) : keys;
   const add = (model, key) => {
     const keyId = getKeyIdentifier(key);
     sequence.push({ model, key, keyId, trialId: `${model}::${keyId}` });
   };
   for (const model of modelTiers) {
-    for (const key of keys) {
+    for (const key of ordered) {
       const keyModels = getModelsForKey(key, modelTiers, keyModelsMap);
       if (keyModels.includes(model)) {
         add(model, key);
       }
     }
   }
-  if (sequence.length === 0 && keys.length > 0) {
+  if (sequence.length === 0 && ordered.length > 0) {
     for (const model of modelTiers) {
-      for (const key of keys) {
+      for (const key of ordered) {
         add(model, key);
       }
     }
@@ -528,6 +618,14 @@ function recordFailure(trial, error, { trials, deadModels, deadKeys }) {
       ? trials.filter(t => t.model === trial.model)
       : [trial];
     for (const t of affected) runtime.cooldowns[t.trialId] = until;
+  } else if (scope === SCOPE_MODEL) {
+    // A model the account cannot serve at all is struck off for every key at
+    // once. Recording only this pairing meant each additional key rediscovered
+    // the same 404 on a later request — three keys, three wasted round trips to
+    // learn one fact, which is exactly backwards from what extra keys are for.
+    for (const t of trials) {
+      if (t.model === trial.model) runtime.badModels.add(t.trialId);
+    }
   } else {
     runtime.badModels.add(trial.trialId);
   }
@@ -536,11 +634,11 @@ function recordFailure(trial, error, { trials, deadModels, deadKeys }) {
 }
 
 function noteSuccess(trial) {
-  if (runtime.cooldowns[trial.trialId]) {
-    delete runtime.cooldowns[trial.trialId];
-    persistRuntimeSoon();
-  }
-  writeLocal({ spelt_last_used_model: trial.model, spelt_last_used_trial: trial.trialId });
+  delete runtime.cooldowns[trial.trialId];
+  // Folded into the debounced write. This used to fire a storage write on the
+  // hot path of every successful request purely to update a status readout.
+  runtime.lastUsed = { model: trial.model, trialId: trial.trialId };
+  persistRuntimeSoon();
 }
 
 /**
@@ -553,9 +651,18 @@ async function getAvailableModelTiers(preferredModel, preferFlash = false) {
   let fallbackModels = availableModels.length > 0 ? availableModels : sortGeminiModels(MODEL_TIERS);
 
   if (preferFlash) {
-    const flashModels = fallbackModels.filter(m => m.toLowerCase().includes('flash') || m.toLowerCase().includes('lite'));
-    const proModels = fallbackModels.filter(m => !m.toLowerCase().includes('flash') && !m.toLowerCase().includes('lite'));
-    fallbackModels = [...flashModels, ...proModels];
+    // Three buckets, order preserved within each. Preview models are demoted
+    // below stable ones of the same class: they are the tier most likely to be
+    // capacity-constrained, and a 503 there costs a whole round trip before the
+    // request even starts making progress.
+    const buckets = [[], [], []];
+    for (const model of fallbackModels) {
+      const lower = model.toLowerCase();
+      const fast = lower.includes('flash') || lower.includes('lite');
+      const preview = lower.includes('preview') || lower.includes('exp');
+      buckets[fast ? (preview ? 1 : 0) : 2].push(model);
+    }
+    fallbackModels = [...buckets[0], ...buckets[1], ...buckets[2]];
   }
 
   if (!preferredModel || preferredModel === GEMINI_AUTO_MODEL) {
@@ -588,7 +695,19 @@ function getShortestWait(cooldowns) {
   return shortest === Infinity ? 60 : Math.ceil(shortest / 1000);
 }
 
-const API_ROOT = 'https://generativelanguage.googleapis.com/v1';
+/**
+ * `v1beta`, not `v1`.
+ *
+ * `thinkingConfig` only exists on v1beta. Posting it to v1 comes back as
+ * `400 Unknown name "thinkingConfig"`, which this engine handles by dropping
+ * the field and retrying — so the request cost a wasted round trip *and* then
+ * ran with the model's default thinking budget. On a Gemini 3 Flash or Pro
+ * preview that default is "high", which is how a one-line dictionary lookup
+ * ended up taking half a minute. v1beta also lists the newer fast models that
+ * v1 does not expose at all.
+ */
+export const GEMINI_API_ROOT = 'https://generativelanguage.googleapis.com/v1beta';
+const API_ROOT = GEMINI_API_ROOT;
 
 /** How long one attempt may go without producing a response before we give up on it. */
 const RESPONSE_TIMEOUT_MS = 20000;
@@ -599,8 +718,13 @@ const RESPONSE_TIMEOUT_MS = 20000;
  * Requests used to be strictly one at a time, so a key having a slow minute
  * stalled the whole chain. Hedging turns the spare keys into what the user
  * expects them to be: the first one to answer wins and the rest are cancelled.
+ *
+ * The loser's tokens are still billed to its key, so this delay is the dial
+ * between latency and quota. With thinking actually off a normal reply lands in
+ * about a second, so a 3s hedge fires only when a key is genuinely stuck rather
+ * than doubling the cost of every routine request.
  */
-const HEDGE_DELAY_MS = 1800;
+const HEDGE_DELAY_MS = 3000;
 const MAX_HEDGED_ATTEMPTS = 2;
 
 function apiUrl(model, method, query = '') {
@@ -629,28 +753,59 @@ function linkAbort(outerSignal, controller) {
 }
 
 /**
+ * The cheapest thinking setting a given model will actually accept.
+ *
+ * The two model generations take different fields, and sending the wrong one is
+ * a 400 — which lands the request back on the model's *default* budget, the
+ * slow outcome this is meant to avoid. Gemini 3 takes `thinkingLevel`; Gemini
+ * 2.5 takes a `thinkingBudget` token count. Neither Pro line can be switched
+ * off entirely, so they get the documented floor instead.
+ */
+function minimalThinkingFor(model) {
+  const lower = model.toLowerCase();
+  const version = Number((lower.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1]);
+  // A model that already rejected the cheapest setting gets the next step up.
+  const atFloor = isUnsupported(model, THINKING_FLOOR);
+  const isPro = lower.includes('pro') || atFloor;
+
+  // The `-latest` aliases carry no version and track the newest release, which
+  // is a Gemini 3 one. A wrong guess costs one 400 and is then remembered.
+  if (version >= 3 || (!version && lower.includes('latest'))) {
+    return { thinkingLevel: isPro ? 'low' : 'minimal' };
+  }
+  if (version >= 2.5) {
+    return { thinkingBudget: isPro ? 128 : 0 };
+  }
+  return null; // unknown generation — better to omit than to 400 on a guess
+}
+
+/**
  * Build the request body for one model, dropping fields it has already rejected
  * and asking for JSON in whichever way the model supports.
  */
-function payloadFor(model, body, wantJson) {
-  const generationConfig = { ...(body.generationConfig || {}) };
-  if (isUnsupported(model, 'thinkingConfig')) delete generationConfig.thinkingConfig;
+function payloadFor(model, request) {
+  const { wantJson, minimizeThinking } = request;
+  const generationConfig = { ...(request.generationConfig || {}) };
+
+  if (minimizeThinking && !isUnsupported(model, 'thinkingConfig')) {
+    const thinking = minimalThinkingFor(model);
+    if (thinking) generationConfig.thinkingConfig = thinking;
+  }
 
   const mimeTypeUsable = wantJson && !isUnsupported(model, 'responseMimeType');
   if (mimeTypeUsable) generationConfig.responseMimeType = 'application/json';
 
-  const payload = { ...body };
+  const payload = { contents: request.contents };
   if (Object.keys(generationConfig).length > 0) payload.generationConfig = generationConfig;
-  else delete payload.generationConfig;
 
   // Without responseMimeType the shape has to be asked for in words instead.
-  if (wantJson && !mimeTypeUsable && body.contents?.[0]?.parts?.[0]?.text) {
+  if (wantJson && !mimeTypeUsable && request.contents?.[0]?.parts?.[0]?.text) {
     payload.contents = [
       {
-        ...body.contents[0],
-        parts: [{ text: `${body.contents[0].parts[0].text}\n\nRespond ONLY with a valid JSON block starting with { and ending with }.` }]
+        ...request.contents[0],
+        parts: [{ text: `${request.contents[0].parts[0].text}\n\nRespond ONLY with a valid JSON block starting with { and ending with }.` }]
       },
-      ...body.contents.slice(1)
+      ...request.contents.slice(1)
     ];
   }
   return payload;
@@ -690,21 +845,28 @@ async function postToGemini(url, key, payload, signal) {
  * One attempt against one model/key, retrying in place if the only problem was
  * a generationConfig field this model does not know about.
  */
-async function requestOnce(trial, body, wantJson, signal, { stream = false } = {}) {
-  for (let attempt = 0; attempt < 2; attempt++) {
+async function requestOnce(trial, request, signal, { stream = false } = {}) {
+  // Three attempts covers the longest legitimate chain — cheapest thinking
+  // setting rejected, next step up also rejected, field dropped — and it only
+  // ever runs the first time a model is seen, because the verdicts persist.
+  for (let attempt = 0; attempt < 3; attempt++) {
     const url = stream
       ? apiUrl(trial.model, 'streamGenerateContent', '?alt=sse')
       : apiUrl(trial.model, 'generateContent');
 
-    const response = await postToGemini(url, trial.key, payloadFor(trial.model, body, wantJson), signal);
+    const response = await postToGemini(url, trial.key, payloadFor(trial.model, request), signal);
     if (response.ok) return response;
 
     const error = await toApiError(response);
-    const field = attempt === 0 ? unsupportedFieldFrom(error.apiMessage) : null;
+    const field = unsupportedFieldFrom(error.apiMessage, trial.model);
     if (!field || isUnsupported(trial.model, field)) throw error;
 
     markUnsupported(trial.model, field);
-    console.info(`[Spelt AI] ${trial.model} rejected ${field}; retrying without it.`);
+    console.info(
+      field === THINKING_FLOOR
+        ? `[Spelt AI] ${trial.model} refused the lowest thinking setting; retrying one step up.`
+        : `[Spelt AI] ${trial.model} rejected ${field}; retrying without it.`
+    );
   }
   throw new Error('Unreachable');
 }
@@ -841,7 +1003,38 @@ async function planTrials(options) {
   }
   const preferredModel = await cachedGet('model', () => getStored('spelt_gemini_model').then(v => v || GEMINI_AUTO_MODEL));
   const modelTiers = await getAvailableModelTiers(preferredModel, options.preferFlash !== false);
-  return getTrialSequence(modelTiers, keys);
+  const trials = await getTrialSequence(modelTiers, keys, { rotate: true });
+  advanceKeyRotation(keys.length);
+  return trials;
+}
+
+/**
+ * Everything one prompt needs, minus the parts that depend on which model ends
+ * up serving it. `payloadFor` finishes the job per trial.
+ */
+function buildRequest(prompt, options, wantJson) {
+  return {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: buildGenerationConfig(options),
+    wantJson,
+    // Every prompt this extension sends is a short, fully specified task — a
+    // dictionary entry, a mnemonic, a one-line correction. The thinking pass
+    // only delays the answer, so it is minimised unless a caller opts in.
+    minimizeThinking: options.thinking !== true
+  };
+}
+
+/**
+ * Shares one in-flight request across callers asking the same question at
+ * the same moment (e.g. two panels mounting together), so a burst of
+ * identical calls costs one network round trip instead of one each. Never
+ * caches past completion — an explicit "regenerate" click must always reach
+ * the network, not replay a stale answer.
+ */
+const inflightRequests = new Map();
+
+function dedupeKeyFor(prompt, options, wantJson) {
+  return `${wantJson}::${prompt}::${JSON.stringify(options || {})}`;
 }
 
 /**
@@ -849,28 +1042,30 @@ async function planTrials(options) {
  * Falls through the model/key trials, hedging across keys on the way.
  */
 async function generate(prompt, options, wantJson) {
-  const trials = await planTrials(options);
-  const body = { contents: [{ parts: [{ text: prompt }] }] };
-  const generationConfig = buildGenerationConfig(options);
-  if (generationConfig) body.generationConfig = generationConfig;
+  const dedupeKey = dedupeKeyFor(prompt, options, wantJson);
+  const existing = inflightRequests.get(dedupeKey);
+  if (existing) return existing;
 
-  return withSlot(() => runTrials(trials, async (trial, signal) => {
-    const response = await requestOnce(trial, body, wantJson, signal);
-    const data = await response.json();
-    const text = extractCandidateText(data.candidates?.[0]);
-    if (!text) throw new Error('Invalid empty response from Gemini API.');
-    return text.trim();
-  }));
+  const promise = (async () => {
+    const trials = await planTrials(options);
+    const request = buildRequest(prompt, options, wantJson);
+
+    return withSlot(() => runTrials(trials, async (trial, signal) => {
+      const response = await requestOnce(trial, request, signal);
+      const data = await response.json();
+      const text = extractCandidateText(data.candidates?.[0]);
+      if (!text) throw new Error('Invalid empty response from Gemini API.');
+      return text.trim();
+    }));
+  })().finally(() => inflightRequests.delete(dedupeKey));
+
+  inflightRequests.set(dedupeKey, promise);
+  return promise;
 }
 
 /**
- * Build generationConfig from caller options.
- *
- * Gemini 2.5+ models reason before answering by default. For the short,
- * well-specified prompts this extension sends (a mnemonic, a one-line
- * correction) that thinking pass adds latency and burns output tokens without
- * improving the answer, so callers can opt out with `thinking: false`.
- * Models that predate thinking ignore the field.
+ * Build the model-independent part of generationConfig from caller options.
+ * The thinking settings are model-specific and are added in `payloadFor`.
  */
 function buildGenerationConfig(options = {}) {
   const config = {};
@@ -878,10 +1073,6 @@ function buildGenerationConfig(options = {}) {
   // user waits on for no reason. Every prompt here wants well under this.
   config.maxOutputTokens = options.maxOutputTokens || 2048;
   if (options.temperature !== undefined) config.temperature = options.temperature;
-  // Off unless a caller explicitly asks for it. Every prompt this extension
-  // sends is a short, fully specified task — a dictionary entry, a mnemonic,
-  // a one-line correction — and the thinking pass only delays the answer.
-  if (options.thinking !== true) config.thinkingConfig = { thinkingBudget: 0 };
   return config;
 }
 
@@ -939,9 +1130,7 @@ export async function askGeminiText(prompt, options = {}) {
  */
 export async function askGeminiTextStream(prompt, options = {}, onChunk) {
   const trials = await planTrials(options);
-  const body = { contents: [{ parts: [{ text: prompt }] }] };
-  const generationConfig = buildGenerationConfig(options);
-  if (generationConfig) body.generationConfig = generationConfig;
+  const request = buildRequest(prompt, options, false /* wantJson */);
 
   // Hedged attempts stream concurrently, so the first one to produce text claims
   // the callback. Without this the loser's tokens would interleave into the same
@@ -949,7 +1138,7 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
   const race = { winner: null };
 
   return withSlot(() => runTrials(trials, async (trial, signal) => {
-    const response = await requestOnce(trial, body, false, signal, { stream: true });
+    const response = await requestOnce(trial, request, signal, { stream: true });
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -1013,12 +1202,19 @@ export async function askGeminiTextStream(prompt, options = {}, onChunk) {
  * Returns the realtime status of all available models.
  */
 export async function getAiStatus() {
-  const preferredModel = await getStored('spelt_gemini_model') || GEMINI_AUTO_MODEL;
+  // One batched read rather than a chain of them: this runs on a repeating
+  // interval while the Settings tab is open.
+  const [stored, keys] = await Promise.all([
+    readLocal(['spelt_gemini_model', 'spelt_last_used_model', 'spelt_last_used_trial']),
+    getStoredKeys(),
+    loadRuntime()
+  ]);
+
+  const preferredModel = stored.spelt_gemini_model || GEMINI_AUTO_MODEL;
   const modelTiers = await getAvailableModelTiers(preferredModel);
-  const keys = await getStoredKeys();
   const now = Date.now();
-  const lastUsed = await getStored('spelt_last_used_model') || null;
-  const lastUsedTrial = await getStored('spelt_last_used_trial') || null;
+  const lastUsed = runtime.lastUsed?.model || stored.spelt_last_used_model || null;
+  const lastUsedTrial = runtime.lastUsed?.trialId || stored.spelt_last_used_trial || null;
 
   const badModels = await getBadModels();
   const cooldowns = await getCooldowns();

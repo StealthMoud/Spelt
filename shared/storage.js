@@ -90,6 +90,7 @@ export {
   isGeminiConfigured,
   getAiStatus,
   GEMINI_AUTO_MODEL,
+  GEMINI_API_ROOT,
   getGeminiKeyFingerprint,
   getGeminiKeyLabel,
   getGeminiModelMeta,

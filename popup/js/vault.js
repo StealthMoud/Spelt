@@ -121,43 +121,56 @@ export async function initVault(onVaultUpdated) {
       const targetLang = await getStored('spelt_target_lang') || 'fa';
       const targetLangName = getLanguageName(targetLang);
 
+      // One read for the whole batch. This used to re-read the entire word list
+      // from storage once per word, inside the loop.
+      const wordsById = new Map((await getWords()).map(w => [w.id, w]));
+
       let done = 0;
-      for (const id of idsToEnrich) {
-        if (isEnrichCancelled) break;
+      const enrichOne = async (id) => {
+        const w = wordsById.get(id);
+        if (!w) return;
         try {
-          const list = await getWords();
-          const w = list.find(x => x.id === id);
-          if (w) {
-            const prompt = buildEnrichmentPrompt(w.word, w, targetLangName);
-            const aiData = await askGemini(prompt);
-            
-            await atomicUpdate(async (freshList) => {
-              const targetWord = freshList.find(x => x.id === id);
-              if (targetWord) {
-                if (aiData.definition) targetWord.definition = aiData.definition;
-                if (aiData.transcription) targetWord.transcription = aiData.transcription;
-                if (aiData.partOfSpeech) targetWord.partOfSpeech = aiData.partOfSpeech;
-                if (aiData.translation) targetWord.translation = aiData.translation;
-                if (aiData.level) targetWord.level = aiData.level.toUpperCase().trim();
-                if (aiData.example) {
-                  targetWord.example = aiData.example;
-                  targetWord.exampleTranslation = '';
-                }
-              }
-            });
-          }
+          const aiData = await askGemini(buildEnrichmentPrompt(w.word, w, targetLangName));
+          await atomicUpdate(async (freshList) => {
+            const targetWord = freshList.find(x => x.id === id);
+            if (!targetWord) return;
+            if (aiData.definition) targetWord.definition = aiData.definition;
+            if (aiData.transcription) targetWord.transcription = aiData.transcription;
+            if (aiData.partOfSpeech) targetWord.partOfSpeech = aiData.partOfSpeech;
+            if (aiData.translation) targetWord.translation = aiData.translation;
+            if (aiData.level) targetWord.level = aiData.level.toUpperCase().trim();
+            if (aiData.example) {
+              targetWord.example = aiData.example;
+              targetWord.exampleTranslation = '';
+            }
+          });
         } catch (err) {
           console.error(`AI enrichment failed for word ID ${id}:`, err);
         }
-        done++;
-        const progressMsgEl = document.getElementById('popup-confirm-msg');
-        if (progressMsgEl) {
-          progressMsgEl.textContent = `Enriched ${done} of ${total} words...`;
+      };
+
+      // Words are enriched by a small pool of workers rather than one at a time
+      // with a fixed 3.5s pause between each. That pause was a stand-in for rate
+      // limiting, but it charged every user the full delay whether or not they
+      // were anywhere near a limit — 20 words cost over a minute of pure
+      // waiting. The request engine already spreads load across keys, backs off
+      // per key on a 429, and caps its own concurrency, so the pool can simply
+      // feed it and let it throttle.
+      const ENRICH_CONCURRENCY = 3;
+      let cursor = 0;
+      const worker = async () => {
+        while (!isEnrichCancelled) {
+          const index = cursor++;
+          if (index >= idsToEnrich.length) return;
+          await enrichOne(idsToEnrich[index]);
+          done++;
+          const progressMsgEl = document.getElementById('popup-confirm-msg');
+          if (progressMsgEl) progressMsgEl.textContent = `Enriched ${done} of ${total} words...`;
         }
-        if (done < total && !isEnrichCancelled) {
-          await new Promise(resolve => setTimeout(resolve, 3500));
-        }
-      }
+      };
+      await Promise.all(
+        Array.from({ length: Math.min(ENRICH_CONCURRENCY, idsToEnrich.length) }, worker)
+      );
 
       await reloadVaultList();
       if (onVaultUpdatedCallback) onVaultUpdatedCallback();

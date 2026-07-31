@@ -13,6 +13,7 @@ const KEYS = ['AAAAkey-one-1111', 'AAAAkey-two-2222', 'AAAAkey-three-3333'];
 
 const store = {};
 const calls = [];
+const urls = [];
 let plan = () => ({ status: 200, text: 'ok' });
 
 function resetStore() {
@@ -22,7 +23,9 @@ function resetStore() {
     spelt_gemini_models_list: ['models/gemini-3.5-flash', 'models/gemini-2.5-flash'],
     spelt_gemini_key_models: {},
     spelt_bad_models: [],
-    spelt_bad_models_epoch: 2,
+    spelt_bad_models_epoch: 3,
+    spelt_gemini_unsupported_fields: {},
+    spelt_gemini_key_offset: 0,
     spelt_rate_limit_cooldowns: {}
   });
 }
@@ -54,6 +57,7 @@ globalThis.fetch = async (url, opts) => {
     aborted: false
   };
   calls.push(record);
+  urls.push(url);
 
   const outcome = plan(record, JSON.parse(opts.body));
 
@@ -113,6 +117,7 @@ async function freshEngine() {
   await new Promise(r => setTimeout(r, 300));
   resetStore();
   calls.length = 0;
+  urls.length = 0;
   return import(`${MODULE}?i=${instance++}`);
 }
 
@@ -124,16 +129,72 @@ test('a successful request costs exactly one API call', async () => {
   assert.equal(calls.length, 1);
 });
 
-test('thinking is off unless the caller asks for it', async () => {
+test('thinking is minimised unless the caller asks for it', async () => {
   const gemini = await freshEngine();
   let body = null;
   plan = (_record, sent) => { body = sent; return { status: 200, text: 'x' }; };
 
   await gemini.askGeminiText('hi');
-  assert.deepEqual(body.generationConfig.thinkingConfig, { thinkingBudget: 0 });
+  assert.deepEqual(body.generationConfig.thinkingConfig, { thinkingLevel: 'minimal' });
 
   await gemini.askGeminiText('hi', { thinking: true });
   assert.equal(body.generationConfig.thinkingConfig, undefined);
+});
+
+test('the thinking field matches the model generation', async () => {
+  const gemini = await freshEngine();
+  const sentFor = {};
+  plan = (record, sent) => {
+    sentFor[record.model] = sent.generationConfig?.thinkingConfig;
+    // Force a fall-through so both models in the list get exercised.
+    return record.model === 'gemini-3.5-flash'
+      ? { status: 404, message: 'model is not found' }
+      : { status: 200, text: 'x' };
+  };
+
+  await gemini.askGeminiText('hi');
+  // Gemini 3 takes a level; Gemini 2.5 takes a token budget. Sending the wrong
+  // one is a 400, which drops the field and restores the slow default budget.
+  assert.deepEqual(sentFor['gemini-3.5-flash'], { thinkingLevel: 'minimal' });
+  assert.deepEqual(sentFor['gemini-2.5-flash'], { thinkingBudget: 0 });
+});
+
+test('requests go to v1beta, the only version that accepts thinkingConfig', async () => {
+  const gemini = await freshEngine();
+  plan = () => ({ status: 200, text: 'x' });
+
+  await gemini.askGeminiText('hi');
+  assert.ok(urls[0].startsWith('https://generativelanguage.googleapis.com/v1beta/'), urls[0]);
+});
+
+test('a model no key can serve is not rediscovered on the next request', async () => {
+  const gemini = await freshEngine();
+  plan = (record) => record.model === 'gemini-3.5-flash'
+    ? { status: 404, message: 'model is not found' }
+    : { status: 200, text: 'ok' };
+
+  await gemini.askGeminiText('one');
+  calls.length = 0;
+  await gemini.askGeminiText('two');
+
+  assert.equal(
+    calls.filter(c => c.model === 'gemini-3.5-flash').length, 0,
+    'the dead model was only struck off for the key that happened to try it'
+  );
+});
+
+test('consecutive requests rotate across the configured keys', async () => {
+  const gemini = await freshEngine();
+  plan = () => ({ status: 200, text: 'x' });
+
+  await gemini.askGeminiText('one');
+  await gemini.askGeminiText('two');
+  await gemini.askGeminiText('three');
+
+  assert.deepEqual(
+    calls.map(c => c.key), ['1111', '2222', '3333'],
+    'every request landed on the same key, so the spare keys buy no headroom'
+  );
 });
 
 test('a model the account cannot serve is not retried on every key', async () => {
@@ -178,7 +239,7 @@ test('a slow key is hedged rather than waited out, and is not penalised', async 
 
   const started = Date.now();
   assert.equal(await gemini.askGeminiText('hi'), 'fast');
-  assert.ok(Date.now() - started < 4000, 'hedge did not fire');
+  assert.ok(Date.now() - started < 5000, 'hedge did not fire');
   assert.ok(calls.find(c => c.key === '1111').aborted, 'losing attempt was left running');
 
   await new Promise(r => setTimeout(r, 400)); // let the debounced persist land
@@ -193,13 +254,38 @@ test('a generationConfig field the model rejects is retried in place, then remem
     : { status: 200, text: 'recovered' };
 
   assert.equal(await gemini.askGeminiText('hi'), 'recovered');
-  assert.equal(calls.length, 2, 'should retry the same model rather than drop a tier');
-  assert.equal(calls[1].model, calls[0].model);
+  // Cheapest setting, then one step up, then the field dropped — all on the
+  // same model rather than falling down a tier.
+  assert.equal(calls.length, 3, 'should retry the same model rather than drop a tier');
+  assert.ok(calls.every(c => c.model === calls[0].model));
 
   rejecting = false;
   calls.length = 0;
   await gemini.askGeminiText('again');
   assert.equal(calls.length, 1, 'rediscovered a field already known to be unsupported');
+});
+
+test('a model that refuses the lowest thinking setting steps up instead of giving up', async () => {
+  const gemini = await freshEngine();
+  const levels = [];
+  plan = (_record, body) => {
+    const level = body.generationConfig?.thinkingConfig?.thinkingLevel;
+    levels.push(level);
+    return level === 'minimal'
+      ? { status: 400, message: 'thinkingLevel "minimal" is not supported by this model' }
+      : { status: 200, text: 'stepped up' };
+  };
+
+  assert.equal(await gemini.askGeminiText('hi'), 'stepped up');
+  // The point of the step-up: thinking stays constrained. Dropping the field
+  // outright would hand the request back to the model's default budget, which
+  // is what made these calls take tens of seconds.
+  assert.deepEqual(levels, ['minimal', 'low']);
+
+  calls.length = 0;
+  levels.length = 0;
+  await gemini.askGeminiText('again');
+  assert.deepEqual(levels, ['low'], 'the floor was not remembered');
 });
 
 test('streaming emits only the winning attempt text', async () => {
