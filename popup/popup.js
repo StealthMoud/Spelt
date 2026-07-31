@@ -11,6 +11,7 @@ import { initNetworkStatus } from './js/popup/network_status.js';
 import { initResizer } from './js/popup/resizer.js';
 import { initSelectionLookup } from './js/popup/selection_lookup.js';
 import { initMoveable } from './js/popup/moveable.js';
+import { initTooltips } from './js/popup/tooltip.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const dueCountEl = document.getElementById('due-count'), totalCountEl = document.getElementById('total-count');
@@ -139,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initResizer();
   initSelectionLookup();
   initMoveable();
+  initTooltips();
 
   // Everything the open views are derived from. Watching only `spelt_words`
   // left the Stats tab stale whenever a sandbox check or a finished session
