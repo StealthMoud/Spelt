@@ -1,4 +1,4 @@
-import { POPOUT_WIDTH, getPopoutSize, clampToWorkArea } from './popout_bounds.js';
+import { POPOUT_WIDTH, getPopoutSize, getLaunchBounds } from './popout_bounds.js';
 
 export function initResizer() {
   const handles = document.querySelectorAll('.resizer');
@@ -14,21 +14,16 @@ export function initResizer() {
     document.body.classList.add('standalone');
 
     /**
-     * Snap to the full launch size, once, on load.
+     * Snap to the full launch size and position, once, on load.
      *
-     * The create call already asks for these bounds, but this window also comes
-     * back on its own — Chrome restores it after a restart at whatever size it
-     * last had, and a reload keeps the old frame. Applying the size here is what
-     * makes "always this big" true on every route into the popout, not just the
-     * button.
+     * The create call asks for these bounds, but applying them here ensures the
+     * window is centred (or restored) consistently on every route into the popout.
      */
-    const applyLaunchSize = () => {
+    const applyLaunchSize = async () => {
+      const bounds = await getLaunchBounds();
       chrome.windows?.getCurrent((win) => {
         if (!win || win.type !== 'popup') return;
-        const size = getPopoutSize();
-        if (win.width === size.width && win.height === size.height) return;
-        const position = clampToWorkArea({ left: win.left, top: win.top }, size);
-        chrome.windows.update(win.id, { state: 'normal', ...size, ...position });
+        chrome.windows.update(win.id, { state: 'normal', ...bounds });
       });
     };
 

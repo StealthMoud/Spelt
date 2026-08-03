@@ -86,6 +86,10 @@ export function savePosition(left, top) {
 export async function getLaunchBounds() {
   const size = getPopoutSize();
   const saved = await readSavedPosition();
-  const position = saved ? clampToWorkArea(saved, size) : getCenteredPosition(size);
+  const area = workArea();
+  // Positions <= area.left + 40 are default left-edge popouts from Chrome's window manager.
+  // Re-center these so the popout opens centered in the display area.
+  const isStuckOnLeft = saved && saved.left <= area.left + 40;
+  const position = (saved && !isStuckOnLeft) ? clampToWorkArea(saved, size) : getCenteredPosition(size);
   return { ...size, ...position };
 }
