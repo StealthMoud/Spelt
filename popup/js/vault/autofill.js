@@ -247,18 +247,34 @@ export function registerAutofillListeners() {
     if (span) span.textContent = '...';
 
     try {
-      const targetLang = await getStored('spelt_target_lang');
+      const targetLang = (await getStored('spelt_target_lang')) || 'fa';
       const targetLangName = getLanguageName(targetLang);
 
-      const prompt = buildEnrichmentPrompt(word, {}, targetLangName);
+      const draft = {
+        definition: document.getElementById('form-definition')?.value.trim() || '',
+        transcription: document.getElementById('form-transcription')?.value.trim() || '',
+        partOfSpeech: document.getElementById('form-part-of-speech')?.value.trim() || '',
+        translation: document.getElementById('form-translation')?.value.trim() || '',
+        level: document.getElementById('form-level')?.value.trim() || '',
+        example: document.getElementById('form-example')?.value.trim() || ''
+      };
+
+      const prompt = buildEnrichmentPrompt(word, draft, targetLangName);
 
       const aiData = await askGemini(prompt, { maxOutputTokens: 1024, temperature: 0.3 });
+
+      let translation = aiData.translation;
+      if (!translation) {
+        try {
+          translation = await translateWord(word);
+        } catch (_) {}
+      }
 
       if (aiData.word) document.getElementById('form-word').value = aiData.word;
       if (aiData.definition) document.getElementById('form-definition').value = aiData.definition;
       if (aiData.transcription) document.getElementById('form-transcription').value = aiData.transcription;
       if (aiData.partOfSpeech) document.getElementById('form-part-of-speech').value = aiData.partOfSpeech;
-      if (aiData.translation) document.getElementById('form-translation').value = aiData.translation;
+      if (translation) document.getElementById('form-translation').value = translation;
       if (aiData.level) document.getElementById('form-level').value = aiData.level.toUpperCase().trim();
       if (aiData.example) document.getElementById('form-example').value = aiData.example;
 

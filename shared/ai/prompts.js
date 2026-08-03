@@ -51,7 +51,7 @@ Correct anything wrong and fill anything blank.
 - definition: precise, clear, and ultra-concise in English (one single primary sense, 5 to 12 words max). Never combine multiple senses or list alternate definitions with "or".
 - transcription: IPA, US first, e.g. /lɑːrdʒ/ (US) / /lɑːdʒ/ (UK).
 - partOfSpeech: noun, verb, adjective, adverb, phrasal verb or idiom.
-- translation: contextual ${targetLangName}.
+- translation: natural, contextual translation into ${targetLangName}. Never leave blank.
 - level: one CEFR level (A1, A2, B1, B2, C1, C2), or "" if unclear.
 - example: one natural sentence using the word in this exact primary sense.
 
