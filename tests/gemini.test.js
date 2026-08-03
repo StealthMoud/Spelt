@@ -306,6 +306,60 @@ test('exhausting every model and key reports how long to wait', async () => {
   await assert.rejects(() => gemini.askGeminiText('hi'), /rate-limited.*retry in ~1[0-9]s/);
 });
 
+test('JSON wrapped in a fence or in prose still parses', async () => {
+  const gemini = await freshEngine();
+  const entry = '{"definition": "large", "level": "A2"}';
+
+  for (const reply of [
+    '```json\n' + entry + '\n```',
+    'Here is the entry:\n' + entry + '\nHope that helps.',
+    '```json\n' + entry // fence the model never closed
+  ]) {
+    plan = () => ({ status: 200, text: reply });
+    assert.deepEqual(await gemini.askGemini(`entry ${reply.length}`), { definition: 'large', level: 'A2' });
+  }
+});
+
+test('a reply cut off mid-object keeps the fields that did arrive', async () => {
+  const gemini = await freshEngine();
+  // What MAX_TOKENS looks like: the object stops mid-value, unclosed.
+  plan = () => ({ status: 200, text: '{"definition": "large", "level": "A2", "example": "The la' });
+
+  assert.deepEqual(
+    await gemini.askGemini('hi'),
+    { definition: 'large', level: 'A2' },
+    'a truncated entry should yield its complete fields, not an error'
+  );
+});
+
+test('a model returning unusable JSON falls through to the next model', async () => {
+  const gemini = await freshEngine();
+  plan = (record) => record.model === 'gemini-3.5-flash'
+    ? { status: 200, text: 'Sorry, I cannot help with that.' }
+    : { status: 200, text: '{"definition": "large"}' };
+
+  assert.deepEqual(await gemini.askGemini('hi'), { definition: 'large' });
+  const wasted = calls.filter(c => c.model === 'gemini-3.5-flash');
+  assert.equal(wasted.length, 1, `the same unusable model was asked ${wasted.length} times`);
+
+  // The model formats one reply badly; that is not a lasting verdict on it.
+  await new Promise(r => setTimeout(r, 400)); // let the debounced persist land
+  assert.deepEqual(store.spelt_rate_limit_cooldowns, {}, 'a bad reply benched the model');
+  assert.deepEqual(store.spelt_bad_models, [], 'a bad reply blacklisted the model');
+});
+
+test('the token ceiling leaves room for thinking tokens', async () => {
+  const gemini = await freshEngine();
+  let body = null;
+  plan = (_record, sent) => { body = sent; return { status: 200, text: '{}' }; };
+
+  await gemini.askGemini('hi', { maxOutputTokens: 1024 });
+  assert.ok(
+    body.generationConfig.maxOutputTokens > 1024,
+    'thinking is billed against the ceiling, so the answer gets truncated without headroom'
+  );
+});
+
 test('concurrent requests are not serialised behind each other', async () => {
   const gemini = await freshEngine();
   plan = () => ({ status: 200, delay: 300, text: 'x' });

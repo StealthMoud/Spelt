@@ -604,6 +604,18 @@ function classifyFailure(status, errorMessage) {
 function recordFailure(trial, error, { trials, deadModels, deadKeys }) {
   const status = error.status;
   const message = error.apiMessage || error.message;
+
+  // A 200 whose content the caller cannot use is the model's doing, not the
+  // key's: handing the same prompt to the next key buys the same unusable
+  // answer. Rule the model out for the rest of this request and drop a tier.
+  // Nothing is written down — a model that fumbles one JSON reply still serves
+  // the next prompt fine, so this must not follow it into later requests.
+  if (error.badOutput) {
+    deadModels.add(trial.model);
+    console.warn(`[Spelt AI] ${trial.model} returned an unusable reply: ${message}`);
+    return;
+  }
+
   const { scope, transient } = classifyFailure(status, message);
 
   // Narrow the rest of *this* request immediately.
@@ -752,6 +764,9 @@ function linkAbort(outerSignal, controller) {
   return () => outerSignal.removeEventListener('abort', forward);
 }
 
+/** Token allowance added on top of the caller's ceiling to cover thinking. */
+const THINKING_HEADROOM_TOKENS = 1024;
+
 /**
  * The cheapest thinking setting a given model will actually accept.
  *
@@ -790,6 +805,16 @@ function payloadFor(model, request) {
   if (minimizeThinking && !isUnsupported(model, 'thinkingConfig')) {
     const thinking = minimalThinkingFor(model);
     if (thinking) generationConfig.thinkingConfig = thinking;
+  }
+
+  // Thinking tokens are spent out of `maxOutputTokens`, so a model that thinks
+  // at all reaches the ceiling with less of the answer written. "Minimal" is a
+  // floor, not a promise of zero, and the cost of hitting the ceiling is a
+  // half-finished reply — a truncated JSON object the caller cannot use. The
+  // ceiling exists to stop a runaway reply, not to ration thinking, so give it
+  // room for both. Nothing is billed for headroom that goes unused.
+  if (generationConfig.thinkingConfig && generationConfig.maxOutputTokens) {
+    generationConfig.maxOutputTokens += THINKING_HEADROOM_TOKENS;
   }
 
   const mimeTypeUsable = wantJson && !isUnsupported(model, 'responseMimeType');
@@ -1040,8 +1065,13 @@ function dedupeKeyFor(prompt, options, wantJson) {
 /**
  * Send a prompt and return the parsed response text.
  * Falls through the model/key trials, hedging across keys on the way.
+ *
+ * `transform` runs *inside* the trial so that a reply the caller cannot use —
+ * a JSON answer that will not parse, say — fails that trial and lets the next
+ * model answer instead. Run after the trials it would end the whole request on
+ * one model's bad day.
  */
-async function generate(prompt, options, wantJson) {
+async function generate(prompt, options, wantJson, transform) {
   const dedupeKey = dedupeKeyFor(prompt, options, wantJson);
   const existing = inflightRequests.get(dedupeKey);
   if (existing) return existing;
@@ -1053,9 +1083,20 @@ async function generate(prompt, options, wantJson) {
     return withSlot(() => runTrials(trials, async (trial, signal) => {
       const response = await requestOnce(trial, request, signal);
       const data = await response.json();
-      const text = extractCandidateText(data.candidates?.[0]);
-      if (!text) throw new Error('Invalid empty response from Gemini API.');
-      return text.trim();
+      const candidate = data.candidates?.[0];
+      const text = extractCandidateText(candidate);
+      if (!text) {
+        if (candidate?.finishReason === 'MAX_TOKENS') {
+          // The model thought until the ceiling and never started the answer.
+          // Another key runs the same model into the same wall, so this one is
+          // ruled out for the rest of the request.
+          const budget = new Error('Gemini spent its whole token budget before answering.');
+          budget.badOutput = true;
+          throw budget;
+        }
+        throw new Error('Invalid empty response from Gemini API.');
+      }
+      return transform ? transform(text.trim()) : text.trim();
     }));
   })().finally(() => inflightRequests.delete(dedupeKey));
 
@@ -1085,34 +1126,89 @@ function extractCandidateText(candidate) {
     .join('');
 }
 
+/** Strip a ```json fence, including one the model never got to close. */
+function stripCodeFence(text) {
+  if (!text.startsWith('```')) return text;
+  return text.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```\s*$/, '').trim();
+}
+
 /**
- * Sends a prompt to Google Gemini API and returns the parsed JSON response.
- * Requires Gemini API keys to be set in chrome.storage.local.
- * Automatically falls back through model/key trials on rate limit.
+ * Find the JSON object in a reply, tolerating the two ways a model gets it
+ * wrong: prose wrapped around it, and a reply cut off mid-object because the
+ * token budget ran out.
+ *
+ * Walking the text with a bracket stack beats "first { to last }" — that pair
+ * happily spans a chatty preamble's braces or two separate objects — and the
+ * stack is also what makes truncation recoverable: the last comma at depth
+ * marks the end of the last *complete* property, so cutting there and closing
+ * the brackets still standing yields the entry minus its final field, which is
+ * a far better answer than none.
  */
-export async function askGemini(prompt, options = {}) {
-  let text = await generate(prompt, options, true /* wantJson */);
+function extractJsonObject(text) {
+  const start = text.indexOf('{');
+  if (start === -1) return null;
 
-  // Clean text in case model returned markdown code blocks (e.g. ```json ... ```)
-  if (text.startsWith('```')) {
-    text = text.replace(/^```[a-zA-Z]*\n?/, '');
-    text = text.replace(/\n?```$/, '');
-    text = text.trim();
+  const stack = [];
+  let inString = false;
+  let escaped = false;
+  let lastComplete = null;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+
+    if (ch === '"') { inString = true; continue; }
+
+    if (ch === '{' || ch === '[') {
+      stack.push(ch === '{' ? '}' : ']');
+    } else if (ch === '}' || ch === ']') {
+      stack.pop();
+      if (stack.length === 0) return text.slice(start, i + 1);
+      lastComplete = { index: i + 1, closers: [...stack].reverse().join('') };
+    } else if (ch === ',' && stack.length > 0) {
+      lastComplete = { index: i, closers: [...stack].reverse().join('') };
+    }
   }
 
-  // Extract first { and last } if there are prefix/suffix texts
-  const startIdx = text.indexOf('{');
-  const endIdx = text.lastIndexOf('}');
-  if (startIdx !== -1 && endIdx !== -1) {
-    text = text.substring(startIdx, endIdx + 1);
-  }
+  if (!lastComplete) return null;
+  return text.slice(start, lastComplete.index) + lastComplete.closers;
+}
+
+/** Parse a model's JSON reply, or throw so the trial falls to the next model. */
+function parseJsonReply(raw) {
+  const text = stripCodeFence(raw.trim());
 
   try {
     return JSON.parse(text);
-  } catch (err) {
-    console.error('Failed to parse Gemini response as JSON:', text);
-    throw new Error('Gemini response was not valid JSON. Please try again.', { cause: err });
+  } catch (_) { /* fall through to salvage */ }
+
+  const salvaged = extractJsonObject(text);
+  if (salvaged) {
+    try {
+      return JSON.parse(salvaged);
+    } catch (_) { /* fall through to the error below */ }
   }
+
+  console.error('[Spelt AI] Failed to parse Gemini response as JSON:', raw);
+  const error = new Error("Gemini's reply was not valid JSON.");
+  error.badOutput = true;
+  throw error;
+}
+
+/**
+ * Sends a prompt to Google Gemini API and returns the parsed JSON response.
+ * Requires Gemini API keys to be set in chrome.storage.local.
+ * Automatically falls back through model/key trials on rate limit or on a
+ * reply that does not parse.
+ */
+export async function askGemini(prompt, options = {}) {
+  return generate(prompt, options, true /* wantJson */, parseJsonReply);
 }
 
 /**
