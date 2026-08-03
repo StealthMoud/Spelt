@@ -254,6 +254,7 @@ export function registerAutofillListeners() {
 
       const aiData = await askGemini(prompt, { maxOutputTokens: 1024, temperature: 0.3 });
 
+      if (aiData.word) document.getElementById('form-word').value = aiData.word;
       if (aiData.definition) document.getElementById('form-definition').value = aiData.definition;
       if (aiData.transcription) document.getElementById('form-transcription').value = aiData.transcription;
       if (aiData.partOfSpeech) document.getElementById('form-part-of-speech').value = aiData.partOfSpeech;

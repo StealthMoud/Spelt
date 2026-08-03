@@ -8,6 +8,7 @@
  */
 
 const ENTRY_SCHEMA = `{
+  "word": "...",
   "definition": "...",
   "transcription": "...",
   "partOfSpeech": "...",
@@ -46,6 +47,7 @@ Correct anything wrong and fill anything blank.
     : '';
 
   return `Dictionary entry for "${word}".${existing}
+- word: canonical headword or correct spelling in English.
 - definition: clear and concise, in English.
 - transcription: IPA, US first, e.g. /lɑːrdʒ/ (US) / /lɑːdʒ/ (UK).
 - partOfSpeech: noun, verb, adjective, adverb, phrasal verb or idiom.
