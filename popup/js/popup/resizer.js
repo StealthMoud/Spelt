@@ -6,8 +6,14 @@ export function initResizer() {
   // Clear any old saved overflow dimensions in storage that might corrupt popup sizing
   chrome.storage?.local.remove(['spelt_popup_width', 'spelt_popup_height']);
 
-  // Detect standalone window / popout / tab mode via URL hash or window context
-  const isStandalone = window.location.hash !== '' || window.location.search.includes('standalone');
+  const route = window.location.hash.slice(1).split('/')[0];
+  const isStatsPage = route === 'stats';
+  const isStandalone = route === 'popout' || window.location.search.includes('standalone');
+
+  if (isStatsPage) {
+    document.documentElement.classList.add('stats-page');
+    document.body.classList.add('stats-page');
+  }
 
   if (isStandalone) {
     document.documentElement.classList.add('standalone');

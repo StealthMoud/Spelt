@@ -13,6 +13,12 @@ import {
   GEMINI_API_ROOT
 } from '../../shared/storage.js';
 import { runIntegrityAudit } from '../../src/data/integrity.js';
+import { AI_JOB_ACTIVE_STATES, AI_JOB_KINDS } from '../../src/core/ai_jobs.js';
+import {
+  getAiJobStatus,
+  startAiJob,
+  subscribeToAiJob
+} from './components/ai_job_client.js';
 
 let onDbRestoredCallback = null;
 let aiStatusIntervalId = null;
@@ -248,16 +254,67 @@ export function initSettings(onDbRestored) {
 
       keyInfo.append(title, keyText, meta);
 
+      const keyActions = document.createElement('div');
+      keyActions.className = 'gemini-key-actions';
+
+      const testBtn = document.createElement('button');
+      testBtn.className = 'test-key-btn';
+      testBtn.type = 'button';
+      testBtn.textContent = 'Check';
+      testBtn.setAttribute('aria-label', `Check Key ${index + 1}`);
+      testBtn.addEventListener('click', async () => {
+        const statusEl = document.getElementById('gemini-test-status');
+        testBtn.disabled = true;
+        if (statusEl) {
+          statusEl.classList.remove('hidden');
+          statusEl.style.color = 'var(--text-muted)';
+          statusEl.textContent = `Checking Key ${index + 1}...`;
+        }
+
+        try {
+          const discoveredModels = await fetchModelsForKey(key);
+          if (discoveredModels.length === 0) throw new Error('No compatible text models were found.');
+
+          const latest = await getGeminiStorage();
+          const latestKeys = normalizeStoredKeys(latest);
+          const latestMap = latest.spelt_gemini_key_models || {};
+          latestMap[getGeminiKeyFingerprint(key)] = discoveredModels;
+          pruneKeyModelsMap(latestMap, latestKeys);
+          const modelList = collectModelsFromKeyMap(latestMap, latestKeys);
+          await setGeminiStorage({
+            spelt_gemini_key_models: latestMap,
+            spelt_gemini_models_list: modelList,
+            spelt_gemini_discovery_epoch: MODEL_DISCOVERY_EPOCH
+          });
+
+          if (statusEl) {
+            statusEl.style.color = 'var(--success)';
+            statusEl.textContent = `Key ${index + 1} is ready with ${discoveredModels.length} compatible model${discoveredModels.length === 1 ? '' : 's'}.`;
+          }
+          renderKeysList(latestKeys, latestMap, modelList);
+          await renderModelSelect(latest.spelt_gemini_model, true);
+          renderAiStatusMonitor();
+        } catch (err) {
+          testBtn.disabled = false;
+          if (statusEl) {
+            statusEl.style.color = 'var(--danger)';
+            statusEl.textContent = `Key ${index + 1} failed: ${err.message}`;
+          }
+        }
+      });
+
       const removeBtn = document.createElement('button');
       removeBtn.className = 'remove-key-btn';
       removeBtn.type = 'button';
       removeBtn.title = 'Remove key';
+      removeBtn.setAttribute('aria-label', `Remove Key ${index + 1}`);
       removeBtn.textContent = 'x';
       removeBtn.addEventListener('click', () => {
         removeKey(key);
       });
 
-      row.append(keyInfo, removeBtn);
+      keyActions.append(testBtn, removeBtn);
+      row.append(keyInfo, keyActions);
       listContainer.appendChild(row);
     });
   }
@@ -358,20 +415,30 @@ export function initSettings(onDbRestored) {
 
   document.getElementById('retranslate-all-btn')?.addEventListener('click', () => {
     showConfirm(
-      'Refresh All Words via AI',
-      'This will query Gemini AI in the background to clean up, enrich, and optimize translations and details for all library words (processed sequentially to fit free rate limits). Proceed?',
-      triggerRetranslate
+      'Enrich entire vault',
+      'Update definitions, translations, parts of speech, levels, and examples for every saved word? This task continues in the background if you close Spelt.',
+      async () => {
+        try {
+          const targetLang = document.getElementById('setting-target-lang')?.value || 'none';
+          renderSettingsAiJob(await startAiJob({
+            kind: AI_JOB_KINDS.ENRICH_ALL,
+            wordIds: [],
+            targetLang
+          }));
+        } catch (err) {
+          showConfirm('Could not start enrichment', err.message, null, false);
+        }
+      }
     );
   });
 
-  chrome.runtime.onMessage.addListener(async (message) => {
-    if (message.action === 'retranslateCompleted') {
-      showConfirm('Update Complete', `Successfully refreshed all ${message.count} words!`, null, false);
-      if (onDbRestoredCallback) await onDbRestoredCallback();
-    } else if (message.action === 'retranslateFailed') {
-      showConfirm('Update Failed', `Error: ${message.error}`, null, false);
+  subscribeToAiJob(job => {
+    renderSettingsAiJob(job);
+    if (job?.status === 'completed' && onDbRestoredCallback) {
+      onDbRestoredCallback().catch(console.error);
     }
   });
+  getAiJobStatus().then(renderSettingsAiJob).catch(() => {});
 
   renderAiStatusMonitor();
 
@@ -612,45 +679,27 @@ async function renderAiStatusMonitor() {
 }
 
 
-async function triggerRetranslate() {
-  const allowRes = await new Promise(r => chrome.storage?.local.get('spelt_allow_background_ai', r));
-  if (!allowRes || !allowRes.spelt_allow_background_ai) {
-    showConfirm(
-      'Background AI Disabled',
-      'Background AI processing is currently disabled in Settings to prevent rate limits. Please enable "Allow background AI tasks" in Settings first.',
-      null,
-      false
-    );
-    return;
+function renderSettingsAiJob(job) {
+  const status = document.getElementById('settings-ai-job-status');
+  const button = document.getElementById('retranslate-all-btn');
+  if (!status || !button) return;
+
+  const isActive = !!job && AI_JOB_ACTIVE_STATES.has(job.status);
+  button.disabled = isActive;
+  status.classList.toggle('hidden', !job);
+  if (!job) return;
+
+  if (job.status === 'completed') {
+    status.textContent = `Last run: ${job.succeeded} updated${job.failed ? `, ${job.failed} failed` : ''}.`;
+  } else if (job.status === 'cancelled') {
+    status.textContent = `Last run was cancelled after ${job.completed} of ${job.total} words.`;
+  } else if (job.status === 'failed') {
+    status.textContent = job.failures?.at(-1)?.message || 'The last enrichment task failed.';
+  } else if (job.status === 'cancelling') {
+    status.textContent = `Stopping after the current request (${job.completed} of ${job.total}).`;
+  } else {
+    status.textContent = `Background enrichment: ${job.completed} of ${job.total} words (${job.percent || 0}%).`;
   }
-
-  const selectEl = document.getElementById('setting-target-lang');
-  const targetLang = selectEl ? selectEl.value : 'none';
-
-  if (targetLang === 'none') {
-    showConfirm('No Language Set', 'Please select a preferred language first.', null, false);
-    return;
-  }
-
-  const btn = document.getElementById('retranslate-all-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.style.opacity = '0.5';
-    const span = btn.querySelector('span');
-    if (span) span.textContent = 'Processing in background...';
-  }
-
-  chrome.runtime.sendMessage({ action: 'retranslateAll', targetLang }, () => {
-    showConfirm('Started', 'Retranslation has been delegated to the background service worker.', null, false);
-    if (btn) {
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      const span = btn.querySelector('span');
-      if (span) span.textContent = 'Refresh All Translations & Details';
-    }
-  });
 }
-
-
 
 

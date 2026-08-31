@@ -1,69 +1,75 @@
 import { stopAiStatusMonitor } from './settings.js';
 
-// Tab switching navigation controller for Spelt extension popup
+const TAB_IDS = ['sandbox-tab', 'practice-tab', 'vault-tab', 'stats-tab', 'settings-tab'];
+
+function getInitialTab() {
+  const route = window.location.hash.slice(1).split('/')[0];
+  if (route === 'stats') return 'stats-tab';
+  if (TAB_IDS.includes(`${route}-tab`)) return `${route}-tab`;
+  return 'sandbox-tab';
+}
+
 export function initNavigation(onTabChanged) {
-  const tabs = document.querySelectorAll('.tab-btn');
-  const panes = document.querySelectorAll('.tab-pane');
+  const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+  const panes = Array.from(document.querySelectorAll('.tab-pane'));
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.getAttribute('data-tab');
-      
-      if (target !== 'settings-tab') {
-        stopAiStatusMonitor();
-      }
+  const activateTab = (target, { focusTab = false } = {}) => {
+    const nextTab = tabs.find(tab => tab.dataset.tab === target);
+    const nextPane = document.getElementById(target);
+    if (!nextTab || !nextPane) return;
 
-      tabs.forEach(t => t.classList.remove('active'));
-      panes.forEach(p => p.classList.remove('active'));
-      
-      tab.classList.add('active');
-      const targetPane = document.getElementById(target);
-      if (targetPane) {
-        targetPane.classList.add('active');
-      }
+    if (target !== 'settings-tab') stopAiStatusMonitor();
 
-      // Auto-focus primary input so the tab is immediately typeable.
-      if (target === 'sandbox-tab') {
-        document.getElementById('word-input')?.focus();
-      } else if (target === 'practice-tab') {
-        // No auto-focus on practice input to allow Enter key navigation
-      } else if (target === 'vault-tab') {
-        document.getElementById('vault-search')?.focus();
-      } else if (target === 'stats-tab') {
-        document.activeElement?.blur();
-      }
+    tabs.forEach(tab => {
+      const active = tab === nextTab;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+    });
+    panes.forEach(pane => {
+      const active = pane === nextPane;
+      pane.classList.toggle('active', active);
+      pane.hidden = !active;
+    });
 
-      if (onTabChanged) onTabChanged(target);
+    document.documentElement.dataset.activeTab = target;
+    const main = document.querySelector('.popup-main');
+    if (main) main.scrollTop = 0;
+    if (focusTab) nextTab.focus();
+
+    if (target === 'sandbox-tab') document.getElementById('word-input')?.focus();
+    else if (target === 'vault-tab') document.getElementById('vault-search')?.focus();
+    else if (target === 'stats-tab') document.activeElement?.blur();
+
+    Promise.resolve(onTabChanged?.(target)).catch(error => {
+      console.error('Tab refresh failed:', error);
+    });
+  };
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+    tab.addEventListener('keydown', event => {
+      let nextIndex = null;
+      if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+      else if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+      else if (event.key === 'Home') nextIndex = 0;
+      else if (event.key === 'End') nextIndex = tabs.length - 1;
+      if (nextIndex === null) return;
+
+      event.preventDefault();
+      activateTab(tabs[nextIndex].dataset.tab, { focusTab: true });
     });
   });
 
-  // Listen to window ArrowLeft / ArrowRight to switch pages
-  window.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-
-    // Ensure we do not block typing navigation unless input is empty
-    const active = document.activeElement;
-    const isTextInput = active && (
-      active.tagName === 'TEXTAREA' ||
-      (active.tagName === 'INPUT' && ['text', 'search', 'password', 'email', 'number', 'url'].includes(active.type))
-    );
-
-    if (isTextInput && active.value !== '' && !e.altKey) {
-      return;
-    }
-
-    const tabsList = Array.from(tabs);
-    const activeIndex = tabsList.findIndex(t => t.classList.contains('active'));
-    if (activeIndex === -1) return;
-
-    let nextIndex;
-    if (e.key === 'ArrowLeft') {
-      nextIndex = (activeIndex - 1 + tabsList.length) % tabsList.length;
-    } else {
-      nextIndex = (activeIndex + 1) % tabsList.length;
-    }
-
-    e.preventDefault();
-    tabsList[nextIndex].click();
+  window.addEventListener('keydown', event => {
+    if (!event.altKey || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+    const activeIndex = tabs.findIndex(tab => tab.classList.contains('active'));
+    if (activeIndex < 0) return;
+    const step = event.key === 'ArrowLeft' ? -1 : 1;
+    const nextIndex = (activeIndex + step + tabs.length) % tabs.length;
+    event.preventDefault();
+    activateTab(tabs[nextIndex].dataset.tab, { focusTab: true });
   });
+
+  activateTab(getInitialTab());
 }

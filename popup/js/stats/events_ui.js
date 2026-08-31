@@ -1,49 +1,41 @@
 import { setTimeframe, setLeechesLimit, setLeechesCustomVal, currentStatsTimeframe } from './state.js';
 
 export function bindUiEvents(renderStats) {
-  document.querySelectorAll('.stats-subtab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.stats-subtab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.stats-subtab-content').forEach(p => { p.classList.remove('active'); p.classList.add('hidden'); });
-      btn.classList.add('active');
-      const target = document.getElementById(`stats-subtab-${btn.getAttribute('data-subtab')}`);
-      if (target) { target.classList.add('active'); target.classList.remove('hidden'); }
+  const subtabButtons = Array.from(document.querySelectorAll('.stats-subtab-btn'));
+  const activateSubtab = (btn, focus = false) => {
+    document.querySelectorAll('.stats-subtab-content').forEach(panel => {
+      const active = panel.id === `stats-subtab-${btn.dataset.subtab}`;
+      panel.classList.toggle('active', active);
+      panel.classList.toggle('hidden', !active);
+      panel.hidden = !active;
+    });
+    subtabButtons.forEach(button => {
+      const active = button === btn;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+      button.tabIndex = active ? 0 : -1;
+    });
+    if (focus) btn.focus();
+  };
+
+  subtabButtons.forEach((btn, index) => {
+    btn.addEventListener('click', () => activateSubtab(btn));
+    btn.addEventListener('keydown', event => {
+      let nextIndex = null;
+      if (event.key === 'ArrowLeft') nextIndex = (index - 1 + subtabButtons.length) % subtabButtons.length;
+      else if (event.key === 'ArrowRight') nextIndex = (index + 1) % subtabButtons.length;
+      else if (event.key === 'Home') nextIndex = 0;
+      else if (event.key === 'End') nextIndex = subtabButtons.length - 1;
+      if (nextIndex === null) return;
+      event.preventDefault();
+      activateSubtab(subtabButtons[nextIndex], true);
     });
   });
 
   const select = document.getElementById('stats-timeframe-select');
-  const btn = document.getElementById('stats-timeframe-btn');
-  const dropdown = document.getElementById('stats-timeframe-dropdown');
-  const label = document.getElementById('stats-timeframe-label');
-
-  const syncSelect = () => {
-    if (!select || !label || !dropdown) return;
-    const opt = dropdown.querySelector(`.custom-select-option[data-value="${select.value}"]`);
-    if (opt) {
-      label.textContent = opt.textContent;
-      dropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-    }
-  };
 
   if (select) {
-    select.value = currentStatsTimeframe; syncSelect();
-    btn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const show = dropdown.classList.contains('hidden');
-      dropdown.classList.toggle('hidden', !show);
-      const row = btn.closest('.stats-header-row');
-      if (row) { row.style.position = 'relative'; row.style.zIndex = show ? '60' : ''; }
-    });
-    dropdown?.querySelectorAll('.custom-select-option').forEach(opt => {
-      opt.addEventListener('click', (e) => {
-        e.stopPropagation(); select.value = opt.getAttribute('data-value'); syncSelect();
-        dropdown.classList.add('hidden');
-        const row = btn.closest('.stats-header-row');
-        if (row) row.style.zIndex = '';
-        select.dispatchEvent(new Event('change'));
-      });
-    });
+    select.value = currentStatsTimeframe;
     select.addEventListener('change', async (e) => {
       setTimeframe(e.target.value);
       const cr = document.getElementById('stats-custom-range');
@@ -79,10 +71,4 @@ export function bindUiEvents(renderStats) {
     if (customInput) { customInput.value = Math.min(500, (parseInt(customInput.value, 10) || 15) + 1); customInput.dispatchEvent(new Event('input')); }
   });
 
-  window.addEventListener('click', (e) => {
-    if (dropdown && !dropdown.classList.contains('hidden') && !btn.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.classList.add('hidden');
-      const row = btn.closest('.stats-header-row'); if (row) row.style.zIndex = '';
-    }
-  });
 }

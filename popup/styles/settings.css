@@ -2,10 +2,10 @@
 .settings-content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  font-size: 0.72rem;
+  gap: 14px;
+  font-size: var(--text-sm);
 }
-.settings-group-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-light); margin: 8px 0 2px; padding-bottom: 2px; border-bottom: 1px solid hsla(155, 10%, 25%, 0.2); }
+.settings-group-title { font-size: var(--text-base); font-weight: 700; color: var(--text-main); margin: 10px 0 2px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
 .danger-title { color: var(--danger); border-color: hsla(5, 80%, 55%, 0.2); }
 .danger-block { border-color: hsla(5, 80%, 55%, 0.3); background: hsla(5, 80%, 55%, 0.04); }
 .danger-block strong { color: var(--danger); }
@@ -14,11 +14,11 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  padding: 10px 12px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 4px 16px -4px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-sm);
   transition: border-color var(--transition-fast);
 }
 .settings-block:hover {
@@ -27,13 +27,27 @@
 .settings-block strong {
   color: var(--primary-light);
   font-weight: 600;
-  font-size: 0.76rem;
+  font-size: var(--text-base);
 }
 .settings-block p {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.66rem;
-  line-height: 1.35;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.settings-wide-action {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.settings-ai-job-status {
+  padding: 7px 9px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  color: var(--text-muted) !important;
+  font-variant-numeric: tabular-nums;
 }
 
 .select-input {
@@ -113,9 +127,35 @@
   min-width: 0;
 }
 
+.gemini-key-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.test-key-btn {
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.test-key-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
 .gemini-key-title {
   color: var(--text);
-  font-size: 0.66rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -123,13 +163,13 @@
 .gemini-key-mask {
   color: var(--text-muted);
   font-family: monospace;
-  font-size: 0.66rem;
+  font-size: var(--text-xs);
   white-space: nowrap;
 }
 
 .gemini-key-meta {
   color: var(--text-muted);
-  font-size: 0.62rem;
+  font-size: 0.64rem;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -179,11 +219,11 @@
 }
 
 .ai-status-monitor-title {
-  color: #a78bfa !important;
+  color: var(--primary-light) !important;
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.7rem !important;
+  font-size: var(--text-xs) !important;
 }
 
 .ai-status-list-container {
@@ -262,9 +302,9 @@
 }
 
 .ai-status-badge.purple {
-  background: hsla(260, 60%, 50%, 0.2);
-  border: 1px solid hsla(260, 60%, 65%, 0.35);
-  color: #c4b5fd;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, transparent);
+  color: var(--primary-light);
 }
 
 .ai-status-badge.neutral {
@@ -419,11 +459,11 @@ kbd {
 kbd:hover {
   color: var(--text-main);
   border-color: hsla(155, 65%, 48%, 0.3);
-  box-shadow: 0 0 6px var(--primary-glow);
+  box-shadow: none;
 }
 
 .btn-import-flex { flex: 1; justify-content: center; }
-.btn-retranslate { margin-top: 8px; width: 100%; justify-content: center; background: hsla(265, 80%, 65%, 0.08); border-color: var(--purple); color: var(--purple-light); }
+.btn-retranslate { margin-top: 8px; width: 100%; justify-content: center; background: color-mix(in srgb, var(--primary) 8%, var(--bg-card)); border-color: color-mix(in srgb, var(--primary) 32%, var(--border)); color: var(--primary-light); }
 .btn-integrity { margin-top: 8px; width: 100%; justify-content: center; background: hsla(210, 70%, 55%, 0.08); border-color: hsla(210, 70%, 55%, 0.45); color: hsla(210, 90%, 78%, 1); }
 .setting-checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .setting-checkbox { accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px; margin: 0; }

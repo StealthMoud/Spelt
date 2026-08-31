@@ -1,12 +1,12 @@
       <!-- TAB 4: STATS -->
-      <section id="stats-tab" class="tab-pane">
+      <section id="stats-tab" class="tab-pane" role="tabpanel" aria-labelledby="stats-tab-button" hidden>
         <!-- Sub-tabs Navigation & Full Page Popout -->
         <div class="stats-header-bar flex-items-center-between">
-          <div class="stats-subtabs-nav flex-1">
-            <button type="button" class="stats-subtab-btn active" data-subtab="overview">Overview</button>
-            <button type="button" class="stats-subtab-btn" data-subtab="vocabulary">Vocabulary</button>
-            <button type="button" class="stats-subtab-btn" data-subtab="activity">Activity</button>
-            <button type="button" class="stats-subtab-btn" data-subtab="performance">Performance</button>
+          <div class="stats-subtabs-nav flex-1" role="tablist" aria-label="Statistics views">
+            <button type="button" id="stats-overview-button" class="stats-subtab-btn active" data-subtab="overview" role="tab" aria-selected="true" aria-controls="stats-subtab-overview" tabindex="0">Overview</button>
+            <button type="button" id="stats-vocabulary-button" class="stats-subtab-btn" data-subtab="vocabulary" role="tab" aria-selected="false" aria-controls="stats-subtab-vocabulary" tabindex="-1">Vocabulary</button>
+            <button type="button" id="stats-activity-button" class="stats-subtab-btn" data-subtab="activity" role="tab" aria-selected="false" aria-controls="stats-subtab-activity" tabindex="-1">Activity</button>
+            <button type="button" id="stats-performance-button" class="stats-subtab-btn" data-subtab="performance" role="tab" aria-selected="false" aria-controls="stats-subtab-performance" tabindex="-1">Performance</button>
           </div>
           <button type="button" id="open-stats-page-btn" class="icon-btn stats-popout-btn" title="Open Stats in full page" aria-label="Open Stats in full page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>

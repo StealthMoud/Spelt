@@ -22,9 +22,9 @@ export function getFilteredWords(wordsList) {
   const query = document.getElementById('vault-search').value.trim().toLowerCase();
   const statusFilter = document.getElementById('vault-filter-status')?.value || 'all';
 
-  let filtered = wordsList.filter(w => 
-    w.word.toLowerCase().includes(query) || 
-    w.definition.toLowerCase().includes(query)
+  let filtered = wordsList.filter(w =>
+    String(w.word || '').toLowerCase().includes(query) ||
+    String(w.definition || '').toLowerCase().includes(query)
   );
 
   if (statusFilter === 'learning') {

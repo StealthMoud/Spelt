@@ -1,14 +1,14 @@
       <!-- TAB 2: PRACTICE -->
-      <section id="practice-tab" class="tab-pane">
+      <section id="practice-tab" class="tab-pane" role="tabpanel" aria-labelledby="practice-tab-button" hidden>
         <!-- Practice Mode Selector -->
-        <div class="practice-mode-selector">
-          <button id="practice-mode-spelling" class="practice-mode-pill active">Spelling</button>
-          <button id="practice-mode-recall" class="practice-mode-pill">Recall</button>
+        <div class="practice-mode-selector" role="group" aria-label="Practice mode">
+          <button type="button" id="practice-mode-spelling" class="practice-mode-pill active" aria-pressed="true">Spelling</button>
+          <button type="button" id="practice-mode-recall" class="practice-mode-pill" aria-pressed="false">Recall</button>
         </div>
         <p id="practice-mode-description" class="practice-mode-description">Spelling: Hear audio clues and type the exact spelling.</p>
 
         <!-- Progress Bar -->
-        <div class="practice-progress-track" title="Session Progress" aria-label="Session Progress">
+        <div class="practice-progress-track" title="Session progress" role="progressbar" aria-label="Session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <div id="practice-progress-fill" class="practice-progress-fill"></div>
         </div>
 
@@ -32,7 +32,7 @@
           <p id="empty-state-message">You have cleared all scheduled reviews. Keep up the great work!</p>
           <div id="ai-session-summary" class="ai-summary-box hidden">
             <div class="ai-summary-header">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" class="icon-svg-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <strong class="ai-summary-title">AI Session Summary</strong>
             </div>
             <p id="ai-session-summary-text" class="ai-summary-text"></p>

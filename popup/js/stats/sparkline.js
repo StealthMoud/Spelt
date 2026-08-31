@@ -13,9 +13,11 @@ export function drawSparkline(containerId, dataPoints, width = 300, height = 60,
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('role', 'img');
   svg.style.overflow = 'visible';
   
   const maxVal = Math.max(...dataPoints, 1);
+  svg.setAttribute('aria-label', options.ariaLabel || `Trend chart with ${dataPoints.length} points and a maximum value of ${maxVal}.`);
   const minVal = 0;
   const range = maxVal - minVal;
   const paddingLeft = 10, paddingRight = 10, paddingTop = 8, paddingBottom = 8;
@@ -74,7 +76,7 @@ export function drawSparkline(containerId, dataPoints, width = 300, height = 60,
     circle.style.cursor = 'pointer'; circle.style.transition = 'all var(--transition-fast) ease';
     
     const label = options.labels ? options.labels[idx] : pt.val.toString();
-    const tooltipText = `<strong>${label}</strong><br/>${pt.val}${options.unit || ''}`;
+    const tooltipText = `${label}\n${pt.val}${options.unit || ''}`;
     
     circle.addEventListener('mouseenter', (e) => {
       circle.setAttribute('r', '4.5'); showStatsTooltip(e.clientX, e.clientY, tooltipText);

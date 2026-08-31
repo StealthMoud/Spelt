@@ -4,15 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spelt Vocabulary</title>
-  <link rel="stylesheet" href="../popup/popup.css">
-  <script src="../popup/js/popup/mock_chrome.js"></script>
+  <link rel="stylesheet" href="../popup/popup.css?v=1.1.0.4">
+  <script src="../popup/js/popup/mock_chrome.js?v=1.1.0.5"></script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="spelt-popup">
 <!-- INCLUDE header.html -->
 <!-- INCLUDE offline.html -->
     <!-- Main Content Panes -->
-    <main class="popup-main">
+    <main id="main-content" class="popup-main" tabindex="-1">
 <!-- INCLUDE sandbox.html -->
 <!-- INCLUDE practice.html -->
 <!-- INCLUDE vault.html -->
@@ -31,6 +32,6 @@
   <div class="resizer resizer-bl"></div>
   <div class="resizer resizer-br"></div>
 
-  <script type="module" src="../popup/popup.js"></script>
+  <script type="module" src="../popup/popup.js?v=1.1.0.5"></script>
 </body>
 </html>

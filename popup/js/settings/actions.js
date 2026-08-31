@@ -1,5 +1,8 @@
 import { getWords, resetDb, atomicUpdate } from '../../../shared/storage.js';
 import { showConfirm, showImportOptionsModal } from '../vault.js';
+import { normalizeBackupMetadata, normalizeImportedWord, validateBackupShape } from '../../../src/data/backup.js';
+
+const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
 
 export async function exportDb() {
   showConfirm(
@@ -46,6 +49,11 @@ export async function exportDb() {
 export async function importDb(e, onDbRestoredCallback) {
   const file = e.target.files[0];
   if (!file) return;
+  if (file.size > MAX_BACKUP_BYTES) {
+    showConfirm('Import Error', 'This backup is larger than 5 MB. Split it into smaller files and try again.', null, false);
+    e.target.value = '';
+    return;
+  }
   const reader = new FileReader();
   reader.onload = async (evt) => {
     try {
@@ -55,19 +63,12 @@ export async function importDb(e, onDbRestoredCallback) {
       let streak = null;
       let sessions = null;
       let sandboxActivity = null;
-      let isFullBackup = false;
+      const backupShape = validateBackupShape(parsed);
+      const isFullBackup = backupShape.isFullBackup;
+      importedWords = backupShape.words;
 
-      if (Array.isArray(parsed)) {
-        importedWords = parsed;
-      } else if (parsed && Array.isArray(parsed.words)) {
-        importedWords = parsed.words;
-        activity = parsed.activity || null;
-        streak = parsed.streak || null;
-        sessions = parsed.sessions || null;
-        sandboxActivity = parsed.sandbox_activity || null;
-        isFullBackup = true;
-      } else {
-        throw new Error('Invalid backup file');
+      if (isFullBackup) {
+        ({ activity, streak, sessions, sandboxActivity } = normalizeBackupMetadata(parsed));
       }
 
 
@@ -78,46 +79,10 @@ export async function importDb(e, onDbRestoredCallback) {
 
         await atomicUpdate(async (freshList) => {
           importedWords.forEach(item => {
-            if (!item.word) return;
-            const id = item.id || 'word_' + Math.random().toString(36).substring(2, 11);
-            
-            let practiceType = item.practiceType || 'both';
-            if (practiceType === 'syntax') {
-              practiceType = 'recall';
-            }
-            if (!isFullBackup && targetPracticeType) {
-              practiceType = targetPracticeType;
-            }
-
-            const newCard = {
-              id: id,
-              word: item.word,
-              definition: item.definition || '',
-              translation: item.translation || '',
-              transcription: item.transcription || '',
-              partOfSpeech: item.partOfSpeech || '',
-              example: item.example || '',
-              exampleTranslation: item.exampleTranslation || '',
-              level: item.level || '',
-              otherLevels: Array.isArray(item.otherLevels) ? item.otherLevels : [],
-              practiceType: practiceType,
-              mastered: item.mastered || false,
-              
-              // Spelling SRS values
-              rep: item.rep !== undefined ? item.rep : 0,
-              interval: item.interval !== undefined ? item.interval : 0,
-              ef: item.ef !== undefined ? item.ef : 2.5,
-              nextDate: item.nextDate !== undefined ? item.nextDate : Date.now(),
-              misspellings: Array.isArray(item.misspellings) ? item.misspellings : [],
-              totalErrors: item.totalErrors !== undefined ? item.totalErrors : 0,
-              correctStreak: item.correctStreak !== undefined ? item.correctStreak : 0,
-
-              // Recall SRS values
-              meaningRep: item.meaningRep !== undefined ? item.meaningRep : 0,
-              meaningInterval: item.meaningInterval !== undefined ? item.meaningInterval : 0,
-              meaningEf: item.meaningEf !== undefined ? item.meaningEf : 2.5,
-              meaningNextDate: item.meaningNextDate !== undefined ? item.meaningNextDate : Date.now()
-            };
+            const newCard = normalizeImportedWord(item, {
+              practiceTypeOverride: !isFullBackup ? targetPracticeType : null
+            });
+            if (!newCard) return;
 
 
 
@@ -139,26 +104,22 @@ export async function importDb(e, onDbRestoredCallback) {
               newCard.misspellings = existingCard.misspellings || newCard.misspellings;
               newCard.totalErrors = existingCard.totalErrors !== undefined ? existingCard.totalErrors : newCard.totalErrors;
               newCard.correctStreak = existingCard.correctStreak !== undefined ? existingCard.correctStreak : newCard.correctStreak;
+              newCard.createdAt = existingCard.createdAt !== undefined ? existingCard.createdAt : newCard.createdAt;
+              newCard.masteredAt = existingCard.masteredAt || newCard.masteredAt;
               
               newCard.meaningNextDate = existingCard.meaningNextDate !== undefined ? existingCard.meaningNextDate : newCard.meaningNextDate;
               newCard.meaningRep = existingCard.meaningRep !== undefined ? existingCard.meaningRep : newCard.meaningRep;
               newCard.meaningInterval = existingCard.meaningInterval !== undefined ? existingCard.meaningInterval : newCard.meaningInterval;
               newCard.meaningEf = existingCard.meaningEf !== undefined ? existingCard.meaningEf : newCard.meaningEf;
 
-              // Preserve history list if present in backup but missing/empty in existing
-              if (Array.isArray(item.history) && item.history.length > 0) {
-                newCard.history = item.history;
-              } else if (Array.isArray(existingCard.history) && existingCard.history.length > 0) {
+              // Existing review history remains authoritative during a merge.
+              if (Array.isArray(existingCard.history) && existingCard.history.length > 0) {
                 newCard.history = existingCard.history;
               }
 
               freshList[idx] = newCard;
               updatedCount++;
             } else {
-              // Carry history list from backup on fresh insert
-              if (Array.isArray(item.history)) {
-                newCard.history = item.history;
-              }
               freshList.push(newCard);
               addedCount++;
             }
@@ -169,16 +130,20 @@ export async function importDb(e, onDbRestoredCallback) {
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
           if (activity) {
             const res = await chrome.storage.local.get('spelt_activity');
-            const mergedActivity = { ...(res.spelt_activity || {}), ...activity };
+            const mergedActivity = { ...(res.spelt_activity || {}) };
+            Object.entries(activity).forEach(([date, count]) => {
+              mergedActivity[date] = Math.max(Number(mergedActivity[date]) || 0, count);
+            });
             await chrome.storage.local.set({ 'spelt_activity': mergedActivity });
           }
           if (streak) {
             const res = await chrome.storage.local.get('spelt_streak');
             const currentStreak = res.spelt_streak || { current: 0, lastDate: '', max: 0 };
+            const useImportedCurrent = (streak.lastDate || '') > (currentStreak.lastDate || '');
             const mergedStreak = {
-              current: Math.max(currentStreak.current, streak.current || 0),
+              current: useImportedCurrent ? streak.current : (currentStreak.current || 0),
               max: Math.max(currentStreak.max || 0, streak.max || 0),
-              lastDate: currentStreak.lastDate || streak.lastDate || ''
+              lastDate: useImportedCurrent ? streak.lastDate : (currentStreak.lastDate || streak.lastDate || '')
             };
             await chrome.storage.local.set({ 'spelt_streak': mergedStreak });
           }
@@ -215,7 +180,7 @@ export async function importDb(e, onDbRestoredCallback) {
           }
         }
 
-        showConfirm('Success', `Import complete! Added: ${addedCount} new items, Updated: ${updatedCount} existing items.`, null, false);
+        showConfirm('Import complete', `Added ${addedCount} new items and updated ${updatedCount} existing items.`, null, false);
         if (onDbRestoredCallback) {
           await onDbRestoredCallback();
         }
@@ -247,7 +212,7 @@ export async function wipeDb(onDbRestoredCallback) {
     'Are you sure you want to delete all words and activity data? Type DELETE to confirm. This action cannot be undone.',
     async () => {
       await resetDb();
-      showConfirm('Purged', 'Database purged successfully!', null, false);
+      showConfirm('Data erased', 'Your words, review history, sessions, and learning statistics were erased.', null, false);
       if (onDbRestoredCallback) {
         await onDbRestoredCallback();
       }

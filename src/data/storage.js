@@ -102,8 +102,23 @@ export function atomicUpdate(updater) {
 }
 
 export async function resetDb() {
-  await setStored('spelt_words', []);
-  await setStored('spelt_activity', {});
-  await setStored('spelt_streak', { current: 0, lastDate: '', max: 0 });
-  await setStored('spelt_schema_version', 0);
+  const reset = async () => {
+    await atomicUpdate(async words => words.splice(0, words.length));
+    await Promise.all([
+      setStored('spelt_activity', {}),
+      setStored('spelt_streak', { current: 0, lastDate: '', max: 0 }),
+      setStored('spelt_sessions', []),
+      setStored('spelt_sandbox_activity', {}),
+      setStored('spelt_stats_ai_insights', null),
+      setStored('spelt_stats_ai_insights_hash', ''),
+      setStored('spelt_stats_ai_insights_timestamp', 0),
+      setStored('spelt_ai_job', null),
+      setStored('spelt_schema_version', 0)
+    ]);
+  };
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    await navigator.locks.request('spelt_ai_job_write', reset);
+  } else {
+    await reset();
+  }
 }

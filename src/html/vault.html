@@ -1,5 +1,5 @@
       <!-- TAB 3: VAULT -->
-      <section id="vault-tab" class="tab-pane">
+      <section id="vault-tab" class="tab-pane" role="tabpanel" aria-labelledby="vault-tab-button" hidden>
         <div class="vault-filter-row">
           <div class="search-box">
             <input type="text" id="vault-search" class="field" placeholder="Search words..." aria-label="Search words">
@@ -33,13 +33,14 @@
             <svg id="sort-dir-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg-sm"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
             <span id="sort-dir-label">ASC</span>
           </button>
+          <label class="vault-select-label vault-select-all-control">
+            <input type="checkbox" id="vault-select-all">
+            <span>Select all</span>
+          </label>
         </div>
         <!-- Bulk Actions Bar -->
-        <div id="vault-bulk-row" class="vault-bulk-row hidden">
-          <label class="vault-select-label">
-            <input type="checkbox" id="vault-select-all">
-            <span>Select All (<span id="vault-selected-count">0</span>)</span>
-          </label>
+        <div id="vault-bulk-row" class="vault-bulk-row hidden" aria-live="polite">
+          <span id="vault-selected-summary" class="vault-selected-summary"><span id="vault-selected-count">0</span> selected</span>
           <div class="flex-gap-xs">
             <button id="vault-demaster-selected" class="submit-btn btn-primary btn-restudy" aria-label="Re-study Selected">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -55,8 +56,24 @@
             </button>
           </div>
         </div>
+        <section id="vault-ai-job" class="vault-ai-job hidden" aria-live="polite" aria-label="AI enrichment progress">
+          <div class="vault-ai-job-head">
+            <div>
+              <strong id="vault-ai-job-title">Enriching vocabulary</strong>
+              <span id="vault-ai-job-status" class="vault-ai-job-status"></span>
+            </div>
+            <div class="vault-ai-job-actions">
+              <button type="button" id="vault-ai-job-cancel" class="submit-btn btn-danger-soft btn-compact-auto">Cancel</button>
+              <button type="button" id="vault-ai-job-dismiss" class="icon-btn" aria-label="Dismiss job status" title="Dismiss job status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <progress id="vault-ai-job-progress" class="vault-ai-job-progress" max="100" value="0">0%</progress>
+        </section>
         <div id="vault-list-container" class="vault-list-box">
-          <div id="vault-list-empty">No words saved yet. Check spelling in the Sandbox to add some!</div>
+          <div id="vault-list-summary" class="vault-list-summary" aria-live="polite"></div>
+          <div id="vault-list-empty">No words saved yet. Check a word in Sandbox to build your vault.</div>
           <ul id="popup-vault-list"></ul>
         </div>
       </section>

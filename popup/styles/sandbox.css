@@ -1,14 +1,13 @@
-/* Sandbox Dashboard Overhaul */
+/* Sandbox layout */
 .quick-add-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: var(--bg-card);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 14px;
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-md);
   transition: border-color var(--transition-fast);
 }
 .quick-add-section:hover {
@@ -50,10 +49,10 @@
 .sandbox-status-note-inline { margin: 0; }
 .sandbox-status-note-sm { font-size: 0.62rem; color: var(--text-muted); text-align: center; margin-top: 4px; margin-bottom: 0; }
 .btn-compact-ai { width: auto; padding: 4px 10px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; }
-.btn-ai-purple { background: hsla(260, 60%, 45%, 0.12); border-color: hsla(260, 60%, 45%, 0.4); color: #c084fc; }
+.btn-ai-purple { background: color-mix(in srgb, var(--primary) 10%, var(--bg-card)); border-color: color-mix(in srgb, var(--primary) 34%, var(--border)); color: var(--primary-light); }
 .btn-add-green { background: hsla(160, 60%, 45%, 0.12); border-color: hsla(160, 60%, 45%, 0.4); color: #2ecc71; }
 .btn-add-blue { background: hsla(210, 60%, 45%, 0.12); border-color: hsla(210, 60%, 45%, 0.4); color: #3498db; }
-.btn-add-purple { background: hsla(280, 60%, 45%, 0.12); border-color: hsla(280, 60%, 45%, 0.4); color: #9b59b6; }
+.btn-add-purple { background: color-mix(in srgb, var(--primary) 10%, var(--bg-card)); border-color: color-mix(in srgb, var(--primary) 34%, var(--border)); color: var(--primary-light); }
 .btn-edit-teal { background: hsla(200, 80%, 15%, 0.2); border-color: var(--primary-light); color: var(--primary-light); }
 .sandbox-add-group { display: inline-flex; align-items: center; gap: 4px; }
 .sandbox-add-select { width: auto; padding: 4px 6px; font-size: 0.7rem; border-radius: var(--radius-md); height: 26px; }
@@ -63,28 +62,31 @@
 .sandbox-history-chip { font-size: 0.65rem; background: hsla(155, 10%, 20%, 0.3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 6px; color: var(--text-main); cursor: pointer; transition: all var(--transition-fast) ease; }
 .sandbox-history-chip:hover { border-color: var(--primary); color: var(--primary-light); background: hsla(155, 65%, 48%, 0.1); }
 .sandbox-skeleton-line { height: 12px; background: linear-gradient(90deg, hsla(155, 10%, 20%, 0.3) 25%, hsla(155, 10%, 30%, 0.5) 50%, hsla(155, 10%, 20%, 0.3) 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.5s infinite; border-radius: var(--radius-sm); margin: 6px 0; }
+.sandbox-loading-status { font-size: var(--text-sm); margin: 0 0 6px; }
+.sandbox-skeleton-short { width: 40%; }
+.sandbox-skeleton-medium { width: 60%; }
+.sandbox-skeleton-long { width: 90%; }
 @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .quick-add-section h3 {
   margin: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--text-lg);
+  font-weight: 650;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
   border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
   padding-bottom: 6px;
 }
 
-/* Form Inputs with Custom Glow Outlines */
+/* Form inputs */
 .field {
   width: 100%;
   padding: 8px 12px;
-  background: hsla(155, 20%, 6%, 0.4);
+  background: hsl(155, 18%, 7%);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   outline: none;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: var(--text-md);
   color: var(--text-main);
   box-sizing: border-box;
   caret-color: var(--primary);
@@ -106,12 +108,12 @@
   justify-content: center;
   gap: 4px;
   padding: 8px 12px;
-  background: hsla(155, 10%, 20%, 0.3);
+  background: hsl(154, 14%, 13%);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast) var(--spring-curve);
@@ -159,9 +161,9 @@
   border: 1px solid hsla(35, 90%, 55%, 0.25);
 }
 .feedback-badge.trans {
-  background: hsla(265, 80%, 65%, 0.12);
-  color: var(--purple);
-  border: 1px solid hsla(265, 80%, 65%, 0.25);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary-light);
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
 }
 .feedback-example {
   background: hsla(155, 10%, 15%, 0.25);

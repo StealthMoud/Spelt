@@ -22,7 +22,7 @@ export function renderResponseTime(globalRtSum, globalRtCount, globalRtMin, glob
     const rtPoints = chartBuckets.map(b => b.rtCount > 0 ? Math.round(b.rtSum / b.rtCount) : 0);
     const rtLabels = chartBuckets.map(b => b.fullDateLabel);
     drawSparkline('rt-trend-container', rtPoints, 320, 75, {
-      strokeColor: 'hsl(265, 80%, 65%)', dotColor: 'hsl(265, 80%, 72%)',
+      strokeColor: 'hsl(155, 58%, 53%)', dotColor: 'hsl(154, 60%, 72%)',
       labels: rtLabels, unit: 'ms avg response'
     });
   } else {

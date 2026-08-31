@@ -1,3 +1,5 @@
+import { escapeHtml } from '../../../shared/dom.js';
+
 export let currentFormMisspellings = [];
 let currentFormWordObj = null;
 
@@ -104,9 +106,9 @@ export function renderPastErrorsList() {
         const badgeText = distText || countBadge ? `(${distText}${distText && countBadge ? ', ' : ''}${countBadge})` : '';
 
         return `
-          <div class="error-trash-chip" data-error="${err}">
+          <div class="error-trash-chip" data-error="${escapeHtml(err)}">
             <div class="error-chip-label-wrap">
-              <span class="error-chip-word">${err}</span>
+              <span class="error-chip-word">${escapeHtml(err)}</span>
               ${badgeText ? `<span class="error-chip-dist">${distText} ${countBadge}</span>` : ''}
             </div>
             <button type="button" class="delete-error-x" title="Remove error from log">

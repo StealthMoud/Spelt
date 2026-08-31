@@ -1,6 +1,6 @@
 /**
- * Ultra-Fast Glassmorphic Tooltip Engine
- * Replaces slow browser default tooltips with instantaneous glassmorphic tooltips.
+ * Fast tooltip engine.
+ * Replaces delayed browser tooltips with an immediate, consistently styled hint.
  */
 
 let tooltipEl = null;

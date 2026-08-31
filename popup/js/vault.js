@@ -1,6 +1,11 @@
-import { getWords, getStored, isGeminiConfigured, askGemini, atomicUpdate } from '../../shared/storage.js';
-import { getLanguageName } from '../../src/core/languages.js';
-import { buildEnrichmentPrompt } from '../../shared/ai/prompts.js';
+import { getWords, getStored, isGeminiConfigured, atomicUpdate } from '../../shared/storage.js';
+import { AI_JOB_ACTIVE_STATES, AI_JOB_KINDS } from '../../src/core/ai_jobs.js';
+import {
+  cancelAiJob,
+  getAiJobStatus,
+  startAiJob,
+  subscribeToAiJob
+} from './components/ai_job_client.js';
 import { showConfirm, showImportOptionsModal } from './vault/confirm.js';
 import { openModal, closeModal, currentFormMisspellings, renderPastErrorsList, setCurrentFormMisspellings } from './vault/modal.js';
 import { saveWord } from './vault/save.js';
@@ -11,8 +16,61 @@ import { registerAudioListeners } from './vault/audio_listeners.js';
 let wordsList = [];
 let onVaultUpdatedCallback = null;
 let selectedWordIds = new Set();
-let isEnrichCancelled = false;
+let currentAiJob = null;
 export { showConfirm, openModal, showImportOptionsModal };
+
+function renderAiJob(job) {
+  const panel = document.getElementById('vault-ai-job');
+  const title = document.getElementById('vault-ai-job-title');
+  const status = document.getElementById('vault-ai-job-status');
+  const progressEl = document.getElementById('vault-ai-job-progress');
+  const cancelBtn = document.getElementById('vault-ai-job-cancel');
+  if (!panel || !title || !status || !progressEl || !cancelBtn) return;
+
+  currentAiJob = job || null;
+  if (!job) {
+    panel.classList.add('hidden');
+    return;
+  }
+
+  panel.classList.remove('hidden');
+  progressEl.value = job.percent || 0;
+  progressEl.textContent = `${job.percent || 0}%`;
+  const isActive = AI_JOB_ACTIVE_STATES.has(job.status);
+  cancelBtn.classList.toggle('hidden', !isActive);
+  cancelBtn.disabled = job.status === 'cancelling';
+
+  if (job.status === 'completed') {
+    title.textContent = 'Enrichment complete';
+    status.textContent = `${job.succeeded} updated${job.failed ? ` · ${job.failed} failed` : ''}`;
+  } else if (job.status === 'cancelled') {
+    title.textContent = 'Enrichment cancelled';
+    status.textContent = `${job.completed} of ${job.total} processed`;
+  } else if (job.status === 'failed') {
+    title.textContent = 'Enrichment stopped';
+    status.textContent = job.failures?.at(-1)?.message || 'The background task failed.';
+  } else if (job.status === 'cancelling') {
+    title.textContent = 'Stopping enrichment';
+    status.textContent = `Finishing the current request · ${job.completed} of ${job.total}`;
+  } else {
+    title.textContent = job.status === 'queued' ? 'Preparing enrichment' : 'Enriching vocabulary';
+    const lastWord = job.currentWord ? ` · Last: ${job.currentWord}` : '';
+    status.textContent = `${job.completed} of ${job.total} processed${lastWord}`;
+  }
+}
+
+async function refreshAiJob() {
+  try {
+    renderAiJob(await getAiJobStatus());
+  } catch {
+    renderAiJob(null);
+  }
+}
+
+async function startEnrichmentJob(kind, wordIds = []) {
+  const targetLang = await getStored('spelt_target_lang');
+  renderAiJob(await startAiJob({ kind, wordIds, targetLang }));
+}
 
 export async function initVault(onVaultUpdated) {
   onVaultUpdatedCallback = onVaultUpdated;
@@ -66,6 +124,26 @@ export async function initVault(onVaultUpdated) {
     updateBulkUIState(filtered, selectedWordIds);
   });
 
+  document.getElementById('vault-ai-job-cancel')?.addEventListener('click', async () => {
+    if (!currentAiJob || !AI_JOB_ACTIVE_STATES.has(currentAiJob.status)) return;
+    try {
+      renderAiJob(await cancelAiJob(currentAiJob.id));
+    } catch (err) {
+      showConfirm('Could not cancel enrichment', err.message, null, false);
+    }
+  });
+
+  document.getElementById('vault-ai-job-dismiss')?.addEventListener('click', () => {
+    document.getElementById('vault-ai-job')?.classList.add('hidden');
+  });
+
+  subscribeToAiJob(job => {
+    renderAiJob(job);
+    if (job?.status === 'completed' || job?.status === 'cancelled') {
+      reloadVaultList().then(() => onVaultUpdatedCallback?.()).catch(console.error);
+    }
+  });
+
   document.getElementById('vault-delete-selected')?.addEventListener('click', () => {
     if (selectedWordIds.size === 0) return;
     showConfirm('Delete Selected', `Delete all ${selectedWordIds.size} selected words?`, async () => {
@@ -106,80 +184,19 @@ export async function initVault(onVaultUpdated) {
       return;
     }
 
-    showConfirm('AI Enrich Selected', `This will query Gemini AI to enrich definitions, translations, parts of speech, and IELTS examples for the selected ${selectedWordIds.size} words. Proceed?`, async () => {
+    showConfirm('Enrich selected words', `Update definitions, translations, parts of speech, and examples for ${selectedWordIds.size} selected words? The task will continue if you close this window.`, async () => {
       const idsToEnrich = Array.from(selectedWordIds);
-      const total = idsToEnrich.length;
-      selectedWordIds.clear();
-      await reloadVaultList();
-      if (onVaultUpdatedCallback) onVaultUpdatedCallback();
-
-      isEnrichCancelled = false;
-      showConfirm('AI Enrich Progress', `Enriched 0 of ${total} words...`, () => {
-        isEnrichCancelled = true;
-      }, true);
-
-      const targetLang = await getStored('spelt_target_lang') || 'fa';
-      const targetLangName = getLanguageName(targetLang);
-
-      // One read for the whole batch. This used to re-read the entire word list
-      // from storage once per word, inside the loop.
-      const wordsById = new Map((await getWords()).map(w => [w.id, w]));
-
-      let done = 0;
-      const enrichOne = async (id) => {
-        const w = wordsById.get(id);
-        if (!w) return;
-        try {
-          const aiData = await askGemini(buildEnrichmentPrompt(w.word, w, targetLangName));
-          await atomicUpdate(async (freshList) => {
-            const targetWord = freshList.find(x => x.id === id);
-            if (!targetWord) return;
-            if (aiData.definition) targetWord.definition = aiData.definition;
-            if (aiData.transcription) targetWord.transcription = aiData.transcription;
-            if (aiData.partOfSpeech) targetWord.partOfSpeech = aiData.partOfSpeech;
-            if (aiData.translation) targetWord.translation = aiData.translation;
-            if (aiData.level) targetWord.level = aiData.level.toUpperCase().trim();
-            if (aiData.example) {
-              targetWord.example = aiData.example;
-              targetWord.exampleTranslation = '';
-            }
-          });
-        } catch (err) {
-          console.error(`AI enrichment failed for word ID ${id}:`, err);
-        }
-      };
-
-      // Words are enriched by a small pool of workers rather than one at a time
-      // with a fixed 3.5s pause between each. That pause was a stand-in for rate
-      // limiting, but it charged every user the full delay whether or not they
-      // were anywhere near a limit — 20 words cost over a minute of pure
-      // waiting. The request engine already spreads load across keys, backs off
-      // per key on a 429, and caps its own concurrency, so the pool can simply
-      // feed it and let it throttle.
-      const ENRICH_CONCURRENCY = 3;
-      let cursor = 0;
-      const worker = async () => {
-        while (!isEnrichCancelled) {
-          const index = cursor++;
-          if (index >= idsToEnrich.length) return;
-          await enrichOne(idsToEnrich[index]);
-          done++;
-          const progressMsgEl = document.getElementById('popup-confirm-msg');
-          if (progressMsgEl) progressMsgEl.textContent = `Enriched ${done} of ${total} words...`;
-        }
-      };
-      await Promise.all(
-        Array.from({ length: Math.min(ENRICH_CONCURRENCY, idsToEnrich.length) }, worker)
-      );
-
-      await reloadVaultList();
-      if (onVaultUpdatedCallback) onVaultUpdatedCallback();
-      if (!isEnrichCancelled) {
-        showConfirm('AI Enrichment Complete', `Successfully enriched ${done} words!`, null, false);
+      try {
+        await startEnrichmentJob(AI_JOB_KINDS.ENRICH_SELECTED, idsToEnrich);
+        selectedWordIds.clear();
+        await reloadVaultList();
+      } catch (err) {
+        showConfirm('Could not start enrichment', err.message, null, false);
       }
     });
   });
 
+  await refreshAiJob();
   await reloadVaultList();
 }
 

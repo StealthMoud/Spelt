@@ -30,13 +30,9 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
     inputField.value = '';
     inputContainer.classList.remove('hidden');
     okBtn.disabled = true;
-    okBtn.style.opacity = '0.5';
-    okBtn.style.cursor = 'not-allowed';
   } else {
     inputContainer.classList.add('hidden');
     okBtn.disabled = false;
-    okBtn.style.opacity = '1';
-    okBtn.style.cursor = 'pointer';
   }
 
   modal.classList.remove('hidden');
@@ -50,8 +46,6 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
   const handleInput = () => {
     const match = inputField.value.trim() === expectedConfirmText;
     okBtn.disabled = !match;
-    okBtn.style.opacity = match ? '1' : '0.5';
-    okBtn.style.cursor = match ? 'pointer' : 'not-allowed';
   };
 
   const handlePaste = (e) => e.preventDefault();
@@ -72,17 +66,30 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
     cleanup();
   };
 
+  const handleDialogCancel = (event) => {
+    event.preventDefault();
+    close();
+  };
+
+  const handleEscape = (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    close();
+  };
+
   const handleOk = async () => {
     if (expectedConfirmText && inputField.value.trim() !== expectedConfirmText) {
       return;
     }
-    if (onOk) await onOk();
     close();
+    if (onOk) await onOk();
   };
 
   const cleanup = () => {
     okBtn.removeEventListener('click', handleOk);
     cancelBtn.removeEventListener('click', close);
+    modal.removeEventListener('cancel', handleDialogCancel);
+    modal.removeEventListener('keydown', handleEscape);
     if (expectedConfirmText) {
       inputField.removeEventListener('input', handleInput);
       inputField.removeEventListener('paste', handlePaste);
@@ -93,6 +100,8 @@ export function showConfirm(title, message, onOk, showCancel = true, expectedCon
 
   okBtn.addEventListener('click', handleOk);
   cancelBtn.addEventListener('click', close);
+  modal.addEventListener('cancel', handleDialogCancel);
+  modal.addEventListener('keydown', handleEscape);
 }
 
 export function showImportOptionsModal(onSelect, onCancel) {
@@ -135,15 +144,30 @@ export function showImportOptionsModal(onSelect, onCancel) {
     close();
   };
 
+  const handleDialogCancel = (event) => {
+    event.preventDefault();
+    handleCancel();
+  };
+
+  const handleEscape = (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    handleCancel();
+  };
+
   const cleanup = () => {
     btnBoth.removeEventListener('click', handleBoth);
     btnSpelling.removeEventListener('click', handleSpelling);
     btnRecall.removeEventListener('click', handleRecall);
     btnCancel.removeEventListener('click', handleCancel);
+    modal.removeEventListener('cancel', handleDialogCancel);
+    modal.removeEventListener('keydown', handleEscape);
   };
 
   btnBoth.addEventListener('click', handleBoth);
   btnSpelling.addEventListener('click', handleSpelling);
   btnRecall.addEventListener('click', handleRecall);
   btnCancel.addEventListener('click', handleCancel);
+  modal.addEventListener('cancel', handleDialogCancel);
+  modal.addEventListener('keydown', handleEscape);
 }

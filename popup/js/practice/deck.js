@@ -35,10 +35,12 @@ export function showPracticeCard() {
 
   // Update session progress bar
   const fillEl = document.getElementById('practice-progress-fill');
+  const progressEl = fillEl?.parentElement;
   if (fillEl) {
     const reviewed = initialTotalDue > 0 ? Math.max(0, initialTotalDue - dueCards.length) : 0;
     const pct = initialTotalDue > 0 ? Math.min(100, Math.round((reviewed / initialTotalDue) * 100)) : 100;
     fillEl.style.width = `${pct}%`;
+    progressEl?.setAttribute('aria-valuenow', String(pct));
   }
 
   if (dueCards.length === 0) {

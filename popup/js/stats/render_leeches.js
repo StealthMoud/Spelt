@@ -1,5 +1,6 @@
 import { isGeminiConfigured, askGeminiText } from '../../../shared/storage.js';
 import { buildHintPrompt } from '../../../shared/ai/prompts.js';
+import { escapeHtml } from '../../../shared/dom.js';
 
 export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVal) {
   const leechesList = document.getElementById('stats-leeches-list');
@@ -52,7 +53,7 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
       item.innerHTML = `
         <div class="leech-header-row">
           <div class="leech-word-info">
-            <span class="leech-word-text">${w.word}</span>
+            <span class="leech-word-text">${escapeHtml(w.word)}</span>
             <span class="leech-count-badge">${lifetimeErrors} lifetime error${lifetimeErrors > 1 ? 's' : ''}${streak > 0 ? ` · ${streak}✓ streak` : ''}</span>
           </div>
           <button type="button" class="icon-btn leech-coach-btn hidden leech-coach-btn-style" title="AI Coach Mnemonic">
@@ -61,7 +62,7 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
           </button>
         </div>
         <div class="leech-typos leech-typos-mt">
-          Common typos: <span class="leech-typos-list">${uniqueTypos.slice(0, 3).join(', ') || 'none'}</span>
+          Common typos: <span class="leech-typos-list">${escapeHtml(uniqueTypos.slice(0, 3).join(', ') || 'none')}</span>
         </div>
         <div class="leech-coach-bubble hidden">
           Loading coaching tips...
@@ -100,4 +101,3 @@ export function renderLeeches(words, currentLeechesLimit, currentLeechesCustomVa
     });
   }
 }
-

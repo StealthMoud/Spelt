@@ -24,10 +24,14 @@ export function registerPracticeListeners() {
     
     const setPillsActive = (activeMode) => {
       [spellingPill, recallPill].forEach(pill => {
-        if (pill) pill.classList.remove('active');
+        if (pill) {
+          pill.classList.remove('active');
+          pill.setAttribute('aria-pressed', 'false');
+        }
       });
-      if (activeMode === 'recall' && recallPill) recallPill.classList.add('active');
-      else if (spellingPill) spellingPill.classList.add('active');
+      const activePill = activeMode === 'recall' ? recallPill : spellingPill;
+      activePill?.classList.add('active');
+      activePill?.setAttribute('aria-pressed', 'true');
     };
     
     setPillsActive(savedMode);

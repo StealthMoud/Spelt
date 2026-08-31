@@ -2,17 +2,17 @@
     <header class="popup-header">
       <div class="logo-row">
         <div class="header-brand">
-          <span class="logo-text">Spelt</span>
+          <span class="logo-text" aria-label="Spelt home">Spelt</span>
           <div class="session-info">
-            <span class="user-status-dot active" title="Storage & network status" aria-label="Network Status"></span>
+            <span class="user-status-dot active" title="Storage & network status" aria-label="Network status" role="status"></span>
           </div>
         </div>
         <div class="header-actions">
-          <button id="popup-refresh-btn" class="icon-btn has-label" title="Reload words, counts & stats">
+          <button type="button" id="popup-refresh-btn" class="icon-btn has-label" title="Reload words, counts & stats" aria-label="Refresh all data">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             <span>Refresh</span>
           </button>
-          <button id="popup-popout-btn" class="icon-btn has-label hidden" title="Open Spelt in standalone window">
+          <button type="button" id="popup-popout-btn" class="icon-btn has-label hidden" title="Open Spelt in standalone window" aria-label="Open Spelt in a standalone window">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             <span>Pop out</span>
           </button>
@@ -20,25 +20,25 @@
       </div>
       
       <!-- Tab Navigation -->
-      <nav class="popup-tabs">
-        <button class="tab-btn active" data-tab="sandbox-tab">
+      <nav class="popup-tabs" role="tablist" aria-label="Spelt sections">
+        <button type="button" id="sandbox-tab-button" class="tab-btn active" data-tab="sandbox-tab" role="tab" aria-selected="true" aria-controls="sandbox-tab" tabindex="0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span>Sandbox</span>
         </button>
-        <button class="tab-btn" data-tab="practice-tab">
+        <button type="button" id="practice-tab-button" class="tab-btn" data-tab="practice-tab" role="tab" aria-selected="false" aria-controls="practice-tab" tabindex="-1">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           <span>Practice</span>
           <span id="popup-due-badge" class="due-badge hidden">0</span>
         </button>
-        <button class="tab-btn" data-tab="vault-tab">
+        <button type="button" id="vault-tab-button" class="tab-btn" data-tab="vault-tab" role="tab" aria-selected="false" aria-controls="vault-tab" tabindex="-1">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
           <span>Vault</span>
         </button>
-        <button class="tab-btn" data-tab="stats-tab">
+        <button type="button" id="stats-tab-button" class="tab-btn" data-tab="stats-tab" role="tab" aria-selected="false" aria-controls="stats-tab" tabindex="-1">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           <span>Stats</span>
         </button>
-        <button class="tab-btn" data-tab="settings-tab">
+        <button type="button" id="settings-tab-button" class="tab-btn" data-tab="settings-tab" role="tab" aria-selected="false" aria-controls="settings-tab" tabindex="-1">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>Settings</span>
         </button>

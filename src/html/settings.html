@@ -1,5 +1,5 @@
 <!-- TAB 5: SETTINGS -->
-      <section id="settings-tab" class="tab-pane">
+      <section id="settings-tab" class="tab-pane" role="tabpanel" aria-labelledby="settings-tab-button" hidden>
         <div class="settings-content-wrapper">
           <!-- Section 1: Study Settings -->
           <div class="settings-group-title">Study Settings</div>
@@ -46,15 +46,15 @@
           <!-- Section 3: AI Configuration -->
           <div class="settings-group-title">AI Configuration</div>
           <div class="settings-block">
-            <strong>Gemini API Keys Manager (Free Tier)</strong>
-            <p>Connect Gemini API keys starting with <code>AIza...</code>. Get free keys at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="link-primary">Google AI Studio</a>.</p>
+            <strong>Gemini API keys</strong>
+            <p>Connect one or more keys starting with <code>AIza...</code>. Get a key at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="link-primary">Google AI Studio</a>.</p>
             
             <div id="gemini-keys-list-container" class="gemini-keys-list">
               <!-- Dynamically populated keys -->
             </div>
 
             <div class="gemini-key-add-row">
-              <input type="password" id="setting-gemini-key-input" class="field gemini-key-input" placeholder="AIzaSy..." aria-label="Gemini API Key">
+              <input type="password" id="setting-gemini-key-input" class="field gemini-key-input" placeholder="AIzaSy..." aria-label="Gemini API key" autocomplete="off" spellcheck="false">
               <button type="button" id="add-gemini-key-btn" class="submit-btn gemini-key-add-btn" aria-label="Add Gemini Key">Add Key</button>
             </div>
             
@@ -64,7 +64,7 @@
                 <select id="setting-gemini-model" class="field select-input gemini-model-select" aria-label="Model Strategy"></select>
               </div>
             </div>
-            <p id="gemini-test-status" class="status-text-msg hidden"></p>
+            <p id="gemini-test-status" class="status-text-msg hidden" role="status" aria-live="polite"></p>
             
             <div id="ai-status-monitor-block" class="ai-status-monitor-block">
               <div class="ai-status-monitor-head">
@@ -81,11 +81,16 @@
           </div>
           <div class="settings-block">
             <strong>Background AI Processing</strong>
-            <p>Allow Spelt to run AI tasks in the background.</p>
+            <p>Run larger enrichment tasks in the service worker so they can continue after this window closes.</p>
             <div class="setting-checkbox-row">
               <input type="checkbox" id="setting-allow-background-ai" class="setting-checkbox">
               <label for="setting-allow-background-ai" class="setting-checkbox-label">Allow background AI tasks</label>
             </div>
+            <button type="button" id="retranslate-all-btn" class="submit-btn settings-wide-action" aria-label="Enrich every word in the vault">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><path d="M12 3v18"/><path d="m7 8 5-5 5 5"/><path d="M5 13a7 7 0 0 0 14 0"/></svg>
+              <span>Enrich entire vault</span>
+            </button>
+            <p id="settings-ai-job-status" class="settings-ai-job-status hidden" aria-live="polite"></p>
           </div>
 
           <!-- Section 4: Keyboard Shortcuts -->
@@ -135,7 +140,7 @@
           <div class="settings-group-title danger-title">Danger Zone</div>
           <div class="settings-block danger-block">
             <strong>Wipe Database</strong>
-            <p>Permanently delete all words, streaks, and history data. Type <code>DELETE</code> to confirm.</p>
+            <p>Permanently delete every word, review, activity record, streak, and queued AI task. Type <code>DELETE</code> to confirm.</p>
             <button type="button" id="wipe-db-btn" class="submit-btn btn-danger" aria-label="Erase Database">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               <span>Erase All Data</span>

@@ -17,6 +17,8 @@ export function renderHeatmap(reviewActivity, studyTimeActivity = {}) {
   if (!heatmapContainer) return;
 
   heatmapContainer.innerHTML = '';
+  heatmapContainer.setAttribute('role', 'img');
+  heatmapContainer.setAttribute('aria-label', 'Daily review activity for the previous 371 days.');
   if (monthsContainer) monthsContainer.innerHTML = '';
 
   const tempDate = new Date();
@@ -51,8 +53,9 @@ export function renderHeatmap(reviewActivity, studyTimeActivity = {}) {
     const formattedDate = tempDate.toLocaleDateString(undefined, { 
       weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
     });
-    const timeText = timeMs > 0 ? `<br/>⏱️ Study Time: ${formatStudyTime(timeMs)}` : '';
-    const tooltipText = `<strong>${formattedDate}</strong><br/>${count} review${count === 1 ? '' : 's'}${timeText}`;
+    const timeText = timeMs > 0 ? `\nStudy time: ${formatStudyTime(timeMs)}` : '';
+    const tooltipText = `${formattedDate}\n${count} review${count === 1 ? '' : 's'}${timeText}`;
+    cell.setAttribute('aria-hidden', 'true');
 
     cell.addEventListener('mouseenter', (e) => showStatsTooltip(e.clientX, e.clientY, tooltipText));
     cell.addEventListener('mouseleave', hideStatsTooltip);

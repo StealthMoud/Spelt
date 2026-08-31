@@ -1,12 +1,12 @@
       <!-- TAB 1: SANDBOX -->
-      <section id="sandbox-tab" class="tab-pane active">
+      <section id="sandbox-tab" class="tab-pane active" role="tabpanel" aria-labelledby="sandbox-tab-button">
         <div class="quick-add-section">
-          <h3>Spellcheck Sandbox</h3>
-          <p id="sandbox-empty-hint" class="sandbox-empty-hint">Type any word to verify spelling, definitions, and IPA pronunciation, or select text on web pages and press <kbd>Alt+S</kbd>.</p>
+          <h3>Check a spelling</h3>
+          <p id="sandbox-empty-hint" class="sandbox-empty-hint">Look up a word, hear its pronunciation, and save it for review. You can also select text on a page and press <kbd>Alt+S</kbd>.</p>
           <div id="sandbox-history-container" class="sandbox-history-container hidden" aria-label="Recent checks history"></div>
           <form id="quick-add-form">
             <div class="input-wrapper">
-              <input type="text" id="word-input" class="field text-center-bold" placeholder="Type word & press Enter to verify..." autocomplete="off" required autofocus aria-label="Word to verify">
+              <input type="text" id="word-input" class="field text-center-bold" placeholder="Type a word, then press Enter" autocomplete="off" required autofocus aria-label="Word to verify">
             </div>
           </form>
           <div id="feedback-msg" class="feedback-text hidden" aria-live="polite"></div>

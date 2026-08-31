@@ -34,10 +34,10 @@ function renderLoadingSkeleton(stepText) {
   feedbackMsg.classList.remove('hidden');
   feedbackMsg.innerHTML = `
     <div class="sandbox-result-card">
-      <p class="text-primary-light" style="font-size: 0.72rem; margin: 0 0 6px;">${escapeHtml(stepText)}</p>
-      <div class="sandbox-skeleton-line" style="width: 60%;"></div>
-      <div class="sandbox-skeleton-line" style="width: 90%;"></div>
-      <div class="sandbox-skeleton-line" style="width: 40%;"></div>
+      <p class="text-primary-light sandbox-loading-status">${escapeHtml(stepText)}</p>
+      <div class="sandbox-skeleton-line sandbox-skeleton-medium"></div>
+      <div class="sandbox-skeleton-line sandbox-skeleton-long"></div>
+      <div class="sandbox-skeleton-line sandbox-skeleton-short"></div>
     </div>
   `;
 }
