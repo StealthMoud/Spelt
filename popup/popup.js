@@ -12,6 +12,7 @@ import { initResizer } from './js/popup/resizer.js';
 import { initSelectionLookup } from './js/popup/selection_lookup.js';
 import { initMoveable } from './js/popup/moveable.js';
 import { initTooltips } from './js/popup/tooltip.js';
+import { initToday, renderToday, initStudyPreferences } from './js/today.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const dueCountEl = document.getElementById('due-count'), totalCountEl = document.getElementById('total-count');
@@ -31,13 +32,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       totalCountEl.textContent = words.length;
       
       const badge = document.getElementById('popup-due-badge');
+      badge.classList.toggle('hidden', dueCount === 0);
       if (dueCount > 0) {
         badge.textContent = dueCount;
         badge.style.display = 'block';
       } else {
         badge.style.display = 'none';
       }
-      await renderStats();
+      await Promise.all([renderStats(), renderToday()]);
     } catch (e) { console.error(e); }
   }
 
@@ -78,6 +80,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     else if (targetTab === 'vault-tab') await reloadVaultList();
     else if (targetTab === 'stats-tab') await renderStats();
   });
+  initToday(async () => { await reloadVaultList(); await loadPracticeDeck(); await refreshStats(); });
+  await initStudyPreferences();
   
   await initPractice(() => refreshStats());
   
@@ -151,6 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'spelt_activity',
     'spelt_streak',
     'spelt_sessions',
+    'spelt_daily_goal',
     'spelt_sandbox_activity'
   ];
 
@@ -171,6 +176,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  document.getElementById('word-input')?.focus();
   await refreshStats();
 });

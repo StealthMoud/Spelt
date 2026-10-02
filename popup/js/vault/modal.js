@@ -20,6 +20,7 @@ export function openModal(wordObj = null) {
   document.getElementById('form-translation').value = wordObj ? wordObj.translation : '';
   document.getElementById('form-part-of-speech').value = wordObj ? (wordObj.partOfSpeech || '') : '';
   document.getElementById('form-example').value = wordObj ? (wordObj.example || '') : '';
+  document.getElementById('form-notes').value = wordObj?.notes || '';
 
   document.getElementById('form-level').value = wordObj ? (wordObj.level || '').toUpperCase().trim() : '';
   document.getElementById('form-practice-type').value = wordObj ? (wordObj.practiceType || 'both') : 'both';
@@ -35,18 +36,6 @@ export function openModal(wordObj = null) {
   const ptVal = practiceTypeSelect.value;
   updateFormLabels(ptVal);
 
-  // Update custom select UI for Practice Target
-  const wrapper = practiceTypeSelect.closest('.custom-select-wrapper');
-  if (wrapper) {
-    const options = wrapper.querySelectorAll('.custom-option');
-    options.forEach(o => o.classList.remove('selected'));
-    const selectedOpt = wrapper.querySelector(`.custom-option[data-value="${ptVal}"]`);
-    if (selectedOpt) {
-      selectedOpt.classList.add('selected');
-      wrapper.querySelector('.custom-select-trigger span').textContent = selectedOpt.textContent;
-    }
-  }
-  
   modal.classList.remove('hidden');
   if (typeof modal.showModal === 'function' && !modal.open) {
     modal.showModal();

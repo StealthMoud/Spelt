@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="290" height="260" viewBox="0 0 290 260">
+ <g fill="none" stroke="#9bbca0" opacity=".25"><circle cx="150" cy="130" r="111"/><circle cx="150" cy="130" r="86" stroke-dasharray="2 7"/><path d="M20 210h252M30 51h11m-5-5v11m218 27h11m-5-5v11"/></g>
+ <ellipse cx="153" cy="220" rx="100" ry="10" fill="#0d2a1e" opacity=".2"/>
+ <g transform="translate(38 99) rotate(-13)"><rect x="3" y="7" width="90" height="107" rx="13" fill="#0d2a1e" opacity=".25"/><rect width="90" height="107" rx="13" fill="#dce8c6"/><rect x="7" y="7" width="76" height="92" rx="8" fill="none" stroke="#bdcfac"/><text x="43" y="77" text-anchor="middle" font-family="Georgia,serif" font-size="78" fill="#34563d">a</text><circle cx="73" cy="89" r="3" fill="#6d875a"/></g>
+ <g transform="translate(147 43) rotate(13)"><rect x="3" y="7" width="85" height="102" rx="12" fill="#0d2a1e" opacity=".25"/><rect width="85" height="102" rx="12" fill="#efe8d2"/><rect x="7" y="7" width="71" height="88" rx="7" fill="none" stroke="#d8d0b9"/><text x="42" y="76" text-anchor="middle" font-family="Georgia,serif" font-size="79" fill="#526344">b</text></g>
+ <g transform="translate(140 135) rotate(6)"><rect x="3" y="6" width="81" height="89" rx="12" fill="#0d2a1e" opacity=".3"/><rect width="81" height="89" rx="12" fill="#aac99d"/><rect x="7" y="7" width="67" height="75" rx="7" fill="none" stroke="#8fb483"/><text x="40" y="65" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="#2f5139">c</text></g>
+ <path d="M241 215c-4-29-1-49 12-68" stroke="#a2bb88" fill="none" stroke-width="2"/><path d="M243 190c-18-3-24-15-23-26 20 2 27 12 23 26M246 177c18-1 26-11 25-24-18 0-25 9-25 24" fill="#88aa7c"/>
+ <circle cx="65" cy="52" r="4" fill="#b6d0a2"/><path d="m113 36 4 7 7 4-7 4-4 7-4-7-7-4 7-4z" fill="#a4c28f"/>
+</svg>

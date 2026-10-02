@@ -7,7 +7,7 @@ export { syncPracticeDeck, loadPracticeDeck, getDueCards, getReviewedWordIds, ge
 
 export async function initPractice(onDeckUpdated) {
   setOnDeckUpdated(onDeckUpdated);
-  registerPracticeListeners();
+  await registerPracticeListeners();
   registerKeydowns();
   await loadPracticeDeck();
 }

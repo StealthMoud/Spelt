@@ -6,6 +6,7 @@ import { showManualCorrectionForm } from './manual_form.js';
 import { escapeHtml } from '../../../shared/dom.js';
 
 const historyList = [];
+let verifying = false;
 
 export function pushSandboxHistory(word) {
   if (!word) return;
@@ -46,14 +47,19 @@ export async function handleVerify(reloadVaultListCallback) {
   const wordInput = document.getElementById('word-input');
   const feedbackMsg = document.getElementById('feedback-msg');
   const word = wordInput?.value.trim();
-  if (!word) return;
+  if (!word || verifying) return;
+  verifying = true;
+  const submit = document.getElementById('verify-word-btn');
+  if (submit) { submit.disabled = true; submit.textContent = 'Looking up…'; }
+  wordInput.readOnly = true;
+  feedbackMsg.setAttribute('aria-busy', 'true');
   
   pushSandboxHistory(word);
 
   try {
     renderLoadingSkeleton('Checking primary dictionary…');
     const lowerWord = word.toLowerCase();
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`);
+    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`, { signal: AbortSignal.timeout(12000) });
     if (response.ok) {
       const data = await response.json();
       logSandboxActivity('correct').catch(() => {});
@@ -99,5 +105,13 @@ export async function handleVerify(reloadVaultListCallback) {
         }
       }
     }
-  } catch (err) { feedbackMsg.innerHTML = `<p class="text-danger">Error: ${escapeHtml(err.message)}</p>`; }
+  } catch (err) {
+    feedbackMsg.innerHTML = `<p class="text-danger">We couldn’t look up this word. Check your connection and try again.</p><p class="feedback-subtext">Your saved words are still available in Practice.</p>`;
+    console.warn('Word lookup failed:', err.message);
+  } finally {
+    verifying = false;
+    wordInput.readOnly = false;
+    feedbackMsg.setAttribute('aria-busy', 'false');
+    if (submit) { submit.disabled = false; submit.innerHTML = 'Look up <span aria-hidden="true">↗</span>'; }
+  }
 }

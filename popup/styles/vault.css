@@ -60,7 +60,7 @@
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: hsla(155, 10%, 20%, 0.25);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   color: var(--text-muted);
   cursor: pointer;
@@ -90,14 +90,14 @@
   opacity: 0.6;
 }
 .icon-btn:disabled:hover {
-  background: hsla(155, 10%, 20%, 0.25);
+  background: var(--surface-soft);
   border-color: var(--border);
   color: var(--text-muted);
   transform: none;
 }
 
 .vault-sort-dir-btn {
-  background: hsla(155, 10%, 15%, 0.35) !important;
+  background: var(--surface-soft) !important;
   border-color: var(--border) !important;
   font-size: 0.7rem !important;
   font-weight: 600 !important;
@@ -125,7 +125,7 @@
 
 /* Custom Select Dropdowns */
 .custom-select-trigger {
-  background: hsla(155, 20%, 6%, 0.45) !important;
+  background: var(--surface-soft) !important;
   border: 1px solid var(--border) !important;
   color: var(--text-muted) !important;
   border-radius: var(--radius-md) !important;
@@ -175,7 +175,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 6px 10px;
-  background: hsla(155, 12%, 10%, 0.55);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   margin-bottom: 0px;
@@ -301,8 +301,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 10px;
-  background: hsla(155, 10%, 15%, 0.22);
-  border: 1px solid hsla(155, 12%, 24%, 0.12);
+  background: var(--surface-soft);
+  border: 1px solid var(--surface-soft);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast) var(--spring-curve);
   position: relative;
@@ -321,7 +321,7 @@
 
 .select-wrapper { flex: 1; position: relative; }
 .select-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; }
-.select-options-box { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: hsl(155, 12%, 8%); border: 1px solid var(--border-hover); border-radius: var(--radius-md); z-index: 100; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); padding: 4px; box-sizing: border-box; }
+.select-options-box { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface-soft); border: 1px solid var(--border-hover); border-radius: var(--radius-md); z-index: 100; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); padding: 4px; box-sizing: border-box; }
 .select-option-item { padding: 6px 10px; font-size: 0.72rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); transition: all var(--transition-fast) ease; }
 
 .vault-item-main { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }

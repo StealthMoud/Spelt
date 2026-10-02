@@ -35,7 +35,7 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
       card.meaningNextDate = nextDate;
       card.meaningLastReviewedAt = Date.now();
 
-      const historyEntry = { date: Date.now(), q, interval, mode: 'meaning' };
+      const historyEntry = { date: Date.now(), q, interval, mode: 'meaning', correct: isCorrect };
       if (responseTimeMs !== null && responseTimeMs > 0) {
         historyEntry.rt = responseTimeMs;
       }
@@ -52,7 +52,7 @@ export async function reviewWord(wordId, q, typedWrongWord = null, responseTimeM
       card.ef = ef;
       card.nextDate = nextDate;
       card.lastReviewedAt = Date.now();
-      const historyEntry = { date: Date.now(), q, interval, mode: 'spelling' };
+      const historyEntry = { date: Date.now(), q, interval, mode: 'spelling', correct: isCorrect };
       if (responseTimeMs !== null && responseTimeMs > 0) {
         historyEntry.rt = responseTimeMs;
       }

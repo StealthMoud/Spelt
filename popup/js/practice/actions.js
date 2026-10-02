@@ -1,5 +1,6 @@
 import { getFallbackExample, computeErrorWeight, calcSM2, getSpellingVariant, areSpellingVariants, getStored } from '../../../shared/storage.js';
-import { getDueCards, getOnDeckUpdated, trackReview, getCardShownAt, setLastSpellingResult } from './state.js';
+import { getDueCards, getOnDeckUpdated, setLastSpellingResult, getPracticeMode } from './state.js';
+import { spellingTip } from '../../../src/core/collections.js';
 import { isAnswerCorrect } from './answer.js';
 import { renderAudioButtons } from './helpers.js';
 import { isGeminiConfigured, generateMisspellingFeedbackStream } from './ai_helpers.js';
@@ -75,11 +76,14 @@ async function mountCoachButton(fbRow, fbText, card, typed) {
 }
 
 export function populateBackFace(card) {
+  const note = card.notes || spellingTip(card.word);
+  document.getElementById('spelling-memory-note').classList.toggle('hidden', !note);
+  document.getElementById('spelling-memory-text').textContent = note;
   document.getElementById('back-word-display').textContent = card.word;
   document.getElementById('back-definition-display').textContent = card.definition || '';
   
   const efEl = document.getElementById('back-card-ef');
-  if (efEl) efEl.textContent = card.ef ? Number(card.ef).toFixed(2) : '2.50';
+  if (efEl) efEl.textContent = Number((getPracticeMode() === 'recall' ? card.meaningEf : card.ef) || 2.5).toFixed(2);
   const lapsesEl = document.getElementById('back-card-lapses');
   if (lapsesEl) lapsesEl.textContent = card.totalErrors || 0;
   
@@ -166,13 +170,17 @@ function updateSrsHints(hardInt, goodInt, easyInt, recommendSelector) {
 }
 
 function flipCard() {
-  document.getElementById('popup-deck-card').classList.add('flipped');
+  const card = document.getElementById('popup-deck-card');
+  card.classList.add('flipped');
+  card.querySelector('.card-front').inert = true;
+  card.querySelector('.card-back').inert = false;
   setTimeout(() => { document.querySelector('#practice-tab .srs-recommend')?.focus(); }, 200);
 }
 
 // ── Spelling Mode: check typed answer, populate back, flip ──────────
 
 export function checkSpelling() {
+  if (document.getElementById('popup-deck-card').classList.contains('flipped')) return;
   const dueCards = getDueCards();
   const card = dueCards[0];
   if (!card) return;
@@ -184,10 +192,6 @@ export function checkSpelling() {
   setLastSpellingResult(isOk);
   const badge = document.getElementById('spelling-result-badge');
   const typedDisplay = document.getElementById('user-typed-display');
-
-  // Track the review for empty state summary
-  const rt = getCardShownAt() > 0 ? Date.now() - getCardShownAt() : 0;
-  trackReview(card.word, isOk, rt);
 
   // Show spelling result
   if (badge) {
@@ -203,7 +207,7 @@ export function checkSpelling() {
       }
       badge.className = 'result-badge success';
     } else {
-      badge.textContent = 'Incorrect'; badge.className = 'result-badge danger';
+      badge.textContent = 'Let’s learn this one'; badge.className = 'result-badge danger';
     }
   }
   if (typedDisplay) {
@@ -288,6 +292,5 @@ export function revealRecall() {
 
   flipCard();
 }
-
 
 

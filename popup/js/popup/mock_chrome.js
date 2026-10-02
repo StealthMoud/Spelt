@@ -48,6 +48,12 @@ if (typeof chrome === 'undefined' || !chrome.runtime) {
       removeListener: listener => runtimeListeners.delete(listener)
     },
     sendMessage(message, callback) {
+      if (message?.action === 'reviewWord') {
+        return import('../../../shared/storage/reviews.js').then(async ({ reviewWord }) => {
+          const card = await reviewWord(message.wordId, message.q, message.typedWrongWord, message.responseTimeMs, message.mode);
+          return respond(callback, { success: true, card });
+        }).catch(error => respond(callback, { success: false, error: error.message }));
+      }
       if (message?.action === 'getAiJobStatus') {
         return respond(callback, { success: true, job: readValue('spelt_ai_job') || null });
       }

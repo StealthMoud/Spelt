@@ -1,27 +1,16 @@
     <!-- MODAL: Add Word Form -->
-    <dialog id="word-form-modal" class="modal-overlay hidden" aria-modal="true">
+    <dialog id="word-form-modal" class="modal-overlay hidden" aria-modal="true" aria-labelledby="form-modal-title">
       <div class="modal-card">
         <h3 id="form-modal-title">Add New Word</h3>
         <form id="word-entry-form">
           <input type="hidden" id="edit-word-id">
           <div class="modal-input-item">
             <label for="form-practice-type">Practice Target</label>
-            <div class="custom-select-wrapper select-wrapper" id="practice-type-custom-select">
-              <button type="button" class="field custom-select-trigger select-trigger" aria-label="Practice Target">
-                <span>Both (Spelling & Recall)</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron icon-svg-sm"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div class="custom-options select-options-box">
-                <div class="custom-option select-option-item selected" data-value="both">Both (Spelling & Recall)</div>
-                <div class="custom-option select-option-item" data-value="spelling">Spelling Only</div>
-                <div class="custom-option select-option-item" data-value="recall">Recall Only</div>
-              </div>
-              <select id="form-practice-type" class="hidden" aria-label="Practice Target">
+              <select id="form-practice-type" class="field select-input">
                 <option value="both">Both (Spelling & Recall)</option>
                 <option value="spelling">Spelling Only</option>
                 <option value="recall">Recall Only</option>
               </select>
-            </div>
           </div>
           <div class="modal-input-item">
             <label for="form-word">Word *</label>
@@ -83,6 +72,10 @@
           <div class="modal-input-item">
             <label for="form-example">Example Sentence</label>
             <textarea id="form-example" class="field textarea-item" placeholder="Use the word in a sentence..." autocomplete="off"></textarea>
+          </div>
+          <div class="modal-input-item">
+            <label for="form-notes">Memory cue (optional)</label>
+            <textarea id="form-notes" class="field textarea-item" maxlength="2000" placeholder="A phrase, pattern, or connection that helps you remember."></textarea>
           </div>
 
           <div class="modal-input-item form-checkbox-row">

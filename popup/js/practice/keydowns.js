@@ -29,6 +29,7 @@ export function registerKeydowns() {
   window.addEventListener('keydown', async (e) => {
     const practiceTab = document.getElementById('practice-tab');
     if (!practiceTab || !practiceTab.classList.contains('active')) return;
+    if (document.querySelector('dialog[open]')) return;
     if (document.getElementById('word-form-modal')?.classList.contains('hidden') === false) return;
 
     const cardEl = document.getElementById('popup-deck-card');
@@ -36,6 +37,7 @@ export function registerKeydowns() {
 
     const active = document.activeElement;
     const isTyping = active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && ['text', 'search'].includes(active.type)));
+    if (isTyping && active.id !== 'spelling-input') return;
 
     if ((e.key === 't' || e.key === 'T') && !isTyping) {
       e.preventDefault(); e.stopPropagation();

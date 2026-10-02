@@ -1,4 +1,4 @@
-import { addWord, fetchDynamicDefinition, atomicUpdate, getNextReviewDate } from '../../../shared/storage.js';
+import { addWord, getWords, fetchDynamicDefinition, atomicUpdate, getNextReviewDate } from '../../../shared/storage.js';
 import { showConfirm } from './confirm.js';
 import { closeModal } from './modal.js';
 
@@ -11,6 +11,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
   const translation = document.getElementById('form-translation').value.trim();
   const partOfSpeech = document.getElementById('form-part-of-speech').value.trim();
   const example = document.getElementById('form-example').value.trim();
+  const notes = document.getElementById('form-notes').value.trim();
   const level = document.getElementById('form-level').value.trim();
   const practiceType = document.getElementById('form-practice-type').value;
   const mastered = document.getElementById('form-mastered').checked;
@@ -20,6 +21,8 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
       if (id) {
         await atomicUpdate(async (freshList) => {
           const idx = freshList.findIndex(w => w.id === id);
+          if (idx === -1) throw new Error('This word is no longer in your vault.');
+          if (freshList.some(w => w.id !== id && w.word.toLowerCase() === word.toLowerCase())) throw new Error('That word is already in your vault.');
           if (idx !== -1) {
             const wasMastered = freshList[idx].mastered;
             const oldEx = freshList[idx].example;
@@ -32,6 +35,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
               translation,
               partOfSpeech,
               example,
+              notes,
               exampleTranslation,
               level,
               practiceType,
@@ -51,7 +55,7 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
           }
         });
       } else {
-        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, level, practiceType, mastered, misspellings: currentFormMisspellings });
+        const addedWord = await addWord({ word, definition, transcription, translation, partOfSpeech, example, notes, level, practiceType, mastered, misspellings: currentFormMisspellings });
         if (mastered) {
           await atomicUpdate(async (list) => {
             const wObj = list.find(w => w.id === addedWord.id);
@@ -72,13 +76,14 @@ export async function saveWord(e, currentFormMisspellings, reloadCallback, onVau
 
   try {
     const isOnline = navigator.onLine;
-    if (isOnline) {
+    const original = id ? (await getWords()).find(entry => entry.id === id) : null;
+    if (isOnline && (!original || original.word.toLowerCase() !== word.toLowerCase())) {
       // 1. Try our robust definition lookup (queries Cambridge and Oxford, handling multi-word hyphens)
       const res = await fetchDynamicDefinition(word);
       
       // 2. If dynamic definition is empty, fallback to Free Dictionary API validation check
       if (!res || !res.definition) {
-        const checkRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`);
+        const checkRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`, { signal: AbortSignal.timeout(12000) });
         if (!checkRes.ok) {
           showConfirm(
             'Unrecognized Word',

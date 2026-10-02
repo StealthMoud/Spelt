@@ -1,6 +1,7 @@
 import { getWords } from '../../../shared/storage.js';
 import { selectDueCards, isDueInMode } from '../../../src/core/selectors.js';
-import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, hasReviewedWord, refreshReviewedWordDay, getPracticeMode } from './state.js';
+import { getDueCards, setDueCards, getOnDeckUpdated, setCardShownAt, hasReviewedWord, refreshReviewedWordDay, getPracticeMode, getIsSubmitting } from './state.js';
+import { prioritizeDueCards } from '../../../src/core/learning.js';
 import { populateBackFace } from './actions.js';
 import { populateFrontFace } from './front_face.js';
 import { setupAIHintButton, setupBackAIHintButton, setupAIWritingPractice, setupAISpellingFeedback, triggerSessionSummary, resetCardScope } from './ai_panels.js';
@@ -12,7 +13,7 @@ export async function loadPracticeDeck() {
   const words = await getWords();
   const mode = getPracticeMode();
   const reviewedSet = new Set(words.filter(w => hasReviewedWord(w.id, mode)).map(w => w.id));
-  const due = selectDueCards(words, mode, { excludeIds: reviewedSet });
+  const due = prioritizeDueCards(selectDueCards(words, mode, { excludeIds: reviewedSet }), mode);
   setDueCards(due);
   initialTotalDue = due.length;
   getOnDeckUpdated()?.(); showPracticeCard();
@@ -29,8 +30,8 @@ export function showPracticeCard() {
   const descEl = document.getElementById('practice-mode-description');
   if (descEl) {
     descEl.textContent = mode === 'recall'
-      ? 'Recall: View word, test memory, then reveal answer.'
-      : 'Spelling: Hear audio clues and type the exact spelling.';
+      ? 'Read the word. Remember its meaning before you reveal.'
+      : 'Read the clues, listen if you like, then try the spelling.';
   }
 
   // Update session progress bar
@@ -41,6 +42,7 @@ export function showPracticeCard() {
     const pct = initialTotalDue > 0 ? Math.min(100, Math.round((reviewed / initialTotalDue) * 100)) : 100;
     fillEl.style.width = `${pct}%`;
     progressEl?.setAttribute('aria-valuenow', String(pct));
+    document.getElementById('practice-progress-text').textContent = initialTotalDue ? `${reviewed} of ${initialTotalDue} words reviewed` : 'Ready when you are';
   }
 
   if (dueCards.length === 0) {
@@ -48,20 +50,22 @@ export function showPracticeCard() {
     
     // 3-state empty state differentiation
     getWords().then(words => {
+      if (getDueCards().length || mode !== getPracticeMode()) return;
       const titleEl = document.getElementById('empty-state-title');
       const msgEl = document.getElementById('empty-state-message');
       if (!titleEl || !msgEl) return;
       if (words.length === 0) {
-        titleEl.textContent = 'Vault Empty!';
-        msgEl.textContent = 'Add words in Sandbox to start practicing.';
+        titleEl.textContent = 'Your first word is a small beginning.';
+        msgEl.textContent = 'Choose a five-word collection on Today, or save a word in Discover.';
       } else {
-        const hasModeWords = words.some(w => (w.practiceType || 'spelling') === mode || (w.practiceType || 'spelling') === 'both');
+        const hasModeWords = words.some(w => (w.practiceType || 'both') === mode || (w.practiceType || 'both') === 'both');
         if (!hasModeWords) {
-          titleEl.textContent = 'No Cards for This Mode!';
-          msgEl.textContent = 'No words saved for this practice mode yet. Add words or switch mode.';
+          titleEl.textContent = `No ${mode === 'recall' ? 'meaning' : 'spelling'} cards yet.`;
+          msgEl.textContent = 'Try the other mode, or edit a word in your vault to practice both.';
         } else {
-          titleEl.textContent = 'Deck Fully Reviewed!';
-          msgEl.textContent = 'You cleared all scheduled reviews for today!';
+          titleEl.textContent = 'Room for a little breathing space.';
+          const nextDates = words.filter(w => !w.mastered && ((w.practiceType || 'both') === mode || (w.practiceType || 'both') === 'both')).map(w => mode === 'recall' ? w.meaningNextDate : w.nextDate).filter(date => date > Date.now());
+          msgEl.textContent = nextDates.length ? `You’re up to date. Next review: ${new Date(Math.min(...nextDates)).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}.` : 'You’re up to date in this mode. Come back when your next words are due.';
         }
       }
     });
@@ -72,6 +76,9 @@ export function showPracticeCard() {
 
   cardEl.classList.remove('hidden'); emptyEl.classList.add('hidden');
   cardEl.classList.remove('flipped'); spellInput.value = '';
+  cardEl.querySelector('.card-front').inert = false;
+  cardEl.querySelector('.card-back').inert = true;
+  document.getElementById('practice-save-error')?.classList.add('hidden');
   setCardShownAt(Date.now());
 
   // Abort previous card's scoped listeners and create fresh scope
@@ -93,8 +100,10 @@ export function showPracticeCard() {
 }
 
 export async function syncPracticeDeck() {
+  if (getIsSubmitting()) return;
   refreshReviewedWordDay();
   const fresh = await getWords(), now = Date.now(), currentDue = getDueCards();
+  if (getIsSubmitting()) return;
   const activeCard = currentDue[0], oldActiveId = activeCard?.id;
   const mode = getPracticeMode();
   let due = [];

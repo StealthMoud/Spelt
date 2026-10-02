@@ -4,7 +4,7 @@
   position: relative;
   padding: 12px;
   border-radius: var(--radius-xl);
-  background: hsla(155, 12%, 8%, 0.85);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.55);
   line-height: 1.4;

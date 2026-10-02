@@ -9,6 +9,9 @@ export function initResizer() {
   const route = window.location.hash.slice(1).split('/')[0];
   const isStatsPage = route === 'stats';
   const isStandalone = route === 'popout' || window.location.search.includes('standalone');
+  if (window.location.protocol === 'chrome-extension:' && !isStandalone && !isStatsPage) {
+    document.documentElement.classList.add('extension-popup');
+  }
 
   if (isStatsPage) {
     document.documentElement.classList.add('stats-page');

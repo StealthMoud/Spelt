@@ -29,7 +29,9 @@ export function initFontResizer() {
     });
 
     function applyFontScale(scale) {
+      scale = Math.max(80, Math.min(150, Number(scale) || 100));
       document.documentElement.style.fontSize = (16 * (scale / 100)) + 'px';
+      document.documentElement.toggleAttribute('data-large-text', scale >= 120);
       fontScaleDisplay.textContent = scale + '%';
     }
   }

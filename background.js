@@ -50,10 +50,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return false;
     }
     const responseTimeMs = Math.max(0, Math.min(Number(message.responseTimeMs) || 0, 60 * 60 * 1000));
-    const typedWrongWord = typeof message.typedWrongWord === 'string'
+    const typedWrongWord = message.typedWrongWord === null ? null : typeof message.typedWrongWord === 'string'
       ? message.typedWrongWord.slice(0, 160)
       : '';
-    reviewWord(wordId, message.q, typedWrongWord, responseTimeMs, mode)
+    reviewWord(wordId, score, typedWrongWord, responseTimeMs, mode)
       .then(updatedCard => sendResponse({ success: true, card: updatedCard }))
       .catch(err => sendResponse({ success: false, error: err.message || (typeof err === 'string' ? err : 'Background script error') }));
     return true; // Keep message channel open for async response

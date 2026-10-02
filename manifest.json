@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Spelt",
-  "version": "1.1.0",
-  "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling.",
+  "version": "1.2.0",
+  "description": "Collect useful words, practice spelling and meaning, and build a daily learning habit with spaced repetition.",
   "permissions": [
     "storage",
     "declarativeNetRequest",
@@ -34,13 +34,15 @@
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",
-      "128": "icons/icon-128.png"
+      "128": "icons/icon-128.png",
+      "32": "icons/icon-32.png"
     }
   },
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
-    "128": "icons/icon-128.png"
+    "128": "icons/icon-128.png",
+    "32": "icons/icon-32.png"
   },
   "commands": {
     "_execute_action": {

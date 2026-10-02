@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spelt Vocabulary</title>
-  <link rel="stylesheet" href="../popup/popup.css?v=1.1.0.4">
-  <script src="../popup/js/popup/mock_chrome.js?v=1.1.0.5"></script>
+  <title>Spelt — a little practice, a lasting word</title>
+  <meta name="description" content="A calm place to collect words, practice spelling, and remember what you learn.">
+  <link rel="icon" href="../icons/mark.svg" type="image/svg+xml">
+  <script src="../popup/js/popup/theme.js"></script>
+  <link rel="stylesheet" href="../popup/popup.css?v=1.2.0">
+  <script src="../popup/js/popup/mock_chrome.js?v=1.2.0"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -14,6 +17,7 @@
 <!-- INCLUDE offline.html -->
     <!-- Main Content Panes -->
     <main id="main-content" class="popup-main" tabindex="-1">
+<!-- INCLUDE today.html -->
 <!-- INCLUDE sandbox.html -->
 <!-- INCLUDE practice.html -->
 <!-- INCLUDE vault.html -->
@@ -32,6 +36,6 @@
   <div class="resizer resizer-bl"></div>
   <div class="resizer resizer-br"></div>
 
-  <script type="module" src="../popup/popup.js?v=1.1.0.5"></script>
+  <script type="module" src="../popup/popup.js?v=1.2.0"></script>
 </body>
 </html>

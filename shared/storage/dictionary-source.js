@@ -14,7 +14,7 @@ export async function getCambridgeDocument(word) {
   const promise = (async () => {
     try {
       const url = `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(urlWord)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
       if (res.ok) {
         triggerNetworkSuccess();
         const html = await res.text();
@@ -42,7 +42,7 @@ export async function getOxfordDocument(word) {
   const promise = (async () => {
     try {
       const url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(urlWord)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
       if (res.ok) {
         triggerNetworkSuccess();
         const html = await res.text();

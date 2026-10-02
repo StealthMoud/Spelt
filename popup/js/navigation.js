@@ -1,12 +1,12 @@
 import { stopAiStatusMonitor } from './settings.js';
 
-const TAB_IDS = ['sandbox-tab', 'practice-tab', 'vault-tab', 'stats-tab', 'settings-tab'];
+const TAB_IDS = ['today-tab', 'sandbox-tab', 'practice-tab', 'vault-tab', 'stats-tab', 'settings-tab'];
 
 function getInitialTab() {
   const route = window.location.hash.slice(1).split('/')[0];
   if (route === 'stats') return 'stats-tab';
   if (TAB_IDS.includes(`${route}-tab`)) return `${route}-tab`;
-  return 'sandbox-tab';
+  return 'today-tab';
 }
 
 export function initNavigation(onTabChanged) {
@@ -37,9 +37,10 @@ export function initNavigation(onTabChanged) {
     if (main) main.scrollTop = 0;
     if (focusTab) nextTab.focus();
 
-    if (target === 'sandbox-tab') document.getElementById('word-input')?.focus();
-    else if (target === 'vault-tab') document.getElementById('vault-search')?.focus();
-    else if (target === 'stats-tab') document.activeElement?.blur();
+    if (!focusTab) {
+      if (target === 'sandbox-tab') document.getElementById('word-input')?.focus();
+      else if (target === 'vault-tab') document.getElementById('vault-search')?.focus();
+    }
 
     Promise.resolve(onTabChanged?.(target)).catch(error => {
       console.error('Tab refresh failed:', error);

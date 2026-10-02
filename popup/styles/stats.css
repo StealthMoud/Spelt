@@ -125,7 +125,7 @@
 /* Stats Sub-tabs Navigation */
 .stats-subtabs-nav {
   display: flex;
-  background: hsla(155, 20%, 6%, 0.4);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 2px;
@@ -152,7 +152,7 @@
 
 .stats-subtab-btn:hover {
   color: var(--text-main);
-  background: hsla(155, 10%, 25%, 0.1);
+  background: var(--surface-soft);
 }
 
 .stats-subtab-btn.active {
@@ -208,7 +208,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  border-bottom: 1px solid var(--surface-soft);
   padding-bottom: 6px;
 }
 
@@ -229,8 +229,8 @@
   border-radius: var(--radius-full);
   display: flex;
   overflow: hidden;
-  background: hsla(155, 20%, 6%, 0.5);
-  border: 1px solid hsla(155, 10%, 25%, 0.1);
+  background: var(--surface-soft);
+  border: 1px solid var(--surface-soft);
 }
 
 .dist-segment {
@@ -294,7 +294,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  border-bottom: 1px solid var(--surface-soft);
   padding-bottom: 6px;
   margin-bottom: 2px;
 }
@@ -337,9 +337,9 @@
   flex-direction: column;
   justify-content: flex-end;
   position: relative;
-  background: hsla(155, 20%, 6%, 0.35);
+  background: var(--surface-soft);
   border-radius: 4px 4px 0 0;
-  border: 1px solid hsla(155, 10%, 25%, 0.1);
+  border: 1px solid var(--surface-soft);
   box-sizing: border-box;
   overflow: visible;
   transition: background var(--transition-fast) ease;
@@ -356,7 +356,7 @@
 }
 
 .bar-fill.empty {
-  background: hsla(155, 10%, 25%, 0.2);
+  background: var(--surface-soft);
   border-radius: 1px;
 }
 
@@ -387,7 +387,7 @@
   font-size: 0.56rem;
   font-weight: 700;
   color: var(--primary-light);
-  background: hsla(155, 20%, 6%, 0.9);
+  background: var(--surface-soft);
   border: 1px solid var(--border-hover);
   padding: 1px 4px;
   border-radius: var(--radius-sm);
@@ -441,10 +441,10 @@
 
 .btn-dist-progress-track {
   height: 5px;
-  background: hsla(155, 20%, 6%, 0.4);
+  background: var(--surface-soft);
   border-radius: var(--radius-full);
   overflow: hidden;
-  border: 1px solid hsla(155, 10%, 25%, 0.05);
+  border: 1px solid var(--surface-soft);
 }
 
 .btn-dist-progress-fill {
@@ -486,7 +486,7 @@ padding: 0;
 }
 
 .leech-item {
-  background: hsla(155, 10%, 15%, 0.15);
+  background: var(--surface-soft);
   border-left: 2px solid var(--danger);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   padding: 6px 10px;
@@ -554,7 +554,7 @@ padding: 0;
   justify-content: space-between;
   align-items: center;
   margin-top: 4px;
-  border-top: 1px dashed hsla(155, 10%, 25%, 0.12);
+  border-top: 1px dashed var(--surface-soft);
   padding-top: 6px;
   animation: slideDownFadeIn var(--transition-fast) ease forwards;
   position: relative;
@@ -730,8 +730,8 @@ justify-content: space-between;
 }
 
 .forecast-item {
-  background: hsla(155, 10%, 15%, 0.18);
-  border: 1px solid hsla(155, 12%, 24%, 0.1);
+  background: var(--surface-soft);
+  border: 1px solid var(--surface-soft);
   border-radius: var(--radius-md);
   padding: 6px 4px;
   text-align: center;
@@ -839,15 +839,15 @@ border: 1px solid hsla(5, 80%, 35%, 0.3);
   border-radius: var(--radius-md);
   cursor: pointer;
   box-shadow: var(--shadow-md);
-  transform: translate(-50%, -100%) scale(0.9);
+  transform: translate(-50%, -120%);
   opacity: 0;
-  transition: opacity var(--transition-fast) ease, transform var(--transition-fast) var(--spring-curve);
+  transition: opacity var(--transition-fast) ease, background var(--transition-fast) ease;
   pointer-events: none;
 }
 
 .floating-lookup-btn.visible {
   opacity: 1;
-  transform: translate(-50%, -120%) scale(1);
+  transform: translate(-50%, -120%);
   pointer-events: auto;
 }
 
@@ -856,11 +856,11 @@ border: 1px solid hsla(5, 80%, 35%, 0.3);
   border-color: var(--primary);
   color: var(--text-main);
   box-shadow: var(--shadow-md);
-  transform: translate(-50%, -120%) scale(1.05);
+  transform: translate(-50%, -120%);
 }
 
 .floating-lookup-btn:active {
-  transform: translate(-50%, -120%) scale(0.95);
+  transform: translate(-50%, -120%);
 }
 
 /* Enhanced Stats Dashboard Styles */
@@ -876,7 +876,7 @@ border: 1px solid hsla(5, 80%, 35%, 0.3);
 .heatmap-wrapper {
   display: flex;
   gap: 8px;
-  background: hsla(155, 20%, 6%, 0.2);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 10px 8px;
@@ -943,7 +943,7 @@ border: 1px solid hsla(5, 80%, 35%, 0.3);
   width: 8px;
   height: 8px;
   border-radius: 1.5px;
-  background-color: hsla(155, 10%, 15%, 0.35);
+  background-color: var(--surface-soft);
   cursor: pointer;
 
 transition: all var(--transition-fast) ease;
@@ -955,7 +955,7 @@ transition: all var(--transition-fast) ease;
   z-index: 10;
 }
 
-.heatmap-cell[data-level="0"] { background-color: hsla(155, 10%, 15%, 0.35); }
+.heatmap-cell[data-level="0"] { background-color: var(--surface-soft); }
 .heatmap-cell[data-level="1"] { background-color: hsla(155, 40%, 25%, 0.55); }
 .heatmap-cell[data-level="2"] { background-color: hsla(155, 55%, 35%, 0.75); }
 .heatmap-cell[data-level="3"] { background-color: hsla(155, 65%, 48%, 0.9); }
@@ -977,7 +977,7 @@ transition: all var(--transition-fast) ease;
   height: 7px;
   border-radius: 1.5px;
 }
-.heatmap-legend-cell[data-level="0"] { background-color: hsla(155, 10%, 15%, 0.35); }
+.heatmap-legend-cell[data-level="0"] { background-color: var(--surface-soft); }
 .heatmap-legend-cell[data-level="1"] { background-color: hsla(155, 40%, 25%, 0.55); }
 .heatmap-legend-cell[data-level="2"] { background-color: hsla(155, 55%, 35%, 0.75); }
 .heatmap-legend-cell[data-level="3"] { background-color: hsla(155, 65%, 48%, 0.9); }
@@ -991,7 +991,7 @@ transition: all var(--transition-fast) ease;
 }
 
 .velocity-card {
-  background: hsla(155, 10%, 12%, 0.25);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 6px 4px;
@@ -1073,7 +1073,7 @@ margin-top: 4px;
 .cefr-bar-wrapper {
   flex: 1;
   height: 6px;
-  background: hsla(155, 10%, 15%, 0.35);
+  background: var(--surface-soft);
   border-radius: var(--radius-full);
   overflow: hidden;
   position: relative;
@@ -1143,7 +1143,7 @@ margin-top: 4px;
 .ai-schedule-header { border-bottom: none; padding-bottom: 0; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; height: auto; }
 
 .leeches-limit-select { width: 90px; height: 24px; padding: 2px 24px 2px 8px !important; font-size: 0.65rem !important; }
-.leeches-custom-box { display: flex; align-items: center; gap: 3px; background: hsla(155, 20%, 6%, 0.4); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 4px; height: 24px; box-sizing: border-box; transition: all var(--transition-fast) ease; }
+.leeches-custom-box { display: flex; align-items: center; gap: 3px; background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 4px; height: 24px; box-sizing: border-box; transition: all var(--transition-fast) ease; }
 .leeches-spin-btn { width: 16px; height: 16px; border: none; background: transparent; font-size: 0.6rem; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 0; }
 .leeches-custom-input { width: 30px; height: 20px; border: none; background: transparent; padding: 0; text-align: center; font-size: 0.65rem; margin: 0; box-shadow: none !important; }
 .flex-gap-xs-center { display: flex; gap: 6px; align-items: center; }

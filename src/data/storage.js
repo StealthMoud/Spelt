@@ -16,9 +16,10 @@ export function triggerNetworkSuccess() {
 }
 
 export function getStored(key) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (isExt) {
       chrome.storage.local.get(key, (res) => {
+        if (chrome.runtime?.lastError) return reject(new Error(chrome.runtime.lastError.message));
         resolve(res ? res[key] : undefined);
       });
     } else {
@@ -33,9 +34,10 @@ export function getStored(key) {
 }
 
 export function setStored(key, value) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (isExt) {
       chrome.storage.local.set({ [key]: value }, () => {
+        if (chrome.runtime?.lastError) return reject(new Error(chrome.runtime.lastError.message));
         resolve();
       });
     } else {

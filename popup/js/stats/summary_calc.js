@@ -41,7 +41,7 @@ export function calculateSummary(words, sandboxActivity, chartBuckets, sessions)
     if (Array.isArray(w.history)) {
       w.history.forEach(h => {
         totalReviews++;
-        const isCorrect = h.q >= 3;
+        const isCorrect = typeof h.correct === 'boolean' ? h.correct : h.q >= 3;
         if (isCorrect) correctReviews++;
 
         if (h.date) {

@@ -1,5 +1,6 @@
       <!-- TAB 2: PRACTICE -->
       <section id="practice-tab" class="tab-pane" role="tabpanel" aria-labelledby="practice-tab-button" hidden>
+        <div class="page-intro compact-intro"><span class="eyebrow">ONE WORD AT A TIME</span><h1>Make it stick.</h1></div>
         <!-- Practice Mode Selector -->
         <div class="practice-mode-selector" role="group" aria-label="Practice mode">
           <button type="button" id="practice-mode-spelling" class="practice-mode-pill active" aria-pressed="true">Spelling</button>
@@ -8,28 +9,31 @@
         <p id="practice-mode-description" class="practice-mode-description">Spelling: Hear audio clues and type the exact spelling.</p>
 
         <!-- Progress Bar -->
+        <div class="practice-progress-label"><span id="practice-progress-text">Ready when you are</span><span>At your pace</span></div>
         <div class="practice-progress-track" title="Session progress" role="progressbar" aria-label="Session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <div id="practice-progress-fill" class="practice-progress-fill"></div>
         </div>
 
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-label">Due Reviews</div>
+            <div class="stat-label">Reviews ready</div>
             <div id="due-count" class="stat-value">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Total Words</div>
+            <div class="stat-label">Words collected</div>
             <div id="total-count" class="stat-value">0</div>
           </div>
         </div>
         
 <!-- INCLUDE practice-card.html -->
+        <p id="practice-save-error" class="inline-status error hidden" role="alert"></p>
         
         <!-- Empty State -->
         <div id="popup-deck-empty-state" class="deck-empty-state hidden" aria-live="polite">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="icon-svg-lg"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <h3 id="empty-state-title">Deck Fully Reviewed!</h3>
-          <p id="empty-state-message">You have cleared all scheduled reviews. Keep up the great work!</p>
+          <h3 id="empty-state-title">A good place to begin.</h3>
+          <p id="empty-state-message">Add a few words to start practicing.</p>
+          <button type="button" class="study-button primary" data-go-tab="today-tab">Back to Today <span aria-hidden="true">→</span></button>
           <div id="ai-session-summary" class="ai-summary-box hidden">
             <div class="ai-summary-header">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-svg-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>

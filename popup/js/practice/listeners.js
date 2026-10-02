@@ -1,12 +1,12 @@
 import { getStored, setStored, fetchTranslation, getFallbackExample, atomicUpdate } from '../../../shared/storage.js';
 import { openModal } from '../vault.js';
 import { showConfirm } from '../vault/confirm.js';
-import { getDueCards, setPracticeMode } from './state.js';
+import { getDueCards, setPracticeMode, getIsSubmitting } from './state.js';
 import { checkSpelling, revealRecall } from './actions.js';
 import { submitRating, submitMasteredRating } from './rate.js';
 import { loadPracticeDeck } from './card.js';
 
-export function registerPracticeListeners() {
+export async function registerPracticeListeners() {
   document.getElementById('check-spelling-btn')?.addEventListener('click', checkSpelling);
   document.getElementById('reveal-recall-btn')?.addEventListener('click', revealRecall);
 
@@ -37,6 +37,7 @@ export function registerPracticeListeners() {
     setPillsActive(savedMode);
     
     const switchMode = async (mode) => {
+      if (getIsSubmitting()) return;
       setPracticeMode(mode);
       await setStored('spelt_practice_mode', mode);
       setPillsActive(mode);
@@ -47,7 +48,7 @@ export function registerPracticeListeners() {
     if (recallPill) recallPill.addEventListener('click', () => switchMode('recall'));
   };
   
-  initModeToggle().catch(err => console.error(err));
+  await initModeToggle();
 
   const translateAction = async (btnId, transId, containerId) => {
     const dueCards = getDueCards();

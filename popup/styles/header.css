@@ -2,7 +2,7 @@
 .popup-header {
   flex-shrink: 0;
   padding: 12px 16px 8px;
-  background: hsla(156, 18%, 6%, 0.96);
+  background: var(--surface-soft);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 8px 26px hsla(155, 30%, 2%, 0.24);
   position: relative;
@@ -78,7 +78,7 @@
   display: flex;
   margin-top: 8px;
   gap: 4px;
-  background: hsl(154, 16%, 8%);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 4px;
@@ -124,8 +124,8 @@
 }
 .tab-btn:hover {
   color: var(--text-main);
-  background: hsla(155, 12%, 18%, 0.35);
-  border-color: hsla(155, 12%, 24%, 0.15);
+  background: var(--surface-soft);
+  border-color: var(--surface-soft);
 }
 .tab-btn:hover svg {
   transform: translateY(-2px) scale(1.1);
@@ -258,14 +258,14 @@
 #popup-popout-btn:hover {
   background: hsla(155, 58%, 53%, 0.1);
   border-color: var(--border-hover);
-  color: #ffffff;
+  color: var(--text-main);
   box-shadow: var(--shadow-sm);
   transform: translateY(-1.5px) scale(1.03);
 }
 
 #popup-popout-btn:hover svg {
   transform: translate(2px, -2px) scale(1.15);
-  color: #ffffff;
+  color: var(--text-main);
   filter: none;
 }
 
@@ -278,7 +278,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  background: hsla(155, 10%, 15%, 0.4);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1px 3px;

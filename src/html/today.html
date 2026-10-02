@@ -1,0 +1,31 @@
+<section id="today-tab" class="tab-pane active" role="tabpanel" aria-labelledby="today-tab-button">
+  <div class="page-intro">
+    <div><span class="eyebrow">YOUR DAILY WORD PRACTICE</span><h1 id="today-greeting">Make room for a new word.</h1><p>A little curiosity. A little repetition. A vocabulary that stays.</p></div>
+    <span id="today-date" class="date-label"></span>
+  </div>
+  <div class="today-feature">
+    <article class="study-hero">
+      <div class="study-hero-copy"><span class="eyebrow">SMALL STEPS, WELL REMEMBERED</span><h2>A little practice.<br><em>A lasting word.</em></h2><p id="today-plan">Start with five useful words. Make them yours, one review at a time.</p><button type="button" id="today-start" class="study-button primary">Find your first words <span aria-hidden="true">→</span></button><span id="today-plan-detail" class="hero-detail">No setup. Start at your own pace.</span></div>
+      <img class="study-hero-art" src="../icons/word-garden.svg" alt="" width="290" height="260">
+    </article>
+    <aside class="daily-rhythm">
+      <div class="section-heading"><span class="eyebrow">YOUR DAILY RHYTHM</span><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 17h18M5 13a7 7 0 0 1 14 0M12 2v2M3 5l2 2M21 5l-2 2M2 21h20"/></svg></div>
+      <div class="daily-count"><strong id="today-reviewed">0</strong><span>of <b id="today-goal">10</b> reviews<br>today</span></div>
+      <progress id="today-progress" max="100" value="0" aria-label="Daily review goal">0%</progress>
+      <p id="today-encouragement">A small habit starts with one word.</p>
+      <div id="today-week" class="week-rhythm" aria-label="Reviews in the last seven days"></div>
+      <button type="button" class="quiet-link" data-go-tab="settings-tab">Set your own pace <span aria-hidden="true">↗</span></button>
+    </aside>
+  </div>
+  <div class="learning-overview" aria-label="Your learning overview">
+    <div><strong id="today-word-count">0</strong><span>words collected</span></div>
+    <div><strong id="today-due-count">0</strong><span>ready to review</span></div>
+    <div><strong id="today-mastered-count">0</strong><span>words mastered</span></div>
+    <div><strong id="today-streak">0</strong><span>day streak</span></div>
+  </div>
+  <div class="section-heading collections-heading" id="collections-heading"><div><span class="eyebrow">A GOOD PLACE TO BEGIN</span><h2>A few words worth keeping.</h2></div><span class="small-note">5 words in each collection</span></div>
+  <div id="starter-collections" class="starter-collections"></div>
+  <p id="collection-status" class="inline-status hidden" role="status" aria-live="polite"></p>
+  <aside class="study-note"><span class="note-symbol" aria-hidden="true">a<span>+</span></span><div><strong>Let your mistakes teach you.</strong><p>Try to remember before you reveal. If a word slips away, choose Again. Spelt will bring it back for another try.</p></div><button type="button" class="quiet-link" data-go-tab="sandbox-tab">Explore a word <span aria-hidden="true">→</span></button></aside>
+  <div class="study-footer"><span>Your words and progress stay on this device.</span><span>Notice → recall → repeat</span></div>
+</section>

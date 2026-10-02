@@ -40,6 +40,7 @@ function normalizeHistory(history) {
       interval: finiteNumber(entry.interval, 0, { min: 0 }),
       mode: entry.mode === 'meaning' || entry.mode === 'recall' ? 'meaning' : 'spelling'
     };
+    if (typeof entry.correct === 'boolean') normalized.correct = entry.correct;
     const responseTime = finiteNumber(entry.rt, 0, { min: 0, max: 60 * 60 * 1000 });
     if (responseTime > 0) normalized.rt = responseTime;
     return [normalized];
@@ -69,6 +70,10 @@ export function normalizeImportedWord(item, {
     partOfSpeech: text(item.partOfSpeech, 120),
     example: text(item.example),
     exampleTranslation: text(item.exampleTranslation),
+    notes: text(item.notes),
+    tags: Array.isArray(item.tags) ? item.tags.map(value => text(value, 80)).filter(Boolean).slice(0, 20) : [],
+    usSpelling: text(item.usSpelling, MAX_WORD_LENGTH),
+    ukSpelling: text(item.ukSpelling, MAX_WORD_LENGTH),
     level: text(item.level, 40).toUpperCase(),
     otherLevels: Array.isArray(item.otherLevels)
       ? item.otherLevels.map(value => text(value, 40).toUpperCase()).filter(Boolean).slice(0, 12)

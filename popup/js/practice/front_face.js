@@ -19,7 +19,7 @@ export function populateFrontFace(card, signal) {
     if (frontRecallWrapper) frontRecallWrapper.classList.remove('hidden');
 
     document.getElementById('recall-front-word').textContent = card.word;
-    document.getElementById('recall-front-transcription').textContent = card.transcription || '/--/';
+    document.getElementById('recall-front-transcription').textContent = card.transcription || '';
     const recallAudio = document.getElementById('recall-front-audio-container');
     if (recallAudio) recallAudio.innerHTML = renderAudioButtons(card.word);
     document.getElementById('recall-front-pos').textContent = card.partOfSpeech || 'unknown';
@@ -54,11 +54,12 @@ export function populateFrontFace(card, signal) {
     if (frontRecallWrapper) frontRecallWrapper.classList.add('hidden');
 
     document.getElementById('practice-definition').textContent = card.definition || 'No definition added.';
-    document.getElementById('practice-transcription').textContent = card.transcription || '/--/';
+    document.getElementById('practice-transcription').textContent = card.transcription || '';
     document.getElementById('practice-part-of-speech').textContent = card.partOfSpeech || 'unknown';
 
     const transEl = document.getElementById('practice-translation');
     if (transEl) {
+      transEl.closest('.clue-item').classList.toggle('hidden', !card.translation);
       if (card.translation) {
         transEl.innerHTML = `<span class="translation-blur-text">${escapeHtml(card.translation)}</span><span class="translation-reveal-hint">Reveal</span>`;
         transEl.className = 'translation-clue-box';
@@ -101,8 +102,9 @@ export function populateFrontFace(card, signal) {
   }
 
   // Handle Cambridge pronunciation auto-fetch if level doesn't exist
-  if (card.word && !card.level) {
+  if (card.word && !card.level && navigator.onLine && !card.tags?.some(tag => ['double-letters', 'quiet-letters', 'everyday-tricky'].includes(tag))) {
     fetchCambridgePronunciation(card.word).then(async cambridge => {
+      if (signal?.aborted) return;
       if (cambridge.level) {
         card.level = cambridge.level;
         card.otherLevels = (cambridge.allLevels || []).filter(l => l !== cambridge.level);

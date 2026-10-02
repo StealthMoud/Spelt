@@ -26,6 +26,7 @@ function reviewWordInBackground(wordId, q, typedWrongWord = null, responseTimeMs
 
 export async function submitRating(score) {
   if (getIsSubmitting()) return;
+  if (!document.getElementById('popup-deck-card').classList.contains('flipped')) return;
   const card = peekCard();
   if (!card) return;
   setIsSubmitting(true);
@@ -41,8 +42,9 @@ export async function submitRating(score) {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = getLastSpellingResult();
       updatedCard = await reviewWordInBackground(card.id, score, isOk ? null : typed, responseTime, 'spelling');
+      trackReview(card.word, isOk, responseTime || 0);
     }
-    await trackSession(score);
+    await trackSession(mode === 'recall' ? score >= 3 : getLastSpellingResult());
     if (score >= 3) {
       markReviewedWord(card.id, mode);
     }
@@ -59,6 +61,9 @@ export async function submitRating(score) {
     }, 200);
   } catch (err) {
     console.error(err);
+    const error = document.getElementById('practice-save-error');
+    error.textContent = `Your review could not be saved. Please try the rating again. ${err.message}`;
+    error.classList.remove('hidden');
     setIsSubmitting(false);
   }
 }
@@ -78,8 +83,9 @@ export async function submitMasteredRating(card) {
       const typed = document.getElementById('spelling-input').value.trim();
       const isOk = getLastSpellingResult();
       await reviewWordInBackground(card.id, 5, isOk ? null : typed, responseTime, 'spelling');
+      trackReview(card.word, isOk, responseTime || 0);
     }
-    await trackSession(5);
+    await trackSession(mode === 'recall' || getLastSpellingResult());
     markReviewedWord(card.id, mode);
 
     await atomicUpdate(async (list) => {
@@ -104,6 +110,9 @@ export async function submitMasteredRating(card) {
     }, 200);
   } catch (err) {
     console.error(err);
+    const error = document.getElementById('practice-save-error');
+    error.textContent = `Could not mark this word as mastered. Please try again. ${err.message}`;
+    error.classList.remove('hidden');
     setIsSubmitting(false);
   }
 }

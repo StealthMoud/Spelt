@@ -1,14 +1,16 @@
 {
   "name": "spelt",
-  "version": "1.1.0",
-  "description": "Organized spelling and vocabulary trainer featuring Spaced Repetition (SRS) scheduling.",
+  "version": "1.2.0",
+  "description": "A calm vocabulary workspace for collecting words and building a daily spelling and recall habit.",
   "type": "module",
   "scripts": {
     "build": "node build.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "node --test tests/*.test.js",
-    "check": "npm run lint && npm test && npm run build"
+    "check": "npm run lint && npm test && npm run build",
+    "test:ui": "npm run build && node scripts/test-learning-ui.js",
+    "icons": "node scripts/generate-icons.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

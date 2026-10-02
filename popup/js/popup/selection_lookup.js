@@ -10,6 +10,7 @@ export function initSelectionLookup() {
   document.body.appendChild(floatingBtn);
 
   let isEnabled = true;
+  let selectedText = '';
   chrome.storage?.local.get('spelt_selection_lookup', (res) => {
     isEnabled = res.spelt_selection_lookup !== false;
   });
@@ -21,7 +22,10 @@ export function initSelectionLookup() {
     }
   });
 
-  const hideBtn = () => floatingBtn.classList.remove('visible');
+  const hideBtn = () => {
+    selectedText = '';
+    floatingBtn.classList.remove('visible');
+  };
 
   document.addEventListener('selectionchange', () => {
     if (!isEnabled) return;
@@ -35,12 +39,13 @@ export function initSelectionLookup() {
       if (rect.width > 0 && rect.height > 0) {
         const btnWidth = 72;
         let left = rect.left + rect.width / 2;
-        let top = rect.top + window.scrollY;
+        const top = rect.top;
         const viewportWidth = document.body.clientWidth || window.innerWidth;
         if (left < btnWidth / 2) left = btnWidth / 2;
         if (left > viewportWidth - btnWidth / 2) left = viewportWidth - btnWidth / 2;
         floatingBtn.style.left = `${left}px`;
         floatingBtn.style.top = `${top}px`;
+        selectedText = txt;
         floatingBtn.classList.add('visible');
       } else { hideBtn(); }
     } else { hideBtn(); }
@@ -53,17 +58,21 @@ export function initSelectionLookup() {
     }, 50);
   });
 
+  // A button's default mouse-down focuses it and can collapse the selection
+  // before click fires. Keep the selection intact until lookup consumes it.
+  floatingBtn.addEventListener('mousedown', (e) => e.preventDefault());
+
   floatingBtn.addEventListener('click', (e) => {
     e.preventDefault(); e.stopPropagation();
     const sel = window.getSelection();
-    const txt = sel.toString().trim();
-    if (txt) {
-      sel.removeAllRanges(); hideBtn();
+    const txt = selectedText;
+    if (isEnabled && txt) {
+      sel?.removeAllRanges(); hideBtn();
       document.querySelector('.tab-btn[data-tab="sandbox-tab"]')?.click();
       const input = document.getElementById('word-input');
       if (input) {
         input.value = txt;
-        document.getElementById('quick-add-form')?.dispatchEvent(new Event('submit'));
+        document.getElementById('quick-add-form')?.requestSubmit();
       }
     }
   });

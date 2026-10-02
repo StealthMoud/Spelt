@@ -2,7 +2,7 @@ import { logSession } from '../../../shared/storage.js';
 
 let currentSession = null;
 
-export async function trackSession(q) {
+export async function trackSession(isCorrect) {
   if (!currentSession || (Date.now() - currentSession.endTime > 10 * 60 * 1000)) {
     currentSession = {
       startTime: Date.now(),
@@ -12,7 +12,7 @@ export async function trackSession(q) {
     };
   }
   currentSession.reviewCount++;
-  if (q >= 3) {
+  if (isCorrect) {
     currentSession.correctCount++;
   }
   currentSession.endTime = Date.now();

@@ -1,16 +1,21 @@
       <!-- TAB 1: SANDBOX -->
-      <section id="sandbox-tab" class="tab-pane active" role="tabpanel" aria-labelledby="sandbox-tab-button">
+      <section id="sandbox-tab" class="tab-pane" role="tabpanel" aria-labelledby="sandbox-tab-button" hidden>
+        <div class="page-intro"><span class="eyebrow">FOLLOW YOUR CURIOSITY</span><h1>Every word starts somewhere.</h1><p>Notice a word. Understand it. Keep it for another day.</p></div>
         <div class="quick-add-section">
           <h3>Check a spelling</h3>
-          <p id="sandbox-empty-hint" class="sandbox-empty-hint">Look up a word, hear its pronunciation, and save it for review. You can also select text on a page and press <kbd>Alt+S</kbd>.</p>
+          <p id="sandbox-empty-hint" class="sandbox-empty-hint">Look up a spelling, listen to the word, and save it to your vault.</p>
           <div id="sandbox-history-container" class="sandbox-history-container hidden" aria-label="Recent checks history"></div>
           <form id="quick-add-form">
             <div class="input-wrapper">
-              <input type="text" id="word-input" class="field text-center-bold" placeholder="Type a word, then press Enter" autocomplete="off" required autofocus aria-label="Word to verify">
+              <input type="text" id="word-input" class="field" placeholder="Which word is on your mind?" autocomplete="off" spellcheck="false" maxlength="160" required aria-label="Word to verify">
+              <button type="submit" id="verify-word-btn" class="study-button primary">Look up <span aria-hidden="true">↗</span></button>
             </div>
           </form>
+          <div class="discovery-suggestions"><span>Try a tricky one</span><button type="button" data-try-word="necessary">necessary</button><button type="button" data-try-word="accommodate">accommodate</button><button type="button" data-try-word="rhythm">rhythm</button></div>
           <div id="feedback-msg" class="feedback-text hidden" aria-live="polite"></div>
         </div>
+        <aside class="discovery-guide"><div><span>01</span><strong>Notice</strong><p>Check the meaning and listen to how it sounds.</p></div><div><span>02</span><strong>Collect</strong><p>Save words you want to use, with an example.</p></div><div><span>03</span><strong>Remember</strong><p>Return to Practice when your words are due.</p></div></aside>
+        <p class="capture-note">Found a word while reading? Select it on a page and press <kbd>Alt+S</kbd> to collect it.</p>
 
         <template id="sandbox-result-template">
           <div class="sandbox-result-card">

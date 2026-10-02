@@ -46,7 +46,7 @@ dialog.modal-overlay[open]:not(.hidden) .modal-card {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--primary-light);
-  border-bottom: 1px solid hsla(155, 10%, 25%, 0.15);
+  border-bottom: 1px solid var(--surface-soft);
   padding-bottom: 6px;
 }
 
@@ -79,7 +79,7 @@ dialog.modal-overlay[open]:not(.hidden) .modal-card {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
-  border-top: 1px solid hsla(155, 10%, 25%, 0.15);
+  border-top: 1px solid var(--surface-soft);
   padding-top: 8px;
 }
 
@@ -234,7 +234,7 @@ dialog.modal-overlay[open]:not(.hidden) .modal-card {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: hsla(155, 10%, 20%, 0.25);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--primary-light);
@@ -264,7 +264,7 @@ dialog.modal-overlay[open]:not(.hidden) .modal-card {
 }
 
 .audio-play-btn-mini {
-  background: hsl(155, 12%, 12%);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--primary-light);
@@ -362,7 +362,7 @@ dialog.modal-overlay[open]:not(.hidden) .modal-card {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: hsl(155, 12%, 8%);
+  background: var(--surface-soft);
   border: 1px solid var(--border-hover);
   border-radius: var(--radius-md);
   z-index: 100;

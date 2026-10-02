@@ -1,481 +1,150 @@
-html.standalone, body.standalone {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 580px !important;
-  max-height: none !important;
-  margin: 0 auto !important;
+/* One responsive layout for the action popup, popout, and full study page. */
+html, body { max-width: none; min-width: 320px; height: 100%; }
+html.extension-popup, .extension-popup body { width: 420px; height: 600px; }
+html.standalone, body.standalone { width: 100%; height: 100%; }
+.spelt-popup { min-height: 0; }
+#practice-tab, #sandbox-tab, #settings-tab { max-width: 760px; }
+#stats-tab.active { display: flex; }
+#settings-tab { max-width: 700px; }
+.vault-list-box { max-height: none; min-height: 160px; flex: 0 0 auto; }
+@media (min-width: 850px) {
+  .stats-subtab-content.active { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .stats-overview-row, .heatmap-panel, .ai-insights-panel, .chart-panel, .leeches-panel, .study-time-panel { grid-column: 1 / -1; }
 }
-
-.standalone .spelt-popup {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 580px !important;
-  max-height: none !important;
-  margin: 0 auto !important;
+@media (max-width: 850px) {
+  .today-feature { grid-template-columns: minmax(0, 1.65fr) minmax(215px, 1fr); gap: 14px; }
+  .study-hero { padding: 24px; }
+  .study-hero-copy { max-width: 84%; }
+  .study-hero-art { opacity: .5; right: -12%; }
+  .daily-rhythm { padding: 20px; }
+  .date-label { display: none; }
+  .collection-copy { padding: 15px; }
+  .collection-copy h3 { font-size: 0.9375rem; }
+  .collection-copy>p { min-height: 54px; }
+  .study-note { flex-wrap: wrap; }
+  .study-note>div { flex: 1; }
 }
-
-html.stats-page,
-body.stats-page {
-  width: 100% !important;
-  min-width: 320px;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-  margin: 0 !important;
-  overflow: auto;
+@media (max-width: 640px) {
+  .popup-header { padding: 16px 20px 0; }
+  .popup-main { padding: 23px 20px; }
+  .popup-tabs { gap: 4px; justify-content: space-between; }
+  .popup-tabs { overflow-x: auto; }
+  .tab-btn { flex: 1; flex-direction: column; font-size: 0.625rem; padding: 10px 2px 13px; gap: 5px; }
+  .due-badge { position: absolute; top: 5px; right: 5px; font-size: 0.5rem; }
+  .brand-caption { font-size: 0.625rem; }
+  .header-brand { gap: 9px; }
+  .brand-home img { width: 29px; height: 29px; }
+  .logo-text { font-size: 1.6875rem; }
+  .logo-row { margin-bottom: 8px; }
+  .today-feature { grid-template-columns: 1fr; gap: 14px; }
+  .study-hero { min-height: 268px; padding: 26px; }
+  .study-hero-copy { max-width: 67%; }
+  .study-hero-art { width: 49%; right: -6%; opacity: 1; }
+  .study-hero h2 { font-size: 2.1875rem; }
+  .daily-rhythm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; padding: 21px; align-items: center; }
+  .daily-rhythm>.section-heading { grid-column: 1 / -1; }
+  .daily-count { grid-column: 1; grid-row: 2; margin: 16px 0 12px; }
+  #today-progress { grid-column: 1; grid-row: 3; }
+  .daily-rhythm>p { grid-column: 1; grid-row: 4; margin-bottom: 0; }
+  .week-rhythm { grid-column: 2; grid-row: 2 / 4; gap: 5px; margin: 9px 0 0; }
+  .daily-rhythm>.quiet-link { grid-column: 2; grid-row: 4; font-size: 0.625rem; margin-top: 10px; }
+  .rhythm-day>i { width: 19px; height: 19px; }
+  .starter-collections { grid-template-columns: 1fr; gap: 12px; }
+  .collection-card { display: grid; grid-template-columns: 120px minmax(0, 1fr); }
+  .collection-art { height: 100%; min-height: 160px; }
+  .collection-copy { padding: 17px; }
+  .collection-copy>p { min-height: 0; margin-bottom: 10px; }
+  .collection-copy h3 { font-size: 1.0625rem; }
+  .collection-words { margin-bottom: 12px; }
+  .collection-symbol { font-size: 4.0625rem; }
+  .art-2 .collection-symbol { font-size: 2.5625rem; }
+  .collection-art-label { font-size: 0.375rem; letter-spacing: .65px; left: 12px; }
+  .section-heading h2 { font-size: 1.4375rem; }
+  .collections-heading .small-note { display: none; }
+  .learning-overview { padding: 14px 0 20px; gap: 10px; }
+  .learning-overview>div { padding-left: 13px; }
+  .learning-overview span { font-size: 0.5625rem; line-height: 1.5; }
+  .learning-overview strong { font-size: 1.5rem; }
+  .study-note { padding: 18px; gap: 12px; }
+  .study-note .quiet-link { width: calc(100% - 50px); margin-left: 50px; justify-content: flex-start; }
+  .study-footer { font-size: 0.5625rem; flex-direction: column; gap: 6px; }
+  .quick-add-section { padding: 21px; }
+  .discovery-guide { gap: 18px; }
+  .card-front, .card-back, .flashcard.flipped .card-back { padding: 20px; }
+  .tab-pane { gap: 18px; }
+  .stats-subtabs-nav { min-width: 0; }
 }
-
-.stats-page .spelt-popup {
-  width: min(100%, 1180px) !important;
-  min-height: 100dvh;
-  height: auto !important;
-  max-width: 1180px !important;
-  margin: 0 auto !important;
+@media (max-width: 640px) {
+  [data-large-text] .header-actions .icon-btn.has-label { width: 30px; padding: 0; }
+  [data-large-text] .header-actions .icon-btn.has-label span, [data-large-text] .brand-caption { display: none; }
+  [data-large-text] .tab-btn { flex-shrink: 0; }
+  [data-large-text] .stats-subtabs-nav { flex-wrap: wrap; }
+  [data-large-text] .stats-subtab-btn { flex-basis: 40%; }
+  [data-large-text] #practice-tab>.page-intro { grid-column: 1 / -1; }
+  [data-large-text] #practice-tab>.practice-mode-selector { grid-column: 1 / -1; grid-row: 2; width: fit-content; }
 }
-
-.stats-page .popup-main {
-  overflow: visible;
+@media (max-height: 680px) and (max-width: 640px) {
+  .recall-front-wrap { padding: 8px 0; gap: 8px; }
+  .recall-front-wrap .recall-example-clue { margin-top: 4px; }
+  .recall-question-hint { margin-top: 2px; }
+  .spelling-input-wrapper { margin-top: 12px; }
 }
-
-@media (max-width: 420px) {
-  .header-actions {
-    gap: 4px;
-  }
-
-  .icon-btn.has-label {
-    width: 30px;
-    padding: 0;
-    border-radius: var(--radius-md);
-  }
-
-  .icon-btn.has-label span {
-    display: none;
-  }
+@media (max-width: 450px) {
+  .popup-header { padding: 13px 15px 0; }
+  .popup-main { padding: 21px 16px; }
+  .brand-caption { display: none; }
+  .tab-btn { font-size: 0.5625rem; }
+  .tab-btn svg { width: 16px; height: 16px; }
+  .header-actions { gap: 5px; }
+  .icon-btn.has-label { padding: 0 8px; }
+  .page-intro h1 { font-size: 1.5rem; letter-spacing: -.8px; }
+  .page-intro p { font-size: 0.6875rem; }
+  .study-hero { padding: 23px; min-height: 260px; }
+  .study-hero h2 { font-size: 1.9375rem; }
+  .study-hero-copy { max-width: 73%; }
+  .study-hero-art { right: -14%; width: 53%; bottom: 35px; }
+  .study-hero .eyebrow { font-size: 0.4375rem; letter-spacing: .9px; }
+  .study-hero p { font-size: 0.6875rem; max-width: 200px; }
+  .study-hero .study-button { font-size: 0.6875rem; padding: 11px 12px; gap: 12px; }
+  .daily-rhythm { column-gap: 15px; padding: 18px; }
+  .daily-rhythm .eyebrow { font-size: 0.5rem; }
+  .daily-count>strong { font-size: 2.4375rem; }
+  .daily-count { gap: 10px; }
+  .week-rhythm { gap: 4px; }
+  .rhythm-day>i { width: 15px; height: 15px; font-size: 0.5625rem; }
+  .daily-rhythm>p { font-size: 0.5625rem; }
+  .learning-overview>div { padding-left: 10px; }
+  .learning-overview span { font-size: 0.5rem; }
+  .collection-card { grid-template-columns: 88px minmax(0, 1fr); }
+  .collection-symbol { font-size: 3.3125rem; }
+  .art-2 .collection-symbol { font-size: 1.9375rem; }
+  .collection-art-label { display: none; }
+  .collection-copy { padding: 15px; }
+  .collection-copy h3 { font-size: 1rem; }
+  .input-wrapper { flex-wrap: wrap; }
+  #word-input { width: 100%; flex-basis: 100%; }
+  #verify-word-btn { width: 100%; }
+  .discovery-guide { gap: 12px; }
+  .discovery-guide strong { font-size: 0.8125rem; }
+  .discovery-guide p { font-size: 0.625rem; }
+  .card-front, .card-back, .flashcard.flipped .card-back { padding: 16px; }
+  .srs-rating-wrapper { gap: 4px; }
+  .srs-btn { font-size: 0.625rem; padding-left: 3px; padding-right: 3px; }
+  .srs-hint { font-size: 0.5rem; }
+  #practice-tab.active { gap: 12px; }
+  #practice-tab>.page-intro h1 { font-size: 1.4375rem; }
+  .practice-mode-pill { min-width: 70px; padding: 7px 9px; font-size: 0.6875rem; }
+  .clue-item p, #practice-definition, #back-definition-display { font-size: 0.875rem; }
+  .vault-filter-row { flex-wrap: wrap; }
+  .vault-sort-row>.flex-1 { min-width: 105px; }
+  .stats-header-bar { flex-wrap: wrap; }
+  .stats-subtabs-nav { width: 100%; }
+  .stat-glass-sub { font-size: 0.5625rem; }
+  .settings-block { padding: 17px; }
+  .modal-card { padding: 18px; }
+  .modal-input-row { flex-wrap: wrap; }
 }
-
-@media (min-width: 760px) {
-  .stats-page .stats-subtab-content.active {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
-
-  .stats-page .ai-insights-panel,
-  .stats-page .heatmap-panel,
-  .stats-page .chart-panel,
-  .stats-page .stats-overview-row,
-  .stats-page .leeches-panel,
-  .stats-page .study-time-panel {
-    grid-column: 1 / -1;
-  }
-
-  .stats-page .forecast-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-}
-
-@media (min-width: 580px) {
-  html, body {
-    max-width: 580px !important;
-    max-height: none !important;
-    margin: 0 auto !important;
-  }
-
-  /* Header & Navigation Bar scaling */
-  .popup-header {
-    padding: 16px 24px !important;
-  }
-  .logo-text {
-    font-size: 1.5rem !important;
-  }
-  .user-label {
-    font-size: 0.8rem !important;
-  }
-  .popup-tabs {
-    gap: 16px !important;
-  }
-  .tab-btn {
-    padding: 12px 16px !important;
-    font-size: 0.95rem !important;
-  }
-  .tab-btn svg {
-    width: 18px !important;
-    height: 18px !important;
-  }
-  .tab-btn:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    right: -9px;
-    top: 20%;
-    bottom: 20%;
-    width: 1px;
-    background: hsla(155, 12%, 24%, 0.35);
-  }
-
-  /* Main container scaling */
-  .popup-main {
-    padding: 24px 32px !important;
-  }
-
-  /* Sandbox Tab scaling */
-  .quick-add-section h3 {
-    font-size: 1.4rem !important;
-    margin-bottom: 16px !important;
-  }
-  #word-input {
-    font-size: 1.6rem !important;
-    padding: 18px !important;
-  }
-  #feedback-msg {
-    margin-top: 20px !important;
-    padding: 20px !important;
-  }
-  #feedback-msg h4 {
-    font-size: 1.35rem !important;
-  }
-  .feedback-definition {
-    font-size: 1.15rem !important;
-  }
-  .feedback-badge {
-    font-size: 0.88rem !important;
-    padding: 6px 12px !important;
-  }
-  .feedback-example-text {
-    font-size: 1.25rem !important;
-  }
-  .feedback-example { padding: 10px 16px !important; margin-top: 12px !important; border-left-width: 4px !important; }
-  .feedback-meta-row { gap: 12px !important; margin-top: 6px !important; }
-  #sandbox-play-btn, #sandbox-save-btn { padding: 10px 16px !important; font-size: 0.95rem !important; border-radius: var(--radius-md) !important; }
-  #sandbox-play-btn svg, #sandbox-save-btn svg { width: 14px !important; height: 14px !important; }
-  .offline-banner.visible { max-height: 52px !important; padding: 12px 20px !important; font-size: 0.95rem !important; }
-  .offline-banner svg { width: 16px !important; height: 16px !important; }
-
-  /* Vault Tab scaling */
-  .vault-list-box {
-    max-height: none !important;
-    min-height: 0 !important;
-  }
-  .vault-list-item {
-    padding: 12px 16px !important;
-    border-radius: var(--radius-md) !important;
-  }
-  .vault-list-item strong {
-    font-size: 1.1rem !important;
-  }
-  .vault-list-item span {
-    font-size: 0.9rem !important;
-  }
-}
-
-
-@media (min-width: 640px) {
-  /* Practice Tab & Card scaling */
-  .stats-grid {
-    gap: 20px !important;
-    margin-bottom: 20px !important;
-  }
-  .stat-card {
-    padding: 18px 24px !important;
-  }
-  .stat-label {
-    font-size: 0.85rem !important;
-  }
-  .stat-value {
-    font-size: 2rem !important;
-  }
-
-  /* Dynamic Flashcard Height/Sizing */
-  .flashcard {
-    min-height: 420px !important;
-    max-height: 550px !important;
-  }
-  .card-front, .flashcard.flipped .card-back {
-    min-height: 420px !important;
-  }
-  .card-front, .card-back {
-    padding: 24px 28px !important;
-  }
-  .clue-label {
-    font-size: 0.85rem !important;
-    margin-bottom: 6px !important;
-  }
-  .clue-item p, #practice-definition, #back-definition-display {
-    font-size: 1.25rem !important;
-  }
-  .front-clues, .back-details-list {
-    gap: 16px !important;
-  }
-  #spelling-input, #back-word-display {
-    font-size: 1.6rem !important;
-    padding: 12px 16px !important;
-  }
-  #back-word-display {
-    font-size: 2.2rem !important;
-  }
-
-  /* SRS rating buttons */
-  .srs-rating-wrapper {
-    gap: 10px !important;
-    padding-top: 16px !important;
-  }
-  .srs-btn {
-    padding: 14px 8px 10px !important;
-    font-size: 0.95rem !important;
-  }
-  .srs-kbd {
-    font-size: 0.65rem !important;
-    top: 3px !important;
-    right: 6px !important;
-  }
-  .srs-hint {
-    font-size: 0.72rem !important;
-    margin-top: 4px !important;
-  }
-
-  /* Spelling Check Button */
-  #check-spelling-btn {
-    font-size: 1.1rem !important;
-    padding: 12px 24px !important;
-    background: var(--primary) !important;
-    color: var(--bg-dark) !important;
-    font-weight: 700 !important;
-    box-shadow: var(--shadow-sm) !important;
-    border: 1px solid var(--primary-light) !important;
-  }
-  #check-spelling-btn svg {
-    width: 14px !important;
-    height: 14px !important;
-  }
-  #check-spelling-btn:hover {
-    transform: translateY(-1px) scale(1.02) !important;
-    box-shadow: var(--shadow-md) !important;
-  }
-
-  /* AI Feedback/Hint Popups scale up in widescreen */
-  #ai-feedback-row, 
-  #ai-hint-bubble, 
-  #back-ai-hint-bubble,
-  #ai-practice-writing-feedback {
-    font-size: 1.25rem !important;
-    padding-top: 14px !important;
-    padding-bottom: 14px !important;
-  }
-
-  #ai-feedback-row,
-  #ai-practice-writing-feedback {
-    padding-right: 48px !important;
-  }
-
-  #ai-hint-bubble,
-  #back-ai-hint-bubble {
-    padding-right: 76px !important;
-  }
-
-  #ai-feedback-row .ai-feedback-header-title {
-    font-size: 0.95rem !important;
-  }
-
-  #ai-feedback-row .ai-feedback-header-icon {
-    width: 15px !important;
-    height: 15px !important;
-  }
-
-  .ai-bubble-btn {
-    width: 24px !important;
-    height: 24px !important;
-    border-radius: 6px !important;
-  }
-
-  .ai-bubble-btn svg {
-    width: 12px !important;
-    height: 12px !important;
-  }
-
-  #ai-feedback-close,
-  #ai-practice-writing-feedback-close {
-    top: 10px !important;
-    right: 10px !important;
-  }
-
-  .ai-hint-btn-group {
-    top: 10px !important;
-    right: 10px !important;
-    gap: 6px !important;
-  }
-}
-
-
-@media (min-width: 640px) {
-  /* Stats Tab scaling */
-  .stats-subtabs-nav { display: flex !important; justify-content: center !important; gap: 12px !important; margin-bottom: 24px !important; max-width: 480px !important; margin-left: auto !important; margin-right: auto !important; background: hsla(155, 12%, 5%, 0.45) !important; border: 1px solid hsla(155, 12%, 24%, 0.15) !important; border-radius: var(--radius-md) !important; padding: 3px !important; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4) !important; }
-  .stats-subtab-btn { padding: 10px 16px !important; font-size: 0.9rem !important; flex: 1 !important; text-align: center !important; }
-  .stats-overview-row, .velocity-summary-row { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; gap: 16px !important; margin-bottom: 20px !important; }
-  .stat-glass-card, .velocity-card { padding: 20px !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; }
-  .stat-glass-label, .velocity-label { font-size: 0.82rem !important; }
-  .stat-glass-value, .velocity-val { font-size: 2.4rem !important; }
-  .stat-glass-sub { font-size: 0.78rem !important; }
-  .stats-panel { padding: 22px !important; margin-bottom: 20px !important; }
-  .stats-section-title { font-size: 1.15rem !important; margin-bottom: 16px !important; }
-  .card-dist-bar { height: 16px !important; }
-  .card-dist-legend { gap: 16px !important; }
-  .legend-item { font-size: 0.9rem !important; }
-  .forecast-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)) !important; gap: 12px !important; }
-  .forecast-item { padding: 14px !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
-  .forecast-day { font-size: 0.85rem !important; }
-  .forecast-val { font-size: 1.8rem !important; }
-  .heatmap-wrapper { display: flex !important; justify-content: center !important; padding: 16px 20px !important; background: hsla(155, 20%, 6%, 0.3) !important; border: 1px solid var(--border-hover) !important; border-radius: var(--radius-xl) !important; }
-  .heatmap-weekdays { grid-template-rows: repeat(7, 11px) !important; gap: 4px !important; font-size: 0.72rem !important; padding-top: 19px !important; }
-  .heatmap-months { grid-template-columns: repeat(53, 11px) !important; gap: 4px !important; font-size: 0.72rem !important; height: 16px !important; line-height: 16px !important; }
-  .heatmap-grid { grid-template-rows: repeat(7, 11px) !important; grid-template-columns: repeat(53, 11px) !important; gap: 4px !important; }
-  .heatmap-cell { width: 11px !important; height: 11px !important; }
-  .accuracy-trend-container { height: 130px !important; max-width: 600px !important; margin: 6px auto 0 !important; }
-  #stats-leeches-limit { height: 32px !important; font-size: 0.82rem !important; padding: 4px 24px 4px 8px !important; }
-  .stats-leeches-list li { padding: 12px 16px !important; font-size: 0.95rem !important; }
-
-  /* Settings Tab scaling */
-  .settings-content-wrapper { gap: 20px !important; }
-  .settings-block { padding: 16px !important; }
-  .settings-block strong { font-size: 1.1rem !important; }
-  .settings-block p { font-size: 0.82rem !important; margin-top: 4px !important; }
-  .settings-block .field { font-size: 0.95rem !important; padding: 10px !important; }
-  .shortcut-row { padding: 10px 0 !important; font-size: 0.9rem !important; }
-  .shortcut-row kbd { font-size: 0.8rem !important; padding: 4px 8px !important; }
-  .btn-row { gap: 12px !important; margin-top: 12px !important; }
-  #retranslate-all-btn, #wipe-db-btn { padding: 12px !important; font-size: 0.95rem !important; }
-
-  /* Modal scaling */
-  .modal-card {
-    max-width: 460px !important;
-    padding: 22px 26px !important;
-  }
-  .modal-card h3 {
-    font-size: 1.25rem !important;
-    margin-bottom: 14px !important;
-    padding-bottom: 8px !important;
-  }
-  .modal-input-item {
-    gap: 4px !important;
-    margin-bottom: 12px !important;
-  }
-  .modal-input-item label {
-    font-size: 0.78rem !important;
-  }
-  .modal-input-item .field {
-    padding: 8px 12px !important;
-    font-size: 0.9rem !important;
-  }
-  .modal-input-item .textarea-item {
-    height: 52px !important;
-  }
-  .modal-input-row {
-    gap: 12px !important;
-    margin-bottom: 12px !important;
-  }
-  .modal-actions-row {
-    margin-top: 18px !important;
-    padding-top: 12px !important;
-    gap: 10px !important;
-  }
-  .modal-actions-row .submit-btn {
-    padding: 8px 16px !important;
-    font-size: 0.9rem !important;
-  }
-}
-
-
-@media (min-width: 640px) {
-  /* Vault Tab scaling */
-  .vault-filter-row {
-    gap: 16px !important;
-    margin-bottom: 16px !important;
-  }
-  .vault-filter-row .field {
-    padding: 12px 16px 12px 38px !important;
-    font-size: 1.1rem !important;
-  }
-  .search-icon-svg {
-    left: 14px !important;
-    top: 15px !important;
-    width: 16px !important;
-    height: 16px !important;
-  }
-  #add-word-btn {
-    font-size: 1rem !important;
-    padding: 10px 18px !important;
-    background: var(--primary) !important;
-    color: var(--bg-dark) !important;
-    font-weight: 700 !important;
-    box-shadow: var(--shadow-sm) !important;
-    border: 1px solid var(--primary-light) !important;
-  }
-  #add-word-btn:hover {
-    transform: translateY(-1px) scale(1.02) !important;
-    box-shadow: var(--shadow-md) !important;
-  }
-  .vault-sort-row {
-    gap: 12px !important;
-    margin-bottom: 16px !important;
-  }
-  .vault-sort-select {
-    padding: 10px 32px 10px 14px !important;
-    font-size: 0.95rem !important;
-    background-position: right 12px center !important;
-    background-size: 12px !important;
-    height: auto !important;
-  }
-  .vault-sort-dir-btn {
-    padding: 10px 16px !important;
-    font-size: 0.95rem !important;
-    gap: 6px !important;
-    height: auto !important;
-  }
-  .vault-sort-dir-btn svg {
-    width: 14px !important;
-    height: 14px !important;
-  }
-  .vault-bulk-row {
-    padding: 10px 14px !important;
-    gap: 12px !important;
-    margin-bottom: 16px !important;
-    border-radius: var(--radius-md) !important;
-  }
-  .vault-bulk-row label {
-    font-size: 0.9rem !important;
-    gap: 8px !important;
-  }
-  #vault-select-all {
-    width: 18px !important;
-    height: 18px !important;
-  }
-  #vault-demaster-selected, #vault-delete-selected {
-    padding: 8px 14px !important;
-    font-size: 0.88rem !important;
-    gap: 6px !important;
-    border-radius: var(--radius-md) !important;
-  }
-  #vault-demaster-selected svg, #vault-delete-selected svg {
-    width: 12px !important;
-    height: 12px !important;
-  }
-
-  /* Custom dropdown scaling */
-  .custom-select-trigger {
-    padding: 10px 14px !important;
-    font-size: 0.95rem !important;
-  }
-  .custom-select-trigger .chevron {
-    width: 14px !important;
-    height: 14px !important;
-  }
-  .custom-option {
-    padding: 10px 14px !important;
-    font-size: 0.95rem !important;
-  }
-
-  /* Word list item action buttons — icon-only ones only, so the labelled
-     header controls are not squashed back into squares with the text cut off. */
-  .icon-btn:not(.has-label) { width: 34px !important; height: 34px !important; border-radius: 8px !important; }
-  .icon-btn svg { width: 16px !important; height: 16px !important; }
-  .icon-btn.has-label { height: 34px !important; padding: 0 14px !important; font-size: 0.85rem !important; }
-  .vault-list-item > div:last-child { gap: 10px !important; margin-left: 14px !important; }
+@media (max-width: 380px) {
+  .header-actions .icon-btn.has-label { width: 30px; padding: 0; }
+  .header-actions .icon-btn.has-label span { display: none; }
 }

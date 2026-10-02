@@ -1,4 +1,5 @@
 import { getStored, setStored } from './storage.js';
+import { previousDay } from '../core/learning.js';
 
 // Get YYYY-MM-DD date string in local timezone
 export function getLocalDateString(date = new Date()) {
@@ -23,7 +24,7 @@ export async function logActivity() {
 // Recalculate streak based on consecutive days logged
 export async function updateStreak(todayStr) {
   const streak = await getStored('spelt_streak') || { current: 0, lastDate: '', max: 0 };
-  const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
+  const yesterday = previousDay();
 
   if (streak.lastDate === yesterday) {
     streak.current += 1;
