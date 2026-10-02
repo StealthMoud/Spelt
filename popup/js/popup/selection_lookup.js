@@ -1,4 +1,20 @@
 export function initSelectionLookup() {
+  // Extension pages cannot be read through scripting.executeScript.
+  chrome.runtime.onMessage.addListener((message, sender, respond) => {
+    if (sender.id !== chrome.runtime.id || message?.action !== 'readSpeltSelection') return false;
+    chrome.tabs.getCurrent().then(tab => {
+      if (tab?.id === message.tabId) {
+        const focused = document.activeElement;
+        const pageText = window.getSelection()?.toString() || '';
+        const inputText = focused && typeof focused.selectionStart === 'number' && typeof focused.value === 'string'
+          ? focused.value.slice(focused.selectionStart, focused.selectionEnd)
+          : '';
+        const text = pageText || inputText;
+        respond({ text });
+      }
+    }).catch(() => {});
+    return true;
+  });
   const floatingBtn = document.createElement('button');
   floatingBtn.id = 'floating-lookup-btn';
   floatingBtn.className = 'floating-lookup-btn';

@@ -77,12 +77,12 @@ export async function showToastInTab(tabId, message, isSuccess = true) {
       args: [message, isSuccess]
     });
   } catch (err) {
-    console.warn('Could not inject toast, falling back to chrome.notifications:', err);
-    chrome.notifications.create({
+    console.info('Page toast unavailable; showing a notification instead:', err.message);
+    await chrome.notifications.create({
       type: 'basic',
       iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
       title: isSuccess ? 'Added to Spelt Vault' : 'Spelt Vault Error',
       message: message
-    });
+    }).catch(() => {});
   }
 }

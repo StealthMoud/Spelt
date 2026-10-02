@@ -64,13 +64,13 @@ try {
   await page.locator('#floating-lookup-btn').focus();
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => document.getElementById('feedback-msg').textContent.includes('the letters used to write a word'));
-  assert.deepEqual(requests, ['spelling', 'spelling']);
+  assert.deepEqual(requests, ['spelling'], 'Repeat lookup should reuse the cached definition');
   console.log('PASS keyboard activation looks up the selected word');
   await page.reload(); await page.locator('#sandbox-tab-button').click();
   await selectWord();
   await page.locator('#word-input').click();
   await page.locator('#floating-lookup-btn.visible').waitFor({ state: 'hidden' });
-  assert.deepEqual(requests, ['spelling', 'spelling']);
+  assert.deepEqual(requests, ['spelling'], 'Repeat lookup should reuse the cached definition');
   assert.deepEqual(errors, []);
   console.log('PASS clearing selection dismisses the button without a stale lookup');
 } finally {

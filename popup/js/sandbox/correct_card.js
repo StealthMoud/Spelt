@@ -5,17 +5,17 @@ import { escapeHtml } from '../../../shared/dom.js';
 import { getLanguageName } from '../../../src/core/languages.js';
 import { buildEnrichmentPrompt } from '../../../shared/ai/prompts.js';
 
-export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback) {
-  const enriched = await enrichWord(word);
+export async function handleCorrectSpelling(apiData, word, reloadVaultListCallback, { aiEntry } = {}) {
+  const detailsPromise = aiEntry ? Promise.resolve([aiEntry, aiEntry.translation]) : Promise.all([enrichWord(word), translateWord(word).catch(() => '')]);
+  const enriched = aiEntry || {};
   const def = enriched.definition || apiData.meanings[0]?.definitions[0]?.definition || 'No definition found';
-  let ipa = enriched.ipa || apiData.phonetics.find(p => p.text)?.text || '/--/';
+  let ipa = enriched.ipa || enriched.transcription || apiData.phonetics.find(p => p.text)?.text || '/--/';
   let level = enriched.level || '';
 
   const partOfSpeech = apiData.meanings[0]?.partOfSpeech || '';
   const example = extractExample(apiData) || enriched.example || getFallbackExample(word, partOfSpeech);
   
-  let translation = '';
-  try { translation = await translateWord(word); } catch {}
+  const translation = aiEntry?.translation || '';
 
   try {
     const words = await getWords();
@@ -54,7 +54,7 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
             </button>
           ` : ''}
         </div>
-        <p class="sandbox-status-note">Correct spelling! (Already in vault)</p>
+        <p class="sandbox-status-note">${aiEntry ? 'AI explanation · Already in vault' : 'Correct spelling! (Already in vault)'}</p>
       `;
     } else {
       subtext = `
@@ -104,7 +104,7 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
             <span>Customize...</span>
           </button>
         </div>
-        <p class="sandbox-status-note-sm">Correct spelling! (Not saved to vault)</p>
+        <p class="sandbox-status-note-sm">${aiEntry ? 'AI explanation · Save it when you’re ready' : 'Correct spelling! (Not saved to vault)'}</p>
       `;
     }
     
@@ -116,7 +116,7 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
 
     document.getElementById('feedback-msg').innerHTML = `
       ${closeBtnHtml}
-      <h4 class="feedback-title-success">Correct Spelling!</h4>
+      <h4 class="feedback-title-success">${aiEntry ? 'AI explanation' : 'Correct Spelling!'}</h4>
       <p class="misspell-suggestion">${escapeHtml(word)} <span id="feedback-ipa-display" class="misspell-ipa">${escapeHtml(ipa)}</span></p>
       ${variantHtml}
       ${renderAudioButtons(word)}
@@ -148,6 +148,38 @@ export async function handleCorrectSpelling(apiData, word, reloadVaultListCallba
       </div>
       <div id="sandbox-action-container" class="sandbox-action-container">${subtext}</div>
     `;
+    // Keep optional network requests off the path to the first usable result.
+    const definitionNode = document.getElementById('feedback-def-display');
+    void detailsPromise.then(async ([details, translated]) => {
+      if (!definitionNode.isConnected) return; // A newer lookup or dismissal owns the card now.
+      const feedback = document.getElementById('feedback-msg');
+      const transcription = details.ipa || ipa;
+      const resolvedLevel = wordLevel || details.level || '';
+      document.getElementById('feedback-ipa-display').textContent = transcription;
+      const metadata = document.getElementById('feedback-meta-row');
+      if (resolvedLevel && !document.getElementById('feedback-level-badge')) {
+        const badge = document.createElement('span');
+        badge.id = 'feedback-level-badge'; badge.className = 'feedback-badge level';
+        badge.textContent = resolvedLevel; metadata.append(badge);
+      }
+      if (translated && !document.getElementById('feedback-trans-badge')) {
+        const badge = document.createElement('span');
+        badge.id = 'feedback-trans-badge'; badge.className = 'feedback-badge trans';
+        badge.textContent = translated; metadata.append(badge);
+      }
+      feedback.querySelectorAll('[data-word]').forEach(button => {
+        if (button.dataset.word.toLowerCase() !== word.toLowerCase()) return;
+        if ('transcription' in button.dataset) button.dataset.transcription = transcription;
+        if ('level' in button.dataset) button.dataset.level = resolvedLevel;
+        if ('translation' in button.dataset) button.dataset.translation = translated;
+      });
+      if (existing && resolvedLevel && !existing.level) {
+        await atomicUpdate(async list => {
+          const saved = list.find(item => item.word.toLowerCase() === word.toLowerCase());
+          if (saved && !saved.level) saved.level = resolvedLevel;
+        });
+      }
+    }).catch(() => {});
     document.getElementById('word-input').value = '';
     document.getElementById('word-input')?.blur();
     if (reloadVaultListCallback) await reloadVaultListCallback();

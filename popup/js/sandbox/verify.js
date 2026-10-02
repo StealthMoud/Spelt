@@ -1,9 +1,12 @@
-import { fetchCambridgePronunciation, fetchDynamicDefinition, logSandboxActivity } from '../../../shared/storage.js';
+import { fetchCambridgePronunciation, logSandboxActivity } from '../../../shared/storage.js';
 import { findSuggestions } from './spelling.js';
 import { handleCorrectSpelling } from './correct_card.js';
 import { renderMisspellingCard } from './misspell_card.js';
 import { showManualCorrectionForm } from './manual_form.js';
 import { escapeHtml } from '../../../shared/dom.js';
+import { lookupDefinition } from './lookup.js';
+import { appendAiFallback } from './ai_fallback.js';
+import { clearDictionaryCache } from '../../../shared/storage/dictionary-source.js';
 
 const historyList = [];
 let verifying = false;
@@ -57,28 +60,21 @@ export async function handleVerify(reloadVaultListCallback) {
   pushSandboxHistory(word);
 
   try {
-    renderLoadingSkeleton('Checking primary dictionary…');
+    renderLoadingSkeleton('Finding your word…');
     const lowerWord = word.toLowerCase();
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`, { signal: AbortSignal.timeout(12000) });
-    if (response.ok) {
-      const data = await response.json();
+    const { data, unavailable: primaryUnavailable } = await lookupDefinition(lowerWord);
+    if (data) {
       logSandboxActivity('correct').catch(() => {});
       await handleCorrectSpelling(data[0], word, reloadVaultListCallback);
     } else {
       renderLoadingSkeleton('Checking secondary sources & pronunciations…');
       let isWordValid = false;
       let cambridgeData = null;
-      try {
-        cambridgeData = await fetchCambridgePronunciation(lowerWord);
-        if (cambridgeData.ukIpa || cambridgeData.usIpa || cambridgeData.level || cambridgeData.ukAudio) {
-          isWordValid = true;
-        }
-      } catch {}
-      
+      const definition = '';
       if (!isWordValid) {
         try {
-          const defResult = await fetchDynamicDefinition(lowerWord);
-          if (defResult.definition && defResult.definition !== 'No definition found') isWordValid = true;
+          cambridgeData = await fetchCambridgePronunciation(lowerWord);
+          isWordValid = Boolean(cambridgeData.ukIpa || cambridgeData.usIpa || cambridgeData.level || cambridgeData.ukAudio);
         } catch {}
       }
       
@@ -86,11 +82,17 @@ export async function handleVerify(reloadVaultListCallback) {
         const mockApiData = {
           word: lowerWord,
           phonetics: [],
-          meanings: [{ partOfSpeech: '', definitions: [{ definition: 'No definition found', example: '' }] }]
+          meanings: [{ partOfSpeech: '', definitions: [{ definition: definition || 'No definition found', example: '' }] }]
         };
         logSandboxActivity('correct').catch(() => {});
         await handleCorrectSpelling(mockApiData, word, reloadVaultListCallback);
       } else {
+        if (primaryUnavailable) {
+          clearDictionaryCache();
+          feedbackMsg.innerHTML = `<p class="text-danger">The dictionaries aren’t responding right now. Please try again.</p><p class="feedback-subtext">Your word is still here, and your saved words are available in Practice.</p>`;
+          await appendAiFallback(word);
+          return;
+        }
         renderLoadingSkeleton('Finding spelling suggestions…');
         const suggestions = await findSuggestions(lowerWord);
         if (suggestions.length > 0) {
@@ -102,11 +104,13 @@ export async function handleVerify(reloadVaultListCallback) {
         } else {
           logSandboxActivity('not_found').catch(() => {});
           await showManualCorrectionForm(word);
+          await appendAiFallback(word);
         }
       }
     }
   } catch (err) {
     feedbackMsg.innerHTML = `<p class="text-danger">We couldn’t look up this word. Check your connection and try again.</p><p class="feedback-subtext">Your saved words are still available in Practice.</p>`;
+    await appendAiFallback(word);
     console.warn('Word lookup failed:', err.message);
   } finally {
     verifying = false;

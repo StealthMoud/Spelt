@@ -5,7 +5,7 @@ export async function fetchTranslation(word, targetLang) {
   if (!targetLang || targetLang === 'none') return '';
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(word)}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (res.ok) {
       triggerNetworkSuccess();
       const data = await res.json();

@@ -7,10 +7,16 @@ import { renderMisspellingCard } from './misspell_card.js';
 import { handleExampleActions } from './example_actions.js';
 import { openModal } from '../vault.js';
 import { handleAiEnhance } from './correct_card.js';
+import { handleAiExplanation } from './ai_fallback.js';
 
 export async function handleFeedbackClick(e, reloadVaultList, loadPracticeDeck) {
   const feedbackMsg = document.getElementById('feedback-msg');
   if (!feedbackMsg) return;
+  const explainButton = e.target.closest('.sandbox-ai-explain-btn');
+  if (explainButton) {
+    await handleAiExplanation(explainButton, reloadVaultList);
+    return;
+  }
 
   const editBtn = e.target.closest('.sandbox-edit-btn');
   if (editBtn) {
